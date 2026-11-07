@@ -4,5 +4,7 @@
   "subtitles.entity.vulture.hurt": "Un vautour est blessé",
   "subtitles.entity.vulture.death": "Un vautour meurt",
   "subtitles.entity.vulture.flap": "Un vautour bat des ailes",
-  "subtitles.entity.vulture.eat": "Un vautour mange"
+  "subtitles.entity.vulture.eat": "Un vautour mange",
+  "item.vulture.vulture_spawn_egg": "Œuf d'apparition de vautour",
+  "itemGroup.vulture": "Vautour"
 }

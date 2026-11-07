@@ -4,5 +4,7 @@
   "subtitles.entity.vulture.hurt": "Vulture hurts",
   "subtitles.entity.vulture.death": "Vulture dies",
   "subtitles.entity.vulture.flap": "Vulture flaps",
-  "subtitles.entity.vulture.eat": "Vulture eats"
+  "subtitles.entity.vulture.eat": "Vulture eats",
+  "item.vulture.vulture_spawn_egg": "Vulture Spawn Egg",
+  "itemGroup.vulture": "Vulture"
 }

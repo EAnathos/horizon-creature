@@ -6,6 +6,44 @@ qui attrape des créatures dans ses serres et qui se reproduit.
 
 > ✅ = décidé · ❓ = proposition à valider · les chiffres sont des valeurs de départ à équilibrer en jeu.
 
+## 0. Avancement (au 2026-11-07)
+
+### Fait
+
+- **Phase 0 réussie** (§1.2) : entité `vulture:vulture` (copie du marchand ambulant, ses goals remplacés), dessinée par le
+  mod, montée et pilotée en vol. Testé en jeu, en solo.
+- **Monter** : clic droit sur le vautour (sans cheats) ou `/ride` (cheats). Accroupi pour descendre ❓ : à confirmer avec
+  une vraie touche après une montée par clic droit.
+- **Vol monté**, sans endurance pour l'instant : ZQSD selon le regard, Espace monte, rien = plané, Ctrl = piqué.
+  Pas de dégâts de chute pour le vautour.
+- **Modèle et texture du vautour fauve** : `assets/models/vulture.bbmodel` (Blockbench, 17 cubes : tête, bec crochu, cou,
+  collerette, corps, ailes en 2 segments, queue, pattes et serres), texture 64×64, converti en Rust par
+  `tools/bbmodel_to_rust.py`. Animations : ailes repliées au sol, battement en vol, tête qui suit le regard, marche,
+  pattes rentrées en vol.
+- **Cœurs de la monture** : seulement ceux qu'il a, sans cœurs vides.
+- **Sons** (§7) : le marchand est muet ; cri (sifflement, 3 variantes + cri rare), blessé, mort, battements d'ailes,
+  décollage et manger (ces deux-là pas encore joués par le code), tirés de sons CC0 de freesound par `tools/make_sounds.py` (sources listées dans le script).
+  Sous-titres FR + EN. Blessure et mort : codées, pas encore testées en jeu.
+- **Œuf d'apparition** `vulture:vulture_spawn_egg` (onglet créatif « Vautour »).
+- **Outils** : `tools/install-dev.sh` construit et installe le mod dans l'instance `vulture-dev`.
+
+### Reste à faire
+
+- §2 Statistiques variables (vie, vitesse, endurance) et leur hérédité.
+- §3 Les 4 autres variantes (moine, percnoptère, gypaète, royal) : textures et tirage à l'apparition.
+- §4 Vautour sauvage : hitbox (~1,2 × 1,0 ; il garde pour l'instant celle du marchand), IA (cercles en vol, se poser,
+  charognard), neutre et riposte, apparition naturelle par biome, drops (plumes, viande) et leurs items.
+- §5 Apprivoisement au poulet cru lancé, propriétaire.
+- §6 Vautour apprivoisé : assis/suivre, défense du propriétaire, soin ; monter réservé au propriétaire avec harnais.
+- §6.1 Harnais (item, recette, slot, visible sur le modèle).
+- §6.2 Endurance : jauge à la place de la barre d'XP, coûts et recharge ; marche au sol et décollage.
+- §6.3 Coffres (2 × 15 slots), écran du vautour.
+- §6.4 Serres : touche, attraper et lâcher.
+- §7 Petit (modèle et texture), harnais et coffres sur le modèle, animations picorer/manger, assis, attaque, serres.
+- §8 Reproduction.
+- Multijoueur (LAN) : non testé ; pour un invité, c'est son client qui déplace la monture.
+
+
 ---
 
 ## 1. Contexte technique
@@ -23,17 +61,17 @@ qui attrape des créatures dans ses serres et qui se reproduit.
 
 | Besoin | Disponible | Remarque |
 |---|---|---|
-| Nouveau type d'entité vivante | ⚠️ partiel | Uniquement en copiant un **zombie, un villageois ou un marchand ambulant**. « Pas encore essayé en jeu » selon la doc. |
+| Nouveau type d'entité vivante | ✅ testé en jeu | Uniquement en copiant un **zombie, un villageois ou un marchand ambulant**. `vulture:vulture` (marchand ambulant) marche : `/summon`, œuf, sauvegarde. |
 | IA personnalisée | ✅ | `register_goals` : on vide les goals du modèle de base (marchand ambulant) et on met les nôtres |
-| Modèle et texture personnalisés | ✅ | `native_mob_submit` : on dessine nos cubes (`native_draw_cube`, pile de transformations, pivots) avec des textures `vulture:entity/...` |
+| Modèle et texture personnalisés | ✅ testé en jeu | `native_mob_submit` : on dessine nos cubes (`native_draw_cube`, pile de transformations, pivots) avec des textures `vulture:entity/...` |
 | Données sauvegardées par entité | ✅ | Attachments serveur sur `Holder::Entity(id)` (propriétaire, stats, variante, coffres…) |
 | Clic droit sur l'entité | ✅ | `native_interact_entity` |
 | Événement d'apprivoisement | ✅ | `native_entity_tame` (vanilla seulement, à vérifier) |
 | Items au sol proches | ✅ | API 42 (position, stack, délai de ramassage) |
-| Sons du mod | ✅ | `assets/vulture/sounds.json` + `.ogg` |
+| Sons du mod | ✅ événement joué en jeu (fichiers `.ogg` pas encore écoutés) | `assets/vulture/sounds.json` + `.ogg`, joués par `Host::play_sound` (Horizon préfixe d'office les sons des mobs par `minecraft:`) |
 | Écran d'inventaire | ✅ | Types de menu du mod (1 à 256 slots) |
 | Apparition naturelle | ✅ | `add_spawns` par biome |
-| **Monter une entité du mod et la piloter en vol** | ✅ phase 0 (2026-11-07) | `/ride` accepte tout mob ; Horizon copie les touches du cavalier dans `Mob.rider` (avancer, côté, saut, sprint), qu'un goal lit pour régler la vitesse. Champs internes : révision d'Horizon épinglée. Clic droit → monter : bloqué en solo sans LAN (`run_command`). |
+| **Monter une entité du mod et la piloter en vol** | ✅ phase 0 (2026-11-07) | `/ride` accepte tout mob ; Horizon copie les touches du cavalier dans `Mob.rider` (avancer, côté, saut, sprint), qu'un goal lit pour régler la vitesse. Champs internes : révision d'Horizon épinglée. Clic droit → monter : par une injection mixin qui appelle `start_riding` (`run_command` est refusé pendant le tour d'un joueur). Sans cheats. |
 | Porter une entité (serres) | ❓ | Probablement en faisant d'une créature le passager d'une autre, ou en la téléportant chaque tick. À vérifier. |
 
 ### 1.2 Phase 0 — prototype technique, avant tout le reste
@@ -153,7 +191,7 @@ Inspirées d'espèces réelles, chacune avec sa propre texture :
 - Parties animées : tête, cou, corps, 2 ailes en 2 segments (bras + pointe), queue, 2 pattes avec serres, harnais, 2 coffres.
 - Animations par code : battement, plané, piqué, marche, picorer/manger, assis, attaque, serres fermées.
 - Textures 64×64 : une par variante + petit + harnais, peintes dans Blockbench.
-- Sons : cri, battement d'ailes, manger, blessé, mort. Sons CC0 (freesound.org, licence vérifiée et notée dans `CREDITS.md`) retouchés.
+- Sons : cri, battement d'ailes, manger, blessé, mort. Sons CC0 (freesound.org, licence vérifiée ; le CC0 n'oblige pas à créditer, les sources sont listées dans `tools/make_sounds.py`) retouchés.
 - Œuf d'apparition, textures des items, traductions FR + EN.
 
 ## 8. Reproduction ✅ (v1)
@@ -172,5 +210,6 @@ Inspirées d'espèces réelles, chacune avec sa propre texture :
 
 ## 10. Questions ouvertes restantes
 
-- Q26 — Si la phase 0 montre qu'on ne peut pas monter une entité du mod : A, B ou C (§1.2) ?
+- ~~Q26 — Si la phase 0 montre qu'on ne peut pas monter une entité du mod : A, B ou C (§1.2) ?~~ Sans objet : la phase 0 a
+  réussi sans aucune des trois options (2026-11-07).
 - Surcoût d'endurance quand il porte quelqu'un : +50 % ?
