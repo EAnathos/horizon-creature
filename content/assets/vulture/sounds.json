@@ -1,0 +1,27 @@
+{
+  "entity.vulture.ambient": {
+    "subtitle": "subtitles.entity.vulture.ambient",
+    "sounds": ["vulture:vulture/ambient1", "vulture:vulture/ambient2", "vulture:vulture/ambient3",
+               { "name": "vulture:vulture/call", "weight": 1 }]
+  },
+  "entity.vulture.hurt": {
+    "subtitle": "subtitles.entity.vulture.hurt",
+    "sounds": ["vulture:vulture/hurt1", "vulture:vulture/hurt2"]
+  },
+  "entity.vulture.death": {
+    "subtitle": "subtitles.entity.vulture.death",
+    "sounds": ["vulture:vulture/death"]
+  },
+  "entity.vulture.flap": {
+    "subtitle": "subtitles.entity.vulture.flap",
+    "sounds": ["vulture:vulture/flap1", "vulture:vulture/flap2", "vulture:vulture/flap3"]
+  },
+  "entity.vulture.takeoff": {
+    "subtitle": "subtitles.entity.vulture.flap",
+    "sounds": ["vulture:vulture/takeoff"]
+  },
+  "entity.vulture.eat": {
+    "subtitle": "subtitles.entity.vulture.eat",
+    "sounds": ["vulture:vulture/eat1", "vulture:vulture/eat2"]
+  }
+}

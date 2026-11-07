@@ -6,11 +6,17 @@
 //!   tick les touches du cavalier dans `Mob.rider` (`game/mounts.rs`, `tick_mount_riding`) :
 //!   avancer/reculer, gauche/droite, saut (Espace), sprint (Ctrl). Accroupi fait descendre.
 //! - Voler : `Fly` lit `Mob.rider` et règle directement la vitesse du vautour, sans gravité.
-//! - Dessin : quelques cubes (`mob_submit`) à la place du modèle du marchand ; ses cœurs, une fois
-//!   monté, sans les cœurs vides (injection `mount_hud.rs`).
+//! - Sons : les siens, pas ceux du marchand (`sounds.rs`).
+//! - Dessin : le modèle de Blockbench (`assets/models/vulture.bbmodel`, converti en `model.rs`), animé
+//!   par `pose`, à la place du modèle du marchand ; ses cœurs, une fois monté, sans les cœurs vides
+//!   (injection `mount_hud.rs`).
+mod model;
+mod sounds;
+
 use horizon_client::mobs::goals;
 use horizon_client::mod_api::{
-    CubeFace, Cx, Flow, Goal, Hooks, Host, Mob, MobSubmitEvent, RegisterGoalsEvent,
+    CubeFace, Cx, EntityTickListenedEvent, EntityTickPostEvent, Flow, Goal, Hooks, Host, Mob,
+    MobSubmitEvent, NativeMobRender, RandomSource, RegisterGoalsEvent, BlockEntityDraw,
 };
 
 const KIND: &str = "vulture:vulture";
@@ -70,6 +76,11 @@ impl Goal for Fly {
         let len = (fwd * fwd + strafe * strafe).sqrt().max(1.0);
         m.velocity.x = (strafe * c - fwd * s) / len * speed;
         m.velocity.z = (fwd * c + strafe * s) / len * speed;
+        // Un battement d'ailes toutes les 8 ticks tant qu'il monte.
+        if r.jumping && m.age % 8 == 0 {
+            let pitch = 0.9 + m.random.next_float() * 0.2;
+            sounds::queue(m.id, sounds::FLAP, 0.6, pitch);
+        }
         m.velocity.y = if r.jumping {
             CLIMB
         } else if dive {
@@ -100,14 +111,86 @@ impl Goal for NoFall {
     }
     fn tick(&mut self, m: &mut Mob, _: &mut Cx) {
         m.fall_distance = 0.0;
+        // Muet côté marchand ambulant, à chaque tick : une sauvegarde lue après `register_goals`
+        // remet son `Silent`.
+        m.silent = true;
+        // Un oiseau discret : un cri toutes les 20 s en moyenne (un mob vanilla : toutes les 4 s).
+        if m.random.next_int_bound(400).unwrap_or(1) == 0 {
+            let pitch = 0.8 + m.random.next_float() * 0.3;
+            sounds::queue(m.id, sounds::AMBIENT, 1.0, pitch);
+        }
     }
     fn box_clone(&self) -> Box<dyn Goal> {
         Box::new(self.clone())
     }
 }
 
-fn faces(sprite: &str) -> [Option<CubeFace<'_>>; 6] {
-    std::array::from_fn(|_| Some(CubeFace { sprite, uv: None }))
+/// Un groupe du modèle : son pivot (texels), sa rotation de repos (degrés, x puis y puis z), ses cubes
+/// et ses sous-groupes. Les données viennent de `tools/bbmodel_to_rust.py`.
+pub struct Part {
+    pub name: &'static str,
+    pub pivot: [f32; 3],
+    pub rotation: [f32; 3],
+    pub cubes: &'static [Cube],
+    pub children: &'static [Part],
+}
+
+/// Un cube (texels, 16 par bloc) et les UV de ses faces dans l'ordre de `draw_cube`.
+#[allow(dead_code)] // `name` : pour s’y retrouver dans `model.rs`.
+pub struct Cube {
+    pub name: &'static str,
+    pub from: [f32; 3],
+    pub to: [f32; 3],
+    pub uv: [[f32; 4]; 6],
+}
+
+/// La texture de la variante (une seule pour l'instant : le vautour fauve).
+const TEXTURE: &str = "vulture:entity/vulture/fauve";
+
+/// La rotation d'un groupe à cette image, en degrés (x, y, z), en plus de sa rotation de repos.
+fn pose(name: &str, mob: &NativeMobRender<'_>) -> [f32; 3] {
+    let flying = !mob.on_ground;
+    // Battement : les ailes montent et descendent, les pointes suivent avec un temps de retard.
+    let beat = (mob.age * 0.5).sin();
+    let lag = (mob.age * 0.5 - 0.8).sin();
+    // Au sol, les ailes pendent le long du corps et les pointes se replient vers le haut, côté corps,
+    // sous les couvertures beiges.
+    let (arm, tip) = if flying { (beat * 35.0, lag * 20.0) } else { (85.0, 165.0) };
+    // Marche : comme les pattes d'un quadrupède vanilla ; en vol, les pattes sont rentrées.
+    let step = (mob.walk_position * 0.6662).cos() * 1.4 * mob.walk_speed.min(1.0);
+    let leg = if flying { 60.0 } else { step.to_degrees() };
+    match name {
+        // Le modèle regarde vers +z : un regard à droite (lacet positif) le tourne vers -x.
+        "head" => [mob.pitch, -mob.head_yaw, 0.0],
+        "wing_left" => [0.0, 0.0, -arm],
+        "wing_right" => [0.0, 0.0, arm],
+        "wing_left_tip" => [0.0, 0.0, -tip],
+        "wing_right_tip" => [0.0, 0.0, tip],
+        "leg_left" => [leg, 0.0, 0.0],
+        "leg_right" => [if flying { leg } else { -leg }, 0.0, 0.0],
+        "tail" if flying => [-10.0, 0.0, 0.0],
+        _ => [0.0; 3],
+    }
+}
+
+fn draw_part(host: &dyn Host, draw: &mut BlockEntityDraw, part: &Part, mob: &NativeMobRender<'_>) {
+    let animated = pose(part.name, mob);
+    let pivot = part.pivot.map(|v| v / 16.0);
+    draw.push();
+    for (k, axis) in [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]].into_iter().enumerate() {
+        let degrees = part.rotation[k] + animated[k];
+        if degrees != 0.0 {
+            draw.rotate_about(axis, degrees, pivot);
+        }
+    }
+    for cube in part.cubes {
+        let faces = cube.uv.map(|uv| Some(CubeFace { sprite: TEXTURE, uv: Some(uv) }));
+        host.draw_cube(draw, cube.from, cube.to, faces, 0xFFFFFF);
+    }
+    for child in part.children {
+        draw_part(host, draw, child, mob);
+    }
+    draw.pop();
 }
 
 impl Hooks for Vulture {
@@ -115,6 +198,8 @@ impl Hooks for Vulture {
         if event.mob.kind.id != KIND {
             return;
         }
+        // Sans les sons du marchand ambulant : les siens viennent de `sounds.rs`.
+        event.mob.silent = true;
         let ai = &mut event.mob.ai;
         ai.goals.clear();
         ai.targets.clear();
@@ -122,34 +207,23 @@ impl Hooks for Vulture {
         ai.goals.add(1, Fly);
     }
 
-    /// Le modèle provisoire : un corps, une tête, deux ailes qui battent en vol.
+    fn entity_tick_listened(&self, _: &mut dyn Host, event: &mut EntityTickListenedEvent) {
+        event.listened = true;
+    }
+
+    fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
+        if event.kind == KIND {
+            sounds::tick_post(host, event);
+        }
+    }
+
+    /// Le modèle de Blockbench (`model.rs`), posé par `pose` à chaque image.
     fn mob_submit(&self, host: &dyn Host, event: &mut MobSubmitEvent<'_>) -> Flow {
         let mob = event.mob;
         if mob.kind != KIND {
             return Flow::Continue;
         }
-        let draw = &mut *event.draw;
-        let body = "block/brown_terracotta";
-        let head = "block/pink_terracotta";
-        let wing = "block/dark_oak_planks";
-        // Corps et tête (texels, 16 par bloc ; +z devant, +x à sa gauche).
-        host.draw_cube(draw, [-5.0, 8.0, -8.0], [5.0, 17.0, 8.0], faces(body), 0xFFFFFF);
-        host.draw_cube(draw, [-2.5, 15.0, 8.0], [2.5, 21.0, 13.0], faces(head), 0xFFFFFF);
-        // Ailes : repliées au sol, battantes en l'air (pivot à l'épaule, en blocs).
-        let flap = if mob.on_ground {
-            70.0
-        } else {
-            (mob.age * 0.5).sin() * 35.0
-        };
-        let shoulder_y = 16.0 / 16.0;
-        draw.push();
-        draw.rotate_about([0.0, 0.0, 1.0], -flap, [5.0 / 16.0, shoulder_y, 0.0]);
-        host.draw_cube(draw, [5.0, 15.0, -6.0], [25.0, 16.5, 6.0], faces(wing), 0xFFFFFF);
-        draw.pop();
-        draw.push();
-        draw.rotate_about([0.0, 0.0, 1.0], flap, [-5.0 / 16.0, shoulder_y, 0.0]);
-        host.draw_cube(draw, [-25.0, 15.0, -6.0], [-5.0, 16.5, 6.0], faces(wing), 0xFFFFFF);
-        draw.pop();
+        draw_part(host, &mut *event.draw, &model::VULTURE, mob);
         Flow::Cancel
     }
 }
