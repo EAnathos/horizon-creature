@@ -1,0 +1,19 @@
+[package]
+name = "vulture-tools"
+version = "0.1.0"
+edition = "2024"
+description = "Build tools for the vulture mod: model conversion, sounds, packaging, installing."
+publish = false
+
+[[bin]]
+name = "vulture-tools"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = "1"
+zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
+# zip's deflate through flate2's pure-Rust backend (miniz_oxide): no C library to build.
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
+
+# Not part of any workspace: `native/api` is built by the Horizon launcher, against Horizon's own lock file.
+[workspace]

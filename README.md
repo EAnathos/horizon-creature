@@ -1,64 +1,72 @@
-# Vautour — mod pour Minecraft Horizon
+# Vulture — a mod for Minecraft Horizon
 
-Un vautour pour [Minecraft Horizon](https://playhorizon.dev), la réimplémentation en Rust de Minecraft Java 26.3 :
-on le fait apparaître, on monte dessus et on vole. À terme : apprivoisement au poulet cru lancé, endurance en vol,
-harnais, deux coffres, serres, reproduction, statistiques et variantes (voir [docs/SPECS.md](docs/SPECS.md)).
+A vulture for [Minecraft Horizon](https://playhorizon.dev), the Rust reimplementation of Minecraft Java 26.3: spawn it,
+ride it and fly. Planned: taming with thrown raw chicken, flight stamina, a harness, two chests, talons, breeding, stats
+and variants (see [docs/SPECS.md](docs/SPECS.md)).
 
-> **État :** prototype. Ce qui marche et ce qui reste à faire : [docs/SPECS.md, §0](docs/SPECS.md#0-avancement-au-2026-11-07).
-> Testé en solo seulement.
+The game text is in English and French.
 
-## Ce qui marche
+> **Status:** prototype. What works and what is left: [docs/SPECS.md, §0](docs/SPECS.md#0-progress-as-of-2026-11-07).
+> Single player only for now; multiplayer comes later.
 
-- Le vautour fauve, `vulture:vulture` : `/summon vulture:vulture` ou l'**œuf d'apparition** (onglet créatif « Vautour »).
-- **Monter** : clic droit dessus (sans cheats). **Descendre** : rester accroupi (à confirmer après une montée par clic droit), ou `/ride @s dismount`.
-- **Voler** :
+## What works
 
-  | Touche | Effet |
+- The tawny vulture, `vulture:vulture`: `/summon vulture:vulture` or the **spawn egg** ("Vulture" creative tab).
+- **Mount**: right-click it (no cheats needed). **Get off**: hold sneak (to confirm after mounting by right-click), or
+  `/ride @s dismount`.
+- **Fly**:
+
+  | Key | Effect |
   |---|---|
-  | Z Q S D | Direction selon le regard |
-  | Espace | Monter en battant des ailes |
-  | (rien) | Plané, en descendant lentement |
-  | Ctrl gauche | Piqué |
+  | W A S D | Direction following your look |
+  | Space | Climb, flapping |
+  | (nothing) | Glide, slowly losing height |
+  | Left Ctrl | Dive |
 
-- Son modèle et sa texture, animés (ailes repliées ou battantes, tête, pattes), et ses sons (sifflements, blessure, mort,
-  battements d'ailes).
+- Its own model and texture, animated (wings folded or flapping, head, legs), and its own sounds (hisses, hurt, death,
+  wing flaps).
 
-## Installer et tester
+## Install and test
 
-Il faut le [launcher Horizon](https://playhorizon.dev) avec une instance de test (ici `vulture-dev`), Rust (l'outil
-`cargo horizon-mod` des sources d'Horizon) et Python 3 ; ffmpeg pour refaire les sons.
+You need the [Horizon launcher](https://playhorizon.dev) with a test instance (here `vulture-dev`), Rust (with
+`cargo horizon-mod`, from Horizon's sources); ffmpeg to remake the sounds.
 
 ```sh
 cargo install --locked --git https://github.com/horizon-rust/horizon cargo-horizon-mod
-tools/install-dev.sh            # ou : tools/install-dev.sh <instance>
+cargo vulture install           # or: cargo vulture install <instance>
 ```
 
-Le script construit les deux moitiés du mod et les installe dans l'instance, puis lance sa build native (une à deux
-minutes, plus la première fois) :
+It builds both halves of the mod, installs them in the instance and runs its native build (a minute or two,
+longer the first time):
 
-- `content/` → `vulture.hmod`, la partie contenu : l'entité, l'œuf, la texture, les sons, les traductions ;
-- `native/` → `vulture.hnmod`, la partie native en Rust : vol, rendu, sons, clic droit, compilée dans le jeu par le
-  launcher.
+- `content/` → `vulture.hmod`, the content part: entity, egg, textures, sounds, translations;
+- `native/` → `vulture.hnmod`, the native Rust part: flight, rendering, sounds, right-click mounting, compiled into the
+  game by the launcher.
 
-Ensuite, dans le launcher : choisir l'instance et **Jouer** (s'il était ouvert pendant la build, le relancer pour qu'il
-voie la nouvelle version). Le mod natif est épinglé sur une révision d'Horizon (`native/horizon-mixin.toml`), car il
-lit des champs internes du jeu.
+Then, in the launcher, pick the instance and press **Play** (restart the launcher if it was open during the build, so
+it sees the new version). The native mod is pinned to one Horizon revision (`native/horizon-mixin.toml`), because it
+reads internal game fields.
 
-## Le dépôt
+## Repository
 
-| Chemin | Contenu |
+| Path | Contents |
 |---|---|
-| `content/` | Le mod de contenu (`horizon-mod.toml`, `data/`, `assets/`) |
-| `native/` | Le mod natif : `api/` (le crate Rust du mod), deux injections mixin (`mount_click.rs`, `mount_hud.rs`) |
-| `assets/models/vulture.bbmodel` | Le modèle Blockbench, la source du modèle du jeu |
-| `tools/bbmodel_to_rust.py` | Convertit le modèle en `native/api/src/model.rs` |
-| `tools/make_sounds.py` | Fabrique les `.ogg` à partir des fichiers freesound (à mettre dans `sounds-src/`) |
-| `tools/pack_native.py`, `tools/install-dev.sh` | Empaquettent et installent le mod |
-| `docs/SPECS.md` | Les spécifications et l'avancement |
+| `content/` | The content mod (`horizon-mod.toml`, `data/`, `assets/`) |
+| `native/` | The native mod: `api/` (the mod's Rust crate) and two mixin injections (`mount_click.rs`, `mount_hud.rs`) |
+| `assets/models/vulture.bbmodel` | The Blockbench model, the source of the in-game model |
+| `tools/` | The build tools, in Rust, run as `cargo vulture <command>` (alias in `.cargo/config.toml`) |
+| `docs/SPECS.md` | The specification and progress |
 
-Après une modification du modèle dans Blockbench : `python3 tools/bbmodel_to_rust.py`, puis `tools/install-dev.sh`.
+The tools:
 
-## Sons
+| Command | What it does |
+|---|---|
+| `cargo vulture model` | Converts `assets/models/vulture.bbmodel` into `native/api/src/model.rs` (after editing the model in Blockbench) |
+| `cargo vulture sounds [folder]` | Makes the `.ogg` files from the freesound downloads (default folder `sounds-src/`) |
+| `cargo vulture pack` | Packages `native/` into `target/vulture.hnmod` |
+| `cargo vulture install [instance]` | Builds and packages both halves, installs them in the instance and runs its native build |
 
-Tirés de sons [CC0](https://creativecommons.org/publicdomain/zero/1.0/) de [freesound.org](https://freesound.org)
-(oies qui sifflent, ailes, imitation de vautour), retouchés ; la liste est dans `tools/make_sounds.py`.
+## Sounds
+
+Made from [CC0](https://creativecommons.org/publicdomain/zero/1.0/) sounds from [freesound.org](https://freesound.org)
+(hissing geese, wings, a vulture imitation), edited; the list is in `tools/src/sounds.rs`.

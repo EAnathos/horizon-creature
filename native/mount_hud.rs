@@ -1,6 +1,6 @@
-// Les cœurs du vautour monté : seulement ceux qu'il a, sans les cœurs vides de sa vie perdue
-// (`Hud.extractVehicleHealth` dessine toute sa vie maximale). Renvoie le nombre de cœurs dessinés,
-// que le HUD utilise pour placer les lignes au-dessus.
+// The ridden vulture's hearts: only the ones it has, without empty hearts for the health it lost
+// (`Hud.extractVehicleHealth` draws its whole max health). Returns the number of hearts drawn,
+// which the HUD uses to place the rows above.
 fn vulture_mount_hud(
     game: &mut Game<'_>,
     batch: &mut HudBatch,

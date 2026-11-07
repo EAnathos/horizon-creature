@@ -1,215 +1,228 @@
-# Vautour — spécifications (v0.2)
+# Vulture — specification (v0.2)
 
-Mod natif Rust pour **Minecraft Horizon** (réimplémentation Rust de Minecraft Java 26.3).
-Ajoute un vautour sauvage, qu'on apprivoise en lui lançant des poulets crus, qu'on monte, qu'on équipe de coffres,
-qui attrape des créatures dans ses serres et qui se reproduit.
+A native Rust mod for **Minecraft Horizon** (a Rust reimplementation of Minecraft Java 26.3).
+It adds a wild vulture that you tame by throwing raw chicken at it, ride, fit with chests, that catches creatures in its
+talons and breeds.
 
-> ✅ = décidé · ❓ = proposition à valider · les chiffres sont des valeurs de départ à équilibrer en jeu.
+> ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 
-## 0. Avancement (au 2026-11-07)
+## 0. Progress (as of 2026-11-07)
 
-### Fait
+### Done
 
-- **Phase 0 réussie** (§1.2) : entité `vulture:vulture` (copie du marchand ambulant, ses goals remplacés), dessinée par le
-  mod, montée et pilotée en vol. Testé en jeu, en solo.
-- **Monter** : clic droit sur le vautour (sans cheats) ou `/ride` (cheats). Accroupi pour descendre ❓ : à confirmer avec
-  une vraie touche après une montée par clic droit.
-- **Vol monté**, sans endurance pour l'instant : ZQSD selon le regard, Espace monte, rien = plané, Ctrl = piqué.
-  Pas de dégâts de chute pour le vautour.
-- **Modèle et texture du vautour fauve** : `assets/models/vulture.bbmodel` (Blockbench, 17 cubes : tête, bec crochu, cou,
-  collerette, corps, ailes en 2 segments, queue, pattes et serres), texture 64×64, converti en Rust par
-  `tools/bbmodel_to_rust.py`. Animations : ailes repliées au sol, battement en vol, tête qui suit le regard, marche,
-  pattes rentrées en vol.
-- **Cœurs de la monture** : seulement ceux qu'il a, sans cœurs vides.
-- **Sons** (§7) : le marchand est muet ; cri (sifflement, 3 variantes + cri rare), blessé, mort, battements d'ailes,
-  décollage et manger (ces deux-là pas encore joués par le code), tirés de sons CC0 de freesound par `tools/make_sounds.py` (sources listées dans le script).
-  Sous-titres FR + EN. Blessure et mort : codées, pas encore testées en jeu.
-- **Œuf d'apparition** `vulture:vulture_spawn_egg` (onglet créatif « Vautour »).
-- **Outils** : `tools/install-dev.sh` construit et installe le mod dans l'instance `vulture-dev`.
+- **Phase 0 succeeded** (§1.2): entity `vulture:vulture` (a copy of the wandering trader with its goals replaced), drawn
+  by the mod, ridden and flown. Tested in game, single player.
+- **Mounting**: right-click on the vulture (no cheats needed) or `/ride` (cheats). Holding sneak gets off (confirmed in
+  game).
+- **Ridden flight**, without stamina for now: WASD (ZQSD on AZERTY) following the look direction, Space climbs, nothing =
+  glide, Ctrl = dive. The vulture takes no fall damage.
+- **Model and texture of the tawny vulture**: `assets/models/vulture.bbmodel` (Blockbench, 17 cubes: head, hooked
+  beak, neck, ruff, body, 2-segment wings, tail, legs and talons), 64×64 texture, converted to Rust by
+  `cargo vulture model`. Animations: wings folded on the ground, flapping in flight, head following the gaze, walk
+  cycle, legs tucked in flight.
+- **Mount hearts**: only the hearts it has, no empty ones.
+- **Sounds** (§7): the trader is muted; call (hiss, 3 variants + a rare call), hurt, death, wing flaps, takeoff and eat
+  (those two not played by the code yet), made from CC0 freesound sounds by `cargo vulture sounds` (sources listed in
+  `tools/src/sounds.rs`). English and French subtitles. Hurt and death: written, not tested in game yet.
+- **Spawn egg** `vulture:vulture_spawn_egg` ("Vulture" creative tab).
+- **Tools** (`tools/`, Rust): `cargo vulture model | sounds | pack | install`; `install` builds the mod and installs it
+  in the `vulture-dev` instance.
 
-### Reste à faire
+### To do
 
-- §2 Statistiques variables (vie, vitesse, endurance) et leur hérédité.
-- §3 Les 4 autres variantes (moine, percnoptère, gypaète, royal) : textures et tirage à l'apparition.
-- §4 Vautour sauvage : hitbox (~1,2 × 1,0 ; il garde pour l'instant celle du marchand), IA (cercles en vol, se poser,
-  charognard), neutre et riposte, apparition naturelle par biome, drops (plumes, viande) et leurs items.
-- §5 Apprivoisement au poulet cru lancé, propriétaire.
-- §6 Vautour apprivoisé : assis/suivre, défense du propriétaire, soin ; monter réservé au propriétaire avec harnais.
-- §6.1 Harnais (item, recette, slot, visible sur le modèle).
-- §6.2 Endurance : jauge à la place de la barre d'XP, coûts et recharge ; marche au sol et décollage.
-- §6.3 Coffres (2 × 15 slots), écran du vautour.
-- §6.4 Serres : touche, attraper et lâcher.
-- §7 Petit (modèle et texture), harnais et coffres sur le modèle, animations picorer/manger, assis, attaque, serres.
-- §8 Reproduction.
-- Multijoueur (LAN) : non testé ; pour un invité, c'est son client qui déplace la monture.
-
-
----
-
-## 1. Contexte technique
-
-- **Format** : mod natif Horizon = un mod de contenu (items, recettes, loot, textures, sons, type d'entité en JSON)
-  + des modules Rust injectés dans Horizon (`horizon-mixin.toml`, hooks `native_*`). Outil : `cargo horizon-mod`.
-- **Toolchain** : Rust 1.99.1, épinglé par le launcher et déjà installé.
-- **Cible** : jeu 26.3, révision Horizon épinglée au début du développement.
-- **Id du mod** : `vulture`. Entité `vulture:vulture`, items `vulture:harness`, `vulture:feather`,
-  `vulture:raw_vulture`, `vulture:cooked_vulture`.
-- **Multijoueur** ✅ : v1 = solo + LAN. Le serveur dédié vient en v2, mais la logique serveur est séparée du rendu dès
-  le départ.
-
-### 1.1 Ce que l'API Horizon permet aujourd'hui (lu dans `docs/mods.md` et `docs/native-mods.md` d'Horizon)
-
-| Besoin | Disponible | Remarque |
-|---|---|---|
-| Nouveau type d'entité vivante | ✅ testé en jeu | Uniquement en copiant un **zombie, un villageois ou un marchand ambulant**. `vulture:vulture` (marchand ambulant) marche : `/summon`, œuf, sauvegarde. |
-| IA personnalisée | ✅ | `register_goals` : on vide les goals du modèle de base (marchand ambulant) et on met les nôtres |
-| Modèle et texture personnalisés | ✅ testé en jeu | `native_mob_submit` : on dessine nos cubes (`native_draw_cube`, pile de transformations, pivots) avec des textures `vulture:entity/...` |
-| Données sauvegardées par entité | ✅ | Attachments serveur sur `Holder::Entity(id)` (propriétaire, stats, variante, coffres…) |
-| Clic droit sur l'entité | ✅ | `native_interact_entity` |
-| Événement d'apprivoisement | ✅ | `native_entity_tame` (vanilla seulement, à vérifier) |
-| Items au sol proches | ✅ | API 42 (position, stack, délai de ramassage) |
-| Sons du mod | ✅ événement joué en jeu (fichiers `.ogg` pas encore écoutés) | `assets/vulture/sounds.json` + `.ogg`, joués par `Host::play_sound` (Horizon préfixe d'office les sons des mobs par `minecraft:`) |
-| Écran d'inventaire | ✅ | Types de menu du mod (1 à 256 slots) |
-| Apparition naturelle | ✅ | `add_spawns` par biome |
-| **Monter une entité du mod et la piloter en vol** | ✅ phase 0 (2026-11-07) | `/ride` accepte tout mob ; Horizon copie les touches du cavalier dans `Mob.rider` (avancer, côté, saut, sprint), qu'un goal lit pour régler la vitesse. Champs internes : révision d'Horizon épinglée. Clic droit → monter : par une injection mixin qui appelle `start_riding` (`run_command` est refusé pendant le tour d'un joueur). Sans cheats. |
-| Porter une entité (serres) | ❓ | Probablement en faisant d'une créature le passager d'une autre, ou en la téléportant chaque tick. À vérifier. |
-
-### 1.2 Phase 0 — prototype technique, avant tout le reste
-
-1. Déclarer `vulture:vulture` (copie du marchand ambulant), le faire apparaître avec `/summon` et le dessiner avec un cube.
-2. Faire monter un joueur dessus et lire ses touches (ZQSD, Espace, Ctrl) côté serveur.
-3. Le faire voler en contrôlant directement sa vitesse.
-
-Si l'étape 2 ou 3 n'est pas possible, trois options :
-- **A** : proposer à Horizon une contribution (dépôt open source) qui ajoute un modèle de base de type monture (cheval, âne, happy ghast) ;
-- **B** : faire apparaître un âne vanilla, qui sait déjà être monté, porter des coffres, varier ses stats et se reproduire, et le redessiner en vautour ;
-- **C** : coder la monture nous-mêmes via des hooks d'entrée joueur et de position.
+- §2 Variable stats (health, speed, stamina) and their inheritance.
+- §7 Model: longer neck and smaller head, closer to a real vulture's silhouette, before the other variants.
+- §3 The other 4 variants (dark, white, bearded, king): textures and rolling one at spawn.
+- §4 Wild vulture: hitbox (~1.2 × 1.0; it still has the trader's 0.6 × 1.95: try overriding its mob type's size at
+  spawn), AI (circling in flight, landing, scavenging), neutral
+  and retaliating, natural spawning by biome, drops (feathers, meat) and their items.
+- §5 Taming with thrown raw chicken, owner.
+- §6 Tamed vulture: sit/follow, defending its owner, healing; riding limited to the owner, with a harness.
+- §6.1 Harness (item, recipe, slot, visible on the model).
+- §6.2 Stamina: bar in place of the XP bar, costs and recovery; walking on the ground and taking off.
+- §6.3 Chests (2 × 15 slots), the vulture's screen.
+- §6.4 Talons: key, catch and release.
+- §7 Baby (model and texture), harness and chests on the model, peck/eat, sit, attack and talon animations.
+- §8 Breeding.
+- v2: multiplayer (LAN and dedicated server). For a LAN guest it is their own client that moves the mount.
 
 ---
 
-## 2. Statistiques variables ✅ (comme les chevaux)
+## 1. Technical context
 
-Chaque vautour tire ses stats à sa naissance ou à son apparition :
+- **Format**: a Horizon native mod = a content mod (items, recipes, loot, textures, sounds, entity type in JSON)
+  + Rust code built into Horizon (`horizon-mixin.toml`, `native_*` hooks). Tool: `cargo horizon-mod`.
+- **Toolchain**: Rust 1.99.1, pinned by the launcher and already installed.
+- **Target**: game 26.3, Horizon revision pinned at the start of development.
+- **Mod id**: `vulture`. Entity `vulture:vulture`, items `vulture:harness`, `vulture:feather`, `vulture:raw_vulture`,
+  `vulture:cooked_vulture`.
+- **Multiplayer** ✅: v1 = single player. LAN and the dedicated server come in v2 (for a LAN guest, their own client
+  moves the mount, which needs its own work), but server logic is kept apart from rendering from the start.
+- **Languages** ✅: everything in the repository is in English; the game text is translated (`en_us`, `fr_fr`).
 
-| Stat | Plage | Effet |
+### 1.1 What the Horizon API allows today (read in Horizon's `docs/mods.md` and `docs/native-mods.md`)
+
+| Need | Available | Notes |
 |---|---|---|
-| Points de vie max | 16 – 30 | |
-| Vitesse de vol | 0,6 – 1,2 × la vitesse de base | Plané et piqué |
-| Endurance max | 70 – 130 | Durée de vol battu (§6.2) |
+| New living entity type | ✅ tested in game | Only by copying a **zombie, villager or wandering trader**. `vulture:vulture` (wandering trader) works: `/summon`, egg, saving. |
+| Custom AI | ✅ | `register_goals`: we clear the base model's (wandering trader's) goals and add ours |
+| Custom model and texture | ✅ tested in game | `native_mob_submit`: we draw our cubes (`native_draw_cube`, pose stack, pivots) with `vulture:entity/...` textures |
+| Per-entity saved data | ✅ | Server attachments on `Holder::Entity(id)` (owner, stats, variant, chests…) |
+| Right-click on the entity | ✅ | `native_interact_entity` |
+| Taming event | ✅ | `native_entity_tame` (vanilla only, to check) |
+| Nearby items on the ground | ✅ | API 42 (position, stack, pickup delay) |
+| Mod sounds | ✅ event played in game (`.ogg` files not listened to yet) | `assets/vulture/sounds.json` + `.ogg`, played by `Host::play_sound` (Horizon always prefixes mob sounds with `minecraft:`) |
+| Inventory screen | ✅ | Mod menu types (1 to 256 slots) |
+| Natural spawning | ✅ | `add_spawns` by biome |
+| **Riding a mod entity and flying it** | ✅ phase 0 (2026-11-07) | `/ride` accepts any mob; Horizon copies the rider's keys into `Mob.rider` (forward, strafe, jump, sprint), which a goal reads to set the speed. Internal fields: Horizon revision pinned. Right-click → mount: a mixin injection that calls `start_riding` (`run_command` is refused during a player's turn). No cheats needed. |
+| Carrying an entity (talons) | ❓ | Probably by making a creature another's passenger, or by teleporting it every tick. To check. |
 
-- **Reproduction** : comme les chevaux vanilla, chaque stat du petit est la moyenne des deux parents et d'une valeur
-  tirée au hasard. Les bonnes lignées s'améliorent avec le temps sans dépasser les plafonds.
-- Les stats ne sont pas affichées en jeu, comme en vanilla ❓. On pourrait plus tard les montrer avec un item ou dans l'écran du vautour.
+### 1.2 Phase 0 — technical prototype, before anything else
 
-## 3. Variantes de skin ✅
+1. Declare `vulture:vulture` (a copy of the wandering trader), spawn it with `/summon` and draw it with a cube.
+2. Mount a player on it and read their keys (WASD, Space, Ctrl) on the server.
+3. Make it fly by setting its speed directly.
 
-Inspirées d'espèces réelles, chacune avec sa propre texture :
+If step 2 or 3 is not possible, three options:
+- **A**: contribute to Horizon (open source) a mount-type base model (horse, donkey, happy ghast);
+- **B**: spawn a vanilla donkey, which can already be ridden, carry chests, vary its stats and breed, and draw it as a
+  vulture;
+- **C**: write the mount ourselves with player input and position hooks.
 
-| Variante | Inspiration | Apparition |
+---
+
+## 2. Variable stats ✅ (like horses)
+
+Each vulture rolls its stats when born or spawned:
+
+| Stat | Range | Effect |
 |---|---|---|
-| Fauve | Vautour fauve (beige, collerette blanche) | Commune, tous les biomes |
-| Moine | Vautour moine (brun très sombre) | Commune, badlands |
-| Percnoptère | Percnoptère d'Égypte (blanc, face jaune) | Commune, désert |
-| Gypaète | Gypaète barbu (poitrail orangé, « barbe » noire) | Peu commune, savane plateau / montagnes proches |
-| Royal | Sarcoramphe roi (tête multicolore) | Rare (~3 %), partout |
+| Max health | 16 – 30 | |
+| Flight speed | 0.6 – 1.2 × base speed | Glide and dive |
+| Max stamina | 70 – 130 | Flapping flight time (§6.2) |
 
-- Un petit prend la variante d'un de ses parents (50/50), avec ~5 % de chances de mutation vers une variante au hasard ❓.
-- Des marques secondaires (taches, ailes plus sombres) pourraient multiplier les combinaisons comme pour les chevaux — **plus tard** ✅ (v1 = les 5 variantes).
+- **Breeding**: as with vanilla horses, each stat of the baby is the average of both parents and a random value. Good
+  bloodlines improve over time without passing the caps.
+- Stats are not shown in game, as in vanilla ✅.
 
-## 4. Vautour sauvage
+## 3. Skin variants ✅
 
-| Propriété | Valeur |
+Inspired by real species, each with its own texture:
+
+| Variant | Inspiration | Spawning |
+|---|---|---|
+| Tawny (`tawny`, FR fauve) | Griffon vulture (beige, white ruff) | Common, all biomes |
+| Dark (`dark`, FR sombre) | Cinereous vulture (very dark brown) | Common, badlands |
+| White (`white`, FR blanc) | Egyptian vulture (white, yellow face) | Common, desert |
+| Bearded (`bearded`, FR barbu) | Bearded vulture (orange breast, black "beard") | Uncommon, savanna plateau / nearby mountains |
+| King (`king`, FR royal) | King vulture (multicoloured head) | Rare (~3 %), everywhere |
+
+Variant names are simple colour names ✅, so players need not know the species.
+
+- A baby takes the variant of one of its parents (50/50), with a ~5 % chance of mutating to a random variant ✅.
+- Secondary markings (spots, darker wings) could multiply the combinations, as for horses — **later** ✅ (v1 = the 5
+  variants).
+
+## 4. Wild vulture
+
+| Property | Value |
 |---|---|
-| Taille (hitbox) | ~1,2 × 1,0 bloc ; envergure visuelle ~2,5 blocs en vol |
-| Comportement ✅ | **Neutre et riposte** : attaque qui le frappe (3 dégâts), et les vautours proches s'en mêlent, comme les loups/lamas |
-| Biomes ✅ | Désert, badlands, savane — groupes de 1–3 |
-| Vol sauvage | Cercles lents en altitude, se pose sur des points hauts |
-| Charognard | Attiré par la viande au sol et les mobs morts récemment (~16 blocs) |
-| Drops ✅ | 0–2 **plumes de vautour** + 1–2 **viandes de vautour crues** (cuisinables, viande normale ✅) |
+| Size (hitbox) | ~1.2 × 1.0 blocks; visual wingspan ~2.5 blocks in flight. Horizon gives a mod mob its template's size (the trader's 0.6 × 1.95): we try overriding it at spawn, else we keep the trader's ✅ |
+| Behaviour ✅ | **Neutral and retaliates**: attacks whoever hits it (3 damage), and nearby vultures join in, like wolves/llamas |
+| Biomes ✅ | Desert, badlands, savanna — groups of 1–3 |
+| Wild flight | Slow circles high up, lands on high points |
+| Scavenger | Drawn to meat on the ground and recently dead mobs (~16 blocks) |
+| Drops ✅ | 0–2 **vulture feathers** + 1–2 **raw vulture meat** (cookable, ordinary meat ✅) |
 
-## 5. Apprivoisement ✅
+## 5. Taming ✅
 
-1. Le joueur **lance** un poulet cru (touche Q) près d'un vautour sauvage. Le donner à la main ne marche pas.
-2. Le vautour repère l'item (~16 blocs), se pose dessus et le mange (animation + particules).
-3. **1 chance sur 4** par poulet : cœurs si c'est réussi, fumée sinon.
-4. Le propriétaire est le joueur qui a lancé le poulet.
-5. Les autres viandes crues sont mangées sans effet ; le poulet cuit est ignoré.
+1. The player **throws** a raw chicken (Q key) near a wild vulture. Handing it over does not work.
+2. The vulture spots the item (~16 blocks), lands on it and eats it (animation + particles).
+3. **1 chance in 4** per chicken: hearts on success, smoke otherwise.
+4. The owner is the player who threw the chicken.
+5. Other raw meats are eaten with no effect; cooked chicken is ignored.
 
-## 6. Vautour apprivoisé ✅ (comme le loup)
+## 6. Tamed vulture ✅ (like the wolf)
 
-- **Assis / suivre** : en mode suivre, il vole au-dessus du propriétaire et se téléporte s'il est trop loin.
-- Défend son propriétaire et attaque ce que le propriétaire frappe, comme le loup.
-- Nom avec étiquette. Pas de dégâts de chute. Soin : viande crue (+4 PV).
-- **Contrôles** ✅ :
-  - clic droit = monter s'il a un harnais, sinon assis/suivre ;
-  - accroupi + clic droit = écran du vautour (contient aussi un bouton assis/suivre) ;
-  - clic droit avec de la chair putréfiée = mode reproduction (§8).
+- **Sit / follow**: when following, it flies above its owner and teleports if too far away.
+- Defends its owner and attacks what the owner hits, like the wolf.
+- Can be named with a name tag. No fall damage. Healing: raw meat (+4 HP).
+- **Controls** ✅:
+  - right-click = mount if it has a harness and you are its owner (only the owner rides it ✅), otherwise sit/follow;
+  - sneak + right-click = the vulture's screen (which also has a sit/follow button);
+  - right-click with rotten flesh = breeding mode (§8).
 
-### 6.1 Harnais ✅
+### 6.1 Harness ✅
 
-- Item **Harnais de vautour**, non empilable, recette : 5 cuir + 2 ficelle + 1 lingot de fer (en U, le fer au centre) ✅.
-- Nécessaire pour le monter **et** pour porter des coffres ✅. Se pose dans un slot de l'écran du vautour, et se voit sur le modèle.
+- **Vulture harness** item, unstackable, recipe: 5 leather + 2 string + 1 iron ingot (U shape, iron in the middle) ✅.
+- Needed to ride it **and** to carry chests ✅. Goes in a slot of the vulture's screen, and shows on the model.
 
-### 6.2 Vol avec endurance ✅
+### 6.2 Flight with stamina ✅
 
-| Touche | Action |
+| Key | Action |
 |---|---|
-| ZQSD | Direction selon le regard |
-| Espace | Battre des ailes : prend de l'altitude, consomme de l'endurance |
-| (rien) | Plané : descente lente vers l'avant |
-| Ctrl gauche | Piqué : descente rapide, gain de vitesse |
-| Accroupi | Descendre, **même en plein vol** ✅ (dégâts de chute normaux) |
-| Touche « serres » ❓ (par ex. R) | Attraper / lâcher (§6.4) |
+| WASD (ZQSD) | Direction following the look |
+| Space | Flap: gains height, uses stamina |
+| (nothing) | Glide: slow forward descent |
+| Left Ctrl | Dive: fast descent, gains speed |
+| Sneak | Get off, **even in mid-air** ✅ (normal fall damage) |
+| "Talons" key ✅ (R, rebindable in Controls) | Catch / release (§6.4) |
 
-- Jauge d'endurance à la place de la barre d'XP quand on est monté, comme la jauge de saut du cheval.
-- Battre des ailes : −20/s · Plané : +5/s · Au sol : +25/s.
-- À 0, il ne peut plus battre des ailes avant d'être remonté à 30 % : il plane et redescend.
-- ✅ Les coffres **ne pèsent pas** sur l'endurance. ✅ **Pas de courants ascendants.**
-- Au sol : marche lente, décollage avec Espace.
+- Stamina bar in place of the XP bar while riding, like the horse's jump bar.
+- Flapping: −20/s · Gliding: +5/s · On the ground: +25/s.
+- At 0 it cannot flap again until back at 30 %: it glides down.
+- ✅ Chests **do not weigh** on stamina. ✅ **No thermals.**
+- On the ground: slow walk, takes off with Space.
+- Starting speeds ✅ (blocks per tick, before air drag): flight 0.6, dive 1.0, climb 0.35, glide sink 0.08, dive sink
+  0.7 (felt right in game).
 
-### 6.3 Coffres ✅
+### 6.3 Chests ✅
 
-- Jusqu'à **2 coffres**, un de chaque côté, visibles sur le modèle. On les ajoute par clic droit avec un coffre (harnais obligatoire).
-- **15 slots par coffre**, donc 30 au total.
-- **Écran du vautour** : slot harnais, boutons « retirer coffre gauche / droit » ✅ (le contenu tombe au sol), grille de 15 ou 30 slots, bouton assis/suivre.
-- À sa mort, il lâche ses coffres, leur contenu et son harnais.
+- Up to **2 chests**, one on each side, visible on the model. Added by right-clicking with a chest (harness required).
+- **15 slots per chest**, so 30 in all.
+- **Vulture screen**: harness slot, "remove left / right chest" buttons ✅ (the contents drop on the ground), a grid of 15
+  or 30 slots, sit/follow button.
+- On death it drops its chests, their contents and its harness.
 
-### 6.4 Serres ✅
+### 6.4 Talons ✅
 
-- En vol, monté, avec la touche serres : attrape la créature juste en dessous (~3 blocs).
-- Peut attraper :
-  - les **mobs assez petits** (hitbox ≤ 1 bloc de large et ≤ 1 bloc de haut ✅ : poulet, lapin, cochon, mouton, renard, chat, loup, bébés…) ;
-  - les **alliés** ✅ : un joueur accroupi sous le vautour (s'accroupir vaut accord), ou un animal apprivoisé.
-- Porter quelqu'un **coûte de l'endurance** ✅ : les battements d'ailes coûtent +50 % ❓ et le plané ne recharge plus.
-- Il lâche sur la touche, à la mort du vautour ou quand le cavalier descend. La chute fait des dégâts normaux.
-- Un vautour sauvage ou non monté n'attrape rien ❓.
+- In flight, ridden, with the talons key: catches the creature just below (~3 blocks).
+- It can catch:
+  - **small enough mobs** (hitbox ≤ 1 block wide and ≤ 1 block high ✅: chicken, rabbit, pig, sheep, fox, cat, wolf,
+    babies…);
+  - **allies** ✅: a player sneaking under the vulture (sneaking means consent), or a tamed animal.
+- Carrying someone **costs stamina** ✅: flaps cost +50 % ✅ and gliding no longer recovers.
+- It lets go on the key, when the vulture dies or when the rider gets off. The fall deals normal damage.
+- A wild or unridden vulture catches nothing ✅.
 
-## 7. Contenu graphique et audio
+## 7. Graphics and audio
 
-- Le **modèle est dessiné par code** (`native_mob_submit`) à partir de cubes. La source est un fichier `.bbmodel` (Blockbench), converti par un script du dépôt en données Rust :
-  on édite en visuel, le jeu reçoit des cubes, pivots et UV.
-- Parties animées : tête, cou, corps, 2 ailes en 2 segments (bras + pointe), queue, 2 pattes avec serres, harnais, 2 coffres.
-- Animations par code : battement, plané, piqué, marche, picorer/manger, assis, attaque, serres fermées.
-- Textures 64×64 : une par variante + petit + harnais, peintes dans Blockbench.
-- Sons : cri, battement d'ailes, manger, blessé, mort. Sons CC0 (freesound.org, licence vérifiée ; le CC0 n'oblige pas à créditer, les sources sont listées dans `tools/make_sounds.py`) retouchés.
-- Œuf d'apparition, textures des items, traductions FR + EN.
+- The **model is drawn by code** (`native_mob_submit`) from cubes. Its source is a `.bbmodel` file (Blockbench),
+  converted to Rust data by a script in the repository: we edit visually, the game gets cubes, pivots and UVs.
+- Animated parts: head, neck, body, 2 two-segment wings (arm + tip), tail, 2 legs with talons, harness, 2 chests.
+- Code animations: flap, glide, dive, walk, peck/eat, sit, attack, closed talons.
+- 64×64 textures: one per variant + baby + harness, painted in Blockbench.
+- Sounds: call, wing flap, eat, hurt, death. CC0 sounds (freesound.org, licence checked; CC0 requires no credit, the
+  sources are listed in `tools/src/sounds.rs`), edited.
+- Spawn egg, item textures, English and French translations.
 
-## 8. Reproduction ✅ (v1)
+## 8. Breeding ✅ (v1)
 
-- Deux vautours apprivoisés nourris avec de la **chair putréfiée** ✅ (des charognards…) passent en mode reproduction.
-- Le petit naît apprivoisé, avec le même propriétaire, des stats (§2) et une variante (§3) héritées.
-- Le petit est plus petit, avec une grosse tête et le crâne duveteux. Il devient adulte en 20 min (accéléré en le nourrissant), et on ne peut le monter qu'adulte.
-- Délai de 5 min avant que les parents puissent se reproduire de nouveau.
+- Two tamed vultures fed **rotten flesh** ✅ (scavengers…) go into breeding mode.
+- The baby is born tamed, with the same owner, and inherits stats (§2) and a variant (§3).
+- The baby is smaller, with a big head and a downy crown. It grows up in 20 min (faster when fed), and can only be ridden
+  once grown.
+- 5 min cooldown before the parents can breed again.
 
-## 9. Hors scope v1
+## 9. Out of scope for v1
 
-- Serveur dédié (v2)
-- Armure de vautour
-- Afficher les stats en jeu
-- Configuration utilisateur
+- Multiplayer: LAN and dedicated server (v2)
+- Vulture armour
+- Showing stats in game
+- User configuration
 
-## 10. Questions ouvertes restantes
+## 10. Remaining open questions
 
-- ~~Q26 — Si la phase 0 montre qu'on ne peut pas monter une entité du mod : A, B ou C (§1.2) ?~~ Sans objet : la phase 0 a
-  réussi sans aucune des trois options (2026-11-07).
-- Surcoût d'endurance quand il porte quelqu'un : +50 % ?
+- ~~Q26 — If phase 0 shows a mod entity cannot be ridden: A, B or C (§1.2)?~~ Moot: phase 0 succeeded without any of the
+  three options (2026-11-07).
+- ~~Extra stamina cost when carrying someone: +50 %?~~ Decided: +50 % (§6.4).

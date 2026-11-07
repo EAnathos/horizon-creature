@@ -1,12 +1,12 @@
-//! Les sons du vautour (SPECS §7).
+//! The vulture's sounds (SPECS §7).
 //!
-//! Le marchand ambulant qu'il copie a les siens, et Horizon préfixe d'office les sons des mobs par
-//! `minecraft:` : on le rend muet (`Mob.silent`) et on joue les nôtres, `vulture:entity.vulture.*`
-//! (`content/assets/vulture/sounds.json`), avec `Host::play_sound`, qui accepte les sons d'un mod.
+//! The wandering trader it copies has its own, and Horizon always prefixes mob sounds with `minecraft:`: we mute it
+//! (`Mob.silent`) and play ours, `vulture:entity.vulture.*` (`content/assets/vulture/sounds.json`), with
+//! `Host::play_sound`, which accepts a mod's sounds.
 //!
-//! - Les goals, qui n'ont pas d'hôte, mettent en file le cri et les battements d'ailes (`queue`).
-//! - `entity_tick_post` vide la file du vautour qui vient de tiquer, et entend ses blessures et sa
-//!   mort en comparant sa vie d'un tick à l'autre (les goals ne tournent plus quand il meurt).
+//! - Goals, which have no host, queue the call and the wing flaps (`queue`).
+//! - `entity_tick_post` empties the queue of the vulture that just ticked, and hears its injuries and its death by
+//!   comparing its health from one tick to the next (goals no longer run once it dies).
 use std::collections::HashMap;
 use std::sync::Mutex;
 
@@ -17,13 +17,13 @@ pub const HURT: &str = "vulture:entity.vulture.hurt";
 pub const DEATH: &str = "vulture:entity.vulture.death";
 pub const FLAP: &str = "vulture:entity.vulture.flap";
 
-/// `SoundSource.NEUTRAL`, comme les animaux.
+/// `SoundSource.NEUTRAL`, like animals.
 const NEUTRAL: usize = 6;
 
-/// Un son demandé par un goal : (vautour, son, volume, hauteur).
+/// A sound a goal asked for: (vulture, sound, volume, pitch).
 static QUEUE: Mutex<Vec<(u32, &'static str, f32, f32)>> = Mutex::new(Vec::new());
 
-/// La vie de chaque vautour au tick précédent.
+/// Each vulture's health at the previous tick.
 static HEALTH: Mutex<Option<HashMap<u32, f32>>> = Mutex::new(None);
 
 pub fn queue(mob: u32, sound: &'static str, volume: f32, pitch: f32) {
@@ -32,7 +32,7 @@ pub fn queue(mob: u32, sound: &'static str, volume: f32, pitch: f32) {
     }
 }
 
-/// `Health` dans les données de l'entité (un float, gardé en bits IEEE).
+/// `Health` in the entity's data (a float, kept as IEEE bits).
 fn health(host: &mut dyn Host, id: u32) -> Option<f32> {
     let entity = host.entity(id)?;
     let nbt = host.entity_nbt(entity)?;
@@ -65,7 +65,7 @@ pub fn tick_post(host: &mut dyn Host, event: &EntityTickPostEvent<'_>) {
                 if now <= 0.0 { h.remove(&id) } else { h.insert(id, now) }
             });
         if let Some(before) = before.filter(|&b| now < b && b > 0.0) {
-            // Plus grave et plus fort pour la mort, comme `LivingEntity.getVoicePitch` varie.
+            // A slightly different voice per vulture, as `LivingEntity.getVoicePitch` varies; harder hits sound higher.
             let pitch = 0.9 + (id % 5) as f32 * 0.05;
             play.push(if now <= 0.0 {
                 (DEATH, 1.0, pitch)

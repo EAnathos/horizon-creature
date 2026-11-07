@@ -1,28 +1,45 @@
 # horizon-vulture
 
-Mod natif Rust pour **Minecraft Horizon** (réimplémentation Rust de Minecraft Java 26.3) : un vautour apprivoisable
-(poulets crus lancés), montable en vol avec endurance, 2 coffres, serres, reproduction, stats et skins variables.
+A native Rust mod for **Minecraft Horizon** (a Rust reimplementation of Minecraft Java 26.3): a tameable vulture (thrown
+raw chicken), rideable in flight with stamina, 2 chests, talons, breeding, variable stats and skins.
 
-- **Specs** : `docs/SPECS.md` (source de vérité, en français ; ✅ décidé, ❓ à valider).
-- **Langue** : on échange en français.
+- **Spec**: `docs/SPECS.md` (source of truth; ✅ decided, ❓ to confirm; §0 tracks progress).
+- **Language**: everything in the repository is in English (code, comments, docs, commit messages). The game text is
+  translated: keep `content/assets/vulture/lang/en_us.json` and `fr_fr.json` in step. Conversations with the user are in
+  English.
 
 ## Horizon
 
-- Sources et docs d'Horizon installées par le launcher : `~/.local/share/horizon-launcher/native/stage/`
-  - `docs/mods.md` (mods de contenu, `entity_type`, menus, spawns), `docs/native-mods.md` (hooks `native_*`, goals, rendu des mobs)
-  - `crates/cargo-horizon-mod` (outil `cargo horizon-mod`), `crates/horizon-client/src/game/native_mob_draw.rs`, `mods/`
-- Exemple de mod natif installé : `~/.local/share/horizon-launcher/native/installed.incoming/mod_menu/` (`horizon-native.json`, `mixins/<id>/horizon-mixin.toml`).
-- Toolchain Rust 1.99.1 épinglée par le launcher. Outils MCP `horizon` disponibles (instances, mods, `game_*` pour piloter et capturer le jeu).
-- Ne jamais modifier les fichiers d'Horizon dans `~/.local/share/horizon-launcher` : on les lit, on code dans ce dépôt.
+- Horizon sources and docs installed by the launcher: `~/.local/share/horizon-launcher/native/stage/`
+  - `docs/mods.md` (content mods, `entity_type`, menus, spawns), `docs/native-mods.md` (`native_*` hooks, goals, mob
+    rendering)
+  - `crates/cargo-horizon-mod` (the `cargo horizon-mod` tool), `crates/horizon-client/src/game/native_mob_draw.rs`, `mods/`
+- Example installed native mod: `~/.local/share/horizon-launcher/native/installed.incoming/mod_menu/`
+  (`horizon-native.json`, `mixins/<id>/horizon-mixin.toml`).
+- Rust 1.99.1 toolchain pinned by the launcher. `horizon` MCP tools available (instances, mods, `game_*` to drive and
+  capture the game).
+- Never modify Horizon's files in `~/.local/share/horizon-launcher`: read them, write code in this repository.
 
-## Contraintes connues de l'API
+## Building and testing
 
-- Un type d'entité vivant du mod ne peut copier que `minecraft:zombie`, `minecraft:villager` ou `minecraft:wandering_trader`
-  (on prend le marchand ambulant, dont tout le comportement passe par des goals).
-- Rendu : `native_mob_submit` + `native_draw_cube` (cubes, pivots, textures `vulture:entity/...`).
-- Aucun hook trouvé pour monter et piloter une entité du mod : c'est le risque n°1, que la phase 0 doit lever.
+- `cargo vulture install [instance]` builds `content/` (`.hmod`) and `native/` (`.hnmod`), installs both in the instance
+  (default `vulture-dev`) and runs its native build. The launcher's Play button ignores a bundle built from a folder:
+  it must be installed as a `.hnmod`.
+- Tools are Rust (`tools/`, commands `model`, `sounds`, `pack`, `install`; alias in `.cargo/config.toml`).
+- The launcher binary is `~/Téléchargements/horizon-launcher.AppImage` (override with `HORIZON_LAUNCHER`).
 
-## Modèles
+## Known API constraints
 
-- Blockbench 5.2.2 (Flatpak `net.blockbench.Blockbench`) + plugin MCP jasonjgardner v1.10.1, serveur `blockbench` dans `.mcp.json`
-  (Blockbench doit être ouvert). Fichiers `.bbmodel` dans `assets/models/`.
+- A mod's living entity type can only copy `minecraft:zombie`, `minecraft:villager` or `minecraft:wandering_trader`
+  (we use the wandering trader, whose behaviour is all goals).
+- Rendering: `native_mob_submit` + `native_draw_cube` (cubes, pivots, `vulture:entity/...` textures).
+- Riding: `/ride` and our `mount_click.rs` injection put a player on any mob; Horizon copies the rider's keys into
+  `Mob.rider`, which the `Fly` goal reads. These are internal fields: the Horizon revision is pinned.
+- Mob sounds are always prefixed with `minecraft:` by Horizon: the vulture is muted and plays its own with
+  `Host::play_sound`.
+
+## Models
+
+- Blockbench 5.2.2 (Flatpak `net.blockbench.Blockbench`) + jasonjgardner MCP plugin v1.10.1, `blockbench` server in
+  `.mcp.json` (Blockbench must be open). `.bbmodel` files in `assets/models/`; `cargo vulture model` turns
+  `vulture.bbmodel` into `native/api/src/model.rs`.

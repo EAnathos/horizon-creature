@@ -1,6 +1,6 @@
-// Clic droit sur un vautour : le joueur monte dessus, comme un cheval (`interact_mount`) ou `/ride`.
-// Le hook trait ne peut pas lancer `/ride` en solo (`native_run_command` refuse pendant le tour du
-// joueur), d'où cette injection, compilée dans le jeu, qui appelle directement `start_riding`.
+// Right-click on a vulture: the player mounts it, as on a horse (`interact_mount`) or with `/ride`.
+// The trait hook cannot run `/ride` in single player (`native_run_command` refuses during the player's
+// turn), hence this injection, compiled into the game, which calls `start_riding` directly.
 fn vulture_mount_click(
     game: &mut crate::game::Game<'_>,
     entity: i32,
@@ -10,7 +10,7 @@ fn vulture_mount_click(
     if *claimed || kind != "vulture:vulture" {
         return;
     }
-    // Pas d'écran de marchand, monté ou non.
+    // No trading screen, whether it mounts or not.
     *claimed = true;
     let Ok(id) = u32::try_from(entity) else {
         return;

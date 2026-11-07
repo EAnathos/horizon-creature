@@ -1,17 +1,17 @@
-# Vautour : partie native (trait mod, docs/native-mods.md d'Horizon, « Trait mods »).
-# horizon-launcher native-build native --instance <instance> --trust-native-code
+# Vulture: the native part (a trait mod, Horizon's docs/native-mods.md, "Trait mods").
+# Built and installed by `cargo vulture install`.
 [mod]
 id = "vulture"
 version = "0.0.1"
 
-# On lit des champs internes de `Mob` et on injecte dans `Game` (mixins) : épinglé.
+# Reads internal `Mob` fields and injects into `Game` (mixins): pinned.
 [compatibility]
 horizon_revision = "66f3981f522b24c250b21523a70080965b940424"
 
 [api]
 path = "api"
 
-# Clic droit sur un vautour : monter dessus.
+# Right-click on a vulture: mount it.
 [[injection]]
 id = "mount-click"
 hook = "interact_entity"
@@ -25,7 +25,7 @@ bindings = [
   { name = "claimed", ty = "&mut bool", value = "&mut *claimed" },
 ]
 
-# Les cœurs du vautour monté, sans les cœurs vides.
+# The ridden vulture's hearts, without the empty ones.
 [[injection]]
 id = "mount-hud"
 target = "horizon_client::game::mounts::Game<'_>::draw_mount_hud"

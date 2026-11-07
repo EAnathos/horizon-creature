@@ -4,5 +4,5 @@ version = "0.0.1"
 edition = "2024"
 
 [dependencies]
-# Le launcher fait pointer cette dépendance sur la source d'Horizon qu'il compile.
+# The launcher points this at the Horizon source it builds the game from.
 horizon-client = { git = "https://github.com/horizon-rust/horizon", rev = "66f3981f522b24c250b21523a70080965b940424" }
