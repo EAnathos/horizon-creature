@@ -1,0 +1,8 @@
+id = "vulture"
+name = "Vulture"
+version = "0.0.1"
+description = "Un vautour apprivoisable et montable (prototype de la phase 0)."
+authors = ["EAnathos"]
+api = "0.2"
+side = "both"
+capabilities = ["registries"]

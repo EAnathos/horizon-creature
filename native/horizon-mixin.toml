@@ -1,0 +1,40 @@
+# Vautour : partie native (trait mod, docs/native-mods.md d'Horizon, « Trait mods »).
+# horizon-launcher native-build native --instance <instance> --trust-native-code
+[mod]
+id = "vulture"
+version = "0.0.1"
+
+# On lit des champs internes de `Mob` et on injecte dans `Game` (mixins) : épinglé.
+[compatibility]
+horizon_revision = "66f3981f522b24c250b21523a70080965b940424"
+
+[api]
+path = "api"
+
+# Clic droit sur un vautour : monter dessus.
+[[injection]]
+id = "mount-click"
+hook = "interact_entity"
+hook_version = 1
+kind = "HEAD"
+helper = "mount_click.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "entity", ty = "i32", value = "entity" },
+  { name = "kind", ty = "&str", value = "kind" },
+  { name = "claimed", ty = "&mut bool", value = "&mut *claimed" },
+]
+
+# Les cœurs du vautour monté, sans les cœurs vides.
+[[injection]]
+id = "mount-hud"
+target = "horizon_client::game::mounts::Game<'_>::draw_mount_hud"
+kind = "HEAD"
+cancellable = true
+helper = "mount_hud.rs"
+bindings = [
+  { name = "game", ty = "&mut Game<'_>", value = "&mut *self" },
+  { name = "batch", ty = "&mut HudBatch", value = "&mut *batch" },
+  { name = "w", ty = "i32", value = "w" },
+  { name = "h", ty = "i32", value = "h" },
+]
