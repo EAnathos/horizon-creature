@@ -19,7 +19,7 @@ Butterflies** ✅ (`butterflies`, [its spec](../butterflies/SPECS.md)): the staf
 - **Mod id**: `wyverns`. Entities `wyverns:wyvern`, `wyverns:fire_wyvern`, `wyverns:ice_wyvern`,
   `wyverns:poison_wyvern`, `wyverns:harpy_archer` ❓, `wyverns:harpy_warrior` ❓, `wyverns:harpy_queen`,
   `wyverns:tornado`, `wyverns:feather` (projectile ❓); items `wyverns:<species>_egg`, `wyverns:wyvern_saddle`,
-  `wyverns:umbral_staff` ❓; dimension `wyverns:umbral_peaks` ❓.
+  `wyverns:wyvern_staff` ✅; dimension `wyverns:wyvern_dimension` ✅.
 - **Dependencies** ✅: `creature` and `butterflies` (`[dependencies]` in `native/horizon-mixin.toml`, `requires` in
   `module.toml`).
 - Uses from the library: model drawing and sounds (§3.1, §3.2), **incubator** (§4), riding and flight (§8.1), stamina
@@ -54,31 +54,43 @@ eggs, the Queen) is built and tested in the Overworld meanwhile ✅; the staff a
 
 ## 2. The staff ✅
 
-- **Umbral Staff** ❓ (name), crafted from **1 netherite ingot** ✅, **butterfly dust**, **a stick** and **an eye of
+- The **Wyvern Staff** ✅, crafted from **1 netherite ingot** ✅, **butterfly dust**, **a stick** and **an eye of
   ender** ✅. Proposal: shaped, eye on top, dust and netherite in the middle, stick below.
 - **Four uses** ✅. Use: hold right-click for 3 s ❓ (purple particles gathering) → the player is teleported to the
   dimension, to a safe spot. Used in the dimension, it brings the player **back to the Overworld, where they used it** ✅.
   **The return trip uses a charge too** ✅: 2 round trips per staff. Broken when empty; **cannot be repaired** ✅.
 - A portal may come later ❓.
 
-## 3. The dimension ✅ dark, mysterious, mystical — one biome, mountainous
+## 3. The Wyvern Dimension ✅ dark, mysterious, mystical — one biome, mountainous
 
-Proposal ❓ (name: **the Umbral Peaks**):
+- **Name** ✅: the **Wyvern Dimension** (`wyverns:wyvern_dimension`).
+- **One biome** ✅, **mountainous** ✅: jagged violet-grey peaks, deep ravines with mist pooling in them, floating rock
+  shards around the summits, and the Queen's crater among the highest peaks. Perpetual dusk: a dim purple sky, a pale
+  moon that never moves, slow-falling ash-like motes, distant wyvern calls.
 
-- **One biome** ✅, **mountainous** ✅: jagged violet-grey peaks, deep ravines, mist in the valleys, floating rock shards
-  around the summits. Perpetual dusk: a dim purple sky, a pale moon that never moves, slow-falling ash-like motes.
-- **Blocks** (kept small, matching harpies and wyverns):
-  - **Duskstone** (the dark violet stone; cobbled, bricks, polished) and **Ashen soil** with **Gloommoss** on top;
-  - **Wraithwood** trees: twisted, black bark, pale violet leaves; planks and the usual wood set;
-  - **Stormglass** crystals growing in clusters on cliffs: the main light (cold blue), drop shards ❓;
-  - **Feather bundles** and **woven nest** blocks (harpy nests), **bone blocks** and **scorched**, **frosted** and
-    **venom-stained** duskstone around the wyvern lairs (fire, ice, poison).
-- **Structures**:
-  - **Harpy roosts** on the high peaks: nests, feather banners, a few chests; ranged harpies keep watch;
-  - **Harpy war camps** on ledges: trident racks, cages ❓, melee harpies and wyvern riders;
-  - **Wyvern lairs** in cliff caves, one per species, with bone piles and the element's stained stone;
-  - **The Queen's crater** ✅ (§6): a huge collapsed crater among the peaks, rimmed with roosts;
-  - an **arrival shrine**, a small ring of duskstone pillars, where the staff lands the player the first time ❓.
+### 3.1 Blocks ✅ (our design)
+
+| Block | What it is |
+|---|---|
+| **Duskstone** | The dimension's dark violet stone; cobbled duskstone, bricks, polished, chiseled (a wyvern head), stairs, slabs, walls |
+| **Ashen soil** / **Gloommoss** | The ground: grey soil, with a dark teal moss on top (spreads like grass) |
+| **Wraithwood** | Twisted trees with black bark and pale violet leaves; logs, planks and the whole wood set (door, trapdoor, fence…) |
+| **Stormglass** | Cold blue crystal clusters on the cliffs, the main light; mined into **stormglass shards** ❓ (a crafting material) |
+| **Hollow bloom** | A drooping violet flower that glows faintly at night |
+| **Wyvern bone block** / **wyvern skull** | Giant bones half-buried in the cliffs, decorative skulls (placeable) |
+| **Scorched**, **frosted** and **venom-stained duskstone** | The duskstone around each wyvern species' lair: scorched (glowing cracks, hurts like magma), frosted (slippery like ice), venom-stained (poisons whoever stands on it) |
+| **Harpy nest** / **feather bundle** | Woven twigs and bones; bundles of grey feathers (no fall damage, like hay) |
+| **Harpy banner** | Tattered feather banners on the roosts |
+
+### 3.2 Structures ✅ (our design)
+
+- **Arrival shrine**: a ring of duskstone pillars on a ledge with stormglass on top, where the Wyvern Staff first lands
+  the player.
+- **Harpy roosts** on the high peaks: nests, feather bundles and banners, a few chests; ranged harpies keep watch.
+- **Harpy war camps** on wide ledges: trident racks, wyvern perches, melee harpies and wyvern riders.
+- **Wyvern lairs** in cliff caves, one kind per species, with bone piles and the species' stained duskstone.
+- **Bone spires**: a giant wyvern skeleton arching out of a mountain, loot in its skull.
+- **The Queen's crater** (§6).
 
 ## 4. Harpies ✅ aggressive towards the player
 
@@ -111,9 +123,9 @@ Four species ✅, inspired by the variety of Mo' Creatures' wyverns (our own des
 
 ### 5.1 Eggs ✅
 
-- Eggs are obtained **by killing wyverns** ✅: proposal 20 % ❓ per wyvern, an egg of its species.
+- Eggs are obtained **by killing wyverns** ✅: **15 %** ✅ per wyvern, an egg of its species.
 - Incubated in the library's incubator **like a snake's egg, but hotter** ✅, at **a different temperature per species**
-  ✅ (±3 °C ❓, ~20 min ❓; outside it for more than a few seconds, the egg cracks). Proposal ❓:
+  ✅ (±10 °C, faster the closer, library §4.1; ~20 min ❓ at the exact temperature). Proposal ❓:
 
   | Egg | Temperature ❓ |
   |---|---|
@@ -143,10 +155,12 @@ Four species ✅, inspired by the variety of Mo' Creatures' wyverns (our own des
 - **Much bigger** than a harpy (~3.5 blocks tall ❓), **muscular, powerful, intimidating**, a boss at a glance ✅:
   dark slate plumage, a pale bone crown, scarred wings (span ~8 blocks ❓), glowing violet eyes, talons of black iron.
 
-### 6.2 Numbers (proposal)
+### 6.2 Numbers
 
+- **One Queen** ✅ per world: she lives in the crater and does not come back once killed ❓ (the crater stays, its roosts
+  emptied).
 - Health **400** ❓ (the Wither 300, the Warden 500), armour 10 ❓, knockback resistance 0.8 ❓, immune to fall damage
-  and to her own explosions and tornadoes ✅.
+  and to her own explosions and tornadoes.
 - A boss bar with her name ❓ (§1.1).
 
 ### 6.3 Attacks ✅ (dynamic, several, never just plain blows)
@@ -164,7 +178,7 @@ Four species ✅, inspired by the variety of Mo' Creatures' wyverns (our own des
 4. **Feather storm** ❓: a fan of 9 steel feathers, or a rain from above the arena.
 5. **Shriek** ❓: a sonic scream; slowness II and nausea for 5 s in 12 blocks.
 
-### 6.4 Phases ❓
+### 6.4 Phases ✅ three
 
 | Phase | Health | Behaviour |
 |---|---|---|
@@ -174,11 +188,10 @@ Four species ✅, inspired by the variety of Mo' Creatures' wyverns (our own des
 
 - An attack pattern with cooldowns, never the same attack twice in a row ❓.
 
-### 6.5 Rewards ❓
+### 6.5 Reward ✅
 
-- **The Queen's Crown** ❓ (trophy / helmet), **Queen's plume** ❓ (makes the staff unbreakable, or upgrades the saddle),
-  a guaranteed wyvern egg of a random species ❓, a lot of XP (500 ❓). She returns ❓ (respawns after N days, or summoned
-  with an offering at her throne).
+- The **Harpy Head trophy** ✅ (`wyverns:harpy_queen_head`): a placeable head of the Queen, on the floor or a wall, like
+  vanilla mob heads; plus XP (500 ❓).
 
 ## 7. Out of scope for v1
 
@@ -196,7 +209,9 @@ Four species ✅, inspired by the variety of Mo' Creatures' wyverns (our own des
 - ~~Q9 — Staff?~~ Netherite ingot; the return trip uses a charge and brings you back where you left the Overworld; not
   repairable.
 - ~~Q11 (part) / Q12~~ A different temperature per species; our own saddle and recipe.
-- Q10 — Names (the dimension, the staff) and the block set (§3).
-- Q11 — Egg drop chance (20 %?) and the temperatures (§5.1).
-- Q13 — The Queen's numbers, phases and rewards (§6.2 – §6.5): to tune; does she come back?
+- ~~Q10~~ The Wyvern Dimension and the Wyvern Staff; blocks and structures as designed (§3).
+- ~~Q11 (part)~~ 15 % egg drop.
+- ~~Q13 (part)~~ One Queen, three phases, the Harpy Head trophy.
+- Q11 — The temperatures per species (§5.1).
+- Q15 — The Queen's numbers (§6.2), to tune in game.
 - Q14 — Can the player tame a harpy's wyvern after killing its rider, or only hatched ones?

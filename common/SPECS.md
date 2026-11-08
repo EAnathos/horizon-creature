@@ -75,8 +75,14 @@ Eggs hatch **only in the incubator** ✅ (a placed egg does nothing).
 
 ### 4.1 Gameplay
 
-- **Block** `creature:incubator`, a furnace-like block with a screen. Recipe ❓ (proposal: 4 iron ingots around, 2 hay
-  bales, 1 furnace in the middle, 2 glass panes on top).
+- **Block** `creature:incubator`, a furnace-like block with a screen: a copper body with a glass dome where the egg
+  shows, glowing more as it heats. **Recipe** ✅ (our design), shaped:
+
+  ```
+  G G G     G = glass          (the dome)
+  C H C     C = copper ingot   H = hay bale (the nest)
+  C F C     F = furnace        (the heater)
+  ```
 - **One egg** at a time ✅: one egg slot, one fuel slot.
 - **Fuel** ✅: anything that burns in a furnace (coal, charcoal, wood, lava bucket, blaze rod…), with the furnace's burn
   times.
@@ -86,10 +92,11 @@ Eggs hatch **only in the incubator** ✅ (a placed egg does nothing).
   furnace, 134 °C almost 3 times as fast, and below 10 °C almost nothing. The actual temperature moves towards the
   setting by 2 °C per second ❓ while there is fuel, and cools by 1 °C per second ❓ without fuel, down to the room's
   temperature ❓ (20 °C).
-- Each egg needs **its own temperature** ✅ (each species a different one), within a tolerance of **±3 °C** ❓. When the
-  actual temperature is outside it, the egg has **a few seconds' grace** ✅ (proposal: 5 s ❓, shown by a warning on the
-  screen and steam particles); after that it **cracks** ✅ (lost: shell particles and a crack sound). Progress pauses
-  while outside the tolerance ❓. Putting an egg in a cold incubator therefore cracks it: heat the incubator first.
+- Each egg needs **its own temperature** ✅ (each species a different one), with a **tolerance of ±10 °C** ✅, and **the
+  closer, the faster it hatches** ✅: proposal ❓, full speed at the exact temperature, falling linearly to half speed at
+  ±10 °C. Outside the tolerance, progress stops and the egg has **a few seconds' grace** ✅ (proposal: 5 s ❓, shown by a
+  warning on the screen and steam particles); after that it **cracks** ✅ (lost: shell particles and a crack sound).
+  Putting an egg in a cold incubator therefore cracks it: heat the incubator first.
 - The egg's tooltip gives its temperature ("Incubate at 38 °C") ❓, so the player knows what to set.
 - The screen shows the setting, the actual temperature, the fuel left and the progress.
 - **Owner** ✅: the player who put the egg in. The creature hatches next to the incubator, as a baby, tamed to its owner.
@@ -103,7 +110,7 @@ Each mod registers its eggs at start, from its `hooks()`:
 creature::incubator::register(EggKind {
     item: "snakes:snake_egg",
     hatches: "snakes:snake",
-    temperature: 38,         // °C, ± the tolerance
+    temperature: 38,         // °C, ±10, faster the closer
     ticks: 12_000,           // 10 min
     named: true,             // §5: a naming screen opens when it hatches
     on_hatch: Some(snake_hatched), // the mod sets its colours, pattern, owner data…
@@ -217,7 +224,7 @@ Not shared: the Wyverns dimension, its staff and the Harpy Queen.
 - ~~Q7 — Naming?~~ A naming screen opens when it hatches, as in Mo' Creatures.
 - ~~Temperature scale~~ 0 to 150 °C, any whole value; a different temperature per species.
 - ~~Q4 — Can eggs hatch placed in the world?~~ No, only in the incubator.
-- Q3 — Incubator recipe; fuel use by temperature; the tolerance (±3 °C?).
+- ~~Q3~~ Tolerance ±10 °C, faster the closer; the recipe as designed. Still open: fuel use by temperature (§4.1).
 - Q8 — Filled jars: one item per creature mod (own texture), or one `creature:glass_jar` holding anything?
 - Q9 — Can a filled jar be placed as a decorative block?
 - Q5 — The tab's order: mods by folder name (now), or a chosen order?

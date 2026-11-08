@@ -49,9 +49,9 @@ flowery places, that you catch in a glass jar and settle where you like. Deliber
 
 ## 4. Butterfly dust ✅
 
-- An item needed by Wyverns' dimension staff ✅ — and a possible dye ❓.
+- An item needed by the Wyvern Staff ✅.
 - **Dropped when a butterfly is killed** ✅ (1 dust ❓; Looting adds 1 ❓).
-- Coloured dust by the butterfly's colour (a dye of that colour) ❓, or one plain dust ❓.
+- **One dust item for every colour** ✅ (`butterflies:butterfly_dust`, shimmering pale gold ❓).
 
 ## 5. Out of scope for v1
 
@@ -61,6 +61,6 @@ flowery places, that you catch in a glass jar and settle where you like. Deliber
 
 - ~~Q1 — Species?~~ One species, several colours and patterns.
 - ~~Q2 — Catching?~~ With a glass jar; released, it keeps to an area.
-- ~~Q3 — Butterfly dust?~~ Dropped when a butterfly is killed. Still open: coloured dust as dyes?
+- ~~Q3 — Butterfly dust?~~ Dropped when a butterfly is killed; one item for all colours.
 - Q4 — The settled area: flowers within 8 blocks of the anchor flower (§3)?
 - Q5 — Day only, or moths at night too?

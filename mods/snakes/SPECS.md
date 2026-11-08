@@ -32,9 +32,9 @@ colours and patterns, whose eggs you hatch in the library's incubator to raise a
 
 ## 3. Eggs and hatching ✅
 
-- Snakes **drop eggs** ✅: proposal 25 % on death ❓. The egg keeps the snake's colours and pattern (library §4.3) ❓.
-- The egg hatches only in the **incubator** ✅ at **38 °C** ❓ (±3, the coolest egg of the series), in ~10 min ❓; outside it
-  for more than a few seconds, it cracks.
+- Snakes **drop eggs** ✅: **20 %** on death ✅. The egg keeps the snake's colours and pattern (library §4.3) ❓.
+- The egg hatches only in the **incubator** ✅ at **38 °C** ❓ (±10, the coolest egg of the series), in ~10 min ❓ at exactly
+  38 °C, longer the further off; outside the tolerance for more than a few seconds, it cracks.
 - When it hatches, **a naming screen opens** ✅ (library §5) and the snake takes that name.
 - The hatchling is a **pet** ✅, tamed to the player who put the egg in ✅, bearing its name.
 
@@ -55,6 +55,6 @@ colours and patterns, whose eggs you hatch in the library's incubator to raise a
 
 - ~~Q1 / Q2 — Species and attitude?~~ One species, several colours and patterns, aggressive.
 - ~~Q3 / Q4 — Eggs and hatched snakes?~~ Dropped by snakes, hatched (named first) into a pet.
-- Q5 — Egg drop chance; incubation temperature and time.
+- ~~Q5 (part)~~ 20 % egg drop. Still open: incubation temperature and time.
 - ~~Q6 — What the pet does?~~ No following; sit or wander; can be put on the shoulder.
 - Q7 — Can two pets breed (laying an egg)?
