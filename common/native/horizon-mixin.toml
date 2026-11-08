@@ -1,0 +1,13 @@
+# Horizon Creature: the native part of the library every mod of the series depends on (common/SPECS.md).
+# A trait mod (Horizon's docs/native-mods.md, "Trait mods"); the mods name it in their own `[dependencies]`.
+# Built and installed by `cargo creature install`.
+[mod]
+id = "creature"
+version = "0.1.0"
+
+# The whole series is pinned to the same revision (docs/CONVENTIONS.md).
+[compatibility]
+horizon_revision = "66f3981f522b24c250b21523a70080965b940424"
+
+[api]
+path = "api"

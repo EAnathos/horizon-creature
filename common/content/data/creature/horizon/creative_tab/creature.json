@@ -1,0 +1,7 @@
+{
+  "icon": "minecraft:sniffer_egg",
+  "items": [
+    "vulture:vulture_spawn_egg"
+  ],
+  "title": "itemGroup.creature"
+}

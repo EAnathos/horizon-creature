@@ -1,0 +1,6 @@
+# Vulture's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
+id = "vulture"
+name = "Vulture"
+status = "prototype"
+# Its items in the series' creative tab, in order.
+creative = ["vulture:vulture_spawn_egg"]

@@ -1,30 +1,26 @@
-# Vulture — a mod for Minecraft Horizon
+# Horizon Creature — creature mods for Minecraft Horizon
 
-A vulture for [Minecraft Horizon](https://playhorizon.dev), the Rust reimplementation of Minecraft Java 26.3: spawn it,
-ride it and fly. Planned: taming with thrown raw chicken, flight stamina, a harness, two chests, talons, breeding, stats
-and variants (see [docs/SPECS.md](docs/SPECS.md)).
+A series of creature mods for [Minecraft Horizon](https://playhorizon.dev), the Rust reimplementation of Minecraft Java
+26.3. Each mod is independent and requires one shared library, **Horizon Creature**. All their items share one creative
+tab, "Horizon Creature". The game text is in English and French.
 
-The game text is in English and French.
+| Mod | What it adds | Status |
+|---|---|---|
+| [Horizon Creature](common/README.md) (`creature`) | The library: shared systems (incubator, glass jar, riding, taming…) and the creative tab. **Required by every mod.** | prototype |
+| [Vulture](mods/vulture/README.md) (`vulture`) | A vulture you tame, ride and fly, with chests and talons | prototype (rideable, flies) |
+| [Butterflies](mods/butterflies/README.md) (`butterflies`) | Butterflies in many colours, caught in a glass jar and settled in your garden | planned |
+| [Wyverns](mods/wyverns/README.md) (`wyverns`) | A dark mountainous dimension of harpies and wyverns, the Harpy Queen boss, wyverns hatched and ridden. **Also requires Butterflies.** | planned |
+| [Snakes](mods/snakes/README.md) (`snakes`) | Aggressive snakes in many colours, whose eggs hatch into named pets | planned |
+| [Worms](mods/worms/README.md) (`worms`) | Earthworms you carry in a jar to your garden, where they help crops grow | planned |
 
-> **Status:** prototype. What works and what is left: [docs/SPECS.md, §0](docs/SPECS.md#0-progress-as-of-2026-11-07).
-> Single player only for now; multiplayer comes later.
+> Single player only for now; multiplayer comes later for the whole series.
 
-## What works
+## Documentation
 
-- The tawny vulture, `vulture:vulture`: `/summon vulture:vulture` or the **spawn egg** ("Vulture" creative tab).
-- **Mount**: right-click it (no cheats needed). **Get off**: hold sneak (to confirm after mounting by right-click), or
-  `/ride @s dismount`.
-- **Fly**:
-
-  | Key | Effect |
-  |---|---|
-  | W A S D | Direction following your look |
-  | Space | Climb, flapping |
-  | (nothing) | Glide, slowly losing height |
-  | Left Ctrl | Dive |
-
-- Its own model and texture, animated (wings folded or flapping, head, legs), and its own sounds (hisses, hurt, death,
-  wing flaps).
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): the modules, their dependencies and responsibilities, what goes in the
+  library, the creative tab, building, adding a mod.
+- [docs/CONVENTIONS.md](docs/CONVENTIONS.md): ids, translations, specs, code and assets conventions.
+- One `SPECS.md` per module (the library's: [common/SPECS.md](common/SPECS.md)), with its progress in §0.
 
 ## Install and test
 
@@ -33,40 +29,31 @@ You need the [Horizon launcher](https://playhorizon.dev) with a test instance (h
 
 ```sh
 cargo install --locked --git https://github.com/horizon-rust/horizon cargo-horizon-mod
-cargo vulture install           # or: cargo vulture install <instance>
+cargo creature install                          # the library and every mod that has something to build
+cargo creature install vulture --instance my-instance   # a mod, with the mods it requires
 ```
 
-It builds both halves of the mod, installs them in the instance and runs its native build (a minute or two,
-longer the first time):
+It writes the shared creative tab, builds the content half (`.hmod`) and the native half (`.hnmod`) of the library and
+of each mod, installs them in the instance and runs its native build (a minute or two, longer the first time). Then, in
+the launcher, pick the instance and press **Play** (restart the launcher if it was open during the build). The native
+mods are pinned to one Horizon revision, because they read internal game fields.
 
-- `content/` → `vulture.hmod`, the content part: entity, egg, textures, sounds, translations;
-- `native/` → `vulture.hnmod`, the native Rust part: flight, rendering, sounds, right-click mounting, compiled into the
-  game by the launcher.
+The tools (`tools/`, Rust, `cargo creature <command>`):
 
-Then, in the launcher, pick the instance and press **Play** (restart the launcher if it was open during the build, so
-it sees the new version). The native mod is pinned to one Horizon revision (`native/horizon-mixin.toml`), because it
-reads internal game fields.
+| Command | What it does |
+|---|---|
+| `cargo creature list` | The library and the mods, with their status |
+| `cargo creature tab` | Writes the series' creative tab from the modules' `module.toml` |
+| `cargo creature model <mod> [model]` | Converts a mod's Blockbench model into Rust (`native/api/src/model.rs`) |
+| `cargo creature sounds <mod> [folder]` | Makes a mod's `.ogg` files from freesound downloads (vulture) |
+| `cargo creature pack <module>` | Packages a module's native half into `target/<id>.hnmod` |
+| `cargo creature install [--instance <name>] [mod...]` | Builds and installs the library and the mods, then runs the native build |
 
 ## Repository
 
 | Path | Contents |
 |---|---|
-| `content/` | The content mod (`horizon-mod.toml`, `data/`, `assets/`) |
-| `native/` | The native mod: `api/` (the mod's Rust crate) and two mixin injections (`mount_click.rs`, `mount_hud.rs`) |
-| `assets/models/vulture.bbmodel` | The Blockbench model, the source of the in-game model |
-| `tools/` | The build tools, in Rust, run as `cargo vulture <command>` (alias in `.cargo/config.toml`) |
-| `docs/SPECS.md` | The specification and progress |
-
-The tools:
-
-| Command | What it does |
-|---|---|
-| `cargo vulture model` | Converts `assets/models/vulture.bbmodel` into `native/api/src/model.rs` (after editing the model in Blockbench) |
-| `cargo vulture sounds [folder]` | Makes the `.ogg` files from the freesound downloads (default folder `sounds-src/`) |
-| `cargo vulture pack` | Packages `native/` into `target/vulture.hnmod` |
-| `cargo vulture install [instance]` | Builds and packages both halves, installs them in the instance and runs its native build |
-
-## Sounds
-
-Made from [CC0](https://creativecommons.org/publicdomain/zero/1.0/) sounds from [freesound.org](https://freesound.org)
-(hissing geese, wings, a vulture imitation), edited; the list is in `tools/src/sounds.rs`.
+| `common/` | The library (content, native, spec) |
+| `mods/<mod>/` | One folder per mod: `content/`, `native/`, `assets/models/`, `SPECS.md`, `README.md`, `module.toml` |
+| `tools/` | The build tools |
+| `docs/` | Series-wide documentation |

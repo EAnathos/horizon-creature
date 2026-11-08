@@ -1,0 +1,8 @@
+id = "creature"
+name = "Horizon Creature"
+version = "0.1.0"
+description = "The library of the Horizon Creature mods: shared systems and the series' creative tab. Needed by every mod of the series."
+authors = ["EAnathos"]
+api = "0.2"
+side = "both"
+capabilities = ["registries"]

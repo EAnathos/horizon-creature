@@ -1,0 +1,8 @@
+# The library's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
+id = "creature"
+name = "Horizon Creature"
+status = "prototype"
+# The shared creative tab's button: a vanilla item until the incubator exists (common/SPECS.md §4).
+icon = "minecraft:sniffer_egg"
+# The library's own items, first in the shared tab.
+creative = []

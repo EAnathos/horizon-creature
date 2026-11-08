@@ -1,7 +1,7 @@
 //! Makes the vulture's sounds from freesound files, all CC0 (public domain: nothing to credit).
 //!
 //! The downloaded files keep the name freesound gives them (`740195__el_boss__goose-hiss.wav`): they are found by
-//! their number. Output: `content/assets/vulture/sounds/vulture/*.ogg`, mono 44.1 kHz, normalized volume, like vanilla
+//! their number. Output: `mods/vulture/content/assets/vulture/sounds/vulture/*.ogg`, mono 44.1 kHz, normalized volume, like vanilla
 //! sounds. Needs ffmpeg.
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -46,9 +46,12 @@ impl Clip {
     }
 }
 
-pub fn run(folder: Option<&str>) -> crate::Result {
-    let root = crate::root();
-    let src = folder.map_or_else(|| root.join("sounds-src"), PathBuf::from);
+pub fn run(module: &str, folder: Option<&str>) -> crate::Result {
+    if module != "vulture" {
+        return Err(format!("no sounds are made for {module} yet: only vulture's (tools/src/sounds.rs)"));
+    }
+    let root = crate::root().join("mods/vulture");
+    let src = folder.map_or_else(|| crate::root().join("sounds-src"), PathBuf::from);
     let out = root.join("content/assets/vulture/sounds/vulture");
     std::fs::create_dir_all(&out).map_err(|e| format!("{}: {e}", out.display()))?;
     let source = |number: u32| find(&src, number);

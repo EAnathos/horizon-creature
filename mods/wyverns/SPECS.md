@@ -1,0 +1,195 @@
+# Wyverns — specification (v0.2, draft)
+
+A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): a new **dark, mysterious,
+mystical and mountainous dimension** ✅, reached with a staff ✅, peopled by **harpies** and **wyverns** ✅ and ruled by
+the **Harpy Queen** from her crater ✅. Wyverns hatch from eggs in the library's incubator, grow up and are ridden ✅.
+
+**Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)), **and
+Butterflies** ✅ (`butterflies`, [its spec](../butterflies/SPECS.md)): the staff is crafted with butterfly dust.
+
+> ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
+
+## 0. Progress (as of 2026-11-08)
+
+- Folder and spec created. **Not started**.
+- Next: the technical prototype (§1.2), the custom dimension first.
+
+## 1. Technical context
+
+- **Mod id**: `wyverns`. Entities `wyverns:wyvern`, `wyverns:fire_wyvern`, `wyverns:ice_wyvern`,
+  `wyverns:poison_wyvern`, `wyverns:harpy_archer` ❓, `wyverns:harpy_warrior` ❓, `wyverns:harpy_queen`,
+  `wyverns:tornado`, `wyverns:feather` (projectile ❓); items `wyverns:<species>_egg`, `wyverns:wyvern_saddle`,
+  `wyverns:umbral_staff` ❓; dimension `wyverns:umbral_peaks` ❓.
+- **Dependencies** ✅: `creature` and `butterflies` (`[dependencies]` in `native/horizon-mixin.toml`, `requires` in
+  `module.toml`).
+- Uses from the library: model drawing and sounds (§3.1, §3.2), **incubator** (§4), riding and flight (§8.1), stamina
+  (§8.2), taming (§8.3), stats (§8.4), babies and growth (§8.5), ridden special attack (§8.6), ranged attacks (§8.7),
+  hitbox size (§8.8). Wyverns is the mod that moves most of the vulture's systems into the library.
+- Its own: the staff, the dimension, its worldgen and structures, the harpies, the Queen and her fight.
+
+### 1.1 What the Horizon API allows (to check)
+
+| Need | Known | Notes |
+|---|---|---|
+| A **custom dimension** | ❓ not documented | Only vanilla dimensions appear in Horizon's docs (`execute in`). **The main risk of the mod.** |
+| Teleporting a player to it | ✅ if it exists | `execute in <dimension> run tp` works across levels |
+| Hostile mod mobs | ✅ | A copy of `minecraft:zombie`, or the trader with our own target goals |
+| Large hitboxes (wyverns, Queen) | ❓ | Same open point as the vulture (library §8.8) |
+| Harpy riding a wyvern (mob on mob) | ❓ | Horizon's riding is player-on-mob for now; `start_riding` on a mob, or the harpy moved onto the wyvern every tick |
+| Projectiles fired by a mod mob | ✅ probably | `native_summon` of a projectile with its motion; impacts through `native_projectile_impact` |
+| Explosion that breaks blocks (Queen's dive) | ✅ | `native_explode(dimension, center, radius, fire, blast)` |
+| Lifting players (tornadoes) | ✅ | `native_motion.rs`: a push on a client |
+| Boss health bar | ❓ | Not found in the docs |
+| Thrown tridents | ❌ for now | A copy of the trident doesn't throw (Horizon #3305): harpy warriors fight in melee |
+
+### 1.2 Technical prototype (before anything else)
+
+1. A custom dimension (simple mountainous noise) and the staff's teleport into it and back.
+2. A large mob with its own hitbox.
+3. A harpy riding a wyvern, both moving together.
+4. A boss bar for the Queen.
+
+If 1 is impossible today ❓: **A** contribute dimension support to Horizon; **B** a placeholder (a remote region of the
+Overworld, or the staff disabled) until it exists; **C** wait for Horizon. The rest of the mod (wyverns, harpies,
+eggs) can be built and tested in the Overworld meanwhile ✅ ("the dimension will be implemented later").
+
+## 2. The staff ✅
+
+- **Umbral Staff** ❓ (name), crafted from **1 netherite ingot** ❓ (or scrap ❓), **butterfly dust**, **a stick** and **an
+  eye of ender** ✅. Proposal: shaped, eye on top, dust and netherite in the middle, stick below.
+- **Four uses** ✅ (durability 4). Use: hold right-click for 3 s ❓ (purple particles gathering) → the player is
+  teleported to the dimension, to a safe spot; used in the dimension it brings the player back to where they left ❓
+  (or their spawn ❓). Each trip uses one charge ❓ (so 2 round trips). Broken when empty ✅.
+- Repairable ❓ (with butterfly dust on an anvil) — or not, so each trip is precious ❓.
+- A portal may come later ❓.
+
+## 3. The dimension ✅ dark, mysterious, mystical — one biome, mountainous
+
+Proposal ❓ (name: **the Umbral Peaks**):
+
+- **One biome** ✅, **mountainous** ✅: jagged violet-grey peaks, deep ravines, mist in the valleys, floating rock shards
+  around the summits. Perpetual dusk: a dim purple sky, a pale moon that never moves, slow-falling ash-like motes.
+- **Blocks** (kept small, matching harpies and wyverns):
+  - **Duskstone** (the dark violet stone; cobbled, bricks, polished) and **Ashen soil** with **Gloommoss** on top;
+  - **Wraithwood** trees: twisted, black bark, pale violet leaves; planks and the usual wood set;
+  - **Stormglass** crystals growing in clusters on cliffs: the main light (cold blue), drop shards ❓;
+  - **Feather bundles** and **woven nest** blocks (harpy nests), **bone blocks** and **scorched**, **frosted** and
+    **venom-stained** duskstone around the wyvern lairs (fire, ice, poison).
+- **Structures**:
+  - **Harpy roosts** on the high peaks: nests, feather banners, a few chests; ranged harpies keep watch;
+  - **Harpy war camps** on ledges: trident racks, cages ❓, melee harpies and wyvern riders;
+  - **Wyvern lairs** in cliff caves, one per species, with bone piles and the element's stained stone;
+  - **The Queen's crater** ✅ (§6): a huge collapsed crater among the peaks, rimmed with roosts;
+  - an **arrival shrine**, a small ring of duskstone pillars, where the staff lands the player the first time ❓.
+
+## 4. Harpies ✅ aggressive towards the player
+
+Winged women-birds, hostile on sight ✅. Two families ✅:
+
+| Kind | Attack | Proposal |
+|---|---|---|
+| **Ranged** harpy ✅ | Shoots **feathers** ✅ | Sharp feather darts (arrow-like, 4 damage ❓) in bursts of 3; keeps her distance, circles the player |
+| **Melee** harpy ✅ | Fights with a **trident** ✅ | Dives at the player, trident thrusts (8 damage ❓); drops her trident rarely ❓ |
+| **Wyvern rider** ✅ | From a wyvern's back ✅ | A ranged or melee harpy mounted on a wyvern: the wyvern flies, breathes and bites, the harpy shoots or strikes |
+
+- Fly freely (no stamina), land on peaks and roosts. Groups of 2–4 ❓. Health 20 ❓.
+- Drops ❓: harpy feathers (crafting: feather darts? fletching ❓), trident (rare).
+- Killing a rider leaves her wyvern wild (§5) ❓.
+
+## 5. Wyverns ✅
+
+Four species ✅, inspired by the variety of Mo' Creatures' wyverns (our own designs and art) ✅:
+
+| Species ✅ | Element | Proposal |
+|---|---|---|
+| Wyvern | — | Bite and tail strike; the most common |
+| Fire wyvern | Fire | Fire breath (sets the target on fire), immune to fire and lava ❓ |
+| Ice wyvern | Ice | Frost breath: slowness and freezing ❓, immune to freezing |
+| Poison wyvern | Poison | Poison spit, tail sting (poison) |
+
+- **Wild** wyverns are **neutral, hostile once hurt** ✅ (they fight back until the attacker is dead or far ❓); and
+  **ridden** by harpies ✅ (those attack with their rider).
+- Bigger than the vulture (hitbox ~2 × 2 ❓, wingspan ~5 blocks ❓). Health 50 ❓.
+
+### 5.1 Eggs ✅
+
+- Eggs are obtained **by killing wyverns** ✅: proposal 20 % ❓ per wyvern, an egg of its species.
+- Incubated in the library's incubator **like a snake's egg, but hotter** ✅. Proposal ❓: **Very hot** (level 4) for
+  every species — or species-specific (fire 5, ice 3 ❓); ~20 min. Wrong temperature: the egg cracks.
+- It hatches as a **juvenile** wyvern tamed to the player who put the egg in ✅.
+
+### 5.2 Growing up and riding ✅
+
+- From juvenile to **fully grown: 1 hour** ✅ (growing visibly; faster when fed ❓, with raw meat / its element's food ❓).
+- It **can be mounted from 40 minutes** ✅ (still a bit smaller and slower ❓), with a **saddle** ✅
+  (`wyverns:wyvern_saddle`, recipe ❓: leather + iron + harpy feathers ❓; or the vanilla saddle ❓).
+- Flight with stamina like the vulture, through the library (§8.1, §8.2) ✅; numbers per species ❓.
+- **The rider controls the breath** ✅: a key (the library's ridden special attack, §8.6) breathes the species' element
+  where the rider looks; costs stamina ❓; the plain wyvern bites / tail-sweeps instead ❓.
+- Tamed wyverns: sit / follow, defend the owner (library §8.3) ❓; keep their element and immunities ✅.
+
+## 6. Boss: the Harpy Queen ✅
+
+### 6.1 Home and look
+
+- She lives in **a crater** ✅ among the mountains: a vast bowl of shattered duskstone, Stormglass shards around the rim,
+  roosts on the slopes, her throne of bone and feathers in the centre. Entering the bowl wakes her ❓.
+- **Much bigger** than a harpy (~3.5 blocks tall ❓), **muscular, powerful, intimidating**, a boss at a glance ✅:
+  dark slate plumage, a pale bone crown, scarred wings (span ~8 blocks ❓), glowing violet eyes, talons of black iron.
+
+### 6.2 Numbers (proposal)
+
+- Health **400** ❓ (the Wither 300, the Warden 500), armour 10 ❓, knockback resistance 0.8 ❓, immune to fall damage
+  and to her own explosions and tornadoes ✅.
+- A boss bar with her name ❓ (§1.1).
+
+### 6.3 Attacks ✅ (dynamic, several, never just plain blows)
+
+1. **Supersonic dive** ✅: she climbs high above the crater, screeches (the warning, ~1.5 s, a trail of light locks on the
+   player ❓), then **charges at very high speed**, hits the ground and **explodes like a Creeper** ✅ (power 3 ❓), **breaking
+   blocks** ✅. She stays **stuck in the crater floor ~3 s** ❓ after it: the opening for melee (double damage ❓).
+2. **Tornadoes** ✅: she summons 2 ❓ tornadoes that wander towards players, **lift them into the air** ✅ and **deal
+   damage** ✅ (2 per second ❓ while caught, then a drop: fall damage). They last 10 s ❓.
+3. **Melee** ✅ with stylised moves ✅ (each with its own animation):
+   - **Talon rake**: a two-hit combo (10 + 6 ❓);
+   - **Wing buffet**: a sweeping blow that knocks everyone around her away ❓;
+   - **Grab and throw**: seizes a player, climbs and throws them ❓ (8 + fall damage);
+   - **Spin strike**: a whirling dash through the player ❓.
+4. **Feather storm** ❓: a fan of 9 steel feathers, or a rain from above the arena.
+5. **Shriek** ❓: a sonic scream; slowness II and nausea for 5 s in 12 blocks.
+
+### 6.4 Phases ❓
+
+| Phase | Health | Behaviour |
+|---|---|---|
+| 1 — Sovereign | 100–60 % | Melee combos, feather storm, a dive every ~25 s |
+| 2 — Tempest | 60–30 % | Adds tornadoes and the shriek; calls 2 ranged harpies; dive every ~18 s |
+| 3 — Fury | below 30 % | Faster everything; **chained dives** (2–3 in a row); wind pulls players towards the crater's centre; the rim's roosts empty |
+
+- An attack pattern with cooldowns, never the same attack twice in a row ❓.
+
+### 6.5 Rewards ❓
+
+- **The Queen's Crown** ❓ (trophy / helmet), **Queen's plume** ❓ (makes the staff unbreakable, or upgrades the saddle),
+  a guaranteed wyvern egg of a random species ❓, a lot of XP (500 ❓). She returns ❓ (respawns after N days, or summoned
+  with an offering at her throne).
+
+## 7. Out of scope for v1
+
+- Multiplayer (v2, the whole series).
+- More species or bosses (later, without changing the architecture).
+
+## 8. Open questions
+
+- ~~Q2 — Access to the dimension~~ A four-use staff (netherite, butterfly dust, stick, eye of ender).
+- ~~Q1 (part)~~ One mountainous biome; the Queen lives in a crater.
+- ~~Q3~~ Ranged harpies shoot feathers. ~~Q4~~ Wild wyverns are neutral, hostile once hurt.
+- ~~Q5 / Q6 / Q7 (part)~~ Eggs by killing wyverns, hotter than snakes; grown in 1 h, ridden from 40 min with a saddle; the
+  rider controls the breath.
+- Q8 — If Horizon can't make custom dimensions yet: A, B or C (§1.2)?
+- Q9 — Staff: netherite ingot or scrap? Does the return trip use a charge? Where does it bring you back? Repairable?
+- Q10 — Names (the dimension, the staff) and the block set (§3).
+- Q11 — Egg drop chance; one incubation temperature for all wyverns or one per species?
+- Q12 — Saddle: our own (recipe?) or vanilla's?
+- Q13 — The Queen's numbers, phases and rewards (§6.2 – §6.5): to tune; does she come back?
+- Q14 — Can the player tame a harpy's wyvern after killing its rider, or only hatched ones?

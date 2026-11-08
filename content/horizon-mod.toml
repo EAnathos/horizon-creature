@@ -1,8 +1,0 @@
-id = "vulture"
-name = "Vulture"
-version = "0.0.1"
-description = "A vulture you can spawn, ride and fly (prototype)."
-authors = ["EAnathos"]
-api = "0.2"
-side = "both"
-capabilities = ["registries"]

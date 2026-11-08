@@ -1,8 +1,9 @@
-//! Packages the mod's native part (`native/`) into `target/vulture.hnmod` (Horizon's docs/api/mod-files.md).
+//! Packages a module's native part (`common/native/` or `mods/<mod>/native/`) into `target/<id>.hnmod` (Horizon's
+//! docs/api/mod-files.md).
 //!
-//! The `.hnmod` holds `horizon-native.json` and `mixins/vulture/` (the bundle as is, without `target/`). It is what
-//! the launcher installs in `horizon-native-mods/` and builds: a bundle built from its folder is not "installed", and
-//! the launcher's Play button ignores it.
+//! The `.hnmod` holds `horizon-native.json` and `mixins/<id>/` (the bundle as is, without `target/`). It is what the
+//! launcher installs in `horizon-native-mods/` and builds: a bundle built from its folder is not "installed", and the
+//! launcher's Play button ignores it.
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
 
@@ -12,19 +13,25 @@ use zip::{CompressionMethod, DateTime, ZipWriter};
 /// horizon-mixins of the pinned build (the `native-mods.json` of the launcher's builds).
 const MIXINS: &str = "5a64af938ec86b00d53d16a408aabc0038fb3e57";
 
-/// Builds the `.hnmod` and returns its path.
-pub fn run() -> crate::Result<PathBuf> {
+/// Builds the module's `.hnmod` and returns its path.
+pub fn run(module: &crate::modules::Module) -> crate::Result<PathBuf> {
     let root = crate::root();
-    let bundle = root.join("native");
-    let out = root.join("target/vulture.hnmod");
+    let bundle = module
+        .native()
+        .ok_or_else(|| format!("{} has no native part", module.id))?;
     let manifest_path = bundle.join("horizon-mixin.toml");
     let toml = std::fs::read_to_string(&manifest_path)
         .map_err(|e| format!("{}: {e}", manifest_path.display()))?;
+    let id = toml_value(&toml, "id").ok_or("horizon-mixin.toml has no id")?;
+    if id != module.id {
+        return Err(format!("{}: id {id}, but module.toml says {}", manifest_path.display(), module.id));
+    }
+    let out = root.join(format!("target/{id}.hnmod"));
     let version = toml_value(&toml, "version").ok_or("horizon-mixin.toml has no version")?;
     let horizon = toml_value(&toml, "horizon_revision")
         .ok_or("horizon-mixin.toml pins no horizon_revision")?;
     let manifest = format!(
-        "{{\n  \"game\": \"26.3\",\n  \"horizon\": \"{horizon}\",\n  \"id\": \"vulture\",\n  \"mixins\": \"{MIXINS}\",\n  \
+        "{{\n  \"game\": \"26.3\",\n  \"horizon\": \"{horizon}\",\n  \"id\": \"{id}\",\n  \"mixins\": \"{MIXINS}\",\n  \
          \"schema\": 1,\n  \"version\": \"{version}\"\n}}\n"
     );
     let mut files = Vec::new();
@@ -52,7 +59,7 @@ pub fn run() -> crate::Result<PathBuf> {
             .collect::<Vec<_>>()
             .join("/");
         let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
-        add(format!("mixins/vulture/{rel}"), &bytes)?;
+        add(format!("mixins/{id}/{rel}"), &bytes)?;
     }
     zip.finish().map_err(|e| e.to_string())?;
     println!(

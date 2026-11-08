@@ -1,0 +1,44 @@
+# Vulture: the native part (a trait mod, Horizon's docs/native-mods.md, "Trait mods").
+# Built and installed by `cargo creature install vulture`.
+[mod]
+id = "vulture"
+version = "0.0.1"
+
+# Reads internal `Mob` fields and injects into `Game` (mixins): pinned.
+[compatibility]
+horizon_revision = "66f3981f522b24c250b21523a70080965b940424"
+
+[api]
+path = "api"
+
+# The series' library, reached as the `creature` crate (common/SPECS.md).
+[dependencies]
+creature = "^0.1"
+
+# Right-click on a vulture: mount it.
+[[injection]]
+id = "mount-click"
+hook = "interact_entity"
+hook_version = 1
+kind = "HEAD"
+helper = "mount_click.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "entity", ty = "i32", value = "entity" },
+  { name = "kind", ty = "&str", value = "kind" },
+  { name = "claimed", ty = "&mut bool", value = "&mut *claimed" },
+]
+
+# The ridden vulture's hearts, without the empty ones.
+[[injection]]
+id = "mount-hud"
+target = "horizon_client::game::mounts::Game<'_>::draw_mount_hud"
+kind = "HEAD"
+cancellable = true
+helper = "mount_hud.rs"
+bindings = [
+  { name = "game", ty = "&mut Game<'_>", value = "&mut *self" },
+  { name = "batch", ty = "&mut HudBatch", value = "&mut *batch" },
+  { name = "w", ty = "i32", value = "w" },
+  { name = "h", ty = "i32", value = "h" },
+]
