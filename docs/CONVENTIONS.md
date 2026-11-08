@@ -6,6 +6,7 @@ Rules shared by every module of the Horizon Creature series ([ARCHITECTURE.md](A
 
 - Everything in the repository is in **English**: code, comments, docs, specs, commit messages.
 - The game text is translated: every module keeps `assets/<id>/lang/en_us.json` and `fr_fr.json` in step (same keys).
+- No em dash in the docs: use a colon, a semicolon, a comma or parentheses (`cargo creature check` refuses one).
 
 ## Ids and namespaces
 
@@ -40,6 +41,28 @@ Rules shared by every module of the Horizon Creature series ([ARCHITECTURE.md](A
   creative tab.
 - Before adding a system to a mod, check the library; before writing one that a second mod will need, put it in the
   library (ARCHITECTURE.md §3).
+
+## Formatting, lint and checks
+
+All three run in CI (`.github/workflows/ci.yml`) on every push to `main` and every pull request; run them before
+committing:
+
+```sh
+cargo fmt --manifest-path tools/Cargo.toml                                   # format the tools
+find common mods -path '*/native/*' -name '*.rs' -print0 | xargs -0 rustfmt --edition 2024   # format the native code
+cargo clippy --manifest-path tools/Cargo.toml --all-targets -- -D warnings   # lint the tools
+cargo creature check                                                         # the repository's consistency
+```
+
+- **rustfmt** with `rustfmt.toml` (edition 2024, 120 columns, as the rest of the repository). Generated models carry
+  `#[rustfmt::skip]`.
+- **Clippy** with warnings as errors, on the tools. The native crates can't be compiled outside the launcher (they need
+  Horizon's lock file and the `creature` crate the launcher injects), so they are formatted in CI but compiled only by
+  `cargo creature install`: run it before pushing native changes.
+- **`cargo creature check`**: the shared tab is up to date, manifests carry the module's id and one version, every pin
+  is the series' Horizon revision, mods depend on the library and on what they require, tab items exist, JSON parses,
+  `en_us` and `fr_fr` have the same keys, no em dash in the docs.
+- CI then builds every module (`cargo creature build`) and keeps the `.hmod` and `.hnmod` files as an artifact.
 
 ## Assets
 

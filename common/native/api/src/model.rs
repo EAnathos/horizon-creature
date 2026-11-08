@@ -35,14 +35,22 @@ pub fn draw(
     let animated = pose(part.name);
     let pivot = part.pivot.map(|v| v / 16.0);
     draw.push();
-    for (k, axis) in [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]].into_iter().enumerate() {
+    for (k, axis) in [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+        .into_iter()
+        .enumerate()
+    {
         let degrees = part.rotation[k] + animated[k];
         if degrees != 0.0 {
             draw.rotate_about(axis, degrees, pivot);
         }
     }
     for cube in part.cubes {
-        let faces = cube.uv.map(|uv| Some(CubeFace { sprite: texture, uv: Some(uv) }));
+        let faces = cube.uv.map(|uv| {
+            Some(CubeFace {
+                sprite: texture,
+                uv: Some(uv),
+            })
+        });
         host.draw_cube(draw, cube.from, cube.to, faces, 0xFFFFFF);
     }
     for child in part.children {

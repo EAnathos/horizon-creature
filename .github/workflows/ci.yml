@@ -1,0 +1,71 @@
+# Lint, test, check and build every module (docs/ARCHITECTURE.md §6).
+#
+# The native Rust (`native/api/`, the injections) is formatted here but not compiled: only the Horizon launcher can
+# build it, against Horizon's own lock file and with the library injected as the `creature` crate. Compile it locally
+# with `cargo creature install` before pushing native changes.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # The series' pinned Horizon revision (every horizon-mixin.toml; `cargo creature check` enforces it).
+  HORIZON_REV: 66f3981f522b24c250b21523a70080965b940424
+
+jobs:
+  lint:
+    name: Format, lint, test, check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tools
+      - name: rustfmt (tools)
+        run: cargo fmt --manifest-path tools/Cargo.toml --check
+      - name: rustfmt (native code)
+        run: find common mods -path '*/native/*' -name '*.rs' -print0 | xargs -0 rustfmt --edition 2024 --check
+      - name: clippy (tools)
+        run: cargo clippy --manifest-path tools/Cargo.toml --all-targets --locked -- -D warnings
+      - name: tests (tools)
+        run: cargo test --manifest-path tools/Cargo.toml --locked
+      - name: Repository consistency
+        run: cargo creature check
+
+  build:
+    name: Build the mods
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tools
+      - name: Cache cargo-horizon-mod
+        id: horizon-mod
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-horizon-mod
+          key: cargo-horizon-mod-${{ runner.os }}-${{ env.HORIZON_REV }}
+      - name: Install cargo-horizon-mod
+        if: steps.horizon-mod.outputs.cache-hit != 'true'
+        run: cargo install --locked --git https://github.com/horizon-rust/horizon --rev "$HORIZON_REV" cargo-horizon-mod
+      - name: Build the content and native packages
+        run: cargo creature build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: horizon-creature-${{ github.sha }}
+          path: target/dist/
+          if-no-files-found: error

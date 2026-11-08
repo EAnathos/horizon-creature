@@ -88,7 +88,9 @@ pub fn find(name: &str) -> crate::Result<Module> {
     }
     let dir = crate::root().join("mods").join(name);
     if !dir.join("module.toml").is_file() {
-        return Err(format!("no module {name}: neither the library ({LIBRARY}) nor a folder of mods/"));
+        return Err(format!(
+            "no module {name}: neither the library ({LIBRARY}) nor a folder of mods/"
+        ));
     }
     Module::read(&dir)
 }

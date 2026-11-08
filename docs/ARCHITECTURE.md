@@ -122,10 +122,15 @@ tools/                  the Rust build tools (`cargo creature ...`), shared by e
 | `cargo creature model <mod> [model]` | `mods/<mod>/assets/models/<model>.bbmodel` → `native/api/src/model.rs` (`model_<model>.rs` for a model not named after the mod) |
 | `cargo creature sounds <mod> [folder]` | Makes the mod's `.ogg` files from freesound downloads (the vulture's only, for now) |
 | `cargo creature pack <module>` | A module's `native/` → `target/<id>.hnmod` |
+| `cargo creature build [mod...]` | Writes the tab and builds the library and the mods (default: all) into `target/dist/` (`.hmod`, checked `.hnmod`), without installing |
+| `cargo creature check` | The repository's consistency (docs/CONVENTIONS.md, "Formatting, lint and checks") |
 | `cargo creature install [--instance <name>] [mod...]` | Writes the tab, builds and installs the library and the mods (default: every mod with something to build) in the instance (default `creature-dev`), turns their content on and runs the instance's native build |
 
-- **One Horizon revision for the whole series**: every `horizon-mixin.toml` and `api/Cargo.toml` pins the same commit.
-  Moving to a new revision is done for all modules at once.
+- **One Horizon revision for the whole series**: every `horizon-mixin.toml` and `api/Cargo.toml` pins the same commit,
+  and so does CI (`HORIZON_REV`). Moving to a new revision is done for all modules at once.
+- **CI** (`.github/workflows/ci.yml`), on every push to `main` and pull request: rustfmt, Clippy and the tools' tests,
+  `cargo creature check`, then `cargo creature build` with the packages as an artifact. The native Rust is compiled only
+  by the launcher (`cargo creature install`), not in CI.
 - **Versions** are semver, per module (`[mod] version` in `horizon-mixin.toml` and `version` in `horizon-mod.toml`, kept
   equal). Mods require the library by `^<major>.<minor>` while it is `0.x`. A breaking change in the library bumps its
   minor version (0.x) and every mod's requirement with it.

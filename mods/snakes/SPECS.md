@@ -1,4 +1,4 @@
-# Snakes — specification (v0.2, draft)
+# Snakes: specification (v0.2, draft)
 
 A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): an aggressive snake in many
 colours and patterns, whose eggs you hatch in the library's incubator to raise a named pet snake ✅.
@@ -41,7 +41,7 @@ colours and patterns, whose eggs you hatch in the library's incubator to raise a
 ## 4. The pet snake ✅
 
 - **Does not follow** its owner ✅. Right-click toggles **sit** (stays put) / **wander** (roams around where it is, never
-  far ❓ — within 8 blocks of where it was told to wander ❓) ✅.
+  far ❓: within 8 blocks of where it was told to wander ❓) ✅.
 - **Grab it onto your shoulder** ✅ (sneak + right-click ❓): it coils on the shoulder like a parrot, and comes off when
   you sneak again ❓ or right-click a block ❓; it is then set to sit there.
 - Never attacks its owner. Defends its owner when on the shoulder ❓.
@@ -53,8 +53,8 @@ colours and patterns, whose eggs you hatch in the library's incubator to raise a
 
 ## 6. Open questions
 
-- ~~Q1 / Q2 — Species and attitude?~~ One species, several colours and patterns, aggressive.
-- ~~Q3 / Q4 — Eggs and hatched snakes?~~ Dropped by snakes, hatched (named first) into a pet.
+- ~~Q1 / Q2: Species and attitude?~~ One species, several colours and patterns, aggressive.
+- ~~Q3 / Q4: Eggs and hatched snakes?~~ Dropped by snakes, hatched (named first) into a pet.
 - ~~Q5 (part)~~ 20 % egg drop. Still open: incubation temperature and time.
-- ~~Q6 — What the pet does?~~ No following; sit or wander; can be put on the shoulder.
-- Q7 — Can two pets breed (laying an egg)?
+- ~~Q6: What the pet does?~~ No following; sit or wander; can be put on the shoulder.
+- Q7: Can two pets breed (laying an egg)?

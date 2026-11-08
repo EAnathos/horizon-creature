@@ -1,4 +1,4 @@
-# Horizon Creature — library specification (v0.2)
+# Horizon Creature: library specification (v0.2)
 
 The mandatory library of the Horizon Creature series ([docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)): the systems
 several creature mods share, and the series' single creative tab. It adds no creature of its own.
@@ -205,7 +205,7 @@ Each moves here when the second mod that needs it is implemented. Until then it 
 | 8.4 | **Inherited stats** (health, speed, stamina) | vulture → wyverns ❓ | specified in the vulture |
 | 8.5 | **Babies and growth**: smaller model, growth time, faster when fed, **rideable from a given age** (wyverns: 40 of 60 min ✅) | vulture → wyverns, snakes | specified in the vulture |
 | 8.6 | **Ridden special attack**: a key that makes the mount attack (vulture talons, wyvern breath ✅) | vulture → wyverns | specified in the vulture |
-| 8.7 | **Ranged attack goal**: a mob shooting projectiles (harpy feathers ✅, wyvern breath, Queen) | wyverns (several mobs); snakes ❓ | — |
+| 8.7 | **Ranged attack goal**: a mob shooting projectiles (harpy feathers ✅, wyvern breath, Queen) | wyverns (several mobs); snakes ❓ |: |
 | 8.8 | **Hitbox size**: a mod mob's size other than its template's | all | to investigate |
 | 8.9 | **Sound making tool**: `cargo creature sounds` with a per-mod source list | vulture → all | vulture only |
 
@@ -219,15 +219,15 @@ Not shared: the Wyverns dimension, its staff and the Harpy Queen.
 
 ## 10. Open questions
 
-- ~~Q1 — Incubator: fuel or heat from blocks? One egg or several?~~ Fuel like a furnace, one egg, a set temperature;
+- ~~Q1: Incubator: fuel or heat from blocks? One egg or several?~~ Fuel like a furnace, one egg, a set temperature;
   the hotter, the more fuel; wrong temperature cracks the egg (§4.1).
-- ~~Q2 — Who owns a hatched creature?~~ The player who put the egg in.
-- ~~Q6 — When does a wrong temperature crack the egg?~~ After a few seconds' grace.
-- ~~Q7 — Naming?~~ A naming screen opens when it hatches, as in Mo' Creatures.
+- ~~Q2: Who owns a hatched creature?~~ The player who put the egg in.
+- ~~Q6: When does a wrong temperature crack the egg?~~ After a few seconds' grace.
+- ~~Q7: Naming?~~ A naming screen opens when it hatches, as in Mo' Creatures.
 - ~~Temperature scale~~ 0 to 150 °C, any whole value; a different temperature per species.
-- ~~Q4 — Can eggs hatch placed in the world?~~ No, only in the incubator.
+- ~~Q4: Can eggs hatch placed in the world?~~ No, only in the incubator.
 - ~~Q3~~ Tolerance ±10 °C, faster the closer; the recipe as designed; fuel use × (setting / 50), 2 °C/s heating, 1 °C/s
   cooling (§4.1).
-- Q8 — Filled jars: one item per creature mod (own texture), or one `creature:glass_jar` holding anything?
-- Q9 — Can a filled jar be placed as a decorative block?
-- Q5 — The tab's order: mods by folder name (now), or a chosen order?
+- Q8: Filled jars: one item per creature mod (own texture), or one `creature:glass_jar` holding anything?
+- Q9: Can a filled jar be placed as a decorative block?
+- Q5: The tab's order: mods by folder name (now), or a chosen order?

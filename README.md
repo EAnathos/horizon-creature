@@ -1,4 +1,4 @@
-# Horizon Creature — creature mods for Minecraft Horizon
+# Horizon Creature: creature mods for Minecraft Horizon
 
 A series of creature mods for [Minecraft Horizon](https://playhorizon.dev), the Rust reimplementation of Minecraft Java
 26.3. Each mod is independent and requires one shared library, **Horizon Creature**. All their items share one creative
@@ -47,6 +47,8 @@ The tools (`tools/`, Rust, `cargo creature <command>`):
 | `cargo creature model <mod> [model]` | Converts a mod's Blockbench model into Rust (`native/api/src/model.rs`) |
 | `cargo creature sounds <mod> [folder]` | Makes a mod's `.ogg` files from freesound downloads (vulture) |
 | `cargo creature pack <module>` | Packages a module's native half into `target/<id>.hnmod` |
+| `cargo creature build [mod...]` | Builds the library and the mods into `target/dist/`, without installing |
+| `cargo creature check` | Checks the repository's consistency (also run by CI) |
 | `cargo creature install [--instance <name>] [mod...]` | Builds and installs the library and the mods, then runs the native build |
 
 ## Repository
@@ -57,3 +59,4 @@ The tools (`tools/`, Rust, `cargo creature <command>`):
 | `mods/<mod>/` | One folder per mod: `content/`, `native/`, `assets/models/`, `SPECS.md`, `README.md`, `module.toml` |
 | `tools/` | The build tools |
 | `docs/` | Series-wide documentation |
+| `.github/workflows/ci.yml` | CI: format, lint, tests, `cargo creature check`, build with the packages as an artifact |

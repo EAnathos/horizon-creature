@@ -37,8 +37,12 @@ wyverns, Harpy Queen boss; also requires `butterflies`), `snakes`, `worms` (spec
   (`.hmod`) and `native/` (`.hnmod`), always with the library, installs them in the instance (default `creature-dev`) and
   runs its native build. The launcher's Play button ignores a bundle built from a folder: it must be installed as a
   `.hnmod`.
-- Tools are Rust (`tools/`, commands `list`, `tab`, `model`, `sounds`, `pack`, `install`; alias in
+- Tools are Rust (`tools/`, commands `list`, `tab`, `model`, `sounds`, `pack`, `build`, `check`, `install`; alias in
   `.cargo/config.toml`).
+- Before committing: rustfmt (tools and native code, `rustfmt.toml`), Clippy `-D warnings` on the tools,
+  `cargo creature check`; CI (`.github/workflows/ci.yml`) runs them and `cargo creature build`. CI can't compile the
+  native crates: run `cargo creature install` after native changes.
+- No em dash in docs or text.
 - The launcher binary is `~/Téléchargements/horizon-launcher.AppImage` (override with `HORIZON_LAUNCHER`).
 
 ## Known API constraints

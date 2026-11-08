@@ -6,6 +6,8 @@
 //! cargo creature model <mod> [model]          # mods/<mod>/assets/models/<model>.bbmodel -> the mod's native/api/src/
 //! cargo creature sounds <mod> [folder]        # freesound downloads (default sounds-src/) -> the mod's sounds (vulture)
 //! cargo creature pack <module>                # a module's native/ -> target/<id>.hnmod
+//! cargo creature build [mod...]               # builds the library and the mods (default: all) into target/dist/
+//! cargo creature check                        # the repository's consistency (tab, manifests, pins, lang, JSON, docs)
 //! cargo creature install [--instance <name>] [mod...]
 //!                                             # builds the library and the mods (default: all), installs them in the
 //!                                             # instance (default creature-dev), runs its native build
@@ -13,6 +15,8 @@
 //!
 //! A module is the library (`creature`) or a mod's folder name under `mods/`. `cargo creature` is an alias
 //! (`.cargo/config.toml`) for `cargo run --release --manifest-path tools/Cargo.toml --`.
+mod build;
+mod check;
 mod install;
 mod model;
 mod modules;
@@ -34,7 +38,7 @@ pub fn root() -> PathBuf {
 pub type Result<T = ()> = std::result::Result<T, String>;
 
 const USAGE: &str = "usage: cargo creature list | tab | model <mod> [model] | sounds <mod> [folder] | pack <module> \
-                     | install [--instance <name>] [mod...]";
+                     | build [mod...] | check | install [--instance <name>] [mod...]";
 
 fn list() -> Result {
     for m in std::iter::once(modules::library()?).chain(modules::mods()?) {
@@ -42,7 +46,11 @@ fn list() -> Result {
             .into_iter()
             .filter_map(|(name, has)| has.then_some(name))
             .collect();
-        let parts = if parts.is_empty() { "spec only".to_owned() } else { parts.join(" + ") };
+        let parts = if parts.is_empty() {
+            "spec only".to_owned()
+        } else {
+            parts.join(" + ")
+        };
         let requires = if m.requires.is_empty() {
             String::new()
         } else {
@@ -79,6 +87,8 @@ fn main() -> ExitCode {
             .ok_or(USAGE.into())
             .and_then(modules::find)
             .and_then(|m| pack::run(&m).map(|_| ())),
+        Some("build") => build::run(&args[1..]),
+        Some("check") => check::run(),
         Some("install") => install(&args[1..]),
         _ => Err(USAGE.into()),
     };

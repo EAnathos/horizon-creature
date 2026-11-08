@@ -1,4 +1,4 @@
-# Wyverns — specification (v0.2, draft)
+# Wyverns: specification (v0.2, draft)
 
 A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): a new **dark, mysterious,
 mystical and mountainous dimension** ✅, reached with a staff ✅, peopled by **harpies** and **wyverns** ✅ and ruled by
@@ -61,7 +61,7 @@ eggs, the Queen) is built and tested in the Overworld meanwhile ✅; the staff a
   **The return trip uses a charge too** ✅: 2 round trips per staff. Broken when empty; **cannot be repaired** ✅.
 - A portal may come later ❓.
 
-## 3. The Wyvern Dimension ✅ dark, mysterious, mystical — one biome, mountainous
+## 3. The Wyvern Dimension ✅ dark, mysterious, mystical; one biome, mountainous
 
 - **Name** ✅: the **Wyvern Dimension** (`wyverns:wyvern_dimension`).
 - **One biome** ✅, **mountainous** ✅: jagged violet-grey peaks, deep ravines with mist pooling in them, floating rock
@@ -112,7 +112,7 @@ Four species ✅, inspired by the variety of Mo' Creatures' wyverns (our own des
 
 | Species ✅ | Element | Proposal |
 |---|---|---|
-| Wyvern | — | Bite and tail strike; the most common |
+| Wyvern | none | Bite and tail strike; the most common |
 | Fire wyvern | Fire | Fire breath (sets the target on fire), immune to fire and lava ❓ |
 | Ice wyvern | Ice | Frost breath: slowness and freezing ❓, immune to freezing |
 | Poison wyvern | Poison | Poison spit, tail sting (poison) |
@@ -182,9 +182,9 @@ Four species ✅, inspired by the variety of Mo' Creatures' wyverns (our own des
 
 | Phase | Health | Behaviour |
 |---|---|---|
-| 1 — Sovereign | 100–60 % | Melee combos, feather storm, a dive every ~25 s |
-| 2 — Tempest | 60–30 % | Adds tornadoes and the shriek; calls 2 ranged harpies; dive every ~18 s |
-| 3 — Fury | below 30 % | Faster everything; **chained dives** (2–3 in a row); wind pulls players towards the crater's centre; the rim's roosts empty |
+| 1: Sovereign | 100–60 % | Melee combos, feather storm, a dive every ~25 s |
+| 2: Tempest | 60–30 % | Adds tornadoes and the shriek; calls 2 ranged harpies; dive every ~18 s |
+| 3: Fury | below 30 % | Faster everything; **chained dives** (2–3 in a row); wind pulls players towards the crater's centre; the rim's roosts empty |
 
 - An attack pattern with cooldowns, never the same attack twice in a row ❓.
 
@@ -214,19 +214,19 @@ The harpies covet wyvern eggs: the Queen comes back for one.
 
 ## 8. Open questions
 
-- ~~Q2 — Access to the dimension~~ A four-use staff (netherite, butterfly dust, stick, eye of ender).
+- ~~Q2: Access to the dimension~~ A four-use staff (netherite, butterfly dust, stick, eye of ender).
 - ~~Q1 (part)~~ One mountainous biome; the Queen lives in a crater.
 - ~~Q3~~ Ranged harpies shoot feathers. ~~Q4~~ Wild wyverns are neutral, hostile once hurt.
 - ~~Q5 / Q6 / Q7 (part)~~ Eggs by killing wyverns, hotter than snakes; grown in 1 h, ridden from 40 min with a saddle; the
   rider controls the breath.
-- ~~Q8 — No custom dimensions yet?~~ Wait, and look at it later.
-- ~~Q9 — Staff?~~ Netherite ingot; the return trip uses a charge and brings you back where you left the Overworld; not
+- ~~Q8: No custom dimensions yet?~~ Wait, and look at it later.
+- ~~Q9: Staff?~~ Netherite ingot; the return trip uses a charge and brings you back where you left the Overworld; not
   repairable.
 - ~~Q11 (part) / Q12~~ A different temperature per species; our own saddle and recipe.
 - ~~Q10~~ The Wyvern Dimension and the Wyvern Staff; blocks and structures as designed (§3).
 - ~~Q11 (part)~~ 15 % egg drop.
 - ~~Q13 (part)~~ One Queen at a time, three phases, the Harpy Head trophy; summoned again with a Storm Offering on her
   Bone Throne (§6.6).
-- Q11 — The temperatures per species (§5.1).
-- Q15 — The Queen's numbers (§6.2), to tune in game.
-- Q14 — Can the player tame a harpy's wyvern after killing its rider, or only hatched ones?
+- Q11: The temperatures per species (§5.1).
+- Q15: The Queen's numbers (§6.2), to tune in game.
+- Q14: Can the player tame a harpy's wyvern after killing its rider, or only hatched ones?

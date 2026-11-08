@@ -1,4 +1,4 @@
-# Butterflies — specification (v0.2, draft)
+# Butterflies: specification (v0.2, draft)
 
 A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): butterflies that bring life to
 flowery places, that you catch in a glass jar and settle where you like. Deliberately small in scope ✅.
@@ -30,7 +30,7 @@ flowery places, that you catch in a glass jar and settle where you like. Deliber
 - Wings beat in short erratic flights; it lands on flowers and folds its wings.
 - **Ambient** and harmless: 1 HP ❓, no attack. Flees a sprinting player ❓.
 - **Spawning** ❓: daytime, fair weather, near flowers, 1–3 together; at night they rest on leaves and flowers (no flight),
-  and wild ones may despawn — settled ones never ✅.
+  and wild ones may despawn; settled ones never ✅.
 - Sound: a faint flutter, or none ❓.
 
 ## 3. Catching and settling ✅
@@ -59,8 +59,8 @@ flowery places, that you catch in a glass jar and settle where you like. Deliber
 
 ## 6. Open questions
 
-- ~~Q1 — Species?~~ One species, several colours and patterns.
-- ~~Q2 — Catching?~~ With a glass jar; released, it keeps to an area.
-- ~~Q3 — Butterfly dust?~~ Dropped when a butterfly is killed; one item for all colours.
-- Q4 — The settled area: flowers within 8 blocks of the anchor flower (§3)?
-- Q5 — Day only, or moths at night too?
+- ~~Q1: Species?~~ One species, several colours and patterns.
+- ~~Q2: Catching?~~ With a glass jar; released, it keeps to an area.
+- ~~Q3: Butterfly dust?~~ Dropped when a butterfly is killed; one item for all colours.
+- Q4: The settled area: flowers within 8 blocks of the anchor flower (§3)?
+- Q5: Day only, or moths at night too?

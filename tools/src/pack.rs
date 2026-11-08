@@ -20,16 +20,18 @@ pub fn run(module: &crate::modules::Module) -> crate::Result<PathBuf> {
         .native()
         .ok_or_else(|| format!("{} has no native part", module.id))?;
     let manifest_path = bundle.join("horizon-mixin.toml");
-    let toml = std::fs::read_to_string(&manifest_path)
-        .map_err(|e| format!("{}: {e}", manifest_path.display()))?;
+    let toml = std::fs::read_to_string(&manifest_path).map_err(|e| format!("{}: {e}", manifest_path.display()))?;
     let id = toml_value(&toml, "id").ok_or("horizon-mixin.toml has no id")?;
     if id != module.id {
-        return Err(format!("{}: id {id}, but module.toml says {}", manifest_path.display(), module.id));
+        return Err(format!(
+            "{}: id {id}, but module.toml says {}",
+            manifest_path.display(),
+            module.id
+        ));
     }
     let out = root.join(format!("target/{id}.hnmod"));
     let version = toml_value(&toml, "version").ok_or("horizon-mixin.toml has no version")?;
-    let horizon = toml_value(&toml, "horizon_revision")
-        .ok_or("horizon-mixin.toml pins no horizon_revision")?;
+    let horizon = toml_value(&toml, "horizon_revision").ok_or("horizon-mixin.toml pins no horizon_revision")?;
     let manifest = format!(
         "{{\n  \"game\": \"26.3\",\n  \"horizon\": \"{horizon}\",\n  \"id\": \"{id}\",\n  \"mixins\": \"{MIXINS}\",\n  \
          \"schema\": 1,\n  \"version\": \"{version}\"\n}}\n"
@@ -62,11 +64,7 @@ pub fn run(module: &crate::modules::Module) -> crate::Result<PathBuf> {
         add(format!("mixins/{id}/{rel}"), &bytes)?;
     }
     zip.finish().map_err(|e| e.to_string())?;
-    println!(
-        "{}: {} files, version {version}",
-        out.display(),
-        files.len()
-    );
+    println!("{}: {} files, version {version}", out.display(), files.len());
     Ok(out)
 }
 
@@ -88,12 +86,7 @@ fn collect(dir: &Path, out: &mut Vec<PathBuf>) -> crate::Result {
 /// The first `key = "value"` line's value.
 fn toml_value(toml: &str, key: &str) -> Option<String> {
     toml.lines().find_map(|line| {
-        let rest = line
-            .trim()
-            .strip_prefix(key)?
-            .trim_start()
-            .strip_prefix('=')?
-            .trim();
+        let rest = line.trim().strip_prefix(key)?.trim_start().strip_prefix('=')?.trim();
         Some(rest.strip_prefix('"')?.strip_suffix('"')?.to_owned())
     })
 }

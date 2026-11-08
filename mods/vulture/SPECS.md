@@ -1,4 +1,4 @@
-# Vulture — specification (v0.2)
+# Vulture: specification (v0.2)
 
 A mod of the **Horizon Creature** series for **Minecraft Horizon** (a Rust reimplementation of Minecraft Java 26.3).
 It adds a wild vulture that you tame by throwing raw chicken at it, ride, fit with chests, that catches creatures in its
@@ -83,7 +83,7 @@ library shares are described there; this spec gives the vulture's own rules and 
 | **Riding a mod entity and flying it** | ✅ phase 0 (2026-11-07) | `/ride` accepts any mob; Horizon copies the rider's keys into `Mob.rider` (forward, strafe, jump, sprint), which a goal reads to set the speed. Internal fields: Horizon revision pinned. Right-click → mount: a mixin injection that calls `start_riding` (`run_command` is refused during a player's turn). No cheats needed. |
 | Carrying an entity (talons) | ❓ | Probably by making a creature another's passenger, or by teleporting it every tick. To check. |
 
-### 1.2 Phase 0 — technical prototype, before anything else
+### 1.2 Phase 0: technical prototype, before anything else
 
 1. Declare `vulture:vulture` (a copy of the wandering trader), spawn it with `/summon` and draw it with a cube.
 2. Mount a player on it and read their keys (WASD, Space, Ctrl) on the server.
@@ -128,7 +128,7 @@ Inspired by real species, each with its own texture:
 Variant names are simple colour names ✅, so players need not know the species.
 
 - A baby takes the variant of one of its parents (50/50), with a ~5 % chance of mutating to a random variant ✅.
-- Secondary markings (spots, darker wings) could multiply the combinations, as for horses — **later** ✅ (v1 = the 5
+- Secondary markings (spots, darker wings) could multiply the combinations, as for horses: **later** ✅ (v1 = the 5
   variants).
 
 ## 4. Wild vulture
@@ -137,7 +137,7 @@ Variant names are simple colour names ✅, so players need not know the species.
 |---|---|
 | Size (hitbox) | ~1.2 × 1.0 blocks; visual wingspan ~2.5 blocks in flight. Horizon gives a mod mob its template's size (the trader's 0.6 × 1.95): we try overriding it at spawn, else we keep the trader's ✅ |
 | Behaviour ✅ | **Neutral and retaliates**: attacks whoever hits it (3 damage), and nearby vultures join in, like wolves/llamas |
-| Biomes ✅ | Desert, badlands, savanna — groups of 1–3 |
+| Biomes ✅ | Desert, badlands, savanna; groups of 1–3 |
 | Wild flight | Slow circles high up, lands on high points |
 | Scavenger | Drawn to meat on the ground and recently dead mobs (~16 blocks) |
 | Drops ✅ | 0–2 **vulture feathers** + 1–2 **raw vulture meat** (cookable, ordinary meat ✅) |
@@ -238,6 +238,6 @@ Variant names are simple colour names ✅, so players need not know the species.
 
 ## 10. Remaining open questions
 
-- ~~Q26 — If phase 0 shows a mod entity cannot be ridden: A, B or C (§1.2)?~~ Moot: phase 0 succeeded without any of the
+- ~~Q26: If phase 0 shows a mod entity cannot be ridden: A, B or C (§1.2)?~~ Moot: phase 0 succeeded without any of the
   three options (2026-11-07).
 - ~~Extra stamina cost when carrying someone: +50 %?~~ Decided: +50 % (§6.4).

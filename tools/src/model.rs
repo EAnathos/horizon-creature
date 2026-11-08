@@ -16,11 +16,14 @@ pub fn run(module: &str, name: Option<&str>) -> crate::Result {
     let m = crate::modules::find(module)?;
     let name = name.unwrap_or(&m.id);
     let src = m.dir.join(format!("assets/models/{name}.bbmodel"));
-    let file = if name == m.id { "model.rs".to_owned() } else { format!("model_{name}.rs") };
+    let file = if name == m.id {
+        "model.rs".to_owned()
+    } else {
+        format!("model_{name}.rs")
+    };
     let out = m.dir.join("native/api/src").join(file);
     let text = std::fs::read_to_string(&src).map_err(|e| format!("{}: {e}", src.display()))?;
-    let model: Value =
-        serde_json::from_str(&text).map_err(|e| format!("{}: {e}", src.display()))?;
+    let model: Value = serde_json::from_str(&text).map_err(|e| format!("{}: {e}", src.display()))?;
     let source = src.strip_prefix(crate::root()).unwrap_or(&src).display().to_string();
     let rust = convert(&model, &format!("{module} {name}"), &source, name)?;
     std::fs::write(&out, rust).map_err(|e| format!("{}: {e}", out.display()))?;
@@ -66,7 +69,7 @@ fn convert(model: &Value, args: &str, source: &str, name: &str) -> crate::Result
     );
     let _ = writeln!(
         out,
-        "pub static {}: Part = {};",
+        "#[rustfmt::skip]\npub static {}: Part = {};",
         name.to_uppercase(),
         tree.part(root, 0)?
     );
@@ -82,9 +85,7 @@ struct Tree<'a> {
 impl Tree<'_> {
     fn cube(&self, e: &Value) -> crate::Result<String> {
         let name = e["name"].as_str().unwrap_or("");
-        if e.get("rotation")
-            .is_some_and(|r| vector(r).iter().any(|&v| v != 0.0))
-        {
+        if e.get("rotation").is_some_and(|r| vector(r).iter().any(|&v| v != 0.0)) {
             return Err(format!("cube {name} is rotated: rotate its group instead"));
         }
         let mut uvs = Vec::new();
@@ -106,19 +107,13 @@ impl Tree<'_> {
 
     fn part(&self, node: &Value, depth: usize) -> crate::Result<String> {
         let uuid = node["uuid"].as_str().unwrap_or("");
-        let g = self
-            .groups
-            .get(uuid)
-            .ok_or_else(|| format!("no group {uuid}"))?;
+        let g = self.groups.get(uuid).ok_or_else(|| format!("no group {uuid}"))?;
         let pad = "    ".repeat(depth + 1);
         let mut cubes = String::new();
         let mut children = String::new();
         for child in node["children"].as_array().into_iter().flatten() {
             if let Some(id) = child.as_str() {
-                let e = self
-                    .elements
-                    .get(id)
-                    .ok_or_else(|| format!("no element {id}"))?;
+                let e = self.elements.get(id).ok_or_else(|| format!("no element {id}"))?;
                 if e["export"].as_bool() != Some(false) {
                     let _ = write!(cubes, "\n{pad}    {},", self.cube(e)?);
                 }
@@ -139,11 +134,7 @@ impl Tree<'_> {
 }
 
 fn vector(v: &Value) -> Vec<f64> {
-    v.as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(Value::as_f64)
-        .collect()
+    v.as_array().into_iter().flatten().filter_map(Value::as_f64).collect()
 }
 
 /// `[1.0, 0.25]`: `{:?}` keeps a `.0` on whole numbers, so every value is an `f32` literal.
@@ -182,6 +173,10 @@ mod tests {
             "groups": [{"uuid": "g", "name": "vulture", "origin": [0, 0, 0]}],
             "outliner": [{"uuid": "g", "children": ["c"]}]
         });
-        assert!(convert(&model, "vulture", "vulture.bbmodel", "vulture").unwrap_err().contains("rotate its group"));
+        assert!(
+            convert(&model, "vulture", "vulture.bbmodel", "vulture")
+                .unwrap_err()
+                .contains("rotate its group")
+        );
     }
 }

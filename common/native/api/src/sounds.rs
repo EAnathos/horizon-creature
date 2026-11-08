@@ -62,13 +62,10 @@ pub fn tick_post(host: &mut dyn Host, event: &EntityTickPostEvent<'_>, voice: &V
         });
     }
     if let Some(now) = health(host, id) {
-        let before = HEALTH
-            .lock()
-            .ok()
-            .and_then(|mut h| {
-                let h = h.get_or_insert_with(HashMap::new);
-                if now <= 0.0 { h.remove(&id) } else { h.insert(id, now) }
-            });
+        let before = HEALTH.lock().ok().and_then(|mut h| {
+            let h = h.get_or_insert_with(HashMap::new);
+            if now <= 0.0 { h.remove(&id) } else { h.insert(id, now) }
+        });
         if let Some(before) = before.filter(|&b| now < b && b > 0.0) {
             // A slightly different voice per mob, as `LivingEntity.getVoicePitch` varies; harder hits sound higher.
             let pitch = 0.9 + (id % 5) as f32 * 0.05;

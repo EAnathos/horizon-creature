@@ -1,12 +1,7 @@
 // Right-click on a vulture: the player mounts it, as on a horse (`interact_mount`) or with `/ride`.
 // The trait hook cannot run `/ride` in single player (`native_run_command` refuses during the player's
 // turn), hence this injection, compiled into the game, which calls `start_riding` directly.
-fn vulture_mount_click(
-    game: &mut crate::game::Game<'_>,
-    entity: i32,
-    kind: &str,
-    claimed: &mut bool,
-) {
+fn vulture_mount_click(game: &mut crate::game::Game<'_>, entity: i32, kind: &str, claimed: &mut bool) {
     if *claimed || kind != "vulture:vulture" {
         return;
     }

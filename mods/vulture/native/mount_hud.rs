@@ -1,12 +1,7 @@
 // The ridden vulture's hearts: only the ones it has, without empty hearts for the health it lost
 // (`Hud.extractVehicleHealth` draws its whole max health). Returns the number of hearts drawn,
 // which the HUD uses to place the rows above.
-fn vulture_mount_hud(
-    game: &mut Game<'_>,
-    batch: &mut HudBatch,
-    w: i32,
-    h: i32,
-) -> ::core::ops::ControlFlow<i32> {
+fn vulture_mount_hud(game: &mut Game<'_>, batch: &mut HudBatch, w: i32, h: i32) -> ::core::ops::ControlFlow<i32> {
     use ::core::ops::ControlFlow;
     let Some(i) = game.mount_index() else {
         return ControlFlow::Continue(());

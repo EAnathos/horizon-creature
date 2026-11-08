@@ -137,7 +137,11 @@ fn pose(name: &str, mob: &NativeMobRender<'_>) -> [f32; 3] {
     let lag = (mob.age * 0.5 - 0.8).sin();
     // On the ground the wings hang along the body and the tips fold back up on the body side, under the beige
     // coverts.
-    let (arm, tip) = if flying { (beat * 35.0, lag * 20.0) } else { (85.0, 165.0) };
+    let (arm, tip) = if flying {
+        (beat * 35.0, lag * 20.0)
+    } else {
+        (85.0, 165.0)
+    };
     // Walking: like a vanilla quadruped's legs; in flight, the legs are tucked in.
     let step = (mob.walk_position * 0.6662).cos() * 1.4 * mob.walk_speed.min(1.0);
     let leg = if flying { 60.0 } else { step.to_degrees() };
@@ -185,7 +189,9 @@ impl Hooks for Vulture {
         if mob.kind != KIND {
             return Flow::Continue;
         }
-        creature::model::draw(host, &mut *event.draw, &model::VULTURE, TEXTURE, &|part| pose(part, mob));
+        creature::model::draw(host, &mut *event.draw, &model::VULTURE, TEXTURE, &|part| {
+            pose(part, mob)
+        });
         Flow::Cancel
     }
 }

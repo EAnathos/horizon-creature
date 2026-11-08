@@ -1,4 +1,4 @@
-# Worms — specification (v0.2, draft)
+# Worms: specification (v0.2, draft)
 
 A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): small earthworms you find on
 the dirt, carry in a glass jar and settle in your garden, where they stay and slowly make crops grow faster. Simple,
@@ -48,9 +48,9 @@ like Butterflies ✅.
 
 ## 6. Open questions
 
-- ~~Q1 — What a worm does?~~ Faster crop growth, a slow bonus.
-- ~~Q2 — The garden?~~ At least 10 connected farmland.
-- ~~Q3 / Q4 — Finding and catching?~~ In nature on the dirt; in a glass jar.
-- ~~Q5 — Bait / chicken food?~~ No.
-- ~~Q6 — Multiplying?~~ No: worms don't multiply.
-- ~~Q7 — The bonus?~~ +10 % per worm, capped at +30 % per garden.
+- ~~Q1: What a worm does?~~ Faster crop growth, a slow bonus.
+- ~~Q2: The garden?~~ At least 10 connected farmland.
+- ~~Q3 / Q4: Finding and catching?~~ In nature on the dirt; in a glass jar.
+- ~~Q5: Bait / chicken food?~~ No.
+- ~~Q6: Multiplying?~~ No: worms don't multiply.
+- ~~Q7: The bonus?~~ +10 % per worm, capped at +30 % per garden.

@@ -48,7 +48,9 @@ impl Clip {
 
 pub fn run(module: &str, folder: Option<&str>) -> crate::Result {
     if module != "vulture" {
-        return Err(format!("no sounds are made for {module} yet: only vulture's (tools/src/sounds.rs)"));
+        return Err(format!(
+            "no sounds are made for {module} yet: only vulture's (tools/src/sounds.rs)"
+        ));
     }
     let root = crate::root().join("mods/vulture");
     let src = folder.map_or_else(|| crate::root().join("sounds-src"), PathBuf::from);
@@ -77,10 +79,7 @@ pub fn run(module: &str, folder: Option<&str>) -> crate::Result {
     make("death", &b, Clip::new(0.0, 2.4).pitch(0.65).fade(0.9))?;
     // Flaps: three clean beats of the big wings, with their whoosh.
     let wings = source(WINGS)?;
-    for (i, (start, length)) in [(1.0, 0.5), (2.42, 0.7), (3.7, 0.5)]
-        .into_iter()
-        .enumerate()
-    {
+    for (i, (start, length)) in [(1.0, 0.5), (2.42, 0.7), (3.7, 0.5)].into_iter().enumerate() {
         make(
             &format!("flap{}", i + 1),
             &wings,
@@ -104,12 +103,7 @@ fn find(folder: &Path, number: u32) -> crate::Result<PathBuf> {
             let name = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
             name.starts_with(&prefix.0) || name.starts_with(&prefix.1)
         })
-        .ok_or_else(|| {
-            format!(
-                "freesound sound {number} is missing from {}",
-                folder.display()
-            )
-        })
+        .ok_or_else(|| format!("freesound sound {number} is missing from {}", folder.display()))
 }
 
 fn make(out: &Path, name: &str, path: &Path, clip: &Clip) -> crate::Result {
@@ -157,10 +151,7 @@ fn make(out: &Path, name: &str, path: &Path, clip: &Clip) -> crate::Result {
         return Err(format!("ffmpeg failed on {name}.ogg ({status})"));
     }
     let file = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-    println!(
-        "{name}.ogg  <- {file} [{:.2}s, x{}]",
-        clip.start, clip.pitch
-    );
+    println!("{name}.ogg  <- {file} [{:.2}s, x{}]", clip.start, clip.pitch);
     Ok(())
 }
 
@@ -168,14 +159,10 @@ fn make(out: &Path, name: &str, path: &Path, clip: &Clip) -> crate::Result {
 fn check_sounds_json(root: &Path, out: &Path) -> crate::Result {
     let path = root.join("content/assets/vulture/sounds.json");
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-    let events: Value =
-        serde_json::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?;
+    let events: Value = serde_json::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?;
     for event in events.as_object().into_iter().flat_map(|o| o.values()) {
         for entry in event["sounds"].as_array().into_iter().flatten() {
-            let id = entry
-                .as_str()
-                .or_else(|| entry["name"].as_str())
-                .unwrap_or("");
+            let id = entry.as_str().or_else(|| entry["name"].as_str()).unwrap_or("");
             let name = id.rsplit('/').next().unwrap_or(id);
             if !out.join(format!("{name}.ogg")).exists() {
                 return Err(format!("sounds.json names {name}.ogg, which was not made"));
