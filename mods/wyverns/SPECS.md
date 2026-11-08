@@ -75,7 +75,7 @@ eggs, the Queen) is built and tested in the Overworld meanwhile ✅; the staff a
 | **Duskstone** | The dimension's dark violet stone; cobbled duskstone, bricks, polished, chiseled (a wyvern head), stairs, slabs, walls |
 | **Ashen soil** / **Gloommoss** | The ground: grey soil, with a dark teal moss on top (spreads like grass) |
 | **Wraithwood** | Twisted trees with black bark and pale violet leaves; logs, planks and the whole wood set (door, trapdoor, fence…) |
-| **Stormglass** | Cold blue crystal clusters on the cliffs, the main light; mined into **stormglass shards** ❓ (a crafting material) |
+| **Stormglass** | Cold blue crystal clusters on the cliffs, the main light; mined into **stormglass shards** ✅ (a crafting material, the Storm Offering's) |
 | **Hollow bloom** | A drooping violet flower that glows faintly at night |
 | **Wyvern bone block** / **wyvern skull** | Giant bones half-buried in the cliffs, decorative skulls (placeable) |
 | **Scorched**, **frosted** and **venom-stained duskstone** | The duskstone around each wyvern species' lair: scorched (glowing cracks, hurts like magma), frosted (slippery like ice), venom-stained (poisons whoever stands on it) |
@@ -151,14 +151,14 @@ Four species ✅, inspired by the variety of Mo' Creatures' wyverns (our own des
 ### 6.1 Home and look
 
 - She lives in **a crater** ✅ among the mountains: a vast bowl of shattered duskstone, Stormglass shards around the rim,
-  roosts on the slopes, her throne of bone and feathers in the centre. Entering the bowl wakes her ❓.
+  roosts on the slopes, her **Bone Throne** in the centre (an unbreakable block). The first time, entering the bowl wakes her ✅.
 - **Much bigger** than a harpy (~3.5 blocks tall ❓), **muscular, powerful, intimidating**, a boss at a glance ✅:
   dark slate plumage, a pale bone crown, scarred wings (span ~8 blocks ❓), glowing violet eyes, talons of black iron.
 
 ### 6.2 Numbers
 
-- **One Queen** ✅ per world: she lives in the crater and does not come back once killed ❓ (the crater stays, its roosts
-  emptied).
+- **One Queen at a time** ✅: she lives in the crater; once killed she is gone until the player **summons her again**
+  (§6.6). The crater keeps the scars of the fight (her dives break blocks); the Bone Throne can't be broken.
 - Health **400** ❓ (the Wither 300, the Warden 500), armour 10 ❓, knockback resistance 0.8 ❓, immune to fall damage
   and to her own explosions and tornadoes.
 - A boss bar with her name ❓ (§1.1).
@@ -193,6 +193,20 @@ Four species ✅, inspired by the variety of Mo' Creatures' wyverns (our own des
 - The **Harpy Head trophy** ✅ (`wyverns:harpy_queen_head`): a placeable head of the Queen, on the floor or a wall, like
   vanilla mob heads; plus XP (500 ❓).
 
+### 6.6 Summoning her again ✅ (our design)
+
+The harpies covet wyvern eggs: the Queen comes back for one.
+
+- **Storm Offering** (`wyverns:storm_offering`), crafted from **1 wyvern egg** (any species) in the middle, **4 harpy
+  feathers** on the sides and **4 stormglass shards** in the corners. Unstackable.
+- **Right-click the Bone Throne** with it, in the crater, while no Queen is alive: the offering is placed on the throne
+  and the ritual starts.
+- **The ritual, 10 s**: the sky over the crater darkens, the wind rises and pulls loose items towards the throne,
+  lightning strikes the rim's stormglass, the roosts fill with harpies' cries; at the end, a tornado touches down on the
+  throne, the offering is gone, and the Queen lands from it with a shriek, at full health, starting in phase 1.
+- Refused (the offering stays in hand, with a message) if she is alive, or if the player is not in the crater.
+- Every fight gives the reward again (§6.5): a Harpy Head trophy per kill.
+
 ## 7. Out of scope for v1
 
 - Multiplayer (v2, the whole series).
@@ -211,7 +225,8 @@ Four species ✅, inspired by the variety of Mo' Creatures' wyverns (our own des
 - ~~Q11 (part) / Q12~~ A different temperature per species; our own saddle and recipe.
 - ~~Q10~~ The Wyvern Dimension and the Wyvern Staff; blocks and structures as designed (§3).
 - ~~Q11 (part)~~ 15 % egg drop.
-- ~~Q13 (part)~~ One Queen, three phases, the Harpy Head trophy.
+- ~~Q13 (part)~~ One Queen at a time, three phases, the Harpy Head trophy; summoned again with a Storm Offering on her
+  Bone Throne (§6.6).
 - Q11 — The temperatures per species (§5.1).
 - Q15 — The Queen's numbers (§6.2), to tune in game.
 - Q14 — Can the player tame a harpy's wyvern after killing its rider, or only hatched ones?

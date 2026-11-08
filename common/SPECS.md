@@ -88,10 +88,12 @@ Eggs hatch **only in the incubator** ✅ (a placed egg does nothing).
   times.
 - **Temperature** ✅: in **degrees, from 0 to 150 °C** ✅, set to **any whole value** ✅ (e.g. 134 °C), not a few
   stages. On the screen: a slider, with − / + buttons for single degrees ❓ (a text field if Horizon's screens have one ❓).
-- **The hotter, the more fuel it burns** ✅. Proposal ❓: a furnace's burn rate × (setting / 50), so 50 °C burns like a
-  furnace, 134 °C almost 3 times as fast, and below 10 °C almost nothing. The actual temperature moves towards the
-  setting by 2 °C per second ❓ while there is fuel, and cools by 1 °C per second ❓ without fuel, down to the room's
-  temperature ❓ (20 °C).
+- **The hotter, the more fuel it burns** ✅: a furnace's burn rate × (setting / 50) ✅. So 50 °C burns fuel like a
+  furnace, 38 °C (a snake egg) ×0.76, 134 °C (a fire wyvern egg) ×2.68 and 150 °C ×3; a coal (80 s in a furnace) lasts
+  ~105 s for a snake egg and ~30 s for a fire wyvern egg. A setting at or below the room's temperature (20 °C ✅) burns
+  nothing. The actual temperature moves towards the setting by **2 °C per second** ✅ while there is fuel, and cools by
+  **1 °C per second** ✅ without fuel, down to 20 °C: running out of fuel gives a few seconds before an egg leaves its
+  tolerance, then the grace, then it cracks.
 - Each egg needs **its own temperature** ✅ (each species a different one), with a **tolerance of ±10 °C** ✅, and **the
   closer, the faster it hatches** ✅: proposal ❓, full speed at the exact temperature, falling linearly to half speed at
   ±10 °C. Outside the tolerance, progress stops and the egg has **a few seconds' grace** ✅ (proposal: 5 s ❓, shown by a
@@ -224,7 +226,8 @@ Not shared: the Wyverns dimension, its staff and the Harpy Queen.
 - ~~Q7 — Naming?~~ A naming screen opens when it hatches, as in Mo' Creatures.
 - ~~Temperature scale~~ 0 to 150 °C, any whole value; a different temperature per species.
 - ~~Q4 — Can eggs hatch placed in the world?~~ No, only in the incubator.
-- ~~Q3~~ Tolerance ±10 °C, faster the closer; the recipe as designed. Still open: fuel use by temperature (§4.1).
+- ~~Q3~~ Tolerance ±10 °C, faster the closer; the recipe as designed; fuel use × (setting / 50), 2 °C/s heating, 1 °C/s
+  cooling (§4.1).
 - Q8 — Filled jars: one item per creature mod (own texture), or one `creature:glass_jar` holding anything?
 - Q9 — Can a filled jar be placed as a decorative block?
 - Q5 — The tab's order: mods by folder name (now), or a chosen order?
