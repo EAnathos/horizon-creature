@@ -49,18 +49,16 @@ Butterflies** ✅ (`butterflies`, [its spec](../butterflies/SPECS.md)): the staf
 3. A harpy riding a wyvern, both moving together.
 4. A boss bar for the Queen.
 
-If 1 is impossible today ❓: **A** contribute dimension support to Horizon; **B** a placeholder (a remote region of the
-Overworld, or the staff disabled) until it exists; **C** wait for Horizon. The rest of the mod (wyverns, harpies,
-eggs) can be built and tested in the Overworld meanwhile ✅ ("the dimension will be implemented later").
+If 1 is impossible today: **wait** for Horizon ✅, and look at it again later. The rest of the mod (wyverns, harpies,
+eggs, the Queen) is built and tested in the Overworld meanwhile ✅; the staff and the dimension come last.
 
 ## 2. The staff ✅
 
-- **Umbral Staff** ❓ (name), crafted from **1 netherite ingot** ❓ (or scrap ❓), **butterfly dust**, **a stick** and **an
-  eye of ender** ✅. Proposal: shaped, eye on top, dust and netherite in the middle, stick below.
-- **Four uses** ✅ (durability 4). Use: hold right-click for 3 s ❓ (purple particles gathering) → the player is
-  teleported to the dimension, to a safe spot; used in the dimension it brings the player back to where they left ❓
-  (or their spawn ❓). Each trip uses one charge ❓ (so 2 round trips). Broken when empty ✅.
-- Repairable ❓ (with butterfly dust on an anvil) — or not, so each trip is precious ❓.
+- **Umbral Staff** ❓ (name), crafted from **1 netherite ingot** ✅, **butterfly dust**, **a stick** and **an eye of
+  ender** ✅. Proposal: shaped, eye on top, dust and netherite in the middle, stick below.
+- **Four uses** ✅. Use: hold right-click for 3 s ❓ (purple particles gathering) → the player is teleported to the
+  dimension, to a safe spot. Used in the dimension, it brings the player **back to the Overworld, where they used it** ✅.
+  **The return trip uses a charge too** ✅: 2 round trips per staff. Broken when empty; **cannot be repaired** ✅.
 - A portal may come later ❓.
 
 ## 3. The dimension ✅ dark, mysterious, mystical — one biome, mountainous
@@ -114,15 +112,23 @@ Four species ✅, inspired by the variety of Mo' Creatures' wyverns (our own des
 ### 5.1 Eggs ✅
 
 - Eggs are obtained **by killing wyverns** ✅: proposal 20 % ❓ per wyvern, an egg of its species.
-- Incubated in the library's incubator **like a snake's egg, but hotter** ✅. Proposal ❓: **Very hot** (level 4) for
-  every species — or species-specific (fire 5, ice 3 ❓); ~20 min. Wrong temperature: the egg cracks.
+- Incubated in the library's incubator **like a snake's egg, but hotter** ✅, at **a different temperature per species**
+  ✅ (±3 °C ❓, ~20 min ❓; outside it for more than a few seconds, the egg cracks). Proposal ❓:
+
+  | Egg | Temperature ❓ |
+  |---|---|
+  | Ice wyvern | 64 °C |
+  | Wyvern | 91 °C |
+  | Poison wyvern | 107 °C |
+  | Fire wyvern | 134 °C |
 - It hatches as a **juvenile** wyvern tamed to the player who put the egg in ✅.
 
 ### 5.2 Growing up and riding ✅
 
 - From juvenile to **fully grown: 1 hour** ✅ (growing visibly; faster when fed ❓, with raw meat / its element's food ❓).
-- It **can be mounted from 40 minutes** ✅ (still a bit smaller and slower ❓), with a **saddle** ✅
-  (`wyverns:wyvern_saddle`, recipe ❓: leather + iron + harpy feathers ❓; or the vanilla saddle ❓).
+- It **can be mounted from 40 minutes** ✅ (still a bit smaller and slower ❓), with **its own saddle** ✅
+  (`wyverns:wyvern_saddle`, its own recipe ✅; proposal ❓: 5 leather in a U, 2 harpy feathers, 1 iron ingot in the
+  middle, 1 string).
 - Flight with stamina like the vulture, through the library (§8.1, §8.2) ✅; numbers per species ❓.
 - **The rider controls the breath** ✅: a key (the library's ridden special attack, §8.6) breathes the species' element
   where the rider looks; costs stamina ❓; the plain wyvern bites / tail-sweeps instead ❓.
@@ -186,10 +192,11 @@ Four species ✅, inspired by the variety of Mo' Creatures' wyverns (our own des
 - ~~Q3~~ Ranged harpies shoot feathers. ~~Q4~~ Wild wyverns are neutral, hostile once hurt.
 - ~~Q5 / Q6 / Q7 (part)~~ Eggs by killing wyverns, hotter than snakes; grown in 1 h, ridden from 40 min with a saddle; the
   rider controls the breath.
-- Q8 — If Horizon can't make custom dimensions yet: A, B or C (§1.2)?
-- Q9 — Staff: netherite ingot or scrap? Does the return trip use a charge? Where does it bring you back? Repairable?
+- ~~Q8 — No custom dimensions yet?~~ Wait, and look at it later.
+- ~~Q9 — Staff?~~ Netherite ingot; the return trip uses a charge and brings you back where you left the Overworld; not
+  repairable.
+- ~~Q11 (part) / Q12~~ A different temperature per species; our own saddle and recipe.
 - Q10 — Names (the dimension, the staff) and the block set (§3).
-- Q11 — Egg drop chance; one incubation temperature for all wyverns or one per species?
-- Q12 — Saddle: our own (recipe?) or vanilla's?
+- Q11 — Egg drop chance (20 %?) and the temperatures (§5.1).
 - Q13 — The Queen's numbers, phases and rewards (§6.2 – §6.5): to tune; does she come back?
 - Q14 — Can the player tame a harpy's wyvern after killing its rider, or only hatched ones?

@@ -33,17 +33,19 @@ colours and patterns, whose eggs you hatch in the library's incubator to raise a
 ## 3. Eggs and hatching ✅
 
 - Snakes **drop eggs** ✅: proposal 25 % on death ❓. The egg keeps the snake's colours and pattern (library §4.3) ❓.
-- The egg hatches only in the **incubator** ✅ at **Warm** ❓ (level 2), in ~10 min ❓; the wrong temperature cracks it.
-- When it's ready, **its owner has to name it, then it hatches** ✅ (library §5).
+- The egg hatches only in the **incubator** ✅ at **38 °C** ❓ (±3, the coolest egg of the series), in ~10 min ❓; outside it
+  for more than a few seconds, it cracks.
+- When it hatches, **a naming screen opens** ✅ (library §5) and the snake takes that name.
 - The hatchling is a **pet** ✅, tamed to the player who put the egg in ✅, bearing its name.
 
-## 4. The pet snake ❓
+## 4. The pet snake ✅
 
-- A baby that grows up in 20 min ❓.
-- Follows its owner, sits on command (right-click) ❓, never attacks its owner; attacks what attacks its owner, like a
-  wolf ❓ (with its poison bite).
-- Can ride on its owner's shoulder ❓ (like a parrot).
-- Heals with raw meat / eggs ❓.
+- **Does not follow** its owner ✅. Right-click toggles **sit** (stays put) / **wander** (roams around where it is, never
+  far ❓ — within 8 blocks of where it was told to wander ❓) ✅.
+- **Grab it onto your shoulder** ✅ (sneak + right-click ❓): it coils on the shoulder like a parrot, and comes off when
+  you sneak again ❓ or right-click a block ❓; it is then set to sit there.
+- Never attacks its owner. Defends its owner when on the shoulder ❓.
+- A baby that grows up in 20 min ❓. Heals with raw meat / eggs ❓.
 
 ## 5. Out of scope for v1
 
@@ -54,5 +56,5 @@ colours and patterns, whose eggs you hatch in the library's incubator to raise a
 - ~~Q1 / Q2 — Species and attitude?~~ One species, several colours and patterns, aggressive.
 - ~~Q3 / Q4 — Eggs and hatched snakes?~~ Dropped by snakes, hatched (named first) into a pet.
 - Q5 — Egg drop chance; incubation temperature and time.
-- Q6 — What the pet does: follow, sit, defend, shoulder?
+- ~~Q6 — What the pet does?~~ No following; sit or wander; can be put on the shoulder.
 - Q7 — Can two pets breed (laying an egg)?

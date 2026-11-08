@@ -9,8 +9,9 @@ use std::process::Command;
 
 use crate::modules::{self, Module};
 
-/// The test instance, from the time the repository held only the vulture.
-pub const DEFAULT_INSTANCE: &str = "vulture-dev";
+/// The test instance, by name (its id and folder are still `vulture-dev`, from the time the repository held only the
+/// vulture: the launcher renames an instance without moving it).
+pub const DEFAULT_INSTANCE: &str = "creature-dev";
 
 pub fn run(instance: &str, names: &[String]) -> crate::Result {
     let root = crate::root();
@@ -18,7 +19,8 @@ pub fn run(instance: &str, names: &[String]) -> crate::Result {
     let launcher = std::env::var("HORIZON_LAUNCHER")
         .map(PathBuf::from)
         .unwrap_or_else(|_| home.join("Téléchargements/horizon-launcher.AppImage"));
-    let game = home.join(".local/share/horizon/instances").join(instance);
+    let launcher = launcher.to_string_lossy().into_owned();
+    let (id, game) = find_instance(&launcher, instance)?;
 
     // The shared creative tab lists every mod's items: written before the library is built.
     crate::tab::run()?;
@@ -37,14 +39,13 @@ pub fn run(instance: &str, names: &[String]) -> crate::Result {
     for m in &chosen {
         install(&root, m, &game)?;
     }
-    let launcher = launcher.to_string_lossy().into_owned();
     run_in(
         &root,
         &launcher,
         &[
             "native-build",
             "--instance",
-            instance,
+            &id,
             "--trust-native-code",
             "--profile",
             "dev",
@@ -73,6 +74,22 @@ fn install(root: &Path, m: &Module, game: &Path) -> crate::Result {
         copy(&hnmod, &game.join("horizon-native-mods"))?;
     }
     Ok(())
+}
+
+/// The instance named `instance` (by name or id), from `horizon-launcher instance list --json`: its id and game folder.
+fn find_instance(launcher: &str, instance: &str) -> crate::Result<(String, PathBuf)> {
+    let out = Command::new(launcher)
+        .args(["instance", "list", "--json"])
+        .output()
+        .map_err(|e| format!("{launcher}: {e}"))?;
+    let list: serde_json::Value = serde_json::from_slice(&out.stdout)
+        .map_err(|e| format!("{launcher} instance list --json: {e}"))?;
+    list.as_array()
+        .into_iter()
+        .flatten()
+        .find(|i| i["name"] == instance || i["id"] == instance)
+        .and_then(|i| Some((i["id"].as_str()?.to_owned(), PathBuf::from(i["home"].as_str()?))))
+        .ok_or_else(|| format!("no instance {instance} in the launcher"))
 }
 
 fn run_in(dir: &Path, program: &str, args: &[&str]) -> crate::Result {

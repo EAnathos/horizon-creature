@@ -38,23 +38,20 @@ flowery places, that you catch in a glass jar and settle where you like. Deliber
 - **Caught with a glass jar** ✅ (library §6.1): right-click a butterfly with an empty jar.
 - **Released** from the jar on a block, it **won't leave a given area** around one or several blocks ✅. Proposal
   (library §6.2, rule "flower patch"):
-  - released **on a flower**, it settles on the **flower patch**: every flower connected to it (each within 3 blocks of
-    another), plus 3 blocks around and 4 blocks up. Plant more flowers next to the patch and its area grows: the player
-    designs a butterfly garden;
+  - released **on a flower**, that flower is its anchor: it roams over the **flowers within 8 blocks** of it, plus 2
+    blocks around them and 4 blocks up. The cap keeps the area small (at most ~20 × 20 blocks) even in a meadow or a
+    flower forest where flowers are everywhere; in a garden, the flower beds are its area;
   - released **anywhere else**, it stays within 4 blocks of the release block ❓ (a lantern, a planter on a balcony);
-  - if the patch's flowers are all broken, it flies off (no longer settled) ❓.
+  - if the anchor flower is broken, it moves its anchor to the nearest flower within 8 blocks, or flies off if there is
+    none ❓.
 - A filled jar can also be **placed as a decorative jar** ✅ ❓ (library §6.1, "display"), the butterfly fluttering
   inside, glowing faintly ❓.
 
 ## 4. Butterfly dust ✅
 
 - An item needed by Wyverns' dimension staff ✅ — and a possible dye ❓.
-- How to get it ❓. Proposals:
-  - **A** (gentle): a butterfly in a placed display jar sheds 1 dust every 10 min ❓, or a settled butterfly drops one now
-    and then on its flowers ❓;
-  - **B**: brushing a butterfly (vanilla brush) gives 1 dust, then it can't be brushed for 5 min ❓;
-  - **C**: a butterfly drops 1 dust when killed.
-- Coloured dust by the butterfly's colour (a dye of that colour) ❓.
+- **Dropped when a butterfly is killed** ✅ (1 dust ❓; Looting adds 1 ❓).
+- Coloured dust by the butterfly's colour (a dye of that colour) ❓, or one plain dust ❓.
 
 ## 5. Out of scope for v1
 
@@ -64,6 +61,6 @@ flowery places, that you catch in a glass jar and settle where you like. Deliber
 
 - ~~Q1 — Species?~~ One species, several colours and patterns.
 - ~~Q2 — Catching?~~ With a glass jar; released, it keeps to an area.
-- Q3 — How butterfly dust is obtained (A, B or C, §4)? Coloured dust as dyes?
-- Q4 — The settled area: the flower-patch rule (§3), or something else?
+- ~~Q3 — Butterfly dust?~~ Dropped when a butterfly is killed. Still open: coloured dust as dyes?
+- Q4 — The settled area: flowers within 8 blocks of the anchor flower (§3)?
 - Q5 — Day only, or moths at night too?

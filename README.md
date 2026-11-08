@@ -24,7 +24,7 @@ tab, "Horizon Creature". The game text is in English and French.
 
 ## Install and test
 
-You need the [Horizon launcher](https://playhorizon.dev) with a test instance (here `vulture-dev`), Rust (with
+You need the [Horizon launcher](https://playhorizon.dev) with a test instance (here `creature-dev`), Rust (with
 `cargo horizon-mod`, from Horizon's sources); ffmpeg to remake the sounds.
 
 ```sh

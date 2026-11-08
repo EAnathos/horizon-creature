@@ -122,7 +122,7 @@ tools/                  the Rust build tools (`cargo creature ...`), shared by e
 | `cargo creature model <mod> [model]` | `mods/<mod>/assets/models/<model>.bbmodel` → `native/api/src/model.rs` (`model_<model>.rs` for a model not named after the mod) |
 | `cargo creature sounds <mod> [folder]` | Makes the mod's `.ogg` files from freesound downloads (the vulture's only, for now) |
 | `cargo creature pack <module>` | A module's `native/` → `target/<id>.hnmod` |
-| `cargo creature install [--instance <name>] [mod...]` | Writes the tab, builds and installs the library and the mods (default: every mod with something to build) in the instance (default `vulture-dev`), turns their content on and runs the instance's native build |
+| `cargo creature install [--instance <name>] [mod...]` | Writes the tab, builds and installs the library and the mods (default: every mod with something to build) in the instance (default `creature-dev`), turns their content on and runs the instance's native build |
 
 - **One Horizon revision for the whole series**: every `horizon-mixin.toml` and `api/Cargo.toml` pins the same commit.
   Moving to a new revision is done for all modules at once.

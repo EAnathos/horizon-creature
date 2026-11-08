@@ -80,25 +80,18 @@ Eggs hatch **only in the incubator** ✅ (a placed egg does nothing).
 - **One egg** at a time ✅: one egg slot, one fuel slot.
 - **Fuel** ✅: anything that burns in a furnace (coal, charcoal, wood, lava bucket, blaze rod…), with the furnace's burn
   times.
-- **Temperature** ✅: the player **sets** the incubator's temperature on its screen (− / + buttons) on a scale of
-  **5 levels** ❓:
-
-  | Level ❓ | Name | Fuel use (× furnace) ❓ |
-  |---|---|---|
-  | 1 | Tepid | ×0.5 |
-  | 2 | Warm | ×1 |
-  | 3 | Hot | ×1.5 |
-  | 4 | Very hot | ×2.5 |
-  | 5 | Scorching | ×4 |
-
-  **The hotter, the more fuel it burns** ✅. The actual temperature climbs or falls one level every 10 s ❓ towards the
-  setting while there is fuel, and falls when the fuel runs out.
-- Each egg needs **one specific temperature** ✅. If the incubator's actual temperature is not the egg's while the egg is
-  in it, the egg **cracks** ✅ (it is lost: shell particles and a crack sound; nothing returned ❓). A short grace ❓ (5 s)
-  covers the moment the egg is put in while the temperature is still climbing — or the egg only starts and only checks
-  once the temperature first matches ❓.
-- The screen shows the setting, the actual temperature, the fuel left and the progress. The egg's tooltip names its
-  temperature ("Needs: Warm") ❓, so the player knows what to set.
+- **Temperature** ✅: in **degrees, from 0 to 150 °C** ✅, set to **any whole value** ✅ (e.g. 134 °C), not a few
+  stages. On the screen: a slider, with − / + buttons for single degrees ❓ (a text field if Horizon's screens have one ❓).
+- **The hotter, the more fuel it burns** ✅. Proposal ❓: a furnace's burn rate × (setting / 50), so 50 °C burns like a
+  furnace, 134 °C almost 3 times as fast, and below 10 °C almost nothing. The actual temperature moves towards the
+  setting by 2 °C per second ❓ while there is fuel, and cools by 1 °C per second ❓ without fuel, down to the room's
+  temperature ❓ (20 °C).
+- Each egg needs **its own temperature** ✅ (each species a different one), within a tolerance of **±3 °C** ❓. When the
+  actual temperature is outside it, the egg has **a few seconds' grace** ✅ (proposal: 5 s ❓, shown by a warning on the
+  screen and steam particles); after that it **cracks** ✅ (lost: shell particles and a crack sound). Progress pauses
+  while outside the tolerance ❓. Putting an egg in a cold incubator therefore cracks it: heat the incubator first.
+- The egg's tooltip gives its temperature ("Incubate at 38 °C") ❓, so the player knows what to set.
+- The screen shows the setting, the actual temperature, the fuel left and the progress.
 - **Owner** ✅: the player who put the egg in. The creature hatches next to the incubator, as a baby, tamed to its owner.
 - Hoppers: fuel from the side, like a furnace ❓; eggs only by hand ❓.
 
@@ -110,9 +103,9 @@ Each mod registers its eggs at start, from its `hooks()`:
 creature::incubator::register(EggKind {
     item: "snakes:snake_egg",
     hatches: "snakes:snake",
-    temperature: 2,          // Warm
+    temperature: 38,         // °C, ± the tolerance
     ticks: 12_000,           // 10 min
-    named: true,             // §5: the owner names it before it hatches
+    named: true,             // §5: a naming screen opens when it hatches
     on_hatch: Some(snake_hatched), // the mod sets its colours, pattern, owner data…
 });
 ```
@@ -134,11 +127,13 @@ creature::incubator::register(EggKind {
 
 ## 5. Naming on hatch ✅
 
-- An egg registered with `named: true` (Snakes ✅) does not hatch when its time is up: it **waits, ready** (it no longer
-  needs the temperature ❓), until its owner **gives it a name** on the incubator's screen; then it hatches, bearing that
-  name ✅.
-- Proposal ❓: a text field and a "Hatch" button on the incubator screen. If Horizon's mod screens have no text field
-  yet, the fallback is a **name tag** renamed on an anvil and put into the egg slot's side slot ❓.
+- For an egg registered with `named: true` (Snakes ✅), **a naming screen opens when it hatches** ✅, as in Mo' Creatures:
+  a text field ("Name your snake") and a "Done" button. The creature takes that name (as a name tag would give it).
+- The screen opens for the owner. If the owner is not near the incubator ❓ (more than 16 blocks), it opens the first
+  time they right-click the newborn ❓. Closing it without a name ❓: the creature stays unnamed, and right-clicking it
+  with an empty hand while sneaking reopens it ❓.
+- Technical ❓: Horizon's mod screens have buttons; a text field is to be checked (fallback: a mod screen drawing its
+  own field from the keys typed).
 - Reusable by any mod (Wyverns ❓).
 
 ## 6. Glass jar and territories ✅
@@ -172,7 +167,7 @@ the block it was released on, by the mod's rule:
 | Rule | User | Area |
 |---|---|---|
 | **Garden** ✅ | Worms | The farmland connected to the release block (4 directions, same level ±1); **at least 10 blocks** ✅, otherwise the worm won't settle (it digs away ❓) |
-| **Flower patch** ❓ | Butterflies | The flowers connected to the release flower (each within 3 blocks of another), plus 3 blocks around them and 4 blocks up |
+| **Flower patch** ❓ | Butterflies | Released on a flower (its anchor): the flowers **within 8 blocks** of the anchor, plus 2 blocks around them and 4 blocks up. The 8-block cap keeps it to at most ~20 × 20 blocks, even in a meadow or a flower forest where every flower touches the next; in a sparse garden it is just the flower beds |
 
 - The creature remembers its anchor (saved on the entity); every few seconds ❓ it checks the area still holds (the
   garden is still ≥ 10 farmland, the flowers are still there). If not, it becomes unsettled (wanders, may despawn ❓).
@@ -218,10 +213,11 @@ Not shared: the Wyverns dimension, its staff and the Harpy Queen.
 - ~~Q1 — Incubator: fuel or heat from blocks? One egg or several?~~ Fuel like a furnace, one egg, a set temperature;
   the hotter, the more fuel; wrong temperature cracks the egg (§4.1).
 - ~~Q2 — Who owns a hatched creature?~~ The player who put the egg in.
+- ~~Q6 — When does a wrong temperature crack the egg?~~ After a few seconds' grace.
+- ~~Q7 — Naming?~~ A naming screen opens when it hatches, as in Mo' Creatures.
+- ~~Temperature scale~~ 0 to 150 °C, any whole value; a different temperature per species.
 - ~~Q4 — Can eggs hatch placed in the world?~~ No, only in the incubator.
-- Q3 — Incubator recipe; the 5 temperature levels and their fuel use.
-- Q6 — Does a wrong temperature crack the egg at once, after a few seconds, or only once the egg has started?
-- Q7 — Naming: a text field on the incubator screen, or a name tag?
+- Q3 — Incubator recipe; fuel use by temperature; the tolerance (±3 °C?).
 - Q8 — Filled jars: one item per creature mod (own texture), or one `creature:glass_jar` holding anything?
 - Q9 — Can a filled jar be placed as a decorative block?
 - Q5 — The tab's order: mods by folder name (now), or a chosen order?

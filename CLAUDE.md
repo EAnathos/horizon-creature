@@ -34,7 +34,7 @@ wyverns, Harpy Queen boss; also requires `butterflies`), `snakes`, `worms` (spec
 ## Building and testing
 
 - `cargo creature install [--instance <name>] [mod...]` writes the creative tab, builds each module's `content/`
-  (`.hmod`) and `native/` (`.hnmod`), always with the library, installs them in the instance (default `vulture-dev`) and
+  (`.hmod`) and `native/` (`.hnmod`), always with the library, installs them in the instance (default `creature-dev`) and
   runs its native build. The launcher's Play button ignores a bundle built from a folder: it must be installed as a
   `.hnmod`.
 - Tools are Rust (`tools/`, commands `list`, `tab`, `model`, `sounds`, `pack`, `install`; alias in

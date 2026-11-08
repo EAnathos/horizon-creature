@@ -8,7 +8,7 @@
 //! cargo creature pack <module>                # a module's native/ -> target/<id>.hnmod
 //! cargo creature install [--instance <name>] [mod...]
 //!                                             # builds the library and the mods (default: all), installs them in the
-//!                                             # instance (default vulture-dev), runs its native build
+//!                                             # instance (default creature-dev), runs its native build
 //! ```
 //!
 //! A module is the library (`creature`) or a mod's folder name under `mods/`. `cargo creature` is an alias

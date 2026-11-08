@@ -37,20 +37,20 @@ like Butterflies ✅.
 ## 4. Faster crop growth ✅
 
 - A settled worm makes the crops of its garden grow **faster, with a slow bonus** ✅. Proposal ❓:
-  - each worm gives the crops of its garden an extra growth chance equal to **+10 %** of the normal rate;
-  - bonuses add up to **+30 %** per garden ❓ (3 worms), so a big farm needs worms in several gardens;
+  - each worm gives the crops of its garden an extra growth chance equal to **+10 %** of the normal rate ✅;
+  - bonuses add up to **+30 %** per garden ✅ (3 worms), so a big farm needs worms in several gardens;
   - the farmland it crawls on stays moist ❓.
 - Faint particles on a crop that got a worm's bonus ❓.
 
 ## 5. Out of scope for v1
 
-- Giant worms ✅, taming, combat, riding.
+- Giant worms ✅, taming, combat, riding, fishing bait and animal food ✅, breeding ✅.
 
 ## 6. Open questions
 
 - ~~Q1 — What a worm does?~~ Faster crop growth, a slow bonus.
 - ~~Q2 — The garden?~~ At least 10 connected farmland.
 - ~~Q3 / Q4 — Finding and catching?~~ In nature on the dirt; in a glass jar.
-- Q5 — Fishing bait / chicken food / compost: wanted?
-- Q6 — Can worms multiply in a garden?
-- Q7 — The bonus: +10 % per worm, capped at +30 % per garden?
+- ~~Q5 — Bait / chicken food?~~ No.
+- ~~Q6 — Multiplying?~~ No: worms don't multiply.
+- ~~Q7 — The bonus?~~ +10 % per worm, capped at +30 % per garden.
