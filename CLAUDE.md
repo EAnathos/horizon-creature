@@ -2,17 +2,18 @@
 
 A series of native Rust mods for **Minecraft Horizon** (a Rust reimplementation of Minecraft Java 26.3): one mandatory
 library, **Horizon Creature** (`common/`, mod id `creature`), and independent creature mods in `mods/<mod>/` that all
-depend on it: `vulture` (prototype: tameable, rideable flying vulture), `butterflies`, `wyverns` (dimension, harpies,
-wyverns, Harpy Queen boss; also requires `butterflies`), `snakes`, `worms` (specs only).
+depend on it: `vulture` (prototype: tameable, rideable flying vulture), `butterflies` (and moths), `wyverns`
+(dimension, harpies, wyverns, Harpy Queen boss), `snakes`, `worms`, `cyclops`, `fireflies` (specs only).
 
 - **Architecture**: `docs/ARCHITECTURE.md` (modules, dependencies, what goes in the library, the single creative tab,
   adding a mod). **Conventions**: `docs/CONVENTIONS.md`.
 - **Specs**: one `SPECS.md` per module, source of truth for it (✅ decided, ❓ to confirm; §0 tracks progress). A mod's
   spec links to `common/SPECS.md` for shared systems instead of describing them.
 - **Rule of two**: a system used (or specified) by two or more mods goes in the library; species content stays in mods.
-  Never duplicate a system between mods. A mod requires another only for content (Wyverns → Butterflies: butterfly
-  dust), declared in `module.toml` (`requires`) and `[dependencies]`. Library features tied to some mods (the glass jar:
-  Butterflies or Worms) switch on through registration and conditional recipes (`neoforge:conditions`, `mod_loaded`).
+  Never duplicate a system between mods. No mod requires another: optional content between mods goes through
+  conditional recipes (the Wyvern Staff: butterfly dust or gunpowder, cyclops eye or eye of ender; `mod_loaded`, `not`).
+  Library features tied to some mods (the glass jar: Butterflies, Worms or Fireflies) switch on through registration and
+  conditional recipes (`neoforge:conditions`, `mod_loaded`).
 - **Creative tab**: only the library has one, generated from each module's `module.toml` (`creative` list) by
   `cargo creature tab`. Mods declare no tab.
 - **Language**: everything in the repository is in English (code, comments, docs, commit messages). The game text is

@@ -9,7 +9,7 @@ library shares are described there; this spec gives the vulture's own rules and 
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 
-## 0. Progress (as of 2026-11-08)
+## 0. Progress (as of 2026-11-09)
 
 ### Done
 
@@ -17,12 +17,12 @@ library shares are described there; this spec gives the vulture's own rules and 
   by the mod, ridden and flown. Tested in game, single player.
 - **Mounting**: right-click on the vulture (no cheats needed) or `/ride` (cheats). Holding sneak gets off (confirmed in
   game).
-- **Ridden flight**, without stamina for now: WASD (ZQSD on AZERTY) following the look direction, Space climbs, nothing =
-  glide, Ctrl = dive. The vulture takes no fall damage.
-- **Model and texture of the tawny vulture**: `mods/vulture/assets/models/vulture.bbmodel` (Blockbench, 17 cubes: head, hooked
-  beak, neck, ruff, body, 2-segment wings, tail, legs and talons), 64×64 texture, converted to Rust by
-  `cargo creature model vulture` and drawn by the library (`creature::model`). Animations: wings folded on the ground, flapping in flight, head following the gaze, walk
-  cycle, legs tucked in flight.
+- **Ridden flight** (first version, replaced by the dynamic flight of §6.2): WASD (ZQSD on AZERTY) following the look
+  direction, Space climbs, nothing = glide, Ctrl = dive. The vulture takes no fall damage.
+- **Model and texture of the tawny vulture**: `mods/vulture/assets/models/vulture.bbmodel` (Blockbench), converted to
+  Rust by `cargo creature model vulture` and drawn by the library (`creature::model`). First version (17 cubes, 64×64)
+  replaced on 2026-11-09 by the lean model of §7.1 (32 cubes, 128×128); the first version was tested in game, the lean
+  one only in Blockbench so far.
 - **Mount hearts**: only the hearts it has, no empty ones.
 - **Sounds** (§7): the trader is muted; call (hiss, 3 variants + a rare call), hurt, death, wing flaps, takeoff and eat
   (those two not played by the code yet), made from CC0 freesound sounds by `cargo creature sounds vulture` (sources
@@ -32,24 +32,27 @@ library shares are described there; this spec gives the vulture's own rules and 
 - **Moved into the Horizon Creature series** (2026-11-08): `mods/vulture/`, depends on the library; built with the
   series' tools (`cargo creature install vulture`), tested in game.
 
-### To do
+### To do (v1)
 
-- §2 Variable stats (health, speed, stamina) and their inheritance: in the library (common/SPECS.md §8.4) if Wyverns
-  is under way by then, else here first.
-- §7 Model: longer neck and smaller head, closer to a real vulture's silhouette, before the other variants.
-- §3 The other 4 variants (dark, white, bearded, king): textures and rolling one at spawn.
+- §6.2 Dynamic flight: written (2026-11-09) and briefly flown in game (take-off, flapping, banking into a turn); to tune
+  in game (numbers, bank, stall).
+- §7.1 Lean model: written (2026-11-09); to check in game with its poses (folded, gliding, flapping, banking, diving).
+- §7.2 New spawn egg: drawn (2026-11-09); to check in game.
+- §2 Variable stats (health, speed) and their inheritance: in the library (common/SPECS.md §8.4) if Wyverns is under
+  way by then, else here first.
 - §4 Wild vulture: hitbox (~1.2 × 1.0; it still has the trader's 0.6 × 1.95: try overriding its mob type's size at
   spawn), AI (circling in flight, landing, scavenging), neutral
   and retaliating, natural spawning by biome, drops (feathers, meat) and their items.
 - §5 Taming with thrown raw chicken, owner.
 - §6 Tamed vulture: sit/follow, defending its owner, healing; riding limited to the owner, with a harness.
 - §6.1 Harness (item, recipe, slot, visible on the model).
-- §6.2 Stamina: bar in place of the XP bar, costs and recovery; walking on the ground and taking off.
+- §6.2 Walking on the ground and taking off.
 - §6.3 Chests (2 × 15 slots), the vulture's screen.
 - §6.4 Talons: key, catch and release.
 - §7 Baby (model and texture), harness and chests on the model, peck/eat, sit, attack and talon animations.
 - §8 Breeding.
-- v2: multiplayer (LAN and dedicated server). For a LAN guest it is their own client that moves the mount.
+
+What waits for v2 is listed apart, in §9.
 
 ---
 
@@ -106,16 +109,16 @@ Each vulture rolls its stats when born or spawned:
 | Stat | Range | Effect |
 |---|---|---|
 | Max health | 16 – 30 | |
-| Flight speed | 0.6 – 1.2 × base speed | Glide and dive |
-| Max stamina | 70 – 130 | Flapping flight time (§6.2) |
+| Flight speed | 0.6 – 1.2 × base speed | Cruising and diving speed (§6.2) |
 
 - **Breeding**: as with vanilla horses, each stat of the baby is the average of both parents and a random value. Good
   bloodlines improve over time without passing the caps.
-- Stats are not shown in game, as in vanilla ✅.
+- Stats are never shown in game ✅, as in vanilla.
 
-## 3. Skin variants ✅
+## 3. Skin variants (v2) ✅
 
-Inspired by real species, each with its own texture:
+**Not in v1** ✅: v1 has one look, the tawny vulture. The variants come in v2 (§9). Inspired by real species, each with
+its own texture:
 
 | Variant | Inspiration | Spawning |
 |---|---|---|
@@ -128,14 +131,13 @@ Inspired by real species, each with its own texture:
 Variant names are simple colour names ✅, so players need not know the species.
 
 - A baby takes the variant of one of its parents (50/50), with a ~5 % chance of mutating to a random variant ✅.
-- Secondary markings (spots, darker wings) could multiply the combinations, as for horses: **later** ✅ (v1 = the 5
-  variants).
+- Secondary markings (spots, darker wings) could multiply the combinations, as for horses: later still ✅.
 
 ## 4. Wild vulture
 
 | Property | Value |
 |---|---|
-| Size (hitbox) | ~1.2 × 1.0 blocks; visual wingspan ~2.5 blocks in flight. Horizon gives a mod mob its template's size (the trader's 0.6 × 1.95): we try overriding it at spawn, else we keep the trader's ✅ |
+| Size (hitbox) | ~1.2 × 1.0 blocks; visual wingspan ~4.5 blocks in flight (§7.1). Horizon gives a mod mob its template's size (the trader's 0.6 × 1.95): we try overriding it at spawn, else we keep the trader's ✅ |
 | Behaviour ✅ | **Neutral and retaliates**: attacks whoever hits it (3 damage), and nearby vultures join in, like wolves/llamas |
 | Biomes ✅ | Desert, badlands, savanna; groups of 1–3 |
 | Wild flight | Slow circles high up, lands on high points |
@@ -168,26 +170,36 @@ Variant names are simple colour names ✅, so players need not know the species.
 - **Vulture harness** item, unstackable, recipe: 5 leather + 2 string + 1 iron ingot (U shape, iron in the middle) ✅.
 - Needed to ride it **and** to carry chests ✅. Goes in a slot of the vulture's screen, and shows on the model.
 
-### 6.2 Flight with stamina ✅
+### 6.2 Dynamic flight ✅
 
-> Riding, flight and stamina are shared with Wyverns (common/SPECS.md §8.1, §8.2). The vulture's keys and numbers below.
+> Riding and flight are shared with Wyverns (common/SPECS.md §8.1). The vulture's keys and numbers below. **No
+> stamina** ✅: the vulture flies as long as the rider wants.
 
-| Key | Action |
+Flown like a plane, not like a flying camera: the vulture always moves forward along its heading, and the rider steers
+it by **looking** where it should go ✅.
+
+| Rider | Vulture |
 |---|---|
-| WASD (ZQSD) | Direction following the look |
-| Space | Flap: gains height, uses stamina |
-| (nothing) | Glide: slow forward descent |
-| Left Ctrl | Dive: fast descent, gains speed |
+| Looks **up** | Noses up and **climbs** ✅ (loses speed as it climbs) |
+| Looks **down** | Noses down and **dives** ✅ (gains speed, up to the dive speed) |
+| Looks **right / left** | **Banks** to that side and **turns in an arc** ✅, like a plane: the further the look is from its heading, the steeper the bank (up to ~50° ❓) and the tighter the turn (up to ~5° a tick ❓); it levels out as its heading reaches the look |
+| W (Z on AZERTY) | Flaps: speeds up to its cruising speed (wing beats, flap sound) |
+| (nothing) | Glides: keeps its speed slowly falling off, sinks gently when level |
+| S | Air brake: slows down, sinks a little faster ❓ |
+| Space | Strong flap: climbs straight up a little; on the ground, **takes off** |
 | Sneak | Get off, **even in mid-air** ✅ (normal fall damage) |
 | "Talons" key ✅ (R, rebindable in Controls) | Catch / release (§6.4) |
 
-- Stamina bar in place of the XP bar while riding, like the horse's jump bar.
-- Flapping: −20/s · Gliding: +5/s · On the ground: +25/s.
-- At 0 it cannot flap again until back at 30 %: it glides down.
-- ✅ Chests **do not weigh** on stamina. ✅ **No thermals.**
-- On the ground: slow walk, takes off with Space.
-- Starting speeds ✅ (blocks per tick, before air drag): flight 0.6, dive 1.0, climb 0.35, glide sink 0.08, dive sink
-  0.7 (felt right in game).
+- **Speed and pitch** trade like a glider's ✅: diving builds speed, climbing spends it. Too slow while climbing, it
+  stalls and noses down by itself ❓, so it can't hang in the air.
+- The **body follows the flight**: pitched with the climb or dive, rolled with the bank, the wings spread wide in a
+  glide, beating when it flaps, swept back in a steep dive ❓.
+- The pitch and the turn rate follow the look smoothly (no snapping), so the flight reads as momentum.
+- A and D (Q and D on AZERTY) do nothing in the air ❓.
+- On the ground: a slow walk (WASD), Space takes off.
+- ✅ Chests **do not weigh** on its flight. ✅ **No thermals.**
+- Starting numbers ❓ (blocks per tick): cruise 0.6, dive up to 1.2, slowest 0.25 before a stall, glide sink 0.04 when
+  level, take-off climb 0.4.
 
 ### 6.3 Chests ✅
 
@@ -204,7 +216,7 @@ Variant names are simple colour names ✅, so players need not know the species.
   - **small enough mobs** (hitbox ≤ 1 block wide and ≤ 1 block high ✅: chicken, rabbit, pig, sheep, fox, cat, wolf,
     babies…);
   - **allies** ✅: a player sneaking under the vulture (sneaking means consent), or a tamed animal.
-- Carrying someone **costs stamina** ✅: flaps cost +50 % ✅ and gliding no longer recovers.
+- Carrying someone **weighs it down** ❓: cruising speed −25 %, and it climbs at half the rate.
 - It lets go on the key, when the vulture dies or when the rider gets off. The fall deals normal damage.
 - A wild or unridden vulture catches nothing ✅.
 
@@ -212,32 +224,64 @@ Variant names are simple colour names ✅, so players need not know the species.
 
 - The **model is drawn by code** (`native_mob_submit`) from cubes. Its source is a `.bbmodel` file (Blockbench),
   converted to Rust data by a script in the repository: we edit visually, the game gets cubes, pivots and UVs.
-- Animated parts: head, neck, body, 2 two-segment wings (arm + tip), tail, 2 legs with talons, harness, 2 chests.
-- Code animations: flap, glide, dive, walk, peck/eat, sit, attack, closed talons.
-- 64×64 textures: one per variant + baby + harness, painted in Blockbench.
+- Animated parts: head, neck, body, 2 wings in three segments (arm, forearm, hand with its primaries), tail, 2 legs with
+  talons, harness, 2 chests.
+- Code animations: flap, glide (wings spread, still), banking turn, dive (wings swept back), walk, peck/eat, sit,
+  attack, closed talons.
 - Sounds: call, wing flap, eat, hurt, death. CC0 sounds (freesound.org, licence checked; CC0 requires no credit, the
   sources are listed in `tools/src/sounds.rs`), edited.
-- Spawn egg, item textures, English and French translations.
+- English and French translations.
+
+### 7.1 Model ✅ (redesign)
+
+**More worked and imposing** ✅, after photos of griffon and Rüppell's vultures (landing with wings spread, perched,
+wings open on a post), and **lean, not stocky** ✅ (a first version looked like a turkey): the profile of a hunched
+vulture.
+
+- **Silhouette** ✅: a long, narrow, low body (8 × 7 × 16 texels) whose back **slopes down to the tail** on the ground,
+  a cream **ruff** at the shoulders, the neck **reaching forward** from it at shoulder height (not upright), a small bald
+  head held low with a **heavy hooked beak**, short legs with feathered thighs, grey feet and dark talons, a short square
+  tail. No breast bulge.
+- **Wings spread** ✅, the impressive part: long and broad (span **~4.5 blocks**), three segments (arm, forearm, hand)
+  so they fold along the flanks on the ground and open fully in flight. The hand ends in **separate primary feathers,
+  the "fingers"** ✅ (5 per wing). Two-tone like the photos: scaly, mottled brown-and-cream **coverts** on top, then a
+  pale band, then **dark brown flight feathers**.
+- **Folded** on the ground, the wings cover the flanks, coverts on top, and their primaries reach past the tail.
+- **Colours** (tawny, v1): mottled brown and cream body, cream ruff, grey-pink bare head and neck, a horn-coloured beak
+  with a dark tip, dark eyes.
+- Texture **128 × 128** ✅ for the detail.
+- **In flight** the neck stays forward, the legs are tucked.
+
+### 7.2 Spawn egg ✅ (redesign)
+
+- In the style of the **latest vanilla spawn eggs** ✅ (since 1.21.5, each egg is drawn for its mob instead of two
+  colours with spots): an egg shape with a dark outline and shading, painted with the mob's look.
+- The vulture's: a mottled brown egg with dark flight-feather streaks on its sides, a cream ruff collar around its top
+  third, and the bald grey-pink head with its hooked beak peeking from the top ❓. 16 × 16, readable at a glance next to
+  vanilla eggs.
 
 ## 8. Breeding ✅ (v1)
 
 > Shared system: common/SPECS.md §8.5. The vulture gives birth to a live baby (no egg, no incubator) ✅.
 
 - Two tamed vultures fed **rotten flesh** ✅ (scavengers…) go into breeding mode.
-- The baby is born tamed, with the same owner, and inherits stats (§2) and a variant (§3).
+- The baby is born tamed, with the same owner, and inherits stats (§2) (and its variant once there are variants, §3).
 - The baby is smaller, with a big head and a downy crown. It grows up in 20 min (faster when fed), and can only be ridden
   once grown.
 - 5 min cooldown before the parents can breed again.
 
-## 9. Out of scope for v1
+## 9. v2 (later, kept out of the v1 to-do list) ✅
 
-- Multiplayer: LAN and dedicated server (v2)
-- Vulture armour
-- Showing stats in game
-- User configuration
+- Multiplayer: LAN and dedicated server. For a LAN guest it is their own client that moves the mount.
+- The skin variants (§3): dark, white, bearded and king, their textures and their spawning by biome; then secondary
+  markings.
+- Vulture armour.
+- User configuration.
 
 ## 10. Remaining open questions
 
 - ~~Q26: If phase 0 shows a mod entity cannot be ridden: A, B or C (§1.2)?~~ Moot: phase 0 succeeded without any of the
   three options (2026-11-07).
-- ~~Extra stamina cost when carrying someone: +50 %?~~ Decided: +50 % (§6.4).
+- ~~Extra stamina cost when carrying someone: +50 %?~~ Moot: no stamina any more (2026-11-09).
+- Q27: The flight's numbers (§6.2), the bank and turn limits, and what A / D do in the air.
+- Q28: What a passenger in its talons does to its flight (§6.4)?

@@ -6,12 +6,14 @@ tab, "Horizon Creature". The game text is in English and French.
 
 | Mod | What it adds | Status |
 |---|---|---|
-| [Horizon Creature](common/README.md) (`creature`) | The library: shared systems (incubator, glass jar, riding, taming…) and the creative tab. **Required by every mod.** | prototype |
+| [Horizon Creature](common/README.md) (`creature`) | The library: shared systems (incubator, glass jar, riding, taming…), the creature guide book and the creative tab. **Required by every mod.** | prototype |
 | [Vulture](mods/vulture/README.md) (`vulture`) | A vulture you tame, ride and fly, with chests and talons | prototype (rideable, flies) |
-| [Butterflies](mods/butterflies/README.md) (`butterflies`) | Butterflies in many colours, caught in a glass jar and settled in your garden | planned |
-| [Wyverns](mods/wyverns/README.md) (`wyverns`) | A dark mountainous dimension of harpies and wyverns, the Harpy Queen boss, wyverns hatched and ridden. **Also requires Butterflies.** | planned |
+| [Butterflies](mods/butterflies/README.md) (`butterflies`) | Butterflies by day and moths by night, in many colours, caught in a glass jar and settled in your garden | planned |
+| [Wyverns](mods/wyverns/README.md) (`wyverns`) | A dark mountainous dimension of harpies and wyverns, the Harpy Queen boss, wyverns hatched and ridden | planned |
 | [Snakes](mods/snakes/README.md) (`snakes`) | Aggressive snakes in many colours, whose eggs hatch into named pets | planned |
 | [Worms](mods/worms/README.md) (`worms`) | Earthworms you carry in a jar to your garden, where they help crops grow | planned |
+| [Cyclops](mods/cyclops/README.md) (`cyclops`) | A one-eyed, boulder-hurling giant of the mountains, and its eye | planned |
+| [Fireflies](mods/fireflies/README.md) (`fireflies`) | Fireflies that light up the night, kept in a glass jar as a soft light | planned |
 
 > Single player only for now; multiplayer comes later for the whole series.
 

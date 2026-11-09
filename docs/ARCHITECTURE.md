@@ -14,42 +14,49 @@ on it.
 | Wyverns | `mods/wyverns/` | `wyverns` | planned (spec) | [mods/wyverns/SPECS.md](../mods/wyverns/SPECS.md) |
 | Snakes | `mods/snakes/` | `snakes` | planned (spec) | [mods/snakes/SPECS.md](../mods/snakes/SPECS.md) |
 | Worms | `mods/worms/` | `worms` | planned (spec) | [mods/worms/SPECS.md](../mods/worms/SPECS.md) |
+| Cyclops | `mods/cyclops/` | `cyclops` | planned (spec) | [mods/cyclops/SPECS.md](../mods/cyclops/SPECS.md) |
+| Fireflies | `mods/fireflies/` | `fireflies` | planned (spec) | [mods/fireflies/SPECS.md](../mods/fireflies/SPECS.md) |
 
 `cargo creature list` prints the same table from the modules' `module.toml`.
 
 ## 2. Dependencies
 
 ```
-                    ┌──────────────────────────────┐
-                    │  Horizon (pinned revision)   │
-                    └──────────────▲───────────────┘
-                                   │
-                    ┌──────────────┴───────────────┐
-                    │ Horizon Creature (`creature`)│  library: shared systems, the series' creative tab
-                    └──▲──────▲──────▲──────▲───▲──┘
-                       │      │      │      │   │      required dependency, never the other way round
-                 vulture  butterflies◄─wyverns snakes worms
-                              (wyverns requires butterflies: its staff is crafted with butterfly dust)
+                    ┌──────────────────────────────────────┐
+                    │      Horizon (pinned revision)       │
+                    └───────────────────▲──────────────────┘
+                                        │
+                    ┌───────────────────┴──────────────────┐
+                    │    Horizon Creature (`creature`)     │  library: shared systems, the series' creative tab
+                    └─▲─────▲─────▲─────▲─────▲─────▲─────▲┘
+                      │     │     │     │     │     │     │   required dependency, never the other way round
+                   vulture  │  wyverns  │   worms   │ fireflies
+                       butterflies   snakes      cyclops
+
+       No mod requires another: Wyverns uses butterfly dust and the cyclops eye when those mods are there.
 ```
 
 - Every mod **requires** the library, and the library never depends on a mod (it does not even know their ids, except
   in the generated creative tab and in the jar recipe's condition, below).
-- Mods are **independent by default**: any subset can be installed with the library. A mod-to-mod requirement is the
-  exception, decided in the specs, never circular, and declared everywhere it matters (below). Today there is one:
-  **Wyverns requires Butterflies** ✅ (the dimension staff needs `butterflies:butterfly_dust`).
+- Mods are **independent**: any subset can be installed with the library. A mod-to-mod requirement would be the
+  exception, decided in the specs, never circular, and declared everywhere it matters (below). **Today there is none**
+  ✅.
+- **Optional content** between mods goes through conditional recipes, never a requirement: the Wyvern Staff takes
+  butterfly dust with Butterflies (gunpowder without) and a cyclops eye with Cyclops (an eye of ender without), from
+  one recipe file per combination (`mod_loaded`, `not`).
 - A *system* needed by two mods is never a reason for one to require the other: it belongs in the library (§3). Only
   *content* (an item used in a recipe) justifies a mod-to-mod requirement.
-- **Optional** features that switch on with a mod are the library's: e.g. the glass jar (common/SPECS.md §5) is only
-  craftable when Butterflies or Worms is on, through a conditional recipe (`neoforge:conditions` / `mod_loaded`, which
-  Horizon supports).
+- **Optional** features that switch on with a mod are the library's: e.g. the glass jar (common/SPECS.md §6) is only
+  craftable, and only shown, when Butterflies, Worms or Fireflies is on, through a conditional recipe
+  (`neoforge:conditions` / `mod_loaded`, which Horizon supports).
 
 How the dependency is expressed, per half of a mod (Horizon has two kinds of mod, and our mods are both):
 
 | Half | File | Dependency mechanism |
 |---|---|---|
-| Native (`.hnmod`, Rust compiled into the game) | `native/horizon-mixin.toml` | `[dependencies] creature = "^0.1"` (plus `butterflies = "^0.1"` for Wyverns). The launcher refuses to build without it, orders the hooks (library first) and gives the mod's `[api]` crate a `creature` crate to call (Horizon's `docs/native-mods.md`, "Dependencies between trait mods"). |
+| Native (`.hnmod`, Rust compiled into the game) | `native/horizon-mixin.toml` | `[dependencies] creature = "^0.1"` (plus any mod it requires). The launcher refuses to build without it, orders the hooks (library first) and gives the mod's `[api]` crate a `creature` crate to call (Horizon's `docs/native-mods.md`, "Dependencies between trait mods"). |
 | Content (`.hmod`, data and assets) | `content/horizon-mod.toml` | None exists in Horizon's content manifest. The native dependency covers it in practice (the library's native half is installed with its content half); the description says "Needs Horizon Creature" (and the other mods required). |
-| Repository tools | `module.toml` | `requires = ["butterflies"]`: `cargo creature install wyverns` also installs Butterflies, first. |
+| Repository tools | `module.toml` | `requires = ["<mod>"]` (none today): `cargo creature install <mod>` then also installs the mods it requires, first. |
 
 A mod with no native half yet (a pure content mod) has no enforced dependency: that is acceptable while it is in
 development, and every mod of the series is expected to have a native half anyway.
@@ -62,12 +69,12 @@ day a second mod needs it (the move is part of that second mod's work, not a cop
 
 | In the library (`creature`) | In a mod |
 |---|---|
-| Generic systems, configured by data or by Rust parameters: incubator, glass jar and territories, riding and flight, stamina, taming and owners, naming, variants and patterns, breeding and growth, model drawing, mob sounds | The species: entity types, models, textures, sounds, items, recipes, loot, spawns, AI tuning, balance numbers |
-| Shared blocks and items (`creature:incubator`, `creature:glass_jar`) | The mod's own blocks and items, eggs included (`wyverns:fire_wyvern_egg`) |
+| Generic systems, configured by data or by Rust parameters: incubator, glass jar and territories, riding and flight, taming and owners, naming, variants and patterns, breeding and growth, model drawing, mob sounds | The species: entity types, models, textures, sounds, items, recipes, loot, spawns, AI tuning, balance numbers |
+| Shared blocks and items (`creature:incubator`, `creature:glass_jar`, `creature:guide`) | The mod's own blocks and items, eggs included (`wyverns:fire_wyvern_egg`) |
 | The series' creative tab | The list of its items for that tab (`module.toml`) |
 | Shared translations (`creature` lang files) | Its own translations |
 
-The full list of shared systems, done and planned, is in [common/SPECS.md](../common/SPECS.md) §3 to §5.
+The full list of shared systems, done and planned, is in [common/SPECS.md](../common/SPECS.md) §3 to §9.
 
 **API shape.** A mod uses the library by calling it from its own hooks (`creature::model::draw(...)`), or by
 registering its species with it at start (`creature::incubator::register(...)`, planned): the mod's `hooks()` runs after

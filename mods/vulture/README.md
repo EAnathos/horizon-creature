@@ -1,11 +1,12 @@
 # Vulture
 
 A mod of the [Horizon Creature](../../README.md) series: a vulture you spawn, ride and fly. Planned: taming with thrown
-raw chicken, flight stamina, a harness, two chests, talons, breeding, stats and variants ([SPECS.md](SPECS.md)).
+raw chicken, flight steered by your look (banking into turns like a plane), a harness, two chests, talons, breeding and
+stats ([SPECS.md](SPECS.md)).
 
 **Requires** Horizon Creature (`creature`), the series' library.
 
-> **Status:** prototype. What works and what is left: [SPECS.md, §0](SPECS.md#0-progress-as-of-2026-11-08).
+> **Status:** prototype. What works and what is left: [SPECS.md, §0](SPECS.md#0-progress-as-of-2026-11-09).
 > Single player only for now.
 
 ## What works
@@ -13,17 +14,19 @@ raw chicken, flight stamina, a harness, two chests, talons, breeding, stats and 
 - The tawny vulture, `vulture:vulture`: `/summon vulture:vulture` or the **spawn egg** (creative tab
   "Horizon Creature").
 - **Mount**: right-click it (no cheats needed). **Get off**: hold sneak, or `/ride @s dismount`.
-- **Fly**:
+- **Fly**, like a plane: it always flies forward and goes where you look.
 
   | Key | Effect |
   |---|---|
-  | W A S D | Direction following your look |
-  | Space | Climb, flapping |
+  | Look up / down | Climb (losing speed) / dive (gaining speed) |
+  | Look left / right | Bank and turn in an arc |
+  | W | Flap, up to cruising speed |
   | (nothing) | Glide, slowly losing height |
-  | Left Ctrl | Dive |
+  | S | Brake |
+  | Space | Strong flap; takes off from the ground |
 
-- Its own model and texture, animated (wings folded or flapping, head, legs), and its own sounds (hisses, hurt, death,
-  wing flaps).
+- Its own model and texture, animated (wings folded, gliding, flapping, swept back in a dive, banking; head, legs), and
+  its own sounds (hisses, hurt, death, wing flaps, take-off).
 
 ## Files
 

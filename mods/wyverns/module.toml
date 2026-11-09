@@ -4,5 +4,3 @@ name = "Wyverns"
 status = "planned"
 # Its items in the series' creative tab, in order.
 creative = []
-# Mods of the series it requires, besides the library: the staff needs butterfly dust (SPECS §2).
-requires = ["butterflies"]

@@ -4,12 +4,14 @@ A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Ja
 mystical and mountainous dimension** ✅, reached with a staff ✅, peopled by **harpies** and **wyverns** ✅ and ruled by
 the **Harpy Queen** from her crater ✅. Wyverns hatch from eggs in the library's incubator, grow up and are ridden ✅.
 
-**Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)), **and
-Butterflies** ✅ (`butterflies`, [its spec](../butterflies/SPECS.md)): the staff is crafted with butterfly dust.
+**Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)), and nothing
+else ✅. It **uses** two other mods of the series when they are installed, for the staff's recipe only (§2):
+[Butterflies](../butterflies/SPECS.md) (butterfly dust, else gunpowder) and [Cyclops](../cyclops/SPECS.md) (a
+cyclops eye, else an eye of ender).
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 
-## 0. Progress (as of 2026-11-08)
+## 0. Progress (as of 2026-11-09)
 
 - Folder and spec created. **Not started**.
 - Next: the technical prototype (§1.2), the custom dimension first.
@@ -20,8 +22,8 @@ Butterflies** ✅ (`butterflies`, [its spec](../butterflies/SPECS.md)): the staf
   `wyverns:poison_wyvern`, `wyverns:harpy_archer` ❓, `wyverns:harpy_warrior` ❓, `wyverns:harpy_queen`,
   `wyverns:tornado`, `wyverns:feather` (projectile ❓); items `wyverns:<species>_egg`, `wyverns:wyvern_saddle`,
   `wyverns:wyvern_staff` ✅; dimension `wyverns:wyvern_dimension` ✅.
-- **Dependencies** ✅: `creature` and `butterflies` (`[dependencies]` in `native/horizon-mixin.toml`, `requires` in
-  `module.toml`).
+- **Dependencies** ✅: `creature` only (`[dependencies]` in `native/horizon-mixin.toml`). Butterflies and Cyclops are
+  **optional** ✅: no `requires`, no native dependency; the staff's recipe comes in conditional versions (§2).
 - Uses from the library: model drawing and sounds (§3.1, §3.2), **incubator** (§4), riding and flight (§8.1), stamina
   (§8.2), taming (§8.3), stats (§8.4), babies and growth (§8.5), ridden special attack (§8.6), ranged attacks (§8.7),
   hitbox size (§8.8). Wyverns is the mod that moves most of the vulture's systems into the library.
@@ -54,8 +56,12 @@ eggs, the Queen) is built and tested in the Overworld meanwhile ✅; the staff a
 
 ## 2. The staff ✅
 
-- The **Wyvern Staff** ✅, crafted from **1 netherite ingot** ✅, **butterfly dust**, **a stick** and **an eye of
-  ender** ✅. Proposal: shaped, eye on top, dust and netherite in the middle, stick below.
+- The **Wyvern Staff** ✅, crafted from **1 netherite ingot** ✅, **a powder**, **a stick** and **an eye** ✅. Proposal:
+  shaped, eye on top, powder and netherite in the middle, stick below.
+  - The powder is **butterfly dust** if Butterflies is installed, else **gunpowder** ✅.
+  - The eye is a **cyclops eye** if Cyclops is installed, else an **eye of ender** ✅.
+  - So four recipe files, one per combination, each with its `neoforge:conditions` (`mod_loaded` and `not`, which
+    Horizon supports): only the one that matches the installed mods loads.
 - **Four uses** ✅. Use: hold right-click for 3 s ❓ (purple particles gathering) → the player is teleported to the
   dimension, to a safe spot. Used in the dimension, it brings the player **back to the Overworld, where they used it** ✅.
   **The return trip uses a charge too** ✅: 2 round trips per staff. Broken when empty; **cannot be repaired** ✅.
@@ -215,6 +221,8 @@ The harpies covet wyvern eggs: the Queen comes back for one.
 ## 8. Open questions
 
 - ~~Q2: Access to the dimension~~ A four-use staff (netherite, butterfly dust, stick, eye of ender).
+- ~~Q16: Must Butterflies be installed?~~ No: gunpowder replaces butterfly dust without it, and a cyclops eye replaces
+  the eye of ender with Cyclops (§2).
 - ~~Q1 (part)~~ One mountainous biome; the Queen lives in a crater.
 - ~~Q3~~ Ranged harpies shoot feathers. ~~Q4~~ Wild wyverns are neutral, hostile once hurt.
 - ~~Q5 / Q6 / Q7 (part)~~ Eggs by killing wyverns, hotter than snakes; grown in 1 h, ridden from 40 min with a saddle; the

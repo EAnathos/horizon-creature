@@ -2,8 +2,8 @@
 
 The library every mod of the [Horizon Creature](../README.md) series requires: the systems several mods share (model
 drawing, mob sounds, and soon the incubator, the glass jar and territories, colours and patterns, riding and flight,
-taming, breeding…) and the series' single
-creative tab, "Horizon Creature". It adds no creature of its own.
+taming, breeding…), the creature guide book given at first spawn, and the series' single creative tab,
+"Horizon Creature". It adds no creature of its own.
 
 - Specification and progress: [SPECS.md](SPECS.md). What belongs here rather than in a mod:
   [docs/ARCHITECTURE.md §3](../docs/ARCHITECTURE.md#3-what-goes-where).

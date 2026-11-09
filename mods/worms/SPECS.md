@@ -8,13 +8,14 @@ like Butterflies ✅.
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 
-## 0. Progress (as of 2026-11-08)
+## 0. Progress (as of 2026-11-09)
 
 - Folder and spec created. **Not started**.
 
 ## 1. Technical context
 
-- **Mod id**: `worms`. Entity `worms:worm`, item `worms:worm_jar` ❓ (a jar holding one).
+- **Mod id**: `worms`. Entity `worms:worm`. No jar item of its own: a caught worm is in the library's
+  `creature:glass_jar`, the same jar as the butterflies' ✅ (library §6.1).
 - Uses from the library: model drawing and sounds (§3.1, §3.2), **glass jar and territories** (§6, which this mod
   switches on; rule "garden"), hitbox size (§8.8).
 - The worm copies the wandering trader (goals only) with a tiny hitbox. Crop growth: Horizon's random tick hook
@@ -29,7 +30,7 @@ like Butterflies ✅.
 
 ## 3. Jar and garden ✅
 
-- **Picked up in a glass jar** ✅ (library §6.1).
+- **Picked up in a glass jar** ✅ (library §6.1), the same one butterflies and fireflies go in.
 - **Released in a garden** ✅, it **stays there** ✅ (library §6.2, rule "garden"): the farmland connected to the release
   block must count **at least 10 blocks** ✅, otherwise it won't settle ❓ (it burrows away / stays unsettled).
 - Settled worms wander only on that farmland (and the crops on it), and never despawn.

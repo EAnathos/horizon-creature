@@ -5,7 +5,7 @@ several creature mods share, and the series' single creative tab. It adds no cre
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 
-## 0. Progress (as of 2026-11-08)
+## 0. Progress (as of 2026-11-09)
 
 ### Done
 
@@ -17,9 +17,10 @@ several creature mods share, and the series' single creative tab. It adds no cre
 ### To do
 
 - §4 Incubator (Wyverns, Snakes) and §5 naming on hatch (Snakes).
-- §6 Glass jar and territories (Butterflies, Worms).
+- §6 Glass jar and territories (Butterflies, Worms, Fireflies).
 - §7 Colours and patterns (Butterflies, Snakes).
 - §8 The systems that move from the vulture, each when its second user is implemented.
+- §9 The creature guide book, given at first spawn (empty for now).
 
 ## 1. Role and rules ✅
 
@@ -29,7 +30,8 @@ several creature mods share, and the series' single creative tab. It adds no cre
 - The library holds **mechanisms**, the mods hold **species**: no entity type in `creature:`. A mod gives the library its
   species and numbers (registration at start, or parameters).
 - A library feature that only makes sense with some mods is **switched on by them** (registration, conditional recipe),
-  e.g. the glass jar (§6).
+  e.g. the glass jar (§6). The same goes for optional content between mods: a recipe that uses another mod's item when
+  it is installed and a vanilla item otherwise (the Wyvern Staff) is two conditional recipes, never a requirement.
 - A system moved here keeps working for the mod it came from, in the same commit.
 
 ## 2. Technical context
@@ -38,7 +40,8 @@ several creature mods share, and the series' single creative tab. It adds no cre
 - **Native half**: a trait mod with an `[api]` crate (`mod-creature`), which the mods reach as the `creature` crate.
   Its `hooks()` runs before theirs (dependency order), so a mod registers its species from its own `hooks()`. It
   publishes functions, types and statics; shared state is behind `Mutex`es.
-- **Content half**: the series' tab, shared blocks and items (`creature:incubator`, `creature:glass_jar`), their recipes
+- **Content half**: the series' tab, shared blocks and items (`creature:incubator`, `creature:glass_jar`,
+  `creature:guide`), their recipes
   (conditional when a feature depends on a mod), textures and translations (`en_us`, `fr_fr`).
 - **Pinned** to the series' Horizon revision (docs/CONVENTIONS.md). Version `0.1.0`; a breaking API change bumps the
   minor version while in `0.x`.
@@ -65,8 +68,11 @@ several creature mods share, and the series' single creative tab. It adds no cre
 
 - One tab, "Horizon Creature" (`itemGroup.creature`), generated from the modules' `module.toml`
   (docs/ARCHITECTURE.md §4). The library's items first, then each mod's.
-- Icon: `minecraft:sniffer_egg` until the incubator exists, then `creature:incubator` ❓.
-- The glass jar is listed even when no mod uses it (a tab can't be conditional); it is then inert and uncraftable.
+- Icon: `minecraft:sniffer_egg` until the incubator exists, then `creature:incubator` ✅.
+- The glass jar is **hidden when no mod uses it** ✅ (neither Butterflies, Worms nor Fireflies installed): not in the tab,
+  not craftable. A tab file can't be conditional today, so how is to prototype ❓: a conditional tab entry if Horizon's
+  conditions reach tabs, else a second tab file chosen by the library's native half, else the item registered only when
+  a jar user is installed.
 
 ## 4. Incubator ✅
 
@@ -95,14 +101,13 @@ Eggs hatch **only in the incubator** ✅ (a placed egg does nothing).
   **1 °C per second** ✅ without fuel, down to 20 °C: running out of fuel gives a few seconds before an egg leaves its
   tolerance, then the grace, then it cracks.
 - Each egg needs **its own temperature** ✅ (each species a different one), with a **tolerance of ±10 °C** ✅, and **the
-  closer, the faster it hatches** ✅: proposal ❓, full speed at the exact temperature, falling linearly to half speed at
-  ±10 °C. Outside the tolerance, progress stops and the egg has **a few seconds' grace** ✅ (proposal: 5 s ❓, shown by a
+  closer, the faster it hatches** ✅, full speed at the exact temperature, falling linearly to half speed at
+  ±10 °C. Outside the tolerance, progress stops and the egg has **a few seconds' grace** ✅ (6 s ✅, shown by a
   warning on the screen and steam particles); after that it **cracks** ✅ (lost: shell particles and a crack sound).
   Putting an egg in a cold incubator therefore cracks it: heat the incubator first.
-- The egg's tooltip gives its temperature ("Incubate at 38 °C") ❓, so the player knows what to set.
 - The screen shows the setting, the actual temperature, the fuel left and the progress.
 - **Owner** ✅: the player who put the egg in. The creature hatches next to the incubator, as a baby, tamed to its owner.
-- Hoppers: fuel from the side, like a furnace ❓; eggs only by hand ❓.
+- Hoppers: fuel from the side, like a furnace ✅; eggs only by hand ✅.
 
 ### 4.2 Registration (native API)
 
@@ -126,7 +131,7 @@ creature::incubator::register(EggKind {
 ### 4.3 Egg data
 
 - An egg item may carry data (an item component ❓) set when it drops: the parent's colours and pattern (§7) or stats, so
-  the baby inherits them ❓. Otherwise the baby rolls its own.
+  the baby inherits them ✅. Otherwise the baby rolls its own.
 
 ### 4.4 Technical notes
 
@@ -138,35 +143,38 @@ creature::incubator::register(EggKind {
 
 - For an egg registered with `named: true` (Snakes ✅), **a naming screen opens when it hatches** ✅, as in Mo' Creatures:
   a text field ("Name your snake") and a "Done" button. The creature takes that name (as a name tag would give it).
-- The screen opens for the owner. If the owner is not near the incubator ❓ (more than 16 blocks), it opens the first
-  time they right-click the newborn ❓. Closing it without a name ❓: the creature stays unnamed, and right-clicking it
-  with an empty hand while sneaking reopens it ❓.
+- The screen opens for the owner. If the owner is not near the incubator ✅ (more than 32 blocks), the creature stays unnamed. (it can be renamed with a name tag)
 - Technical ❓: Horizon's mod screens have buttons; a text field is to be checked (fallback: a mod screen drawing its
   own field from the keys typed).
 - Reusable by any mod (Wyverns ❓).
 
 ## 6. Glass jar and territories ✅
 
-Catching small creatures and settling them in a place they won't leave. Users: **Butterflies**, **Worms** ✅. The jar is
-the library's ✅ and is **active only if Butterflies or Worms is installed** ✅.
+Catching small creatures and settling them in a place they won't leave. Users: **Butterflies**, **Worms**, **Fireflies**
+✅. The jar is the library's ✅ and is **active only if one of them is installed** ✅ (hidden otherwise, §3.3).
 
 ### 6.1 The jar
 
-- Item `creature:glass_jar`. Recipe ✅ conditional (`neoforge:conditions`, `mod_loaded` butterflies **or** worms):
-  proposal ❓ 3 glass in a U + 1 oak slab lid (gives 2 ❓).
+- Item `creature:glass_jar`. Recipe ✅ conditional (`neoforge:conditions`, `mod_loaded` butterflies **or** worms **or**
+  fireflies): 3 glass in a U + 1 oak slab lid (gives 2 ✅).
 - **Catch** ✅: right-click a catchable creature with an empty jar → a **filled jar** holding it (its colours, pattern and
   name are kept).
-- The filled jar is an item of the creature's mod (`butterflies:butterfly_jar`, `worms:worm_jar`) ❓, so each mod has its
-  own texture and name, while catching and releasing are the library's. A mod registers its catchable kinds:
+- **One jar for every creature** ✅: a filled jar is the same `creature:glass_jar`, carrying the creature it holds as
+  item data (a registered component, Horizon's `native_component_types`): its kind, colours, pattern and name. No mod
+  has a jar item of its own. Its name says what is inside ("Glass Jar of Butterfly" ❓), and its icon shows the
+  creature behind the glass: the mod gives a small "in a jar" texture, drawn by the library over the jar's icon ❓
+  (`native_item_decorations`, or an item model chosen by the component). Filled jars don't stack ✅.
+- Catching and releasing are the library's. A mod registers its catchable kinds:
 
   ```rust
-  creature::jar::register(Catchable { kind: "worms:worm", jar: "worms:worm_jar", territory: Some(GARDEN) });
+  creature::jar::register(Catchable { kind: "worms:worm", icon: "worms:item/worm_in_jar", territory: Some(GARDEN) });
   ```
 
 - **Release** ✅: right-click a block with a filled jar → the creature comes out there and the jar is empty again. If the
-  creature has a territory rule (§6.2) it **settles** there.
-- **Display** ❓: sneak + right-click places the filled jar as a small block (a creature visibly inside, glowing faintly
-  for butterflies ❓), broken back into the item. Decorative.
+  creature has a territory rule (§6.2) it **settles** there. A jar whose creature's mod is no longer installed releases
+  nothing and stays full.
+- **Display** ✅: sneak + right-click places the filled jar as a small block (a creature visibly inside, glowing faintly
+  for firefly), broken back into the item. Decorative.
 
 ### 6.2 Territories ✅
 
@@ -175,23 +183,22 @@ the block it was released on, by the mod's rule:
 
 | Rule | User | Area |
 |---|---|---|
-| **Garden** ✅ | Worms | The farmland connected to the release block (4 directions, same level ±1); **at least 10 blocks** ✅, otherwise the worm won't settle (it digs away ❓) |
-| **Flower patch** ❓ | Butterflies | Released on a flower (its anchor): the flowers **within 8 blocks** of the anchor, plus 2 blocks around them and 4 blocks up. The 8-block cap keeps it to at most ~20 × 20 blocks, even in a meadow or a flower forest where every flower touches the next; in a sparse garden it is just the flower beds |
+| **Garden** ✅ | Worms | The farmland connected to the release block (4 directions, same level ±1); **at least 10 blocks** ✅, otherwise the worm won't settle |
+| **Flower patch** ✅ | Butterflies, Fireflies ❓ | Released on a flower (its anchor): the flowers **within 8 blocks** of the anchor, plus 2 blocks around them and 4 blocks up. The 8-block cap keeps it to at most ~20 × 20 blocks, even in a meadow or a flower forest where every flower touches the next; in a sparse garden it is just the flower beds |
 
-- The creature remembers its anchor (saved on the entity); every few seconds ❓ it checks the area still holds (the
-  garden is still ≥ 10 farmland, the flowers are still there). If not, it becomes unsettled (wanders, may despawn ❓).
-- A mod may add a rule (a jar on a shelf, a pond… ❓).
+- The creature remembers its anchor (saved on the entity); every few seconds ✅ it checks the area still holds (the
+  garden is still ≥ 10 farmland, the flowers are still there). If not, it becomes unsettled (wanders, may despawn ✅).
 
 ## 7. Colours and patterns ✅
 
 One species with **several colours and patterns** ✅. Users: **Butterflies**, **Snakes**.
 
 - A creature rolls a **base colour**, a **pattern** and a **pattern colour** at spawn (from lists the mod gives, each
-  weighted, per biome ❓). Saved on the entity, kept in jars and eggs.
+  weighted, per biome ✅). Saved on the entity, kept in jars and eggs.
 - Drawn as two layers: a base texture tinted by the base colour, then the pattern texture tinted by the pattern colour
   (`draw_cube` takes a colour), like vanilla's tropical fish. So 8 colours × 6 patterns × 8 colours need only 7
   textures.
-- Offspring (eggs) take one parent's colours and pattern, with a small mutation chance ❓.
+- Offspring (eggs) take one parent's colours and pattern, with a small mutation chance ✅.
 
 ## 8. Systems moving from the vulture
 
@@ -199,25 +206,40 @@ Each moves here when the second mod that needs it is implemented. Until then it 
 
 | # | System | Users (current → planned) | Today |
 |---|---|---|---|
-| 8.1 | **Riding and flight**: mount by right-click (the `mount-click` injection, with a list of rideable kinds), ridden flight (climb, glide, dive), dismount, mount hearts (`mount-hud` injection), a **saddle / harness** slot | vulture → wyverns | in the vulture |
-| 8.2 | **Stamina** bar in place of the XP bar, costs and recovery | vulture → wyverns | specified in the vulture |
+| 8.1 | **Riding and flight**: mount by right-click (the `mount-click` injection, with a list of rideable kinds), **dynamic ridden flight** (steered by the look, banking into arc turns like a plane, vulture/SPECS.md §6.2) with each species' numbers, dismount, mount hearts (`mount-hud` injection), a **saddle / harness** slot | vulture → wyverns | in the vulture |
 | 8.3 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | vulture → wyverns, snakes | specified in the vulture |
-| 8.4 | **Inherited stats** (health, speed, stamina) | vulture → wyverns ❓ | specified in the vulture |
+| 8.4 | **Inherited stats** (health, speed) | vulture → wyverns ❓ | specified in the vulture |
 | 8.5 | **Babies and growth**: smaller model, growth time, faster when fed, **rideable from a given age** (wyverns: 40 of 60 min ✅) | vulture → wyverns, snakes | specified in the vulture |
 | 8.6 | **Ridden special attack**: a key that makes the mount attack (vulture talons, wyvern breath ✅) | vulture → wyverns | specified in the vulture |
-| 8.7 | **Ranged attack goal**: a mob shooting projectiles (harpy feathers ✅, wyvern breath, Queen) | wyverns (several mobs); snakes ❓ |: |
+| 8.7 | **Ranged attack goal**: a mob shooting projectiles (harpy feathers ✅, wyvern breath, Queen) | wyverns (several mobs), cyclops (boulders) ❓ |: |
 | 8.8 | **Hitbox size**: a mod mob's size other than its template's | all | to investigate |
 | 8.9 | **Sound making tool**: `cargo creature sounds` with a per-mod source list | vulture → all | vulture only |
 
+(8.2, stamina, is gone: the vulture has none, so it would only be the Wyverns' own if they keep one.)
+
 Not shared: the Wyverns dimension, its staff and the Harpy Queen.
 
-## 9. Out of scope for v1
+## 9. Creature guide book ✅
+
+A book about the series' creatures, given to every player.
+
+- **Item** `creature:guide` ("Creature Guide" ❓), unstackable, with **its own texture** ✅ (a worn leather field guide,
+  a creature's footprint on the cover ❓).
+- **Given at a player's first spawn** in a world ✅ (once per player, remembered on the player; `native_player_logged_in`
+  ❓). Not craftable for now ❓ (a book + a feather later, to replace a lost one ❓).
+- **For now it does nothing else** ✅: right-click opens nothing (or a cover page ❓).
+- **Later** (not v1): pages about each installed mod's creatures, **discovered little by little** ✅ (seeing, catching,
+  hatching or taming one unlocks its page and then its details): where it lives, what it eats, how it's tamed, its
+  **egg's incubation temperature** ✅, and the **creature drawn in 3D** in the page ✅ (turning slowly, like Create's
+  Ponder scenes). Each mod registers its pages, the library draws the book.
+
+## 10. Out of scope for v1
 
 - Multiplayer (LAN, dedicated server): v2, for the whole series. Server logic is kept apart from rendering.
 - A configuration file.
 - Compatibility with mods outside the series.
 
-## 10. Open questions
+## 11. Open questions
 
 - ~~Q1: Incubator: fuel or heat from blocks? One egg or several?~~ Fuel like a furnace, one egg, a set temperature;
   the hotter, the more fuel; wrong temperature cracks the egg (§4.1).
@@ -228,6 +250,9 @@ Not shared: the Wyverns dimension, its staff and the Harpy Queen.
 - ~~Q4: Can eggs hatch placed in the world?~~ No, only in the incubator.
 - ~~Q3~~ Tolerance ±10 °C, faster the closer; the recipe as designed; fuel use × (setting / 50), 2 °C/s heating, 1 °C/s
   cooling (§4.1).
-- Q8: Filled jars: one item per creature mod (own texture), or one `creature:glass_jar` holding anything?
-- Q9: Can a filled jar be placed as a decorative block?
+- ~~Q8: Filled jars: one item per creature mod, or one `creature:glass_jar` holding anything?~~ One jar for every
+  creature (§6.1).
+- ~~Q9: Can a filled jar be placed as a decorative block?~~ Yes, sneak + right-click (§6.1).
+- ~~Q10: The jar when no mod uses it?~~ Hidden: not in the tab, not craftable (§3.3).
+- Q11: The guide book's name and cover; how it is given (first login hook) and whether it can be crafted again.
 - Q5: The tab's order: mods by folder name (now), or a chosen order?
