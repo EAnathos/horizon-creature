@@ -5,21 +5,23 @@
 //! - Mounting: a right-click on it (`mount_click.rs` injection), or `/ride`. Horizon then copies the rider's keys into
 //!   `Mob.rider` every tick (`game/mounts.rs`, `tick_mount_riding`): forward/back, left/right, jump (Space), sprint
 //!   (Ctrl). Sneaking gets off.
-//! - Flight: `Fly` reads `Mob.rider` and sets the vulture's speed directly, without gravity: steered by the rider's
-//!   look, banking into arc turns like a plane (SPECS §6.2).
+//! - Flight (`flight.rs`): it sets the vulture's speed directly, without gravity, flown like a plane, banking into
+//!   arc turns (SPECS §6.2). `Fly` steers it from `Mob.rider`; the wild vulture's `wild::Soar` from its own AI.
+//! - Wild (SPECS §4): it soars in circles high up and glides back down (`wild.rs`), walks about, and fights back
+//!   with vanilla's `HurtByTarget` and `MeleeAttack`.
 //! - Sounds: its own, not the trader's (`sounds.rs`, played by the library's `creature::sounds`).
 //! - Drawing: the Blockbench model (`assets/models/vulture.bbmodel`, converted into `model.rs`), posed by `pose` and
 //!   drawn by the library's `creature::model`, in place of the trader's model; its hearts, once ridden, without the
 //!   empty ones (`mount_hud.rs` injection).
 //!
 //! It depends on the series' library, Horizon Creature (`creature`, common/SPECS.md).
+mod flight;
 mod model;
 mod sounds;
+mod wild;
 
-use std::collections::BTreeMap;
-use std::sync::Mutex;
-
-use horizon_client::mobs::goals;
+use flight::{Controls, Flight};
+use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, MeleeAttack, Stroll};
 use horizon_client::mod_api::{
     Cx, EntityTickListenedEvent, EntityTickPostEvent, Flow, Goal, Hooks, Host, Mob, MobSubmitEvent, NativeMobRender,
     RandomSource, RegisterGoalsEvent,
@@ -33,42 +35,16 @@ pub fn hooks() -> Box<dyn Hooks> {
 
 struct Vulture;
 
-/// Flight numbers (SPECS §6.2), in blocks per tick before air drag (×0.91 per tick) and degrees.
-const CRUISE: f64 = 0.6;
-const DIVE_MAX: f64 = 1.2;
-const STALL: f64 = 0.25;
-/// What a nose-down tick adds to the speed (× the sine of the pitch), a nose-up one takes away.
-const GRAVITY: f64 = 0.03;
-/// Wing beats close this share of the gap to the cruising speed every tick.
-const FLAP: f64 = 0.06;
-const GLIDE_DRAG: f64 = 0.004;
-const BRAKE: f64 = 0.04;
-const GLIDE_SINK: f64 = 0.04;
-const TAKE_OFF: f64 = 0.4;
+/// Walking speed on the ground, ridden, in blocks per tick.
 const WALK: f64 = 0.12;
-/// The steepest climb and dive it takes, and how fast its pitch follows the look.
-const MAX_CLIMB: f32 = 50.0;
-const MAX_DIVE: f32 = 75.0;
-const PITCH_RATE: f32 = 4.0;
-/// Its turn: this share of the gap between its heading and the look, at most `MAX_TURN` a tick.
-const TURN: f32 = 0.08;
-const MAX_TURN: f32 = 5.0;
+/// Its peck when it fights back (SPECS §4).
+const ATTACK_DAMAGE: f32 = 3.0;
 
-/// `a - b` in degrees, wrapped to -180..180.
-fn wrap(degrees: f32) -> f32 {
-    (degrees + 180.0).rem_euclid(360.0) - 180.0
-}
-
-/// Ridden flight (SPECS §6.2), flown like a plane: it always moves along its heading, turns towards where the rider
-/// looks (banking, drawn by `pose` from the gap between its heading and its head), noses up or down with the look,
-/// and trades speed for height like a glider. W flaps up to the cruising speed, S brakes, Space flaps hard (and takes
-/// off from the ground).
+/// Ridden flight (SPECS §6.2): the rider's look and keys steer `flight::Flight`. W flaps up to the cruising speed, S
+/// brakes, Space flaps hard (and takes off from the ground); on the ground it walks.
 #[derive(Clone, Debug, Default)]
 struct Fly {
-    /// Speed along the heading, blocks per tick.
-    speed: f64,
-    /// Its pitch, positive nose down (as `head_pitch`).
-    pitch: f32,
+    flight: Flight,
 }
 
 impl Goal for Fly {
@@ -82,92 +58,41 @@ impl Goal for Fly {
         true
     }
     fn start(&mut self, m: &mut Mob, _: &mut Cx) {
-        self.speed = 0.0;
-        self.pitch = 0.0;
+        self.flight = Flight::default();
         m.body_yaw = m.yaw;
     }
     fn stop(&mut self, m: &mut Mob, _: &mut Cx) {
-        m.no_gravity = false;
-        m.head_pitch = 0.0;
-        FLAPPING.lock().unwrap().remove(&m.id);
+        self.flight.land(m);
     }
     fn tick(&mut self, m: &mut Mob, _: &mut Cx) {
         let Some(r) = m.rider else {
             return;
         };
-        // The head looks where the rider looks; the body keeps its heading and turns towards it.
-        m.head_yaw = r.yaw;
-        let flying = !m.on_ground || r.jumping;
-        m.no_gravity = flying;
-        if !flying {
+        if m.on_ground && !r.jumping {
             // On the ground: a slow walk where the rider looks.
-            self.speed = 0.0;
-            self.pitch = 0.0;
-            m.head_pitch = 0.0;
+            self.flight.land(m);
             m.yaw = r.yaw;
             m.body_yaw = r.yaw;
+            m.head_yaw = r.yaw;
             let (s, c) = f64::from(r.yaw).to_radians().sin_cos();
             let (fwd, strafe) = (f64::from(r.forward), f64::from(r.strafe));
             m.velocity.x = (strafe * c - fwd * s) * WALK;
             m.velocity.z = (fwd * c + strafe * s) * WALK;
             return;
         }
-        if m.on_ground {
-            // Taking off: a jump forward.
-            self.speed = self.speed.max(STALL);
-            self.pitch = -MAX_CLIMB / 2.0;
-            sounds::queue(m.id, sounds::TAKEOFF, 0.8, 1.0);
-        }
-        // Turn: a share of the gap to the look, so it banks more and turns faster the further it has to go.
-        let gap = wrap(r.yaw - m.yaw);
-        let heading = m.yaw + (gap * TURN).clamp(-MAX_TURN, MAX_TURN);
-        m.yaw = heading;
-        m.body_yaw = heading;
-        // Pitch: follows the look, smoothly; a stall noses it down whatever the rider does.
-        let mut target = r.pitch.clamp(-MAX_CLIMB, MAX_DIVE);
-        if self.speed < STALL && target < 0.0 {
-            target = 20.0;
-        }
-        self.pitch += (target - self.pitch).clamp(-PITCH_RATE, PITCH_RATE);
-        m.head_pitch = self.pitch;
-        // Speed: gravity along the slope, then the keys.
-        let (sin_pitch, cos_pitch) = f64::from(self.pitch).to_radians().sin_cos();
-        self.speed += GRAVITY * sin_pitch;
-        let flapping = r.forward > 0.0 || r.jumping;
-        if r.forward > 0.0 && self.speed < CRUISE {
-            self.speed += (CRUISE - self.speed) * FLAP;
-        } else if r.forward < 0.0 {
-            self.speed -= BRAKE;
-        } else {
-            self.speed -= GLIDE_DRAG;
-        }
-        self.speed = self.speed.clamp(0.0, DIVE_MAX);
-        let (s, c) = f64::from(heading).to_radians().sin_cos();
-        let level = self.speed * cos_pitch;
-        m.velocity.x = -s * level;
-        m.velocity.z = c * level;
-        m.velocity.y = -self.speed * sin_pitch;
-        if r.jumping {
-            m.velocity.y = m.velocity.y.max(TAKE_OFF);
-        } else if !flapping {
-            // Gliding sinks gently, less the faster it goes.
-            m.velocity.y -= GLIDE_SINK * (1.0 - (self.speed / CRUISE).min(1.0)) + GLIDE_SINK / 2.0;
-        }
-        // One wing beat every 8 ticks while it flaps.
-        if flapping && m.age % 8 == 0 {
-            let pitch = 0.9 + m.random.next_float() * 0.2;
-            sounds::queue(m.id, sounds::FLAP, 0.6, pitch);
-        }
-        FLAPPING.lock().unwrap().insert(m.id, flapping);
+        let controls = Controls {
+            yaw: r.yaw,
+            pitch: r.pitch,
+            flap: r.forward > 0.0,
+            brake: r.forward < 0.0,
+            boost: r.jumping,
+        };
+        self.flight.tick(m, &controls);
     }
     fn box_clone(&self) -> Box<dyn Goal> {
         Box::new(self.clone())
     }
 }
-
-/// Whether each ridden vulture is beating its wings, for `pose` (the render state doesn't carry the keys). Single
-/// player: the goal and the drawing share the mob's id (multiplayer, v2, will need it sent).
-static FLAPPING: Mutex<BTreeMap<u32, bool>> = Mutex::new(BTreeMap::new());
 
 /// No fall damage (SPECS §6), ridden or not: the fall distance is reset every tick, before the move that could land
 /// it. Also keeps it muted and gives it its call.
@@ -272,11 +197,18 @@ impl Hooks for Vulture {
         }
         // Without the wandering trader's sounds: its own come from `sounds.rs`.
         event.mob.silent = true;
+        // Neutral: it fights back with its beak, and nearby vultures join in (SPECS §4).
+        event.mob.attrs.attack_damage = ATTACK_DAMAGE;
         let ai = &mut event.mob.ai;
         ai.goals.clear();
         ai.targets.clear();
         ai.goals.add(0, NoFall);
         ai.goals.add(1, Fly::default());
+        ai.goals.add(2, MeleeAttack::new(1.2, true));
+        ai.goals.add(3, wild::Soar::new());
+        ai.goals.add(4, Stroll::new(0.6));
+        ai.goals.add(5, LookAtPlayer::new(8.0));
+        ai.targets.add(1, HurtByTarget::new().alert());
     }
 
     fn entity_tick_listened(&self, _: &mut dyn Host, event: &mut EntityTickListenedEvent) {
@@ -295,7 +227,7 @@ impl Hooks for Vulture {
         if mob.kind != KIND {
             return Flow::Continue;
         }
-        let flapping = FLAPPING.lock().unwrap().get(&mob.id).copied().unwrap_or(false);
+        let flapping = flight::flapping(mob.id);
         creature::model::draw(host, &mut *event.draw, &model::VULTURE, TEXTURE, &|part| {
             pose(part, mob, flapping)
         });

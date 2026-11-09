@@ -35,6 +35,11 @@ library shares are described there; this spec gives the vulture's own rules and 
 - **Drops** (§4, 2026-11-09): `vulture:feather`, `vulture:raw_vulture` and `vulture:cooked_vulture` (mutton's food
   values; furnace, smoker and campfire), the loot table (0–2 feathers, 1–2 meat, cooked when it burns, Looting), in the
   creative tab. Built; not tested in game yet.
+- **Wild vulture, first part** (§4, 2026-11-09): it soars (takes off every ~30 s on average, climbs 18 to 26 blocks,
+  circles 30 to 60 s with a bank, spirals down and lands; left in the air, it glides down), walks about, looks at
+  players; neutral, it fights back (3 damage) and nearby vultures join in (vanilla's `HurtByTarget` and
+  `MeleeAttack`); spawns in deserts, badlands and savannas (weight 3, groups of 1 to 3, a NeoForge biome modifier).
+  The flight is shared with the ridden one (`flight.rs`). Built; not tested in game yet.
 
 ### To do (v1)
 
@@ -44,8 +49,8 @@ library shares are described there; this spec gives the vulture's own rules and 
 - §7.2 New spawn egg: drawn (2026-11-09); to check in game.
 - §2 Variable stats (health, speed) and their inheritance: in the library (common/SPECS.md §8.4) if Wyverns is under
   way by then, else here first.
-- §4 Wild vulture: hitbox (~1.2 × 1.0; it still has the trader's 0.6 × 1.95: try overriding its mob type's size at
-  spawn), AI (circling in flight, landing, scavenging), neutral and retaliating, natural spawning by biome.
+- §4 Wild vulture, the rest: hitbox (~1.2 × 1.0; it still has the trader's 0.6 × 1.95: try overriding its mob type's
+  size at spawn), landing on high points, scavenging (meat on the ground), fighting in the air rather than on foot.
 - §5 Taming with thrown raw chicken, owner.
 - §6 Tamed vulture: sit/follow, defending its owner, healing; riding limited to the owner, with a harness.
 - §6.1 Harness (item, recipe, slot, visible on the model).
