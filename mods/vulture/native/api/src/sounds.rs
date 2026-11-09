@@ -4,6 +4,7 @@ use creature::sounds::Voice;
 
 pub const AMBIENT: &str = "vulture:entity.vulture.ambient";
 pub const FLAP: &str = "vulture:entity.vulture.flap";
+pub const TAKEOFF: &str = "vulture:entity.vulture.takeoff";
 
 pub const VOICE: Voice = Voice {
     hurt: "vulture:entity.vulture.hurt",
