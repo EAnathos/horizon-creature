@@ -51,6 +51,9 @@ library shares are described there; this spec gives the vulture's own rules and 
   menu shown as a chest): harness (click to take it off, without chests), sit / follow, a button per chest (takes the
   last one off, its contents given back), and 15 slots per chest, saved in the `vulture:chests` attachment. On death
   it drops its harness, chests and their contents. Built; not tested in game yet.
+- **Talons** (§6.4, 2026-11-09): ridden in flight, R (`key.vulture.talons`) catches the nearest small mob (at most
+  1 × 1) or tamed animal up to 3 blocks below and carries it (−25 % cruising speed, half the climb); R again, the rider
+  getting off or its death lets go. Built; not tested in game yet.
 
 ### To do (v1)
 
@@ -62,7 +65,6 @@ library shares are described there; this spec gives the vulture's own rules and 
   way by then, else here first.
 - §4 Wild vulture, the rest: hitbox (~1.2 × 1.0; it still has the trader's 0.6 × 1.95: try overriding its mob type's
   size at spawn), landing on high points, scavenging (meat on the ground), fighting in the air rather than on foot.
-- §6.4 Talons: key, catch and release.
 - §7 Baby (model and texture), peck/eat, sit, attack and talon animations.
 - §8 Breeding.
 
@@ -233,6 +235,8 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
     babies…);
   - **allies** ✅: a player sneaking under the vulture (sneaking means consent), or a tamed animal.
 - Carrying someone **weighs it down** ❓: cruising speed −25 %, and it climbs at half the rate.
+- The key is a mod key (`key.vulture.talons` in `horizon-mods.txt`, R by default); a sneaking player under it can't be
+  caught in single player (the only player is its rider), so allies are tamed animals for now.
 - It lets go on the key, when the vulture dies or when the rider gets off. The fall deals normal damage.
 - A wild or unridden vulture catches nothing ✅.
 

@@ -179,6 +179,7 @@ impl Goal for FollowOwner {
                 flap: false,
                 brake: true,
                 boost: false,
+                heavy: false,
             }
         } else {
             Controls {
@@ -187,6 +188,7 @@ impl Goal for FollowOwner {
                 flap: true,
                 brake: false,
                 boost: m.on_ground,
+                heavy: false,
             }
         };
         self.flight.tick(m, &controls);

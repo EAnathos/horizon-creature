@@ -119,6 +119,7 @@ impl Goal for Soar {
                     flap: true,
                     brake: false,
                     boost: self.ticks < 10,
+                    heavy: false,
                 }
             }
             Phase::Circle => {
@@ -134,6 +135,7 @@ impl Goal for Soar {
                     flap: below > 1.0 || self.flight.speed < CRUISE * 0.6,
                     brake: false,
                     boost: false,
+                    heavy: false,
                 }
             }
             Phase::Descend => Controls {
@@ -142,6 +144,7 @@ impl Goal for Soar {
                 flap: false,
                 brake: self.flight.speed > CRUISE,
                 boost: false,
+                heavy: false,
             },
         };
         self.flight.tick(m, &controls);

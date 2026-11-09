@@ -20,6 +20,7 @@ mod model;
 mod screen;
 mod sounds;
 mod state;
+mod talons;
 mod tame;
 mod wild;
 
@@ -27,9 +28,9 @@ use flight::{Controls, Flight};
 use horizon_client::mobs::Who;
 use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, MeleeAttack, Stroll};
 use horizon_client::mod_api::{
-    Cx, EntityTickListenedEvent, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent, LivingDeathEvent,
-    MenuClickedEvent, MenuClosedEvent, MenuInputClosedEvent, Mob, MobSubmitEvent, NativeMobRender, RandomSource,
-    RegisterGoalsEvent,
+    Cx, EntityTickListenedEvent, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent, KeyEvent,
+    LivingDeathEvent, MenuClickedEvent, MenuClosedEvent, MenuInputClosedEvent, Mob, MobSubmitEvent, NativeMobRender,
+    RandomSource, RegisterGoalsEvent,
 };
 
 const KIND: &str = "vulture:vulture";
@@ -73,8 +74,9 @@ impl Goal for Fly {
     }
     fn stop(&mut self, m: &mut Mob, _: &mut Cx) {
         self.flight.land(m);
+        talons::release(m.id);
     }
-    fn tick(&mut self, m: &mut Mob, _: &mut Cx) {
+    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
         let Some(r) = m.rider else {
             return;
         };
@@ -104,8 +106,13 @@ impl Goal for Fly {
             flap: r.forward > 0.0,
             brake: r.forward < 0.0,
             boost: r.jumping,
+            heavy: talons::carrying(m.id),
         };
         self.flight.tick(m, &controls);
+        if talons::take_press() {
+            talons::toggle(m, cx.w);
+        }
+        talons::follow(m);
     }
     fn box_clone(&self) -> Box<dyn Goal> {
         Box::new(self.clone())
@@ -268,8 +275,16 @@ impl Hooks for Vulture {
     fn living_death(&self, host: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
         if event.kind == KIND {
             screen::died(host, &state::dimension(event.entity), event.entity);
+            talons::release(event.entity);
         }
         Flow::Continue
+    }
+
+    /// The talons key (SPECS §6.4), taken by the ridden vulture.
+    fn key(&self, host: &mut dyn Host, event: &mut KeyEvent<'_>) {
+        if event.pressed && event.key == host.mod_key("vulture", talons::KEY, talons::DEFAULT_KEY) {
+            talons::press();
+        }
     }
 
     fn entity_tick_listened(&self, _: &mut dyn Host, event: &mut EntityTickListenedEvent) {
@@ -281,6 +296,7 @@ impl Hooks for Vulture {
             creature::sounds::tick_post(host, event, &sounds::VOICE, creature::sounds::NEUTRAL);
             state::save(host, event.dimension, event.entity);
             state::look_for_food(host, event.dimension, event.entity);
+            talons::carry(host, event.dimension, event.entity);
         }
     }
 

@@ -42,7 +42,13 @@ pub struct Controls {
     pub brake: bool,
     /// A strong flap that climbs, and takes off from the ground (Space).
     pub boost: bool,
+    /// Carrying a creature in its talons (SPECS §6.4): a lower cruising speed and half the climb.
+    pub heavy: bool,
 }
+
+/// What a catch takes off its cruising speed and its climb.
+const HEAVY_CRUISE: f64 = 0.75;
+const HEAVY_CLIMB: f64 = 0.5;
 
 /// A flying vulture's momentum.
 #[derive(Clone, Debug, Default)]
@@ -88,8 +94,9 @@ impl Flight {
         // Speed: gravity along the slope, then the wings.
         let (sin_pitch, cos_pitch) = f64::from(self.pitch).to_radians().sin_cos();
         self.speed += GRAVITY * sin_pitch;
-        if c.flap && self.speed < CRUISE {
-            self.speed += (CRUISE - self.speed) * FLAP;
+        let cruise = if c.heavy { CRUISE * HEAVY_CRUISE } else { CRUISE };
+        if c.flap && self.speed < cruise {
+            self.speed += (cruise - self.speed) * FLAP;
         } else if c.brake {
             self.speed -= BRAKE;
         } else {
@@ -103,7 +110,10 @@ impl Flight {
         m.velocity.y = -self.speed * sin_pitch;
         let flapping = c.flap || c.boost;
         if c.boost {
-            m.velocity.y = m.velocity.y.max(TAKE_OFF);
+            m.velocity.y = m
+                .velocity
+                .y
+                .max(if c.heavy { TAKE_OFF * HEAVY_CLIMB } else { TAKE_OFF });
         } else if !flapping {
             // Gliding sinks gently, less the faster it goes.
             m.velocity.y -= GLIDE_SINK * (1.0 - (self.speed / CRUISE).min(1.0)) + GLIDE_SINK / 2.0;
