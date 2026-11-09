@@ -91,6 +91,11 @@ library shares are described there; this spec gives the vulture's own rules and 
   dive 0.8 blocks per tick), and sneak brings it down at least 0.2 a tick so it lands. The screen opens on the
   vulture's next tick (Horizon refuses a menu during the click). The talons key is on the mod's page in Options > Mods.
   Tried in game: right-click mount, take-off with Space, the screen with sneak + right-click.
+- **Rider, chests, catch, lost taming** (2026-11-09, tested in game): the rider sits on the seat (hitbox height 0.6:
+  Horizon seats a rider at a mod mob's box top); the saddlebags hug the flanks under the wing roots and swing out from
+  under the folded wings on the ground; a catch is held 0.7 below, one tick ahead along the flight, so it stays in the
+  talons. A vulture's saved state is read again when it isn't reachable yet on its first tick (it was taken for a new,
+  wild vulture about one load in four, and saved so), and a saved owner is never overwritten by none.
 - **v1 is written.** What is left is testing everything above in game, then tuning (flight numbers, taming odds,
   speeds, the dive attack) and fixing what the tests find.
 

@@ -464,12 +464,28 @@ pub fn save(host: &mut dyn Host, dimension: &str, id: u32) {
     }
     let holder = Holder::Entity(id);
     if !shared.read {
+        match STATE.get_existing(host, holder) {
+            Ok(Some(saved)) => {
+                shared.current = saved.clone();
+                shared.loaded = Some(saved);
+            }
+            Ok(None) => {}
+            // Not reachable yet (just loaded): read again next tick rather than take it for a new vulture.
+            Err(_) => return,
+        }
         shared.read = true;
-        if let Ok(Some(saved)) = STATE.get_existing(host, holder) {
+        return;
+    }
+    if shared.dirty && shared.current.owner.is_none() {
+        // Never untame a vulture by saving over it: a saved owner wins, and is applied to the mob.
+        if let Ok(Some(saved)) = STATE.get_existing(host, holder)
+            && saved.owner.is_some()
+        {
             shared.current = saved.clone();
             shared.loaded = Some(saved);
+            shared.dirty = false;
+            return;
         }
-        return;
     }
     if shared.dirty && STATE.set(host, holder, shared.current.clone()).is_ok() {
         shared.dirty = false;

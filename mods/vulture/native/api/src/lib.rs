@@ -38,10 +38,11 @@ use horizon_client::mod_api::{
 };
 
 const KIND: &str = "vulture:vulture";
-/// Its hitbox and eye height, in blocks (SPECS §4).
+/// Its hitbox and eye height, in blocks (SPECS §4). The height is also where a rider sits (Horizon seats a rider on
+/// a mod mob at its box's top), so it is set for the rider to sit on the harness's seat.
 const WIDTH: f64 = 1.2;
-const HEIGHT: f64 = 1.0;
-const EYE_HEIGHT: f64 = 0.9;
+const HEIGHT: f64 = 0.6;
+const EYE_HEIGHT: f64 = 0.55;
 
 pub fn hooks() -> Box<dyn Hooks> {
     Box::new(Vulture)
@@ -226,6 +227,9 @@ fn pose(name: &str, mob: &NativeMobRender<'_>, flapping: bool, look: &state::Loo
             "head" => [mob.pitch + HUNCH + peck, -mob.head_yaw, 0.0],
             // Sitting: legs folded forward under the belly.
             "leg_left" | "leg_right" if look.sitting => [HUNCH - 80.0, 0.0, 0.0],
+            // The saddlebags swing out from under the folded wings.
+            "chest_left" => [0.0, 0.0, 35.0],
+            "chest_right" => [0.0, 0.0, -35.0],
             "wing_left" => [-90.0, 0.0, 90.0],
             "wing_right" => [-90.0, 0.0, -90.0],
             "wing_left_mid" | "wing_right_mid" => [0.0, 0.0, 180.0],

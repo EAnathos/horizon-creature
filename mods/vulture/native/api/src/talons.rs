@@ -22,8 +22,9 @@ const REACH_DOWN: f64 = 3.0;
 const REACH_AROUND: f64 = 1.5;
 /// The biggest creature it lifts, in blocks (width and height).
 const MAX_SIZE: f64 = 1.0;
-/// How far below the vulture's feet the carried creature hangs.
-const HANG: f64 = 1.0;
+/// How far below the vulture's position (its feet) the carried creature's feet are held: its back against the
+/// talons.
+const HANG: f64 = 0.7;
 
 /// When the key was last pressed, in milliseconds since the epoch.
 static PRESSED: AtomicU64 = AtomicU64::new(0);
@@ -83,10 +84,12 @@ pub fn toggle(m: &Mob, w: &MobWorld) {
     }
 }
 
-/// From the goal, every tick it carries: where to hold the catch.
+/// From the goal, every tick it carries: where to hold the catch, one tick ahead along the vulture's velocity (the
+/// server moves the catch after the vulture has moved), so it stays in the talons instead of trailing behind.
 pub fn follow(m: &Mob) {
     if let Some(entry) = CARRIED.lock().unwrap().get_mut(&m.id) {
-        entry.1 = [m.position.x, m.position.y - HANG, m.position.z];
+        let v = m.velocity;
+        entry.1 = [m.position.x + v.x, m.position.y + v.y - HANG, m.position.z + v.z];
     }
 }
 
