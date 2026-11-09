@@ -9,5 +9,6 @@
   "item.vulture.feather": "Vulture Feather",
   "item.vulture.raw_vulture": "Raw Vulture",
   "item.vulture.cooked_vulture": "Cooked Vulture",
-  "item.vulture.harness": "Vulture Harness"
+  "item.vulture.harness": "Vulture Harness",
+  "container.vulture.vulture": "Vulture"
 }

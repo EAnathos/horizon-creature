@@ -1,7 +1,7 @@
 //! Builds modules (`build.rs`) and installs them in a launcher instance, as the Mods page's "Build" button would: the
 //! library always, then the mods asked for and the mods they require (all the buildable ones by default), each with its
 //! content part (`.hmod`) and its native part (`.hnmod`); then the instance's native build. Pressing Play on that
-//! instance then starts the game with them.
+//! instance then starts the game with them. A mod the launcher leaves out of that build fails the install.
 //!
 //! The launcher is `$HORIZON_LAUNCHER`, else `~/Téléchargements/horizon-launcher.AppImage`.
 use std::path::{Path, PathBuf};
@@ -37,7 +37,30 @@ pub fn run(instance: &str, names: &[String]) -> crate::Result {
             "--profile",
             "dev",
         ],
-    )
+    )?;
+    left_out(&home.join(".local/share/horizon-launcher/native/build.log"))
+}
+
+/// The launcher still succeeds when it leaves a mod out of the build (an injection it refuses, a helper file with two
+/// functions...), and the game then starts without it: its build log says so, which fails the install.
+fn left_out(log: &Path) -> crate::Result {
+    let Ok(text) = std::fs::read_to_string(log) else {
+        return Ok(());
+    };
+    let problems: Vec<&str> = text
+        .lines()
+        .filter(|l| l.contains("was left out") || l.contains("\"message\""))
+        .map(str::trim)
+        .collect();
+    if problems.is_empty() {
+        Ok(())
+    } else {
+        Err(format!(
+            "the native build left mods out ({}):\n{}",
+            log.display(),
+            problems.join("\n")
+        ))
+    }
 }
 
 /// Copies one built module into the instance, and turns its content on.

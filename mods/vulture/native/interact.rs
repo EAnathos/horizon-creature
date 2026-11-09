@@ -4,11 +4,17 @@
 // trait hook cannot run `/ride` in single player: `native_run_command` refuses during a player's turn).
 //
 // Only its owner gets anything from it:
+// - sneaking: its screen, opened by the vulture's `interact_entity` trait hook (left unclaimed here);
 // - holding the vulture harness: puts it on; a chest: adds one (two at most, harness needed);
 // - holding raw meat while it is hurt: heals 4;
 // - otherwise: mounts it when it wears a harness, else tells it to sit or follow.
 fn vulture_interact(game: &mut crate::game::Game<'_>, entity: i32, kind: &str, claimed: &mut bool) {
     use crate::mod_api::Host as _;
+    fn vulture_with_mob(game: &mut crate::game::Game<'_>, id: u32, f: impl FnOnce(&mut crate::mobs::Mob)) {
+        if let Some(m) = game.mobs.iter_mut().find(|m| m.id == id) {
+            f(m);
+        }
+    }
     if *claimed || kind != "vulture:vulture" {
         return;
     }
@@ -23,6 +29,10 @@ fn vulture_interact(game: &mut crate::game::Game<'_>, entity: i32, kind: &str, c
         return;
     };
     if !m.extra.tame || !crate::mobs::tame::owned_by(m.extra.owner, me) {
+        return;
+    }
+    if game.sneaking() {
+        *claimed = false;
         return;
     }
     let (saddled, chests, hurt) = (m.extra.saddled, m.extra.variant2, m.health < m.attrs.max_health);
@@ -69,8 +79,3 @@ fn vulture_interact(game: &mut crate::game::Game<'_>, entity: i32, kind: &str, c
     game.start_riding(id);
 }
 
-fn vulture_with_mob(game: &mut crate::game::Game<'_>, id: u32, f: impl FnOnce(&mut crate::mobs::Mob)) {
-    if let Some(m) = game.mobs.iter_mut().find(|m| m.id == id) {
-        f(m);
-    }
-}

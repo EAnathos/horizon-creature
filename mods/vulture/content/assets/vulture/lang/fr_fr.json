@@ -9,5 +9,6 @@
   "item.vulture.feather": "Plume de vautour",
   "item.vulture.raw_vulture": "Vautour cru",
   "item.vulture.cooked_vulture": "Vautour cuit",
-  "item.vulture.harness": "Harnais de vautour"
+  "item.vulture.harness": "Harnais de vautour",
+  "container.vulture.vulture": "Vautour"
 }

@@ -110,9 +110,44 @@ struct Shared {
     ate: Option<u32>,
     /// Ticks since it last looked for food.
     scan: u8,
+    /// Changes asked by the hooks.
+    pending: Vec<Change>,
+    /// Its dimension, from the tick hook.
+    dimension: String,
 }
 
 static SHARED: Mutex<BTreeMap<u32, Shared>> = Mutex::new(BTreeMap::new());
+
+/// A change the hooks (its screen) ask of the mob, applied by the goal on its next tick.
+#[derive(Clone, Copy, Debug)]
+pub enum Change {
+    ToggleSit,
+    RemoveChest,
+    RemoveHarness,
+}
+
+/// Its state as last handed over by the goal.
+pub fn saved(id: u32) -> Saved {
+    SHARED
+        .lock()
+        .unwrap()
+        .get(&id)
+        .map(|s| s.current.clone())
+        .unwrap_or_default()
+}
+
+/// Asks the mob for `change` (from a hook).
+pub fn request(id: u32, change: Change) {
+    let mut map = SHARED.lock().unwrap();
+    let shared = map.entry(id).or_default();
+    shared.pending.push(change);
+    // Seen at once by a screen opened again before the goal's next tick.
+    match change {
+        Change::ToggleSit => shared.current.sitting = !shared.current.sitting,
+        Change::RemoveChest => shared.current.chests = shared.current.chests.saturating_sub(1),
+        Change::RemoveHarness => shared.current.harness = false,
+    }
+}
 
 /// What the drawing needs of it: its harness and chests (the render state doesn't carry them).
 pub fn gear(id: u32) -> (bool, u8) {
@@ -143,6 +178,13 @@ pub fn sync_mob(m: &mut Mob) {
         m.extra.sitting = saved.sitting;
         m.extra.saddled = saved.harness;
         m.extra.variant2 = saved.chests;
+    }
+    for change in std::mem::take(&mut shared.pending) {
+        match change {
+            Change::ToggleSit => m.extra.sitting = !m.extra.sitting,
+            Change::RemoveChest => m.extra.variant2 = m.extra.variant2.saturating_sub(1),
+            Change::RemoveHarness => m.extra.saddled = false,
+        }
     }
     let now = of(m);
     if shared.read && now != shared.current {
@@ -215,10 +257,23 @@ pub fn look_for_food(host: &mut dyn Host, dimension: &str, id: u32) {
     }
 }
 
+/// Its dimension, as its last tick heard it.
+pub fn dimension(id: u32) -> String {
+    SHARED
+        .lock()
+        .unwrap()
+        .get(&id)
+        .map(|s| s.dimension.clone())
+        .unwrap_or_default()
+}
+
 /// From `entity_tick_post`: reads the save the first time, writes it when the state changed.
-pub fn save(host: &mut dyn Host, id: u32) {
+pub fn save(host: &mut dyn Host, dimension: &str, id: u32) {
     let mut map = SHARED.lock().unwrap();
     let shared = map.entry(id).or_default();
+    if shared.dimension != dimension {
+        shared.dimension = dimension.to_owned();
+    }
     let holder = Holder::Entity(id);
     if !shared.read {
         shared.read = true;

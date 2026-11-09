@@ -37,6 +37,8 @@ Rules shared by every module of the Horizon Creature series ([ARCHITECTURE.md](A
 - A native crate may only use crates in Horizon's `Cargo.lock`. The tools (`tools/`) are a separate crate with their own
   lock.
 - Server logic stays apart from rendering (multiplayer comes later).
+- A mixin injection's helper file holds exactly one private function, named `<mod>_<injection id>` (helpers it
+  needs go inside it); the launcher leaves the whole mod out otherwise, which `cargo creature install` reports.
 - Generated files say so in their first line and are never edited by hand: `model.rs` (from `.bbmodel`), the shared
   creative tab.
 - Before adding a system to a mod, check the library; before writing one that a second mod will need, put it in the

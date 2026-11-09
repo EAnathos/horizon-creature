@@ -17,6 +17,7 @@
 //! It depends on the series' library, Horizon Creature (`creature`, common/SPECS.md).
 mod flight;
 mod model;
+mod screen;
 mod sounds;
 mod state;
 mod tame;
@@ -26,8 +27,9 @@ use flight::{Controls, Flight};
 use horizon_client::mobs::Who;
 use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, MeleeAttack, Stroll};
 use horizon_client::mod_api::{
-    Cx, EntityTickListenedEvent, EntityTickPostEvent, Flow, Goal, Hooks, Host, Mob, MobSubmitEvent, NativeMobRender,
-    RandomSource, RegisterGoalsEvent,
+    Cx, EntityTickListenedEvent, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent, LivingDeathEvent,
+    MenuClickedEvent, MenuClosedEvent, MenuInputClosedEvent, Mob, MobSubmitEvent, NativeMobRender, RandomSource,
+    RegisterGoalsEvent,
 };
 
 const KIND: &str = "vulture:vulture";
@@ -240,6 +242,36 @@ impl Hooks for Vulture {
         ai.targets.add(3, HurtByTarget::new().alert());
     }
 
+    /// Sneak + right-click by its owner (left to this hook by the `interact.rs` injection): its screen.
+    fn interact_entity(&self, host: &mut dyn Host, event: &mut InteractEntityEvent<'_>) -> Flow {
+        if event.kind != KIND || !host.sneaking() {
+            return Flow::Continue;
+        }
+        match u32::try_from(event.entity) {
+            Ok(id) if screen::open(host, id) => Flow::Cancel,
+            _ => Flow::Continue,
+        }
+    }
+
+    fn menu_clicked(&self, host: &mut dyn Host, event: &mut MenuClickedEvent) {
+        screen::clicked(host, event);
+    }
+
+    fn menu_closed(&self, _: &mut dyn Host, event: &mut MenuClosedEvent) {
+        screen::forget(event.uuid);
+    }
+
+    fn menu_input_closed(&self, host: &mut dyn Host, event: &mut MenuInputClosedEvent<'_>) {
+        screen::closed(host, event);
+    }
+
+    fn living_death(&self, host: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
+        if event.kind == KIND {
+            screen::died(host, &state::dimension(event.entity), event.entity);
+        }
+        Flow::Continue
+    }
+
     fn entity_tick_listened(&self, _: &mut dyn Host, event: &mut EntityTickListenedEvent) {
         event.listened = true;
     }
@@ -247,7 +279,7 @@ impl Hooks for Vulture {
     fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
         if event.kind == KIND {
             creature::sounds::tick_post(host, event, &sounds::VOICE, creature::sounds::NEUTRAL);
-            state::save(host, event.entity);
+            state::save(host, event.dimension, event.entity);
             state::look_for_food(host, event.dimension, event.entity);
         }
     }

@@ -47,6 +47,10 @@ library shares are described there; this spec gives the vulture's own rules and 
   right-click: harness on, a chest on (two at most), raw meat heals 4 when hurt, then mount (with a harness) or sit /
   follow. **Harness** `vulture:harness` (recipe, texture); harness and chests drawn on the model when worn. State in
   `Mob.extra`, saved in the `vulture:state` attachment (`state.rs`). Built; not tested in game yet.
+- **The vulture's screen and chests** (§6.1, §6.3, 2026-11-09): sneak + right-click by its owner opens it (a server
+  menu shown as a chest): harness (click to take it off, without chests), sit / follow, a button per chest (takes the
+  last one off, its contents given back), and 15 slots per chest, saved in the `vulture:chests` attachment. On death
+  it drops its harness, chests and their contents. Built; not tested in game yet.
 
 ### To do (v1)
 
@@ -58,7 +62,6 @@ library shares are described there; this spec gives the vulture's own rules and 
   way by then, else here first.
 - §4 Wild vulture, the rest: hitbox (~1.2 × 1.0; it still has the trader's 0.6 × 1.95: try overriding its mob type's
   size at spawn), landing on high points, scavenging (meat on the ground), fighting in the air rather than on foot.
-- §6.3 Chests' contents (2 × 15 slots) and the vulture's screen (sneak + right-click), with its harness slot.
 - §6.4 Talons: key, catch and release.
 - §7 Baby (model and texture), peck/eat, sit, attack and talon animations.
 - §8 Breeding.

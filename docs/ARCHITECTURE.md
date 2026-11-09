@@ -131,7 +131,7 @@ tools/                  the Rust build tools (`cargo creature ...`), shared by e
 | `cargo creature pack <module>` | A module's `native/` → `target/<id>.hnmod` |
 | `cargo creature build [mod...]` | Writes the tab and builds the library and the mods (default: all) into `target/dist/` (`.hmod`, checked `.hnmod`), without installing |
 | `cargo creature check` | The repository's consistency (docs/CONVENTIONS.md, "Formatting, lint and checks") |
-| `cargo creature install [--instance <name>] [mod...]` | Writes the tab, builds and installs the library and the mods (default: every mod with something to build) in the instance (default `creature-dev`), turns their content on and runs the instance's native build |
+| `cargo creature install [--instance <name>] [mod...]` | Writes the tab, builds and installs the library and the mods (default: every mod with something to build) in the instance (default `creature-dev`), turns their content on and runs the instance's native build; fails when the launcher leaves a mod out of it (an injection it refuses) |
 
 - **One Horizon revision for the whole series**: every `horizon-mixin.toml` and `api/Cargo.toml` pins the same commit,
   and so does CI (`HORIZON_REV`). Moving to a new revision is done for all modules at once.
