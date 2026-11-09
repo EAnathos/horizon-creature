@@ -64,6 +64,8 @@ library shares are described there; this spec gives the vulture's own rules and 
   its own size, in place of the trader's 0.6 × 1.95); it fights on the wing (`DiveAttack`: climbs above its target,
   dives, strikes for 3, pulls away; in place of vanilla's ground melee); poses for pecking (eating), striking, sitting
   (settled, legs folded) and carrying (legs down). Built; not tested in game yet.
+- **Landing on high points** (§4, 2026-11-09): after circling, the wild vulture picks the highest ground within 16
+  blocks (a peak, a tree top) and glides down onto it. Built; not tested in game yet.
 
 ### To do (v1)
 
@@ -71,7 +73,6 @@ library shares are described there; this spec gives the vulture's own rules and 
   the numbers, bank and stall to tune.
 - §7.1 Lean model: written (2026-11-09); to check in game with its poses (folded, gliding, flapping, banking, diving).
 - §7.2 New spawn egg: drawn (2026-11-09); to check in game.
-- §4 Wild vulture: landing on high points (needs a height query from a goal).
 - §7 The baby's own proportions (big head, downy crown) and texture; for now a grown vulture at half size.
 - Everything above to test in game, then to tune.
 

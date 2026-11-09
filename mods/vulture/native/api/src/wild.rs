@@ -1,8 +1,8 @@
 //! The wild vulture (SPECS §4): soaring in slow circles high up, then gliding back down.
 //!
 //! `Soar` flies with the same physics as the ridden flight (`flight::Flight`), steered by its own controls: it takes
-//! off now and then, climbs to 18 to 26 blocks above where it left the ground, circles there for 30 to 60 s and
-//! spirals down until it lands. A vulture left in the air (its rider got off) glides down the same way. Fighting
+//! off now and then, climbs to 18 to 26 blocks above where it left the ground, circles there for 30 to 60 s, then
+//! picks the highest point within 16 blocks (a peak, a tree top, a pillar, `landing_spot`) and glides down onto it. A vulture left in the air (its rider got off) glides down the same way. Fighting
 //! (`DiveAttack`, below, its target from `HurtByTarget`) and riding come first.
 use horizon_client::mobs::goals;
 use horizon_client::mod_api::{Cx, Goal, Mob, RandomSource};
@@ -32,6 +32,30 @@ pub struct Soar {
     ticks: i32,
     /// Ticks to circle before going down.
     circle_for: i32,
+    /// Where it lands: the highest point near it when it starts down.
+    landing: Option<[f64; 3]>,
+}
+
+/// How far around it looks for a high point to land on, and in steps of how many blocks.
+const LANDING_SEARCH: i32 = 16;
+const LANDING_STEP: i32 = 2;
+
+/// The highest ground within `LANDING_SEARCH` blocks (`Heightmap.Types.WORLD_SURFACE`), where it lands; None in
+/// unloaded ground.
+fn landing_spot(m: &Mob, cx: &Cx) -> Option<[f64; 3]> {
+    let world = cx.w.world;
+    let (cx0, cz0) = (m.position.x.floor() as i32, m.position.z.floor() as i32);
+    let mut best: Option<(i32, i32, i32)> = None;
+    for dx in (-LANDING_SEARCH..=LANDING_SEARCH).step_by(LANDING_STEP as usize) {
+        for dz in (-LANDING_SEARCH..=LANDING_SEARCH).step_by(LANDING_STEP as usize) {
+            let (x, z) = (cx0 + dx, cz0 + dz);
+            let top = world.world_surface(x, z, |s| world.is_air(s));
+            if top > world.layout().min_y() && best.is_none_or(|b| top > b.1) {
+                best = Some((x, top, z));
+            }
+        }
+    }
+    best.map(|(x, y, z)| [f64::from(x) + 0.5, f64::from(y), f64::from(z) + 0.5])
 }
 
 impl Soar {
@@ -45,6 +69,7 @@ impl Soar {
             clockwise: true,
             ticks: 0,
             circle_for: 0,
+            landing: None,
         }
     }
 
@@ -83,9 +108,10 @@ impl Goal for Soar {
     fn every_tick(&self) -> bool {
         true
     }
-    fn start(&mut self, m: &mut Mob, _: &mut Cx) {
+    fn start(&mut self, m: &mut Mob, cx: &mut Cx) {
         self.flight = Flight::default();
         self.ticks = 0;
+        self.landing = None;
         self.center = [m.position.x, m.position.z];
         self.radius = 12.0 + f64::from(m.random.next_int_bound(9).unwrap_or(4));
         self.clockwise = m.random.next_int_bound(2).unwrap_or(0) == 0;
@@ -98,12 +124,13 @@ impl Goal for Soar {
             self.phase = Phase::Descend;
             self.cruise_y = m.position.y;
             self.flight.speed = CRUISE * 0.6;
+            self.landing = landing_spot(m, cx);
         }
     }
     fn stop(&mut self, m: &mut Mob, _: &mut Cx) {
         self.flight.land(m);
     }
-    fn tick(&mut self, m: &mut Mob, _: &mut Cx) {
+    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
         self.ticks += 1;
         let yaw = self.circle_yaw(m);
         let below = self.cruise_y - m.position.y;
@@ -126,6 +153,7 @@ impl Goal for Soar {
                 if self.ticks > self.circle_for {
                     self.phase = Phase::Descend;
                     self.ticks = 0;
+                    self.landing = landing_spot(m, cx);
                 }
                 // Holds its height: noses up below it, down above it; flaps only to keep its speed or climb.
                 let pitch = (-below * 3.0).clamp(-20.0, 20.0) as f32;
@@ -138,13 +166,35 @@ impl Goal for Soar {
                     heavy: false,
                 }
             }
-            Phase::Descend => Controls {
-                yaw,
-                pitch: 12.0,
-                flap: false,
-                brake: self.flight.speed > CRUISE,
-                boost: false,
-                heavy: false,
+            // Down onto its landing spot along a glide path (0.4 block down per block across), steeply over it; with no
+            // spot found, spiralling down where it is.
+            Phase::Descend => match self.landing {
+                Some(at) => {
+                    let (dx, dz) = (at[0] - m.position.x, at[2] - m.position.z);
+                    let flat = (dx * dx + dz * dz).sqrt();
+                    let path = at[1] + flat * 0.4 - m.position.y;
+                    let (pitch, brake) = if flat < 3.0 {
+                        (45.0, true)
+                    } else {
+                        ((-path * 3.0).clamp(-20.0, 35.0) as f32, self.flight.speed > CRUISE)
+                    };
+                    Controls {
+                        yaw: heading_of(dx, dz),
+                        pitch,
+                        flap: path > 2.0,
+                        brake,
+                        boost: false,
+                        heavy: false,
+                    }
+                }
+                None => Controls {
+                    yaw,
+                    pitch: 12.0,
+                    flap: false,
+                    brake: self.flight.speed > CRUISE,
+                    boost: false,
+                    heavy: false,
+                },
             },
         };
         self.flight.tick(m, &controls);
