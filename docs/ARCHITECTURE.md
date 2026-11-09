@@ -97,7 +97,7 @@ The whole series shares **one creative tab**, "Horizon Creature", owned by the l
   (`common/module.toml`), then each mod's (`creative` in `mods/<mod>/module.toml`), mods in folder-name order. Never edit
   it by hand.
 - A mod therefore declares **no tab of its own**: its items reach the tab by being listed in its `module.toml`.
-- The tab's button shows `common/module.toml`'s `icon`: `creature:icon`, the library's own sprite.
+- The tab's button shows `common/module.toml`'s `icon`: the creature guide book, `creature:guide`.
 - A new item in a mod changes the library's file: release the library with the mod (§6).
 - Every mod item also appears in the search tab under its name (Horizon does it).
 

@@ -71,8 +71,7 @@ several creature mods share, and the series' single creative tab. It adds no cre
 
 - One tab, "Horizon Creature" (`itemGroup.creature`), generated from the modules' `module.toml`
   (docs/ARCHITECTURE.md §4). The library's items first, then each mod's.
-- Icon ✅: the library's own sprite (a bird track on an amber badge), the item `creature:icon`, which is kept out of
-  the tab and has no recipe (it shows in the search tab, as every item does).
+- Icon ✅: the creature guide book (`creature:guide`, §9).
 - The glass jar is **hidden when no mod uses it** ✅ (neither Butterflies, Worms nor Fireflies installed): not in the tab,
   not craftable. A tab file can't be conditional today, so how is to prototype ❓: a conditional tab entry if Horizon's
   conditions reach tabs, else a second tab file chosen by the library's native half, else the item registered only when

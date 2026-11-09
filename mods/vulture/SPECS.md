@@ -78,7 +78,8 @@ library shares are described there; this spec gives the vulture's own rules and 
 - §7.2 New spawn egg: drawn (2026-11-09); to check in game.
 - **After the first tests** (2026-11-09): the harness in the creative tab; red when hurt and tipping over when dying
   (the library's `tint` and `death_tilt`), so the drops no longer seem to come early; wild vultures no longer land in
-  tree tops (leaves skipped), climb over what they bump into in flight, and give up a landing spot after 20 s.
+  tree tops (leaves skipped), climb over what they bump into in flight, and give up a landing spot after 20 s. The
+  tab's button is the guide book.
 - **v1 is written.** What is left is testing everything above in game, then tuning (flight numbers, taming odds,
   speeds, the dive attack) and fixing what the tests find.
 

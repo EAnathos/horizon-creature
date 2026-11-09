@@ -1,5 +1,5 @@
 {
-  "icon": "creature:icon",
+  "icon": "creature:guide",
   "items": [
     "creature:guide",
     "vulture:vulture_spawn_egg",
