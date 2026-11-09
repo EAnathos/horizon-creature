@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:cooked_mutton",
+  "components": {
+    "minecraft:item_model": "vulture:cooked_vulture",
+    "minecraft:item_name": {
+      "translate": "item.vulture.cooked_vulture"
+    }
+  }
+}

@@ -1,7 +1,11 @@
 {
   "icon": "minecraft:sniffer_egg",
   "items": [
-    "vulture:vulture_spawn_egg"
+    "creature:guide",
+    "vulture:vulture_spawn_egg",
+    "vulture:feather",
+    "vulture:raw_vulture",
+    "vulture:cooked_vulture"
   ],
   "title": "itemGroup.creature"
 }

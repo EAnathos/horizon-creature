@@ -32,6 +32,10 @@ library shares are described there; this spec gives the vulture's own rules and 
 - **Moved into the Horizon Creature series** (2026-11-08): `mods/vulture/`, depends on the library; built with the
   series' tools (`cargo creature install vulture`), tested in game.
 
+- **Drops** (§4, 2026-11-09): `vulture:feather`, `vulture:raw_vulture` and `vulture:cooked_vulture` (mutton's food
+  values; furnace, smoker and campfire), the loot table (0–2 feathers, 1–2 meat, cooked when it burns, Looting), in the
+  creative tab. Built; not tested in game yet.
+
 ### To do (v1)
 
 - §6.2 Dynamic flight: written (2026-11-09) and briefly flown in game (take-off, flapping, banking into a turn); to tune
@@ -41,8 +45,7 @@ library shares are described there; this spec gives the vulture's own rules and 
 - §2 Variable stats (health, speed) and their inheritance: in the library (common/SPECS.md §8.4) if Wyverns is under
   way by then, else here first.
 - §4 Wild vulture: hitbox (~1.2 × 1.0; it still has the trader's 0.6 × 1.95: try overriding its mob type's size at
-  spawn), AI (circling in flight, landing, scavenging), neutral
-  and retaliating, natural spawning by biome, drops (feathers, meat) and their items.
+  spawn), AI (circling in flight, landing, scavenging), neutral and retaliating, natural spawning by biome.
 - §5 Taming with thrown raw chicken, owner.
 - §6 Tamed vulture: sit/follow, defending its owner, healing; riding limited to the owner, with a harness.
 - §6.1 Harness (item, recipe, slot, visible on the model).

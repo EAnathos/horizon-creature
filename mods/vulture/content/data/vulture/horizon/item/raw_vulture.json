@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:mutton",
+  "components": {
+    "minecraft:item_model": "vulture:raw_vulture",
+    "minecraft:item_name": {
+      "translate": "item.vulture.raw_vulture"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "food",
+  "cookingtime": 200,
+  "experience": 0.35,
+  "ingredient": "vulture:raw_vulture",
+  "result": {
+    "id": "vulture:cooked_vulture"
+  }
+}
