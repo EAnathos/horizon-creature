@@ -5,4 +5,4 @@ edition = "2024"
 
 [dependencies]
 # The launcher points this at the Horizon source it builds the game from.
-horizon-client = { git = "https://github.com/horizon-rust/horizon", rev = "66f3981f522b24c250b21523a70080965b940424" }
+horizon-client = { git = "https://github.com/horizon-rust/horizon", rev = "fdc87aecdbd116bf1e08adcd062fcbaea8c2e2ca" }

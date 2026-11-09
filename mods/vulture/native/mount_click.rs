@@ -10,7 +10,7 @@ fn vulture_mount_click(game: &mut crate::game::Game<'_>, entity: i32, kind: &str
     let Ok(id) = u32::try_from(entity) else {
         return;
     };
-    if game.riding.is_some() || !game.may_board() || !game.native_may_board(id) {
+    if game.riding.is_some() || !game.native_may_board(id) {
         return;
     }
     let Some(m) = game.mobs.iter_mut().find(|m| m.id == id && m.alive()) else {

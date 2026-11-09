@@ -18,7 +18,7 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   # The series' pinned Horizon revision (every horizon-mixin.toml; `cargo creature check` enforces it).
-  HORIZON_REV: 66f3981f522b24c250b21523a70080965b940424
+  HORIZON_REV: fdc87aecdbd116bf1e08adcd062fcbaea8c2e2ca
 
 jobs:
   lint:
