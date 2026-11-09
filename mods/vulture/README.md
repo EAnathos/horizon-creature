@@ -45,6 +45,7 @@ Tried in game: the vulture, its spawn egg, mounting and the ridden flight. Built
 | `content/` | The content half (`vulture.hmod`): entity, egg, textures, sounds, translations |
 | `native/` | The native half (`vulture.hnmod`): `api/` (crate `mod-vulture`) and three mixin injections (`interact.rs`, `mount_hud.rs`, `ride_keys.rs`) |
 | `assets/models/vulture.bbmodel` | The Blockbench model, source of `native/api/src/model.rs` (`cargo creature model vulture`) |
+| `assets/models/baby.bbmodel` | The baby's model, source of `native/api/src/model_baby.rs` (`cargo creature model vulture baby`) |
 | `module.toml` | Its entry for the series' tools and its creative tab items |
 
 Build and install with the library: `cargo creature install vulture` (see the [root README](../../README.md)).

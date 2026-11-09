@@ -17,6 +17,7 @@
 //! It depends on the series' library, Horizon Creature (`creature`, common/SPECS.md).
 mod flight;
 mod model;
+mod model_baby;
 mod screen;
 mod sounds;
 mod state;
@@ -171,8 +172,9 @@ const SIT_DROP: f32 = 0.3;
 /// How long a peck lasts, in ticks.
 const PECK: f32 = 10.0;
 
-/// A baby's size, against a grown vulture's.
-const BABY_SCALE: f32 = 0.5;
+/// The baby's model is drawn at this scale.
+const BABY_SCALE: f32 = 0.8;
+const BABY_TEXTURE: &str = "vulture:entity/vulture/baby";
 
 /// How far its back slopes down to the tail on the ground, in degrees.
 const HUNCH: f32 = 18.0;
@@ -354,7 +356,12 @@ impl Hooks for Vulture {
             "chest_right" => look.chests >= 2,
             _ => true,
         };
-        // A baby is drawn at half size (SPECS §8), its head a little bigger (`pose` can't scale: it is the body).
+        // A baby is its own model (SPECS §7: a chick with a big head and down), with the same groups and poses.
+        let (part, texture) = if look.baby {
+            (&model_baby::BABY, BABY_TEXTURE)
+        } else {
+            (&model::VULTURE, TEXTURE)
+        };
         event.draw.push();
         if look.baby {
             event.draw.scale([BABY_SCALE; 3]);
@@ -366,8 +373,8 @@ impl Hooks for Vulture {
         creature::model::draw_shown(
             host,
             &mut *event.draw,
-            &model::VULTURE,
-            TEXTURE,
+            part,
+            texture,
             &|part| pose(part, mob, flapping, &look, carrying),
             &shown,
         );

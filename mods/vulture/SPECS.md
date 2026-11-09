@@ -66,6 +66,9 @@ library shares are described there; this spec gives the vulture's own rules and 
   (settled, legs folded) and carrying (legs down). Built; not tested in game yet.
 - **Landing on high points** (§4, 2026-11-09): after circling, the wild vulture picks the highest ground within 16
   blocks (a peak, a tree top) and glides down onto it. Built; not tested in game yet.
+- **The baby's model** (§7, §8, 2026-11-09): a chick of its own (`assets/models/baby.bbmodel`, 64 × 64): a big
+  grey-pink head with a downy crown, a short neck, a round downy body, stubby wings, a dark beak; the same groups as the
+  grown vulture, so the same poses. Built; not tested in game yet.
 
 ### To do (v1)
 
@@ -73,8 +76,8 @@ library shares are described there; this spec gives the vulture's own rules and 
   the numbers, bank and stall to tune.
 - §7.1 Lean model: written (2026-11-09); to check in game with its poses (folded, gliding, flapping, banking, diving).
 - §7.2 New spawn egg: drawn (2026-11-09); to check in game.
-- §7 The baby's own proportions (big head, downy crown) and texture; for now a grown vulture at half size.
-- Everything above to test in game, then to tune.
+- **v1 is written.** What is left is testing everything above in game, then tuning (flight numbers, taming odds,
+  speeds, the dive attack) and fixing what the tests find.
 
 What waits for v2 is listed apart, in §9.
 
