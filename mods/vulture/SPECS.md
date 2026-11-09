@@ -17,8 +17,8 @@ library shares are described there; this spec gives the vulture's own rules and 
   by the mod, ridden and flown. Tested in game, single player.
 - **Mounting**: right-click on the vulture (no cheats needed) or `/ride` (cheats). Holding sneak gets off (confirmed in
   game).
-- **Ridden flight** (first version, replaced by the dynamic flight of §6.2): WASD (ZQSD on AZERTY) following the look
-  direction, Space climbs, nothing = glide, Ctrl = dive. The vulture takes no fall damage.
+- **Ridden flight** (§6.2), tried in game 2026-11-09: turned by the look, Space climbs, sneak descends, getting off only
+  on the ground. The vulture takes no fall damage.
 - **Model and texture of the tawny vulture**: `mods/vulture/assets/models/vulture.bbmodel` (Blockbench), converted to
   Rust by `cargo creature model vulture` and drawn by the library (`creature::model`). First version (17 cubes, 64×64)
   replaced on 2026-11-09 by the lean model of §7.1 (32 cubes, 128×128); the first version was tested in game, the lean
@@ -43,8 +43,8 @@ library shares are described there; this spec gives the vulture's own rules and 
 
 ### To do (v1)
 
-- §6.2 Dynamic flight: written (2026-11-09) and briefly flown in game (take-off, flapping, banking into a turn); to tune
-  in game (numbers, bank, stall).
+- §6.2 Flight: Space / sneak for height and getting off only on the ground, written after the first flights (to try);
+  the numbers, bank and stall to tune.
 - §7.1 Lean model: written (2026-11-09); to check in game with its poses (folded, gliding, flapping, banking, diving).
 - §7.2 New spawn egg: drawn (2026-11-09); to check in game.
 - §2 Variable stats (health, speed) and their inheritance: in the library (common/SPECS.md §8.4) if Wyverns is under
@@ -183,19 +183,19 @@ Variant names are simple colour names ✅, so players need not know the species.
 > Riding and flight are shared with Wyverns (common/SPECS.md §8.1). The vulture's keys and numbers below. **No
 > stamina** ✅: the vulture flies as long as the rider wants.
 
-Flown like a plane, not like a flying camera: the vulture always moves forward along its heading, and the rider steers
-it by **looking** where it should go ✅.
+Flown like a plane, not like a flying camera: the vulture always moves forward along its heading, the rider turns it
+by **looking** where it should go ✅ and sets its height with **Space and sneak** ✅ (tried in game, 2026-11-09).
 
 | Rider | Vulture |
 |---|---|
-| Looks **up** | Noses up and **climbs** ✅ (loses speed as it climbs) |
-| Looks **down** | Noses down and **dives** ✅ (gains speed, up to the dive speed) |
 | Looks **right / left** | **Banks** to that side and **turns in an arc** ✅, like a plane: the further the look is from its heading, the steeper the bank (up to ~50° ❓) and the tighter the turn (up to ~5° a tick ❓); it levels out as its heading reaches the look |
 | W (Z on AZERTY) | Flaps: speeds up to its cruising speed (wing beats, flap sound) |
 | (nothing) | Glides: keeps its speed slowly falling off, sinks gently when level |
 | S | Air brake: slows down, sinks a little faster ❓ |
-| Space | Strong flap: climbs straight up a little; on the ground, **takes off** |
-| Sneak | Get off, **even in mid-air** ✅ (normal fall damage) |
+| Space (held) | Noses up and **climbs** with strong flaps ✅ (loses speed); on the ground, **takes off** |
+| Sneak (held) | Noses down and **descends** ✅ (gains speed, up to the dive speed); Ctrl does the same |
+| (neither) | Flies level |
+| Sneak on the ground | Get off ✅: **only on the ground**, never in the air |
 | "Talons" key ✅ (R, rebindable in Controls) | Catch / release (§6.4) |
 
 - **Speed and pitch** trade like a glider's ✅: diving builds speed, climbing spends it. Too slow while climbing, it
@@ -203,8 +203,10 @@ it by **looking** where it should go ✅.
 - The **body follows the flight**: pitched with the climb or dive, rolled with the bank, the wings spread wide in a
   glide, beating when it flaps, swept back in a steep dive ❓.
 - The pitch and the turn rate follow the look smoothly (no snapping), so the flight reads as momentum.
-- A and D (Q and D on AZERTY) do nothing in the air ❓.
-- On the ground: a slow walk (WASD), Space takes off.
+- A and D (Q and D on AZERTY) do nothing in the air ❓; the look's pitch does nothing either (the camera is free).
+- On the ground: a slow walk (WASD), Space takes off, sneak gets off.
+- Horizon gets a rider off on sneak before any mod hears of it: the `ride-keys` injection (`ride_keys.rs`) keeps them
+  on in the air.
 - ✅ Chests **do not weigh** on its flight. ✅ **No thermals.**
 - Starting numbers ❓ (blocks per tick): cruise 0.6, dive up to 1.2, slowest 0.25 before a stall, glide sink 0.04 when
   level, take-off climb 0.4.

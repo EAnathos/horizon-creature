@@ -42,3 +42,15 @@ bindings = [
   { name = "w", ty = "i32", value = "w" },
   { name = "h", ty = "i32", value = "h" },
 ]
+
+# Sneak in the air descends instead of getting off; on the ground it still dismounts.
+[[injection]]
+id = "ride-keys"
+target = "horizon_client::game::mounts::Game<'_>::tick_mount_riding"
+kind = "HEAD"
+cancellable = true
+helper = "ride_keys.rs"
+bindings = [
+  { name = "game", ty = "&mut Game<'_>", value = "&mut *self" },
+  { name = "keys", ty = "Keys", value = "keys" },
+]

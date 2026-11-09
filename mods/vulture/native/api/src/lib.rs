@@ -40,8 +40,13 @@ const WALK: f64 = 0.12;
 /// Its peck when it fights back (SPECS §4).
 const ATTACK_DAMAGE: f32 = 3.0;
 
-/// Ridden flight (SPECS §6.2): the rider's look and keys steer `flight::Flight`. W flaps up to the cruising speed, S
-/// brakes, Space flaps hard (and takes off from the ground); on the ground it walks.
+/// The pitch it takes, ridden, climbing (Space) and descending (sneak), in degrees.
+const CLIMB_PITCH: f32 = 35.0;
+const DESCEND_PITCH: f32 = 35.0;
+
+/// Ridden flight (SPECS §6.2): the rider's look turns it and the keys steer `flight::Flight`. W flaps up to the
+/// cruising speed, S brakes, Space climbs with strong flaps (and takes off from the ground), sneak descends (getting off
+/// only on the ground, `ride_keys.rs`); on the ground it walks.
 #[derive(Clone, Debug, Default)]
 struct Fly {
     flight: Flight,
@@ -80,9 +85,17 @@ impl Goal for Fly {
             m.velocity.z = (fwd * c + strafe * s) * WALK;
             return;
         }
+        // Space climbs, sneak (or Ctrl, `ride_keys.rs`) descends, nothing keeps it level; the look only turns it.
+        let pitch = if r.jumping {
+            -CLIMB_PITCH
+        } else if r.sprint {
+            DESCEND_PITCH
+        } else {
+            0.0
+        };
         let controls = Controls {
             yaw: r.yaw,
-            pitch: r.pitch,
+            pitch,
             flap: r.forward > 0.0,
             brake: r.forward < 0.0,
             boost: r.jumping,

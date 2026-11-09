@@ -13,17 +13,18 @@ stats ([SPECS.md](SPECS.md)).
 
 - The tawny vulture, `vulture:vulture`: `/summon vulture:vulture` or the **spawn egg** (creative tab
   "Horizon Creature").
-- **Mount**: right-click it (no cheats needed). **Get off**: hold sneak, or `/ride @s dismount`.
+- **Mount**: right-click it (no cheats needed). **Get off**: sneak on the ground (in the air, sneak descends), or
+  `/ride @s dismount`.
 - **Fly**, like a plane: it always flies forward and goes where you look.
 
   | Key | Effect |
   |---|---|
-  | Look up / down | Climb (losing speed) / dive (gaining speed) |
   | Look left / right | Bank and turn in an arc |
+  | Space (held) | Climb; takes off from the ground |
+  | Sneak (held) | Descend |
   | W | Flap, up to cruising speed |
   | (nothing) | Glide, slowly losing height |
   | S | Brake |
-  | Space | Strong flap; takes off from the ground |
 
 - Its own model and texture, animated (wings folded, gliding, flapping, swept back in a dive, banking; head, legs), and
   its own sounds (hisses, hurt, death, wing flaps, take-off).
@@ -33,7 +34,7 @@ stats ([SPECS.md](SPECS.md)).
 | Path | Contents |
 |---|---|
 | `content/` | The content half (`vulture.hmod`): entity, egg, textures, sounds, translations |
-| `native/` | The native half (`vulture.hnmod`): `api/` (crate `mod-vulture`) and two mixin injections (`mount_click.rs`, `mount_hud.rs`) |
+| `native/` | The native half (`vulture.hnmod`): `api/` (crate `mod-vulture`) and three mixin injections (`mount_click.rs`, `mount_hud.rs`, `ride_keys.rs`) |
 | `assets/models/vulture.bbmodel` | The Blockbench model, source of `native/api/src/model.rs` (`cargo creature model vulture`) |
 | `module.toml` | Its entry for the series' tools and its creative tab items |
 
