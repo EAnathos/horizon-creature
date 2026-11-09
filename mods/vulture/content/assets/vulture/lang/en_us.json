@@ -10,5 +10,7 @@
   "item.vulture.raw_vulture": "Raw Vulture",
   "item.vulture.cooked_vulture": "Cooked Vulture",
   "item.vulture.harness": "Vulture Harness",
-  "container.vulture.vulture": "Vulture"
+  "container.vulture.vulture": "Vulture",
+  "message.vulture.not_tamed": "This vulture isn't tamed: throw it raw chicken",
+  "message.vulture.not_yours": "This vulture belongs to someone else"
 }

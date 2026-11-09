@@ -10,5 +10,7 @@
   "item.vulture.raw_vulture": "Vautour cru",
   "item.vulture.cooked_vulture": "Vautour cuit",
   "item.vulture.harness": "Harnais de vautour",
-  "container.vulture.vulture": "Vautour"
+  "container.vulture.vulture": "Vautour",
+  "message.vulture.not_tamed": "Ce vautour n'est pas apprivoisé : lance-lui du poulet cru",
+  "message.vulture.not_yours": "Ce vautour appartient à quelqu'un d'autre"
 }

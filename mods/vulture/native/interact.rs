@@ -30,6 +30,18 @@ fn vulture_interact(game: &mut crate::game::Game<'_>, entity: i32, kind: &str, c
         return;
     };
     if !m.extra.tame || !crate::mobs::tame::owned_by(m.extra.owner, me) {
+        // Say why nothing happens, holding what only works on one's own vulture.
+        if matches!(
+            held.as_str(),
+            "vulture:harness" | "minecraft:chest" | "minecraft:rotten_flesh"
+        ) {
+            let key = if m.extra.tame {
+                "message.vulture.not_yours"
+            } else {
+                "message.vulture.not_tamed"
+            };
+            game.client_action_bar(crate::text::Text::translate(key, &[]), false);
+        }
         return;
     }
     if game.sneaking() {
@@ -43,7 +55,24 @@ fn vulture_interact(game: &mut crate::game::Game<'_>, entity: i32, kind: &str, c
         held.as_str(),
         "minecraft:chicken" | "minecraft:beef" | "minecraft:porkchop" | "minecraft:mutton" | "minecraft:rabbit"
     );
-    let take = |game: &mut crate::game::Game<'_>, item: &str| game.take_items(item, 1) == 1;
+    // One from the hand that clicked (not in creative, as vanilla). Not `take_items`: it skips stacks carrying any
+    // component data, as one picked from the creative tab may.
+    let take = |game: &mut crate::game::Game<'_>, item: &str| {
+        let creative = game.creative;
+        let hand = game.held_mut();
+        match hand {
+            Some(stack) if &*stack.item == item => {
+                if !creative {
+                    stack.count -= 1;
+                    if stack.count == 0 {
+                        *hand = None;
+                    }
+                }
+                true
+            }
+            _ => false,
+        }
+    };
     if held == "minecraft:rotten_flesh" && age == 0 && !in_love {
         if take(game, "minecraft:rotten_flesh") {
             vulture_with_mob(game, id, |m| m.extra.in_love = 600);
