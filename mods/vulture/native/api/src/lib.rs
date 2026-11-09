@@ -16,6 +16,7 @@
 //!
 //! It depends on the series' library, Horizon Creature (`creature`, common/SPECS.md).
 mod flight;
+mod interaction;
 mod model;
 mod model_baby;
 mod screen;
@@ -289,15 +290,15 @@ impl Hooks for Vulture {
         ai.targets.add(3, HurtByTarget::new().alert());
     }
 
-    /// Sneak + right-click by its owner (left to this hook by the `interact.rs` injection): its screen.
+    /// Right-click (`interaction.rs`), once the `interact.rs` injection didn't mount it. Always taken: no trading.
     fn interact_entity(&self, host: &mut dyn Host, event: &mut InteractEntityEvent<'_>) -> Flow {
-        if event.kind != KIND || !host.sneaking() {
+        if event.kind != KIND {
             return Flow::Continue;
         }
-        match u32::try_from(event.entity) {
-            Ok(id) if screen::open(host, id) => Flow::Cancel,
-            _ => Flow::Continue,
+        if let Ok(id) = u32::try_from(event.entity) {
+            interaction::clicked(host, id);
         }
+        Flow::Cancel
     }
 
     fn menu_clicked(&self, host: &mut dyn Host, event: &mut MenuClickedEvent) {

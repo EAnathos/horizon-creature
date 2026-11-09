@@ -1,122 +1,61 @@
-// Right-click on a vulture (SPECS §6), before its wandering trader's trading screen (always taken).
-// Compiled into the game: it reaches the mob's own state (`Mob.extra`, which the vulture's goals keep
-// in step with its saved state) and the acting player's hand, and mounts with `start_riding` (the
-// trait hook cannot run `/ride` in single player: `native_run_command` refuses during a player's turn).
-//
-// Only its owner gets anything from it:
-// - sneaking: its screen, opened by the vulture's `interact_entity` trait hook (left unclaimed here);
-// - holding the vulture harness: puts it on; a chest: adds one (two at most, harness needed);
-// - holding raw meat while it is hurt: heals 4; a baby grows a minute older instead;
-// - holding rotten flesh, grown and not resting from breeding: in love for 30 s (SPECS §8);
-// - otherwise: mounts it when it wears a harness, else tells it to sit or follow.
+// Right-click on a vulture (SPECS §6): mounts it, when its owner clicks it with a harness on, an empty hand (or
+// anything but what the vulture's `interaction.rs` handles) and not sneaking. Compiled into the game, it calls
+// `start_riding` (the trait hook cannot run `/ride` in single player: `native_run_command` refuses during a player's
+// turn). Everything else is left to the vulture's `interact_entity` trait hook: this sees a copy of the mob that the
+// game refreshes from the one its AI ticks, so it only reads it (`tame`, `owner`), and whether it may be ridden
+// (a harness on, grown up) from the `vulture:rideable` attachment the vulture's code keeps and syncs here.
 fn vulture_interact(game: &mut crate::game::Game<'_>, entity: i32, kind: &str, claimed: &mut bool) {
-    use crate::mod_api::Host as _;
-    fn vulture_with_mob(game: &mut crate::game::Game<'_>, id: u32, f: impl FnOnce(&mut crate::mobs::Mob)) {
-        if let Some(m) = game.mobs.iter_mut().find(|m| m.id == id) {
-            f(m);
-        }
-    }
-    if *claimed || kind != "vulture:vulture" {
+    use crate::mod_api::{AttachmentCodec, AttachmentType, Holder, Host, Tag};
+    static RIDEABLE: AttachmentType<bool> = AttachmentType {
+        namespace: "vulture",
+        name: "rideable",
+        default: || false,
+        codec: Some(AttachmentCodec {
+            encode: |v| Ok([("Rideable".into(), Tag::Byte(i8::from(*v)))].into()),
+            decode: |c| Ok(matches!(c.get(&"Rideable".into()), Some(Tag::Byte(1)))),
+        }),
+        copy_on_death: false,
+        sync: true,
+    };
+    if *claimed || kind != "vulture:vulture" || game.sneaking() {
         return;
     }
-    // No trading screen, whatever happens.
-    *claimed = true;
+    let held = game.held().map(|s| s.item.to_string()).unwrap_or_default();
+    let used = matches!(
+        held.as_str(),
+        "vulture:harness"
+            | "minecraft:chest"
+            | "minecraft:rotten_flesh"
+            | "minecraft:chicken"
+            | "minecraft:beef"
+            | "minecraft:porkchop"
+            | "minecraft:mutton"
+            | "minecraft:rabbit"
+    );
     let Ok(id) = u32::try_from(entity) else {
         return;
     };
-    let me = game.level.player_uuid.unwrap_or_default();
-    let held = game.held().map(|s| s.item.to_string()).unwrap_or_default();
+    // The clicking player, as the server knows them (`level.player_uuid` isn't set here).
+    let Some(me) = game.acting_player().map(|p| p.uuid) else {
+        return;
+    };
+    let me = [(me >> 96) as i32, (me >> 64) as i32, (me >> 32) as i32, me as i32];
     let Some(m) = game.mobs.iter().find(|m| m.id == id && m.alive()) else {
         return;
     };
-    if !m.extra.tame || !crate::mobs::tame::owned_by(m.extra.owner, me) {
-        // Say why nothing happens, holding what only works on one's own vulture.
-        if matches!(
-            held.as_str(),
-            "vulture:harness" | "minecraft:chest" | "minecraft:rotten_flesh"
-        ) {
-            let key = if m.extra.tame {
-                "message.vulture.not_yours"
-            } else {
-                "message.vulture.not_tamed"
-            };
-            game.client_action_bar(crate::text::Text::translate(key, &[]), false);
-        }
+    let owned = m.extra.tame && crate::mobs::tame::owned_by(m.extra.owner, me);
+    let host: &mut dyn Host = game;
+    let rideable = matches!(RIDEABLE.get_existing(host, Holder::Entity(id)), Ok(Some(true)));
+    if used || !owned || !rideable || game.riding.is_some() || !game.native_may_board(id) {
         return;
     }
-    if game.sneaking() {
-        *claimed = false;
+    let Some(m) = game.mobs.iter_mut().find(|m| m.id == id) else {
         return;
-    }
-    let (saddled, chests, hurt) = (m.extra.saddled, m.extra.variant2, m.health < m.attrs.max_health);
-    // Its age is the vulture's own (`state.rs`): negative while a baby, positive while it rests from breeding.
-    let (baby, age, in_love) = (m.extra.age < 0, m.extra.age, m.extra.in_love > 0);
-    let meat = matches!(
-        held.as_str(),
-        "minecraft:chicken" | "minecraft:beef" | "minecraft:porkchop" | "minecraft:mutton" | "minecraft:rabbit"
-    );
-    // One from the hand that clicked (not in creative, as vanilla). Not `take_items`: it skips stacks carrying any
-    // component data, as one picked from the creative tab may.
-    let take = |game: &mut crate::game::Game<'_>, item: &str| {
-        let creative = game.creative;
-        let hand = game.held_mut();
-        match hand {
-            Some(stack) if &*stack.item == item => {
-                if !creative {
-                    stack.count -= 1;
-                    if stack.count == 0 {
-                        *hand = None;
-                    }
-                }
-                true
-            }
-            _ => false,
-        }
     };
-    if held == "minecraft:rotten_flesh" && age == 0 && !in_love {
-        if take(game, "minecraft:rotten_flesh") {
-            vulture_with_mob(game, id, |m| m.extra.in_love = 600);
-        }
-        return;
-    }
-    if meat && baby {
-        if take(game, &held) {
-            vulture_with_mob(game, id, |m| m.extra.age = (m.extra.age + 1200).min(-1));
-        }
-        return;
-    }
-    if held == "vulture:harness" && !saddled && !baby {
-        if take(game, "vulture:harness") {
-            vulture_with_mob(game, id, |m| m.extra.saddled = true);
-        }
-        return;
-    }
-    if held == "minecraft:chest" && saddled && chests < 2 {
-        if take(game, "minecraft:chest") {
-            vulture_with_mob(game, id, |m| m.extra.variant2 = chests + 1);
-        }
-        return;
-    }
-    if meat && hurt {
-        if take(game, &held) {
-            vulture_with_mob(game, id, |m| m.heal(4.0));
-        }
-        return;
-    }
-    if !saddled || baby {
-        vulture_with_mob(game, id, |m| m.extra.sitting = !m.extra.sitting);
-        return;
-    }
-    if game.riding.is_some() || !game.native_may_board(id) {
-        return;
-    }
-    let mut yaw = game.yaw;
-    vulture_with_mob(game, id, |m| {
-        m.extra.flag = false;
-        m.extra.counter = 0;
-        m.extra.sitting = false;
-        yaw = m.yaw;
-    });
+    m.extra.flag = false;
+    m.extra.counter = 0;
+    let yaw = m.yaw;
+    *claimed = true;
     game.yaw = yaw;
     game.mount.jump_ticks = 0;
     game.mount.jump_scale = 0.0;

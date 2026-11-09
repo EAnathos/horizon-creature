@@ -157,6 +157,10 @@ struct Shared {
     /// Whether it may breed now, for a partner's goal.
     in_love: bool,
     look: Look,
+    /// Below its max health.
+    hurt: bool,
+    /// What `RIDEABLE` holds now.
+    rideable: Option<bool>,
 }
 
 /// A baby to bring into the world (from the breeding goal, for the tick hook to summon).
@@ -220,13 +224,41 @@ pub fn pace(id: u32) -> f64 {
 
 static SHARED: Mutex<BTreeMap<u32, Shared>> = Mutex::new(BTreeMap::new());
 
+/// Whether its owner may ride it now (tamed, a harness on, grown up), for the `interact.rs` injection, which can't
+/// read this crate: an attachment of a plain `bool` (the same type there), synced to the client where the injection
+/// runs; its saved copy is set again from the state.
+static RIDEABLE: AttachmentType<bool> = AttachmentType {
+    namespace: "vulture",
+    name: "rideable",
+    default: || false,
+    codec: Some(AttachmentCodec {
+        encode: |v| Ok([("Rideable".into(), Tag::Byte(i8::from(*v)))].into()),
+        decode: |c| Ok(matches!(c.get(&"Rideable".into()), Some(Tag::Byte(1)))),
+    }),
+    copy_on_death: false,
+    sync: true,
+};
+
 /// A change the hooks (its screen) ask of the mob, applied by the goal on its next tick.
 #[derive(Clone, Copy, Debug)]
 pub enum Change {
     ToggleSit,
-    RemoveChest,
+    PutHarness,
     RemoveHarness,
+    AddChest,
+    RemoveChest,
+    /// Fed rotten flesh: in love for 30 s (SPECS §8).
+    InLove,
+    /// A baby fed raw meat: a minute older.
+    Grow,
+    /// Fed raw meat while hurt: +4 health.
+    Heal,
 }
+
+/// What raw meat heals, and how much older it makes a baby (ticks); how long love lasts.
+const HEAL: f32 = 4.0;
+const GROW: i32 = 1200;
+const LOVE: i32 = 600;
 
 /// Its state as last handed over by the goal.
 pub fn saved(id: u32) -> Saved {
@@ -243,12 +275,23 @@ pub fn request(id: u32, change: Change) {
     let mut map = SHARED.lock().unwrap();
     let shared = map.entry(id).or_default();
     shared.pending.push(change);
+    // Saved at once: `current` is changed here too, so the goal's next hand-over won't see a difference.
+    shared.dirty = true;
     // Seen at once by a screen opened again before the goal's next tick.
     match change {
         Change::ToggleSit => shared.current.sitting = !shared.current.sitting,
-        Change::RemoveChest => shared.current.chests = shared.current.chests.saturating_sub(1),
+        Change::PutHarness => shared.current.harness = true,
         Change::RemoveHarness => shared.current.harness = false,
+        Change::AddChest => shared.current.chests = (shared.current.chests + 1).min(2),
+        Change::RemoveChest => shared.current.chests = shared.current.chests.saturating_sub(1),
+        Change::InLove => shared.in_love = true,
+        Change::Grow | Change::Heal => {}
     }
+}
+
+/// Whether it is hurt (for raw meat to heal it).
+pub fn hurt(id: u32) -> bool {
+    SHARED.lock().unwrap().get(&id).is_some_and(|s| s.hurt)
 }
 
 /// What the drawing needs of a vulture, which its render state doesn't carry.
@@ -319,8 +362,13 @@ pub fn sync_mob(m: &mut Mob) {
     for change in std::mem::take(&mut shared.pending) {
         match change {
             Change::ToggleSit => m.extra.sitting = !m.extra.sitting,
-            Change::RemoveChest => m.extra.variant2 = m.extra.variant2.saturating_sub(1),
+            Change::PutHarness => m.extra.saddled = true,
             Change::RemoveHarness => m.extra.saddled = false,
+            Change::AddChest => m.extra.variant2 = (m.extra.variant2 + 1).min(2),
+            Change::RemoveChest => m.extra.variant2 = m.extra.variant2.saturating_sub(1),
+            Change::InLove => m.extra.in_love = LOVE,
+            Change::Grow => m.extra.age = (m.extra.age + GROW).min(-1),
+            Change::Heal => m.heal(HEAL),
         }
     }
     let now = of(m);
@@ -341,6 +389,7 @@ pub fn sync_mob(m: &mut Mob) {
         ate_at: shared.look.ate_at,
     };
     shared.current = now;
+    shared.hurt = m.health < m.attrs.max_health;
     shared.pos = [m.position.x, m.position.y, m.position.z];
     // Wild, it eats whenever it finds meat; tamed, only when hurt (SPECS §6: healing).
     shared.hungry = m.rider.is_none() && m.ai.target.is_none() && (!m.extra.tame || m.health < m.attrs.max_health);
@@ -435,5 +484,9 @@ pub fn save(host: &mut dyn Host, dimension: &str, id: u32) {
     }
     if shared.dirty && STATE.set(host, holder, shared.current.clone()).is_ok() {
         shared.dirty = false;
+    }
+    let rideable = shared.current.owner.is_some() && shared.current.harness && shared.current.age >= 0;
+    if shared.rideable != Some(rideable) && RIDEABLE.set(host, holder, rideable).is_ok() {
+        shared.rideable = Some(rideable);
     }
 }

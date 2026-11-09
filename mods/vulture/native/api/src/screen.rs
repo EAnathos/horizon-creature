@@ -78,15 +78,6 @@ fn decode(data: &Compound) -> Result<Vec<Option<ItemStack>>, AttachmentError> {
 /// The screen each player has open: the vulture and the menu's window.
 static OPEN: Mutex<BTreeMap<u128, (u32, i32)>> = Mutex::new(BTreeMap::new());
 
-fn uuid_ints(uuid: u128) -> [i32; 4] {
-    [
-        (uuid >> 96) as i32,
-        (uuid >> 64) as i32,
-        (uuid >> 32) as i32,
-        uuid as i32,
-    ]
-}
-
 fn button(item: &str) -> Option<ItemStack> {
     Some(ItemStack::new(item, 1))
 }
@@ -114,15 +105,12 @@ fn layout(saved: &state::Saved, contents: &[Option<ItemStack>]) -> (u8, Vec<Opti
     (rows as u8, items, storage)
 }
 
-/// Sneak + right-click on its own vulture: the screen.
-pub fn open(host: &mut dyn Host, id: u32) -> bool {
+/// Sneak + right-click on its own vulture (`interaction.rs` checked it is the owner): the screen.
+pub fn open(host: &mut dyn Host, id: u32) {
     let Some(player) = host.acting_player() else {
-        return false;
+        return;
     };
     let saved = state::saved(id);
-    if saved.owner != Some(uuid_ints(player.uuid)) {
-        return false;
-    }
     let contents = CHESTS.get(host, Holder::Entity(id)).unwrap_or_default();
     let (rows, items, storage) = layout(&saved, &contents);
     let title = Text::translate("container.vulture.vulture", &[]);
@@ -135,7 +123,6 @@ pub fn open(host: &mut dyn Host, id: u32) -> bool {
     if let Some(window) = window {
         OPEN.lock().unwrap().insert(player.uuid, (id, window));
     }
-    true
 }
 
 /// Gives `stacks` to the player, dropping what doesn't fit at the vulture.

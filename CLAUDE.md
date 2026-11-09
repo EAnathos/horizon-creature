@@ -59,6 +59,10 @@ depend on it: `vulture` (prototype: tameable, rideable flying vulture), `butterf
 - Riding: `/ride` and the vulture's `interact.rs` injection put a player on any mob; Horizon copies the rider's keys
   into `Mob.rider`, which the `Fly` goal reads. These are internal fields: the Horizon revision is pinned, the same for
   every module.
+- A mixin injection on a right-click (the vulture's `interact.rs`) sees a copy of the mob that the game refreshes from
+  the one the AI ticks: read it, never change it there (changes are lost). Change a mob from the server trait hook and
+  the goals (the vulture's `state::request`); pass a value to injection code through a synced attachment of a std type
+  (`bool`); the clicking player is `acting_player()` there (`level.player_uuid` is unset).
 - Mob sounds are always prefixed with `minecraft:` by Horizon: our mobs are muted and play their own through
   `creature::sounds` (`Host::play_sound`).
 - Custom dimensions (Wyverns) are not documented in Horizon: to prototype first.

@@ -80,6 +80,11 @@ library shares are described there; this spec gives the vulture's own rules and 
   (the library's `tint` and `death_tilt`), so the drops no longer seem to come early; wild vultures no longer land in
   tree tops (leaves skipped), climb over what they bump into in flight, and give up a landing spot after 20 s. The
   tab's button is the guide book.
+- **Harness fixed, tested in game** (2026-11-09): right-clicks were changing a copy of the mob that the game refreshes
+  (lost), the owner check read an unset player id, a requested change was never saved, and the harness was hidden
+  under the folded wings. Now the server hook makes every change (`interaction.rs`), the injection only mounts (reading
+  a synced `vulture:rideable` attachment), and the harness shows a seat on the back and a breast strap. Tried in game:
+  taming with thrown chicken, harness on, mount, save and reload, mount again.
 - **v1 is written.** What is left is testing everything above in game, then tuning (flight numbers, taming odds,
   speeds, the dive attack) and fixing what the tests find.
 
