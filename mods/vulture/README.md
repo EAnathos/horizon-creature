@@ -34,7 +34,7 @@ stats ([SPECS.md](SPECS.md)).
 | Path | Contents |
 |---|---|
 | `content/` | The content half (`vulture.hmod`): entity, egg, textures, sounds, translations |
-| `native/` | The native half (`vulture.hnmod`): `api/` (crate `mod-vulture`) and three mixin injections (`mount_click.rs`, `mount_hud.rs`, `ride_keys.rs`) |
+| `native/` | The native half (`vulture.hnmod`): `api/` (crate `mod-vulture`) and three mixin injections (`interact.rs`, `mount_hud.rs`, `ride_keys.rs`) |
 | `assets/models/vulture.bbmodel` | The Blockbench model, source of `native/api/src/model.rs` (`cargo creature model vulture`) |
 | `module.toml` | Its entry for the series' tools and its creative tab items |
 

@@ -2,7 +2,7 @@
 //!
 //! - `vulture:vulture` copies the wandering trader (content part, `content/`): we clear its goals and give it ours,
 //!   `NoFall` and `Fly`.
-//! - Mounting: a right-click on it (`mount_click.rs` injection), or `/ride`. Horizon then copies the rider's keys into
+//! - Mounting: a right-click on it by its owner, once it wears a harness (`interact.rs` injection), or `/ride`. Horizon then copies the rider's keys into
 //!   `Mob.rider` every tick (`game/mounts.rs`, `tick_mount_riding`): forward/back, left/right, jump (Space), sprint
 //!   (Ctrl). Sneaking gets off.
 //! - Flight (`flight.rs`): it sets the vulture's speed directly, without gravity, flown like a plane, banking into
@@ -18,9 +18,12 @@
 mod flight;
 mod model;
 mod sounds;
+mod state;
+mod tame;
 mod wild;
 
 use flight::{Controls, Flight};
+use horizon_client::mobs::Who;
 use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, MeleeAttack, Stroll};
 use horizon_client::mod_api::{
     Cx, EntityTickListenedEvent, EntityTickPostEvent, Flow, Goal, Hooks, Host, Mob, MobSubmitEvent, NativeMobRender,
@@ -122,8 +125,16 @@ impl Goal for NoFall {
     fn every_tick(&self) -> bool {
         true
     }
-    fn tick(&mut self, m: &mut Mob, _: &mut Cx) {
+    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
         m.fall_distance = 0.0;
+        state::sync_mob(m);
+        // A tamed vulture never turns on its owner, even when they hit it.
+        if m.extra.tame
+            && m.ai.target == Some(Who::Player)
+            && cx.w.player.as_ref().is_some_and(|p| m.extra.owner == Some(p.uuid))
+        {
+            m.ai.target = None;
+        }
         // Muted as a wandering trader, every tick: a save read after `register_goals` sets its `Silent` back.
         m.silent = true;
         // A quiet bird: one call every 20 s on average (a vanilla mob: every 4 s).
@@ -217,11 +228,16 @@ impl Hooks for Vulture {
         ai.targets.clear();
         ai.goals.add(0, NoFall);
         ai.goals.add(1, Fly::default());
+        ai.goals.add(2, tame::Sit);
         ai.goals.add(2, MeleeAttack::new(1.2, true));
-        ai.goals.add(3, wild::Soar::new());
-        ai.goals.add(4, Stroll::new(0.6));
-        ai.goals.add(5, LookAtPlayer::new(8.0));
-        ai.targets.add(1, HurtByTarget::new().alert());
+        ai.goals.add(3, tame::Eat::default());
+        ai.goals.add(4, tame::FollowOwner::default());
+        ai.goals.add(5, wild::Soar::new());
+        ai.goals.add(6, Stroll::new(0.6));
+        ai.goals.add(7, LookAtPlayer::new(8.0));
+        ai.targets.add(1, tame::OwnerHurtBy::default());
+        ai.targets.add(2, tame::OwnerHurt::default());
+        ai.targets.add(3, HurtByTarget::new().alert());
     }
 
     fn entity_tick_listened(&self, _: &mut dyn Host, event: &mut EntityTickListenedEvent) {
@@ -231,6 +247,8 @@ impl Hooks for Vulture {
     fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
         if event.kind == KIND {
             creature::sounds::tick_post(host, event, &sounds::VOICE, creature::sounds::NEUTRAL);
+            state::save(host, event.entity);
+            state::look_for_food(host, event.dimension, event.entity);
         }
     }
 
@@ -241,9 +259,21 @@ impl Hooks for Vulture {
             return Flow::Continue;
         }
         let flapping = flight::flapping(mob.id);
-        creature::model::draw(host, &mut *event.draw, &model::VULTURE, TEXTURE, &|part| {
-            pose(part, mob, flapping)
-        });
+        let (harness, chests) = state::gear(mob.id);
+        let shown = |part: &str| match part {
+            "harness" => harness,
+            "chest_left" => chests >= 1,
+            "chest_right" => chests >= 2,
+            _ => true,
+        };
+        creature::model::draw_shown(
+            host,
+            &mut *event.draw,
+            &model::VULTURE,
+            TEXTURE,
+            &|part| pose(part, mob, flapping),
+            &shown,
+        );
         Flow::Cancel
     }
 }

@@ -32,6 +32,21 @@ pub fn draw(
     texture: &'static str,
     pose: &dyn Fn(&str) -> [f32; 3],
 ) {
+    draw_shown(host, draw, part, texture, pose, &|_| true);
+}
+
+/// `draw`, leaving out the groups (and their children) `shown` refuses: gear drawn only when worn (a harness, chests).
+pub fn draw_shown(
+    host: &dyn Host,
+    draw: &mut BlockEntityDraw,
+    part: &Part,
+    texture: &'static str,
+    pose: &dyn Fn(&str) -> [f32; 3],
+    shown: &dyn Fn(&str) -> bool,
+) {
+    if !shown(part.name) {
+        return;
+    }
     let animated = pose(part.name);
     let pivot = part.pivot.map(|v| v / 16.0);
     draw.push();
@@ -54,7 +69,7 @@ pub fn draw(
         host.draw_cube(draw, cube.from, cube.to, faces, 0xFFFFFF);
     }
     for child in part.children {
-        self::draw(host, draw, child, texture, pose);
+        draw_shown(host, draw, child, texture, pose, shown);
     }
     draw.pop();
 }

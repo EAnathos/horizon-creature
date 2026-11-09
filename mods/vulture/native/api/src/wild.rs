@@ -65,8 +65,9 @@ fn heading_of(x: f64, z: f64) -> f32 {
     (-x).atan2(z).to_degrees() as f32
 }
 
+/// Only a wild vulture soars on its own; a tamed one follows its owner (`tame.rs`).
 fn idle(m: &Mob) -> bool {
-    m.rider.is_none() && m.ai.target.is_none()
+    !m.extra.tame && m.rider.is_none() && m.ai.target.is_none()
 }
 
 impl Goal for Soar {

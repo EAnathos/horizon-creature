@@ -1,0 +1,11 @@
+{
+  "template": "minecraft:saddle",
+  "max_stack_size": 1,
+  "components": {
+    "minecraft:item_model": "vulture:harness",
+    "minecraft:item_name": {
+      "translate": "item.vulture.harness"
+    },
+    "!minecraft:equippable": {}
+  }
+}

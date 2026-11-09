@@ -40,6 +40,13 @@ library shares are described there; this spec gives the vulture's own rules and 
   players; neutral, it fights back (3 damage) and nearby vultures join in (vanilla's `HurtByTarget` and
   `MeleeAttack`); spawns in deserts, badlands and savannas (weight 3, groups of 1 to 3, a NeoForge biome modifier).
   The flight is shared with the ridden one (`flight.rs`). Built; not tested in game yet.
+- **Taming and the tamed vulture** (§5, §6, 2026-11-09): a hungry vulture walks to raw meat on the ground (16 blocks)
+  and eats it; a wild one eating a raw chicken is tamed 1 time in 4 (hearts, smoke otherwise), by the player. Tamed:
+  sits or follows (right-click), flies to its owner past 10 blocks and lands near them, teleports past 32, attacks
+  what hurts its owner and what they attack, never its owner; eats from the ground only when hurt (+4). Its owner's
+  right-click: harness on, a chest on (two at most), raw meat heals 4 when hurt, then mount (with a harness) or sit /
+  follow. **Harness** `vulture:harness` (recipe, texture); harness and chests drawn on the model when worn. State in
+  `Mob.extra`, saved in the `vulture:state` attachment (`state.rs`). Built; not tested in game yet.
 
 ### To do (v1)
 
@@ -51,13 +58,9 @@ library shares are described there; this spec gives the vulture's own rules and 
   way by then, else here first.
 - §4 Wild vulture, the rest: hitbox (~1.2 × 1.0; it still has the trader's 0.6 × 1.95: try overriding its mob type's
   size at spawn), landing on high points, scavenging (meat on the ground), fighting in the air rather than on foot.
-- §5 Taming with thrown raw chicken, owner.
-- §6 Tamed vulture: sit/follow, defending its owner, healing; riding limited to the owner, with a harness.
-- §6.1 Harness (item, recipe, slot, visible on the model).
-- §6.2 Walking on the ground and taking off.
-- §6.3 Chests (2 × 15 slots), the vulture's screen.
+- §6.3 Chests' contents (2 × 15 slots) and the vulture's screen (sneak + right-click), with its harness slot.
 - §6.4 Talons: key, catch and release.
-- §7 Baby (model and texture), harness and chests on the model, peck/eat, sit, attack and talon animations.
+- §7 Baby (model and texture), peck/eat, sit, attack and talon animations.
 - §8 Breeding.
 
 What waits for v2 is listed apart, in §9.

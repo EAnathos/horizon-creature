@@ -15,13 +15,13 @@ path = "api"
 [dependencies]
 creature = "^0.1"
 
-# Right-click on a vulture: mount it.
+# Right-click on a vulture: harness, chests, healing, sit / follow, mounting (SPECS §6).
 [[injection]]
-id = "mount-click"
+id = "interact"
 hook = "interact_entity"
 hook_version = 1
 kind = "HEAD"
-helper = "mount_click.rs"
+helper = "interact.rs"
 bindings = [
   { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
   { name = "entity", ty = "i32", value = "entity" },

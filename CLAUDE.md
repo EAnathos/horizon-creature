@@ -56,7 +56,7 @@ depend on it: `vulture` (prototype: tameable, rideable flying vulture), `butterf
   (the vulture uses the wandering trader, whose behaviour is all goals).
 - Rendering: `native_mob_submit` + `native_draw_cube`, through `creature::model::draw` (cubes, pivots,
   `<mod>:entity/...` textures).
-- Riding: `/ride` and the vulture's `mount_click.rs` injection put a player on any mob; Horizon copies the rider's keys
+- Riding: `/ride` and the vulture's `interact.rs` injection put a player on any mob; Horizon copies the rider's keys
   into `Mob.rider`, which the `Fly` goal reads. These are internal fields: the Horizon revision is pinned, the same for
   every module.
 - Mob sounds are always prefixed with `minecraft:` by Horizon: our mobs are muted and play their own through
