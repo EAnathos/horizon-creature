@@ -3,4 +3,4 @@ id = "vulture"
 name = "Vulture"
 status = "prototype"
 # Its items in the series' creative tab, in order.
-creative = ["vulture:vulture_spawn_egg", "vulture:feather", "vulture:raw_vulture", "vulture:cooked_vulture"]
+creative = ["vulture:vulture_spawn_egg", "vulture:harness", "vulture:feather", "vulture:raw_vulture", "vulture:cooked_vulture"]

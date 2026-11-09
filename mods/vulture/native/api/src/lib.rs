@@ -363,6 +363,7 @@ impl Hooks for Vulture {
             (&model::VULTURE, TEXTURE)
         };
         event.draw.push();
+        creature::model::death_tilt(&mut *event.draw, mob);
         if look.baby {
             event.draw.scale([BABY_SCALE; 3]);
         }
@@ -377,6 +378,7 @@ impl Hooks for Vulture {
             texture,
             &|part| pose(part, mob, flapping, &look, carrying),
             &shown,
+            creature::model::tint(mob),
         );
         event.draw.pop();
         Flow::Cancel

@@ -2,7 +2,7 @@
 id = "creature"
 name = "Horizon Creature"
 status = "prototype"
-# The shared creative tab's button: a vanilla item until the incubator exists (common/SPECS.md §4).
-icon = "minecraft:sniffer_egg"
+# The shared creative tab's button: the library's own sprite, an item kept out of the tab (common/SPECS.md §3.3).
+icon = "creature:icon"
 # The library's own items, first in the shared tab.
 creative = ["creature:guide"]

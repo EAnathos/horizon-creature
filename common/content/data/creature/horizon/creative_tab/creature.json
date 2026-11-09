@@ -1,8 +1,9 @@
 {
-  "icon": "minecraft:sniffer_egg",
+  "icon": "creature:icon",
   "items": [
     "creature:guide",
     "vulture:vulture_spawn_egg",
+    "vulture:harness",
     "vulture:feather",
     "vulture:raw_vulture",
     "vulture:cooked_vulture"

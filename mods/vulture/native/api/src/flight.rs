@@ -111,7 +111,9 @@ impl Flight {
         m.velocity.z = c_yaw * level;
         m.velocity.y = -self.speed * sin_pitch;
         let flapping = c.flap || c.boost;
-        if c.boost {
+        // Bumping into something in the air (a tree, a cliff): it climbs over it rather than staying stuck.
+        let blocked = m.horizontal_collision && !m.on_ground;
+        if c.boost || blocked {
             m.velocity.y = m
                 .velocity
                 .y

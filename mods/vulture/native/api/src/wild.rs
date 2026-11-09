@@ -36,6 +36,10 @@ pub struct Soar {
     landing: Option<[f64; 3]>,
 }
 
+/// Ticks of descent before it gives up its landing spot, and before it stops flying at all.
+const ABANDON_SPOT: i32 = 400;
+const GIVE_UP: i32 = 1200;
+
 /// How far around it looks for a high point to land on, and in steps of how many blocks.
 const LANDING_SEARCH: i32 = 16;
 const LANDING_STEP: i32 = 2;
@@ -50,7 +54,14 @@ fn landing_spot(m: &Mob, cx: &Cx) -> Option<[f64; 3]> {
         for dz in (-LANDING_SEARCH..=LANDING_SEARCH).step_by(LANDING_STEP as usize) {
             let (x, z) = (cx0 + dx, cz0 + dz);
             let top = world.world_surface(x, z, |s| world.is_air(s));
-            if top > world.layout().min_y() && best.is_none_or(|b| top > b.1) {
+            // Not in a tree top (it gets stuck in the leaves), nor on water or lava.
+            let name =
+                cx.w.registry
+                    .state(world.block(x, top - 1, z))
+                    .map_or("", |s| s.name.as_str());
+            let perch =
+                !cx.w.has_tag("minecraft:leaves", name) && !matches!(name, "minecraft:water" | "minecraft:lava");
+            if perch && top > world.layout().min_y() && best.is_none_or(|b| top > b.1) {
                 best = Some((x, top, z));
             }
         }
@@ -103,7 +114,8 @@ impl Goal for Soar {
         idle(m) && (!m.on_ground || m.random.next_int_bound(TAKE_OFF_CHANCE).unwrap_or(1) == 0)
     }
     fn can_continue(&mut self, m: &mut Mob, _: &mut Cx) -> bool {
-        idle(m) && !(m.on_ground && self.phase == Phase::Descend && self.ticks > 0)
+        // Down, or a minute spent trying: it lets itself drop (no fall damage).
+        idle(m) && !(self.phase == Phase::Descend && (m.on_ground && self.ticks > 0 || self.ticks > GIVE_UP))
     }
     fn every_tick(&self) -> bool {
         true
@@ -132,6 +144,10 @@ impl Goal for Soar {
     }
     fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
         self.ticks += 1;
+        // A spot it can't reach in 20 s (behind a tree, a cliff): it spirals down where it is instead.
+        if self.phase == Phase::Descend && self.ticks > ABANDON_SPOT {
+            self.landing = None;
+        }
         let yaw = self.circle_yaw(m);
         let below = self.cruise_y - m.position.y;
         let controls = match self.phase {
