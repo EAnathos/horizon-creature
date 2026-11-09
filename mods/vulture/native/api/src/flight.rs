@@ -12,8 +12,8 @@ use horizon_client::mod_api::{Mob, RandomSource};
 use crate::sounds;
 
 /// Speeds in blocks per tick, before air drag (×0.91 per tick).
-pub const CRUISE: f64 = 0.4;
-const DIVE_MAX: f64 = 0.8;
+pub const CRUISE: f64 = 0.55;
+const DIVE_MAX: f64 = 1.0;
 pub const STALL: f64 = 0.18;
 /// What a nose-down tick adds to the speed (× the sine of the pitch), a nose-up one takes away.
 const GRAVITY: f64 = 0.03;

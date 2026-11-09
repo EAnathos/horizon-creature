@@ -172,6 +172,10 @@ pub struct Birth {
 
 static BIRTHS: Mutex<Vec<Birth>> = Mutex::new(Vec::new());
 
+/// Vultures that have had their baby this time, until they are out of love: one baby per pair, whichever of the two
+/// goals gets there first.
+static BRED: Mutex<std::collections::BTreeSet<u32>> = Mutex::new(std::collections::BTreeSet::new());
+
 /// Whether vulture `id` is in love (another vulture's breeding goal asks).
 pub fn in_love(id: u32) -> bool {
     SHARED.lock().unwrap().get(&id).is_some_and(|s| s.in_love)
@@ -185,6 +189,14 @@ pub fn stat(range: (f32, f32), roll: f32) -> f32 {
 /// From the breeding goal: a baby of `a` and `b` (SPECS §8): tamed to `a`'s owner; each stat the average of both
 /// parents' and a fresh roll's, like a horse's.
 pub fn breed(a: &Mob, b: u32, rolls: [f32; 2]) {
+    {
+        let mut bred = BRED.lock().unwrap();
+        if bred.contains(&a.id) || bred.contains(&b) {
+            return;
+        }
+        bred.insert(a.id);
+        bred.insert(b);
+    }
     let other = saved(b);
     let mine = of(a);
     let mix = |x: f32, y: f32, range: (f32, f32), roll: f32| (x + y + stat(range, roll)) / 3.0;
@@ -345,6 +357,9 @@ pub fn sync_mob(m: &mut Mob) {
         m.extra.in_love -= 1;
     }
     shared.in_love = m.extra.in_love > 0;
+    if !shared.in_love {
+        BRED.lock().unwrap().remove(&m.id);
+    }
     for change in std::mem::take(&mut shared.pending) {
         match change {
             Change::ToggleSit => m.extra.sitting = !m.extra.sitting,

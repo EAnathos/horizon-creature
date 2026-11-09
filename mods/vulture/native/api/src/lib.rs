@@ -29,8 +29,8 @@ mod wild;
 use std::sync::Arc;
 
 use flight::{Controls, Flight};
-use horizon_client::mobs::Who;
 use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, Stroll};
+use horizon_client::mobs::{MobEvent, Who};
 use horizon_client::mod_api::{
     Cx, EntityTickListenedEvent, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent, KeyEvent,
     LivingDeathEvent, MenuClickedEvent, MenuClosedEvent, MenuInputClosedEvent, Mob, MobSubmitEvent, ModsEvent,
@@ -146,6 +146,16 @@ impl Goal for NoFall {
     fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
         m.fall_distance = 0.0;
         state::sync_mob(m);
+        // In love: hearts now and then, as vanilla's animals show (SPECS §8).
+        if m.extra.in_love > 0 && m.extra.in_love % 10 == 0 {
+            cx.events.push(MobEvent::LevelParticles {
+                kind: "minecraft:heart",
+                at: [m.position.x, m.position.y + 1.0, m.position.z],
+                spread: [0.4, 0.3, 0.4],
+                speed: 0.02,
+                count: 1,
+            });
+        }
         // A tamed vulture never turns on its owner, even when they hit it.
         if m.extra.tame
             && m.ai.target == Some(Who::Player)

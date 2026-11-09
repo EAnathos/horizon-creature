@@ -17,6 +17,8 @@ use crate::{sounds, state};
 
 /// One raw chicken in this many tames it.
 const TAME_CHANCE: i32 = 4;
+/// How fast it walks to food (a share of its walking speed): a vulture hops to a carcass, it doesn't sprint.
+const FOOD_PACE: f64 = 0.55;
 /// What a meat eaten heals a tamed vulture.
 const MEAT_HEAL: f32 = 4.0;
 
@@ -64,7 +66,7 @@ impl Goal for Eat {
         let d2 = (m.position.x - food.at[0]).powi(2) + (m.position.z - food.at[2]).powi(2);
         if d2 > 1.5 * 1.5 || (m.position.y - food.at[1]).abs() > 2.0 {
             if self.ticks % 10 == 1 {
-                m.nav_move_to(cx.w, food.at, 1.0);
+                m.nav_move_to(cx.w, food.at, FOOD_PACE);
             }
             return;
         }
@@ -286,6 +288,8 @@ const MATE_SEARCH: f64 = 8.0;
 #[derive(Clone, Debug, Default)]
 pub struct Mate {
     partner: Option<u32>,
+    /// Bred already this time (a baby once per pair, whatever the ticks left of the goal).
+    bred: bool,
 }
 
 impl Mate {
@@ -323,6 +327,9 @@ impl Goal for Mate {
                 .partner
                 .is_some_and(|p| cx.w.seen(p).is_some_and(|s| s.alive) && state::in_love(p))
     }
+    fn start(&mut self, _: &mut Mob, _: &mut Cx) {
+        self.bred = false;
+    }
     fn stop(&mut self, m: &mut Mob, _: &mut Cx) {
         self.partner = None;
         m.nav_stop();
@@ -341,10 +348,14 @@ impl Goal for Mate {
         m.look_at_speed(target, 10.0, 10.0);
         let d2 = (at.x - m.position.x).powi(2) + (at.z - m.position.z).powi(2);
         if d2 > MATE_RANGE * MATE_RANGE {
-            m.nav_move_to(cx.w, target, 1.0);
+            m.nav_move_to(cx.w, target, FOOD_PACE);
             return;
         }
         // Both see each other close; the one with the smaller id brings the baby, both wait.
+        if self.bred {
+            return;
+        }
+        self.bred = true;
         if m.id < partner {
             let rolls = [m.random.next_float(), m.random.next_float()];
             state::breed(m, partner, rolls);

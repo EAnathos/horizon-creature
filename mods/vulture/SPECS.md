@@ -96,6 +96,9 @@ library shares are described there; this spec gives the vulture's own rules and 
   under the folded wings on the ground; a catch is held 0.7 below, one tick ahead along the flight, so it stays in the
   talons. A vulture's saved state is read again when it isn't reachable yet on its first tick (it was taken for a new,
   wild vulture about one load in four, and saved so), and a saved owner is never overwritten by none.
+- **Breeding and speeds** (2026-11-09): rotten flesh worked (tested: two fed vultures had a baby) but showed nothing;
+  now hearts rise from a vulture in love, and one baby per pair (two were born). It walks to food at 0.55 of its pace
+  (it rushed); flight back up to cruise 0.55, dive 1.0 (0.4 felt too slow).
 - **v1 is written.** What is left is testing everything above in game, then tuning (flight numbers, taming odds,
   speeds, the dive attack) and fixing what the tests find.
 
@@ -247,7 +250,7 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
 - Horizon gets a rider off on sneak before any mod hears of it: the `ride-keys` injection (`ride_keys.rs`) keeps them
   on in the air.
 - ✅ Chests **do not weigh** on its flight. ✅ **No thermals.**
-- Starting numbers ❓ (blocks per tick): cruise 0.4 × its speed stat, dive up to 0.8, slowest 0.18 before a stall,
+- Starting numbers ❓ (blocks per tick): cruise 0.55 × its speed stat, dive up to 1.0, slowest 0.18 before a stall,
   glide sink 0.04 when level, take-off climb 0.4, descent at least 0.2.
 
 ### 6.3 Chests ✅
