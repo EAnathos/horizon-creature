@@ -11,10 +11,14 @@ stats ([SPECS.md](SPECS.md)).
 
 ## What works
 
-- The tawny vulture, `vulture:vulture`: `/summon vulture:vulture` or the **spawn egg** (creative tab
-  "Horizon Creature").
-- **Mount**: right-click it (no cheats needed). **Get off**: sneak on the ground (in the air, sneak descends), or
-  `/ride @s dismount`.
+Tried in game: the vulture, its spawn egg, mounting and the ridden flight. Built but not tried in game yet: the rest.
+
+- The tawny vulture, `vulture:vulture`: `/summon vulture:vulture`, the **spawn egg** (creative tab "Horizon Creature"),
+  or in the wild in deserts, badlands and savannas, where it soars in circles and lands again.
+- **Taming**: throw it raw chicken (Q). It walks to the meat and eats it: 1 chance in 4 to tame it (hearts).
+- **Its owner's right-click**: a **vulture harness** (5 leather, 2 string, 1 iron ingot) puts it on, a **chest** adds
+  one (two at most), raw meat heals it, rotten flesh makes it want a mate; otherwise mount it (with a harness) or tell
+  it to sit or follow. **Sneak + right-click**: its screen (harness, sit / follow, chests and their 15 slots each).
 - **Fly**, like a plane: it always flies forward and goes where you look.
 
   | Key | Effect |
@@ -25,9 +29,14 @@ stats ([SPECS.md](SPECS.md)).
   | W | Flap, up to cruising speed |
   | (nothing) | Glide, slowly losing height |
   | S | Brake |
+  | R | Talons: catch the small creature below, let it go |
+  | Sneak on the ground | Get off |
 
-- Its own model and texture, animated (wings folded, gliding, flapping, swept back in a dive, banking; head, legs), and
-  its own sounds (hisses, hurt, death, wing flaps, take-off).
+- A tamed vulture follows its owner in the air, defends them, and two in love have a baby that grows up in 20 minutes.
+  Each vulture has its own health and speed.
+- Neutral: hit it and it dives at you, with the vultures nearby.
+- Drops feathers and meat (raw and cooked vulture).
+- Its own model and texture, animated, and its own sounds (hisses, hurt, death, wing flaps, take-off, eating).
 
 ## Files
 

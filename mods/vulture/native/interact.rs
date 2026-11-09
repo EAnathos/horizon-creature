@@ -93,4 +93,3 @@ fn vulture_interact(game: &mut crate::game::Game<'_>, entity: i32, kind: &str, c
     game.mount.jump_scale = 0.0;
     game.start_riding(id);
 }
-
