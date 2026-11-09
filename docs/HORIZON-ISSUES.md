@@ -7,7 +7,9 @@ Where things go, since 2026-11-09: **pull requests** about the mod API, native h
 mixins and `cargo horizon-mod` go to [arismoko/horizon](https://github.com/arismoko/horizon) (board:
 [arismoko project 1](https://github.com/users/arismoko/projects/1)); the **issues** stay open on
 [horizon-rust/horizon](https://github.com/horizon-rust/horizon), and claims on them stand. Everything else (gameplay,
-rendering, launcher) stays on horizon-rust/horizon. Before opening an issue, search both repositories.
+rendering, launcher) stays on horizon-rust/horizon. **New** modding issues (proposals, API gaps, mod-loading bugs) go
+to [arismoko/horizon's issues](https://github.com/arismoko/horizon/issues) (its README); game bugs unrelated to modding
+go to horizon-rust/horizon. Before opening an issue, search both repositories.
 
 Status: **to open** (found, not filed), **open** (filed, nothing merged), **claimed** (someone works on it), **fixed
 upstream** (merged, not yet in our pinned revision), **done** (in our pinned revision, workaround removed),
