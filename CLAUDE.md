@@ -68,6 +68,13 @@ depend on it: `vulture` (prototype: tameable, rideable flying vulture), `butterf
   `creature::sounds` (`Host::play_sound`).
 - Custom dimensions (Wyverns) are not documented in Horizon: to prototype first.
 
+## Horizon workarounds
+
+Each one is marked in the code with its issue; drop it when moving to a Horizon revision that fixes it:
+#13971 (`cargo creature install` reads the build log), #13972 (clicks in the trait hook, `Host::mount`), #13973
+(harness not in `Mob.extra.saddled`), #13974 (the vulture's screen opens next tick), #13975 (hitbox height 0.6 for the
+seat), #13976 (the vulture's own age), #6276 (the vulture's size by a cloned `MobType`).
+
 ## Models
 
 - Blockbench 5.2.2 (Flatpak `net.blockbench.Blockbench`) + jasonjgardner MCP plugin v1.10.1, `blockbench` server in

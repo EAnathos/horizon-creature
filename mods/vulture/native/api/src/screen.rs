@@ -106,7 +106,7 @@ fn layout(saved: &state::Saved, contents: &[Option<ItemStack>]) -> (u8, Vec<Opti
 }
 
 /// Screens asked for by a click, opened on the vulture's next tick: Horizon refuses a menu while the clicking
-/// player's own action is being handled.
+/// player's own action is being handled (workaround for horizon-rust/horizon#13974).
 static ASKED: Mutex<BTreeMap<u32, u128>> = Mutex::new(BTreeMap::new());
 
 /// Sneak + right-click on its own vulture (`interaction.rs` checked it is the owner): its screen, next tick.

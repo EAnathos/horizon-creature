@@ -43,6 +43,7 @@ pub fn run(instance: &str, names: &[String]) -> crate::Result {
 
 /// The launcher still succeeds when it leaves a mod out of the build (an injection it refuses, a helper file with two
 /// functions...), and the game then starts without it: its build log says so, which fails the install.
+/// Workaround for horizon-rust/horizon#13971.
 fn left_out(log: &Path) -> crate::Result {
     let Ok(text) = std::fs::read_to_string(log) else {
         return Ok(());

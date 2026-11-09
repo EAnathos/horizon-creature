@@ -39,7 +39,8 @@ use horizon_client::mod_api::{
 
 const KIND: &str = "vulture:vulture";
 /// Its hitbox and eye height, in blocks (SPECS §4). The height is also where a rider sits (Horizon seats a rider on
-/// a mod mob at its box's top), so it is set for the rider to sit on the harness's seat.
+/// a mod mob at its box's top), so it is set for the rider to sit on the harness's seat (workaround for
+/// horizon-rust/horizon#13975: back to ~1.0 once a seat can be declared).
 const WIDTH: f64 = 1.2;
 const HEIGHT: f64 = 0.6;
 const EYE_HEIGHT: f64 = 0.55;
@@ -276,7 +277,7 @@ impl Hooks for Vulture {
         // Without the wandering trader's sounds: its own come from `sounds.rs`.
         event.mob.silent = true;
         // Its own size (SPECS §4), in place of the trader's 0.6 × 1.95: a mob's box comes from its type, so it gets a
-        // copy of its type with its own width and height.
+        // copy of its type with its own width and height (workaround for horizon-rust/horizon#6276).
         if event.mob.kind.width != WIDTH {
             let mut kind = (*event.mob.kind).clone();
             kind.width = WIDTH;

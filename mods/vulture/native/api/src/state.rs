@@ -1,7 +1,8 @@
 //! A vulture's own state (SPECS §5, §6): its owner, whether it sits, its harness and chests.
 //!
 //! It lives on the mob, in `Mob.extra` (`tame`, `owner`, `sitting`, `variant2` = chests, `age`: negative
-//! for a baby, positive for a breeding pause, which Horizon leaves alone for a wandering trader), where the goals,
+//! for a baby, positive for a breeding pause, which Horizon leaves alone for a wandering trader: workaround for
+//! horizon-rust/horizon#13976), where the goals,
 //! the right-click (`interaction.rs`) and the drawing read it. A wandering trader saves none of those, so it is
 //! also kept in a server attachment (`vulture:state`, saved with the entity), and the two meet here:
 //!
@@ -320,7 +321,8 @@ pub fn of(m: &Mob) -> Saved {
     Saved {
         owner: if m.extra.tame { m.extra.owner } else { None },
         sitting: m.extra.sitting,
-        // Not on the mob: Horizon drives a mob whose `saddled` is set as its own saddled mount.
+        // Not on the mob: Horizon drives a mob whose `saddled` is set as its own saddled mount
+        // (workaround for horizon-rust/horizon#13973).
         harness: false,
         chests: m.extra.variant2.min(2),
         age: m.extra.age,

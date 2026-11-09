@@ -1,7 +1,8 @@
 //! Right-click on a vulture (SPECS §6), on the server, with the acting player's hand (`interact_entity` hook).
 //!
 //! It changes the mob through `state::request` (applied by its goal on its next tick), mounts with `Host::mount` (as
-//! `/ride` does, on the server, so its goals see the rider), and always takes the click (no trading screen).
+//! `/ride` does, on the server, so its goals see the rider), and always takes the click (no trading screen). Not an
+//! injection into `native_interact_entity`: that one sees a copy of the mob (workaround for horizon-rust/horizon#13972).
 //!
 //! Only its owner gets anything from it:
 //! - sneaking: its screen (`screen.rs`);
