@@ -6,7 +6,8 @@
 // Only its owner gets anything from it:
 // - sneaking: its screen, opened by the vulture's `interact_entity` trait hook (left unclaimed here);
 // - holding the vulture harness: puts it on; a chest: adds one (two at most, harness needed);
-// - holding raw meat while it is hurt: heals 4;
+// - holding raw meat while it is hurt: heals 4; a baby grows a minute older instead;
+// - holding rotten flesh, grown and not resting from breeding: in love for 30 s (SPECS §8);
 // - otherwise: mounts it when it wears a harness, else tells it to sit or follow.
 fn vulture_interact(game: &mut crate::game::Game<'_>, entity: i32, kind: &str, claimed: &mut bool) {
     use crate::mod_api::Host as _;
@@ -36,12 +37,26 @@ fn vulture_interact(game: &mut crate::game::Game<'_>, entity: i32, kind: &str, c
         return;
     }
     let (saddled, chests, hurt) = (m.extra.saddled, m.extra.variant2, m.health < m.attrs.max_health);
+    // Its age is the vulture's own (`state.rs`): negative while a baby, positive while it rests from breeding.
+    let (baby, age, in_love) = (m.extra.age < 0, m.extra.age, m.extra.in_love > 0);
     let meat = matches!(
         held.as_str(),
         "minecraft:chicken" | "minecraft:beef" | "minecraft:porkchop" | "minecraft:mutton" | "minecraft:rabbit"
     );
     let take = |game: &mut crate::game::Game<'_>, item: &str| game.take_items(item, 1) == 1;
-    if held == "vulture:harness" && !saddled {
+    if held == "minecraft:rotten_flesh" && age == 0 && !in_love {
+        if take(game, "minecraft:rotten_flesh") {
+            vulture_with_mob(game, id, |m| m.extra.in_love = 600);
+        }
+        return;
+    }
+    if meat && baby {
+        if take(game, &held) {
+            vulture_with_mob(game, id, |m| m.extra.age = (m.extra.age + 1200).min(-1));
+        }
+        return;
+    }
+    if held == "vulture:harness" && !saddled && !baby {
         if take(game, "vulture:harness") {
             vulture_with_mob(game, id, |m| m.extra.saddled = true);
         }
@@ -59,7 +74,7 @@ fn vulture_interact(game: &mut crate::game::Game<'_>, entity: i32, kind: &str, c
         }
         return;
     }
-    if !saddled {
+    if !saddled || baby {
         vulture_with_mob(game, id, |m| m.extra.sitting = !m.extra.sitting);
         return;
     }

@@ -160,6 +160,9 @@ impl Goal for NoFall {
 /// The variant's texture (only one for now: tawny).
 const TEXTURE: &str = "vulture:entity/vulture/tawny";
 
+/// A baby's size, against a grown vulture's.
+const BABY_SCALE: f32 = 0.5;
+
 /// How far its back slopes down to the tail on the ground, in degrees.
 const HUNCH: f32 = 18.0;
 
@@ -239,6 +242,7 @@ impl Hooks for Vulture {
         ai.goals.add(1, Fly::default());
         ai.goals.add(2, tame::Sit);
         ai.goals.add(2, MeleeAttack::new(1.2, true));
+        ai.goals.add(3, tame::Mate::default());
         ai.goals.add(3, tame::Eat::default());
         ai.goals.add(4, tame::FollowOwner::default());
         ai.goals.add(5, wild::Soar::new());
@@ -297,6 +301,7 @@ impl Hooks for Vulture {
             state::save(host, event.dimension, event.entity);
             state::look_for_food(host, event.dimension, event.entity);
             talons::carry(host, event.dimension, event.entity);
+            state::births(host, event.dimension);
         }
     }
 
@@ -307,13 +312,18 @@ impl Hooks for Vulture {
             return Flow::Continue;
         }
         let flapping = flight::flapping(mob.id);
-        let (harness, chests) = state::gear(mob.id);
+        let (harness, chests, baby) = state::gear(mob.id);
         let shown = |part: &str| match part {
             "harness" => harness,
             "chest_left" => chests >= 1,
             "chest_right" => chests >= 2,
             _ => true,
         };
+        // A baby is drawn at half size (SPECS §8), its head a little bigger (`pose` can't scale: it is the body).
+        event.draw.push();
+        if baby {
+            event.draw.scale([BABY_SCALE; 3]);
+        }
         creature::model::draw_shown(
             host,
             &mut *event.draw,
@@ -322,6 +332,7 @@ impl Hooks for Vulture {
             &|part| pose(part, mob, flapping),
             &shown,
         );
+        event.draw.pop();
         Flow::Cancel
     }
 }

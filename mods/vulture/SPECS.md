@@ -54,6 +54,12 @@ library shares are described there; this spec gives the vulture's own rules and 
 - **Talons** (§6.4, 2026-11-09): ridden in flight, R (`key.vulture.talons`) catches the nearest small mob (at most
   1 × 1) or tamed animal up to 3 blocks below and carries it (−25 % cruising speed, half the climb); R again, the rider
   getting off or its death lets go. Built; not tested in game yet.
+- **Stats, breeding and babies** (§2, §8, 2026-11-09): each vulture rolls its max health (16 to 30) and flight speed
+  (0.6 to 1.2 × base) once, saved. Rotten flesh from its owner puts a grown tamed vulture in love for 30 s; two in love
+  within 8 blocks meet and have a baby (tamed to the owner, each stat the average of both parents' and a roll), then
+  wait 5 minutes. A baby is drawn at half size, can't wear a harness or be ridden, grows up in 20 minutes, a minute
+  faster per raw meat fed. Its age is its own (Horizon doesn't age a wandering trader's copy), saved with its state.
+  Built; not tested in game yet.
 
 ### To do (v1)
 
@@ -61,12 +67,9 @@ library shares are described there; this spec gives the vulture's own rules and 
   the numbers, bank and stall to tune.
 - §7.1 Lean model: written (2026-11-09); to check in game with its poses (folded, gliding, flapping, banking, diving).
 - §7.2 New spawn egg: drawn (2026-11-09); to check in game.
-- §2 Variable stats (health, speed) and their inheritance: in the library (common/SPECS.md §8.4) if Wyverns is under
-  way by then, else here first.
 - §4 Wild vulture, the rest: hitbox (~1.2 × 1.0; it still has the trader's 0.6 × 1.95: try overriding its mob type's
   size at spawn), landing on high points, scavenging (meat on the ground), fighting in the air rather than on foot.
-- §7 Baby (model and texture), peck/eat, sit, attack and talon animations.
-- §8 Breeding.
+- §7 Animations: peck/eat, sit, attack, talons; the baby's own proportions (big head, downy crown) and texture.
 
 What waits for v2 is listed apart, in §9.
 

@@ -6,6 +6,8 @@
 //! - `Sit`: it stays put when told to (right-click, `interact.rs`).
 //! - `FollowOwner`: flies to its owner when more than 10 blocks away and lands near them; teleports past 32 blocks.
 //! - `OwnerHurtBy` / `OwnerHurt`: it attacks what hurts its owner, and what its owner attacks (as vanilla's wolf).
+//! - `Mate` (SPECS §8): fed rotten flesh by its owner (`interact.rs`), a grown vulture is in love for 30 s; it walks to
+//!   another tamed vulture in love and, once close, they have a baby (born tamed, `state::breed`) and wait 5 minutes.
 use horizon_client::mobs::goals::{self, Cx, Goal};
 use horizon_client::mobs::{MobEvent, Who};
 use horizon_client::mod_api::{Mob, RandomSource};
@@ -269,6 +271,86 @@ impl Goal for OwnerHurt {
     }
     fn stop(&mut self, m: &mut Mob, _: &mut Cx) {
         m.ai.target = None;
+    }
+    fn box_clone(&self) -> Box<dyn Goal> {
+        Box::new(self.clone())
+    }
+}
+
+/// How close two vultures in love must come to breed, in blocks.
+const MATE_RANGE: f64 = 2.5;
+/// How far it looks for a partner.
+const MATE_SEARCH: f64 = 8.0;
+
+#[derive(Clone, Debug, Default)]
+pub struct Mate {
+    partner: Option<u32>,
+}
+
+impl Mate {
+    /// The nearest other tamed vulture in love (vultures are the only ones of their species `in_love` is set on).
+    fn find(m: &Mob, cx: &Cx) -> Option<u32> {
+        cx.w.others
+            .iter()
+            .filter(|s| s.id != m.id && s.alive && s.tame && state::in_love(s.id))
+            .map(|s| {
+                (
+                    s.id,
+                    (s.position.x - m.position.x).powi(2) + (s.position.z - m.position.z).powi(2),
+                )
+            })
+            .filter(|(_, d2)| *d2 <= MATE_SEARCH * MATE_SEARCH)
+            .min_by(|a, b| a.1.total_cmp(&b.1))
+            .map(|(id, _)| id)
+    }
+}
+
+impl Goal for Mate {
+    fn flags(&self) -> u8 {
+        goals::MOVE | goals::LOOK
+    }
+    fn can_use(&mut self, m: &mut Mob, cx: &mut Cx) -> bool {
+        if !(m.extra.tame && m.extra.in_love > 0 && m.extra.age == 0 && free(m)) {
+            return false;
+        }
+        self.partner = Self::find(m, cx);
+        self.partner.is_some()
+    }
+    fn can_continue(&mut self, m: &mut Mob, cx: &mut Cx) -> bool {
+        m.extra.in_love > 0
+            && self
+                .partner
+                .is_some_and(|p| cx.w.seen(p).is_some_and(|s| s.alive) && state::in_love(p))
+    }
+    fn stop(&mut self, m: &mut Mob, _: &mut Cx) {
+        self.partner = None;
+        m.nav_stop();
+    }
+    fn every_tick(&self) -> bool {
+        true
+    }
+    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
+        let Some(partner) = self.partner else {
+            return;
+        };
+        let Some(at) = cx.w.seen(partner).map(|s| s.position) else {
+            return;
+        };
+        let target = [at.x, at.y, at.z];
+        m.look_at_speed(target, 10.0, 10.0);
+        let d2 = (at.x - m.position.x).powi(2) + (at.z - m.position.z).powi(2);
+        if d2 > MATE_RANGE * MATE_RANGE {
+            m.nav_move_to(cx.w, target, 1.0);
+            return;
+        }
+        // Both see each other close; the one with the smaller id brings the baby, both wait.
+        if m.id < partner {
+            let rolls = [m.random.next_float(), m.random.next_float()];
+            state::breed(m, partner, rolls);
+            particles(m, cx, "minecraft:heart");
+        }
+        m.extra.in_love = 0;
+        m.extra.age = state::BREED_PAUSE;
     }
     fn box_clone(&self) -> Box<dyn Goal> {
         Box::new(self.clone())

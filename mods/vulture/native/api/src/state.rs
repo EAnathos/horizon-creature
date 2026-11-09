@@ -1,6 +1,7 @@
 //! A vulture's own state (SPECS §5, §6): its owner, whether it sits, its harness and chests.
 //!
-//! It lives on the mob, in `Mob.extra` (`tame`, `owner`, `sitting`, `saddled`, `variant2` = chests), where the goals,
+//! It lives on the mob, in `Mob.extra` (`tame`, `owner`, `sitting`, `saddled`, `variant2` = chests, `age`: negative
+//! for a baby, positive for a breeding pause, which Horizon leaves alone for a wandering trader), where the goals,
 //! the right-click (`interact.rs` injection) and the drawing read it. A wandering trader saves none of those, so it is
 //! also kept in a server attachment (`vulture:state`, saved with the entity), and the two meet here:
 //!
@@ -17,7 +18,18 @@
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use horizon_client::mod_api::{AttachmentCodec, AttachmentError, AttachmentType, Compound, Holder, Host, Mob, Tag};
+use horizon_client::mod_api::{
+    AttachmentCodec, AttachmentError, AttachmentType, Compound, Holder, Host, Mob, RandomSource, Tag,
+};
+
+/// Each vulture's flight speed share, once rolled or loaded (`Mob` has no field for it).
+static PACES: Mutex<BTreeMap<u32, f32>> = Mutex::new(BTreeMap::new());
+
+fn set_stats(m: &mut Mob, health: f32, pace: f32) {
+    m.attrs.max_health = health;
+    m.health = m.health.min(health);
+    PACES.lock().unwrap().insert(m.id, pace);
+}
 
 /// The raw meats it eats from the ground (SPECS §4); a thrown raw chicken may tame it (§5). Cooked meat is ignored.
 pub const MEATS: [&str; 5] = [
@@ -40,7 +52,7 @@ pub struct Food {
 }
 
 /// What is saved of a vulture.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Saved {
     /// The owner's UUID as four ints (`UUIDUtil.uuidToIntArray`), when tamed.
     pub owner: Option<[i32; 4]>,
@@ -48,6 +60,25 @@ pub struct Saved {
     pub harness: bool,
     /// 0, 1 or 2 chests (SPECS §6.3).
     pub chests: u8,
+    /// Ticks: negative while a baby (grows up at 0), positive while it may not breed again (SPECS §8).
+    pub age: i32,
+    /// Its stats (SPECS §2): max health, and its flight speed as a share of the base speed; 0 until rolled.
+    pub health: f32,
+    pub pace: f32,
+}
+
+/// The stats' ranges (SPECS §2).
+pub const HEALTH: (f32, f32) = (16.0, 30.0);
+pub const PACE: (f32, f32) = (0.6, 1.2);
+/// A baby grows up in 20 minutes; parents wait 5 minutes before breeding again (SPECS §8).
+pub const BABY_AGE: i32 = -24_000;
+pub const BREED_PAUSE: i32 = 6_000;
+
+fn float(data: &Compound, key: &str) -> f32 {
+    match data.get(&key.into()) {
+        Some(Tag::Float(bits)) => f32::from_bits(*bits),
+        _ => 0.0,
+    }
 }
 
 fn flag(data: &Compound, key: &str) -> bool {
@@ -67,6 +98,9 @@ static STATE: AttachmentType<Saved> = AttachmentType {
             data.insert("Sitting".into(), Tag::Byte(i8::from(s.sitting)));
             data.insert("Harness".into(), Tag::Byte(i8::from(s.harness)));
             data.insert("Chests".into(), Tag::Byte(s.chests as i8));
+            data.insert("Age".into(), Tag::Int(s.age));
+            data.insert("Health".into(), Tag::Float(s.health.to_bits()));
+            data.insert("Pace".into(), Tag::Float(s.pace.to_bits()));
             Ok(data)
         },
         decode: |data: &Compound| {
@@ -85,6 +119,12 @@ static STATE: AttachmentType<Saved> = AttachmentType {
                 sitting: flag(data, "Sitting"),
                 harness: flag(data, "Harness"),
                 chests,
+                age: match data.get(&"Age".into()) {
+                    Some(Tag::Int(n)) => *n,
+                    _ => 0,
+                },
+                health: float(data, "Health"),
+                pace: float(data, "Pace"),
             })
         },
     }),
@@ -114,6 +154,67 @@ struct Shared {
     pending: Vec<Change>,
     /// Its dimension, from the tick hook.
     dimension: String,
+    /// Whether it may breed now, for a partner's goal.
+    in_love: bool,
+}
+
+/// A baby to bring into the world (from the breeding goal, for the tick hook to summon).
+#[derive(Clone, Debug)]
+pub struct Birth {
+    pub at: [f64; 3],
+    pub baby: Saved,
+}
+
+static BIRTHS: Mutex<Vec<Birth>> = Mutex::new(Vec::new());
+
+/// Whether vulture `id` is in love (another vulture's breeding goal asks).
+pub fn in_love(id: u32) -> bool {
+    SHARED.lock().unwrap().get(&id).is_some_and(|s| s.in_love)
+}
+
+/// Rolls a stat between `range`'s ends from `roll` (0 to 1).
+pub fn stat(range: (f32, f32), roll: f32) -> f32 {
+    range.0 + (range.1 - range.0) * roll
+}
+
+/// From the breeding goal: a baby of `a` and `b` (SPECS §8): tamed to `a`'s owner; each stat the average of both
+/// parents' and a fresh roll's, like a horse's.
+pub fn breed(a: &Mob, b: u32, rolls: [f32; 2]) {
+    let other = saved(b);
+    let mine = of(a);
+    let mix = |x: f32, y: f32, range: (f32, f32), roll: f32| (x + y + stat(range, roll)) / 3.0;
+    let baby = Saved {
+        owner: mine.owner,
+        age: BABY_AGE,
+        health: mix(mine.health, other.health, HEALTH, rolls[0]),
+        pace: mix(mine.pace, other.pace, PACE, rolls[1]),
+        ..Saved::default()
+    };
+    BIRTHS.lock().unwrap().push(Birth {
+        at: [a.position.x, a.position.y, a.position.z],
+        baby,
+    });
+}
+
+/// From `entity_tick_post`: summons the babies waiting to be born, with their state.
+pub fn births(host: &mut dyn Host, dimension: &str) {
+    let births = std::mem::take(&mut *BIRTHS.lock().unwrap());
+    for birth in births {
+        if let Some(id) = host.summon(dimension, "vulture:vulture", birth.at, Compound::new()) {
+            let _ = STATE.set(host, Holder::Entity(id), birth.baby);
+        }
+    }
+}
+
+/// Its flight speed as a share of the base speed.
+pub fn pace(id: u32) -> f64 {
+    SHARED.lock().unwrap().get(&id).map_or(1.0, |s| {
+        if s.current.pace > 0.0 {
+            f64::from(s.current.pace)
+        } else {
+            1.0
+        }
+    })
 }
 
 static SHARED: Mutex<BTreeMap<u32, Shared>> = Mutex::new(BTreeMap::new());
@@ -149,13 +250,11 @@ pub fn request(id: u32, change: Change) {
     }
 }
 
-/// What the drawing needs of it: its harness and chests (the render state doesn't carry them).
-pub fn gear(id: u32) -> (bool, u8) {
-    SHARED
-        .lock()
-        .unwrap()
-        .get(&id)
-        .map_or((false, 0), |s| (s.current.harness, s.current.chests))
+/// What the drawing needs of it: its harness, chests and whether it is a baby (the render state doesn't carry them).
+pub fn gear(id: u32) -> (bool, u8, bool) {
+    SHARED.lock().unwrap().get(&id).map_or((false, 0, false), |s| {
+        (s.current.harness, s.current.chests, s.current.age < 0)
+    })
 }
 
 /// The mob's state as saved.
@@ -165,6 +264,9 @@ pub fn of(m: &Mob) -> Saved {
         sitting: m.extra.sitting,
         harness: m.extra.saddled,
         chests: m.extra.variant2.min(2),
+        age: m.extra.age,
+        health: m.attrs.max_health,
+        pace: PACES.lock().unwrap().get(&m.id).copied().unwrap_or(0.0),
     }
 }
 
@@ -178,7 +280,24 @@ pub fn sync_mob(m: &mut Mob) {
         m.extra.sitting = saved.sitting;
         m.extra.saddled = saved.harness;
         m.extra.variant2 = saved.chests;
+        m.extra.age = saved.age;
+        if saved.pace > 0.0 {
+            set_stats(m, saved.health, saved.pace);
+        }
     }
+    // A vulture seen for the first time (a wild spawn, an egg): its stats are rolled once.
+    if shared.read && shared.loaded.is_none() && PACES.lock().unwrap().get(&m.id).is_none() {
+        let health = stat(HEALTH, m.random.next_float());
+        let pace = stat(PACE, m.random.next_float());
+        set_stats(m, health, pace);
+        m.health = m.attrs.max_health;
+    }
+    // Growing up, and the breeding pause.
+    m.extra.age -= m.extra.age.signum();
+    if m.extra.in_love > 0 {
+        m.extra.in_love -= 1;
+    }
+    shared.in_love = m.extra.in_love > 0;
     for change in std::mem::take(&mut shared.pending) {
         match change {
             Change::ToggleSit => m.extra.sitting = !m.extra.sitting,
@@ -187,7 +306,12 @@ pub fn sync_mob(m: &mut Mob) {
         }
     }
     let now = of(m);
-    if shared.read && now != shared.current {
+    // The age alone changes every tick: saved once a minute, and when it grows up.
+    let aged_only = Saved {
+        age: shared.current.age,
+        ..now.clone()
+    } == shared.current;
+    if shared.read && now != shared.current && (!aged_only || now.age % 1200 == 0) {
         shared.dirty = true;
     }
     shared.current = now;
@@ -212,8 +336,8 @@ pub fn eaten(id: u32, food: Food) {
     }
 }
 
-/// From `entity_tick_post` (looking every 10 ticks): takes what it ate from the ground, and finds the nearest raw meat for a
-/// hungry vulture.
+/// From `entity_tick_post` (looking every 10 ticks): takes what it ate from the ground, and finds the nearest raw meat
+/// for a hungry vulture.
 pub fn look_for_food(host: &mut dyn Host, dimension: &str, id: u32) {
     let (pos, hungry, ate) = {
         let mut map = SHARED.lock().unwrap();

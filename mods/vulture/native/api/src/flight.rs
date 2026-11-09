@@ -94,7 +94,9 @@ impl Flight {
         // Speed: gravity along the slope, then the wings.
         let (sin_pitch, cos_pitch) = f64::from(self.pitch).to_radians().sin_cos();
         self.speed += GRAVITY * sin_pitch;
-        let cruise = if c.heavy { CRUISE * HEAVY_CRUISE } else { CRUISE };
+        // Its own speed (SPECS §2), then a catch's weight.
+        let pace = crate::state::pace(m.id);
+        let cruise = CRUISE * pace * if c.heavy { HEAVY_CRUISE } else { 1.0 };
         if c.flap && self.speed < cruise {
             self.speed += (cruise - self.speed) * FLAP;
         } else if c.brake {
@@ -102,7 +104,7 @@ impl Flight {
         } else {
             self.speed -= GLIDE_DRAG;
         }
-        self.speed = self.speed.clamp(0.0, DIVE_MAX);
+        self.speed = self.speed.clamp(0.0, DIVE_MAX * pace);
         let (s, c_yaw) = f64::from(heading).to_radians().sin_cos();
         let level = self.speed * cos_pitch;
         m.velocity.x = -s * level;
