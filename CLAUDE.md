@@ -6,7 +6,8 @@ depend on it: `vulture` (prototype: tameable, rideable flying vulture), `butterf
 (dimension, harpies, wyverns, Harpy Queen boss), `snakes`, `worms`, `cyclops`, `fireflies` (specs only).
 
 - **Architecture**: `docs/ARCHITECTURE.md` (modules, dependencies, what goes in the library, the single creative tab,
-  adding a mod). **Conventions**: `docs/CONVENTIONS.md`.
+  adding a mod). **Conventions**: `docs/CONVENTIONS.md`. **Horizon issues** we raised or follow, and our workarounds:
+  `docs/HORIZON-ISSUES.md` (keep it up to date; mod-API PRs go to arismoko/horizon, issues stay on horizon-rust).
 - **Specs**: one `SPECS.md` per module, source of truth for it (✅ decided, ❓ to confirm; §0 tracks progress). A mod's
   spec links to `common/SPECS.md` for shared systems instead of describing them.
 - **Rule of two**: a system used (or specified) by two or more mods goes in the library; species content stays in mods.
@@ -73,7 +74,7 @@ depend on it: `vulture` (prototype: tameable, rideable flying vulture), `butterf
 Each one is marked in the code with its issue; drop it when moving to a Horizon revision that fixes it:
 #13971 (`cargo creature install` reads the build log), #13972 (clicks in the trait hook, `Host::mount`), #13973
 (harness not in `Mob.extra.saddled`), #13974 (the vulture's screen opens next tick), #13975 (hitbox height 0.6 for the
-seat), #13976 (the vulture's own age), #6276 (the vulture's size by a cloned `MobType`).
+seat), #6276 (the vulture's size by a cloned `MobType`). Full tracker: `docs/HORIZON-ISSUES.md`.
 
 ## Models
 

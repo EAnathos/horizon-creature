@@ -22,6 +22,8 @@ tab, "Horizon Creature". The game text is in English and French.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): the modules, their dependencies and responsibilities, what goes in the
   library, the creative tab, building, adding a mod.
 - [docs/CONVENTIONS.md](docs/CONVENTIONS.md): ids, translations, specs, code and assets conventions.
+- [docs/HORIZON-ISSUES.md](docs/HORIZON-ISSUES.md): the Horizon issues we raised or follow, their status and the
+  workaround each one left in our code.
 - One `SPECS.md` per module (the library's: [common/SPECS.md](common/SPECS.md)), with its progress in §0.
 
 ## Install and test

@@ -58,7 +58,8 @@ library shares are described there; this spec gives the vulture's own rules and 
   (0.6 to 1.2 × base) once, saved. Rotten flesh from its owner puts a grown tamed vulture in love for 30 s; two in love
   within 8 blocks meet and have a baby (tamed to the owner, each stat the average of both parents' and a roll), then
   wait 5 minutes. A baby is drawn at half size, can't wear a harness or be ridden, grows up in 20 minutes, a minute
-  faster per raw meat fed. Its age is its own (Horizon doesn't age a wandering trader's copy), saved with its state.
+  faster per raw meat fed. Horizon ages it (a wandering trader's copy is an `AgeableMob`); its age is also saved with its
+  state.
   Built; not tested in game yet.
 - **Hitbox, fighting in the air, animations** (§4, §7, 2026-11-09): its own 1.2 × 1.0 hitbox (a copy of its type with
   its own size, in place of the trader's 0.6 × 1.95); it fights on the wing (`DiveAttack`: climbs above its target,

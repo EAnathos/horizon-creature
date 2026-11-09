@@ -1,10 +1,9 @@
 //! A vulture's own state (SPECS §5, §6): its owner, whether it sits, its harness and chests.
 //!
-//! It lives on the mob, in `Mob.extra` (`tame`, `owner`, `sitting`, `variant2` = chests, `age`: negative
-//! for a baby, positive for a breeding pause, which Horizon leaves alone for a wandering trader: workaround for
-//! horizon-rust/horizon#13976), where the goals,
-//! the right-click (`interaction.rs`) and the drawing read it. A wandering trader saves none of those, so it is
-//! also kept in a server attachment (`vulture:state`, saved with the entity), and the two meet here:
+//! It lives on the mob, in `Mob.extra` (`tame`, `owner`, `sitting`, `variant2` = chests, `age`: negative for a
+//! baby, positive for a breeding pause, aged by Horizon as any `AgeableMob`'s), where the goals, the right-click
+//! (`interaction.rs`) and the drawing read it. A wandering trader saves none of those but the age, so it is also
+//! kept in a server attachment (`vulture:state`, saved with the entity), and the two meet here:
 //!
 //! - every tick, the `NoFall` goal hands the mob's state over (`from_mob`), and applies a state loaded from the save
 //!   once (`to_mob`);
@@ -353,8 +352,6 @@ pub fn sync_mob(m: &mut Mob) {
         set_stats(m, health, pace);
         m.health = m.attrs.max_health;
     }
-    // Growing up, and the breeding pause.
-    m.extra.age -= m.extra.age.signum();
     if m.extra.in_love > 0 {
         m.extra.in_love -= 1;
     }
