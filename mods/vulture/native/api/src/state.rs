@@ -156,6 +156,7 @@ struct Shared {
     dimension: String,
     /// Whether it may breed now, for a partner's goal.
     in_love: bool,
+    look: Look,
 }
 
 /// A baby to bring into the world (from the breeding goal, for the tick hook to summon).
@@ -250,11 +251,28 @@ pub fn request(id: u32, change: Change) {
     }
 }
 
-/// What the drawing needs of it: its harness, chests and whether it is a baby (the render state doesn't carry them).
-pub fn gear(id: u32) -> (bool, u8, bool) {
-    SHARED.lock().unwrap().get(&id).map_or((false, 0, false), |s| {
-        (s.current.harness, s.current.chests, s.current.age < 0)
-    })
+/// What the drawing needs of a vulture, which its render state doesn't carry.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Look {
+    pub harness: bool,
+    pub chests: u8,
+    pub baby: bool,
+    pub sitting: bool,
+    /// Striking with its beak (`MeleeAttack`'s swing).
+    pub striking: bool,
+    /// Its age when it last ate, for the peck.
+    pub ate_at: u32,
+}
+
+pub fn look(id: u32) -> Look {
+    SHARED.lock().unwrap().get(&id).map_or(Look::default(), |s| s.look)
+}
+
+/// From the `Eat` goal: it is eating now.
+pub fn pecked(m: &Mob) {
+    if let Some(s) = SHARED.lock().unwrap().get_mut(&m.id) {
+        s.look.ate_at = m.age;
+    }
 }
 
 /// The mob's state as saved.
@@ -314,6 +332,14 @@ pub fn sync_mob(m: &mut Mob) {
     if shared.read && now != shared.current && (!aged_only || now.age % 1200 == 0) {
         shared.dirty = true;
     }
+    shared.look = Look {
+        harness: now.harness,
+        chests: now.chests,
+        baby: now.age < 0,
+        sitting: now.sitting && m.on_ground,
+        striking: m.ai.swinging,
+        ate_at: shared.look.ate_at,
+    };
     shared.current = now;
     shared.pos = [m.position.x, m.position.y, m.position.z];
     // Wild, it eats whenever it finds meat; tamed, only when hurt (SPECS §6: healing).

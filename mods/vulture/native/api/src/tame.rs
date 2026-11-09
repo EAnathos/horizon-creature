@@ -69,6 +69,7 @@ impl Goal for Eat {
             return;
         }
         state::eaten(m.id, food);
+        state::pecked(m);
         let pitch = 0.9 + m.random.next_float() * 0.2;
         sounds::queue(m.id, sounds::EAT, 1.0, pitch);
         if m.extra.tame {

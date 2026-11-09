@@ -8,7 +8,7 @@
 //! - Flight (`flight.rs`): it sets the vulture's speed directly, without gravity, flown like a plane, banking into
 //!   arc turns (SPECS §6.2). `Fly` steers it from `Mob.rider`; the wild vulture's `wild::Soar` from its own AI.
 //! - Wild (SPECS §4): it soars in circles high up and glides back down (`wild.rs`), walks about, and fights back
-//!   with vanilla's `HurtByTarget` and `MeleeAttack`.
+//!   in the air (`wild::DiveAttack`), its target chosen by vanilla's `HurtByTarget`.
 //! - Sounds: its own, not the trader's (`sounds.rs`, played by the library's `creature::sounds`).
 //! - Drawing: the Blockbench model (`assets/models/vulture.bbmodel`, converted into `model.rs`), posed by `pose` and
 //!   drawn by the library's `creature::model`, in place of the trader's model; its hearts, once ridden, without the
@@ -24,9 +24,11 @@ mod talons;
 mod tame;
 mod wild;
 
+use std::sync::Arc;
+
 use flight::{Controls, Flight};
 use horizon_client::mobs::Who;
-use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, MeleeAttack, Stroll};
+use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, Stroll};
 use horizon_client::mod_api::{
     Cx, EntityTickListenedEvent, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent, KeyEvent,
     LivingDeathEvent, MenuClickedEvent, MenuClosedEvent, MenuInputClosedEvent, Mob, MobSubmitEvent, NativeMobRender,
@@ -34,6 +36,10 @@ use horizon_client::mod_api::{
 };
 
 const KIND: &str = "vulture:vulture";
+/// Its hitbox and eye height, in blocks (SPECS §4).
+const WIDTH: f64 = 1.2;
+const HEIGHT: f64 = 1.0;
+const EYE_HEIGHT: f64 = 0.9;
 
 pub fn hooks() -> Box<dyn Hooks> {
     Box::new(Vulture)
@@ -160,6 +166,11 @@ impl Goal for NoFall {
 /// The variant's texture (only one for now: tawny).
 const TEXTURE: &str = "vulture:entity/vulture/tawny";
 
+/// How far it settles when sitting, in blocks.
+const SIT_DROP: f32 = 0.3;
+/// How long a peck lasts, in ticks.
+const PECK: f32 = 10.0;
+
 /// A baby's size, against a grown vulture's.
 const BABY_SCALE: f32 = 0.5;
 
@@ -172,8 +183,18 @@ const HUNCH: f32 = 18.0;
 /// the gap between its heading and its head (where the rider looks, `head_yaw`). On the ground the wings fold along the
 /// flanks of its hunched body: the arm turned back with its coverts outward, the forearm folded forward over it, the hand back again, its
 /// primaries along the tail.
-fn pose(name: &str, mob: &NativeMobRender<'_>, flapping: bool) -> [f32; 3] {
+fn pose(name: &str, mob: &NativeMobRender<'_>, flapping: bool, look: &state::Look, carrying: bool) -> [f32; 3] {
     let flying = !mob.on_ground;
+    // A peck: the head goes down and back up after it ate; a strike, quicker.
+    let since_meal = mob.age - look.ate_at as f32;
+    let peck = if look.ate_at > 0 && (0.0..PECK).contains(&since_meal) {
+        (since_meal / PECK * std::f32::consts::PI).sin() * 70.0
+    } else if look.striking {
+        (mob.age * 1.2).sin().abs() * 45.0
+    } else {
+        0.0
+    };
+
     let bank = (mob.head_yaw * 0.8).clamp(-50.0, 50.0);
     // Flapping: the wings go up and down, the outer segments following a little later; gliding, they are held still
     // with a slight dihedral, swept back the steeper it dives.
@@ -199,7 +220,9 @@ fn pose(name: &str, mob: &NativeMobRender<'_>, flapping: bool) -> [f32; 3] {
             // Hunched: the back slopes down to the tail, the head and legs straightened against it.
             "body" => [-HUNCH, 0.0, 0.0],
             // The model faces +z: looking right (positive yaw) turns it towards -x.
-            "head" => [mob.pitch + HUNCH, -mob.head_yaw, 0.0],
+            "head" => [mob.pitch + HUNCH + peck, -mob.head_yaw, 0.0],
+            // Sitting: legs folded forward under the belly.
+            "leg_left" | "leg_right" if look.sitting => [HUNCH - 80.0, 0.0, 0.0],
             "wing_left" => [-90.0, 0.0, 90.0],
             "wing_right" => [-90.0, 0.0, -90.0],
             "wing_left_mid" | "wing_right_mid" => [0.0, 0.0, 180.0],
@@ -213,13 +236,15 @@ fn pose(name: &str, mob: &NativeMobRender<'_>, flapping: bool) -> [f32; 3] {
     match name {
         "body" => [mob.pitch, 0.0, bank],
         // The head looks into the turn, and a little up against a dive.
-        "head" => [-mob.pitch * 0.5, -mob.head_yaw * 0.5, 0.0],
+        "head" => [-mob.pitch * 0.5 + peck, -mob.head_yaw * 0.5, 0.0],
         "wing_left" => [0.0, sweep, beat],
         "wing_right" => [0.0, -sweep, -beat],
         "wing_left_mid" => [0.0, sweep * 0.5, lag],
         "wing_right_mid" => [0.0, -sweep * 0.5, -lag],
         "wing_left_tip" => [0.0, 0.0, late],
         "wing_right_tip" => [0.0, 0.0, -late],
+        // Carrying, the legs hang down to hold the catch.
+        "leg_left" | "leg_right" if carrying => [0.0, 0.0, 0.0],
         "leg_left" | "leg_right" => [leg, 0.0, 0.0],
         "tail" => [-10.0, 0.0, -bank * 0.3],
         _ => [0.0; 3],
@@ -233,7 +258,16 @@ impl Hooks for Vulture {
         }
         // Without the wandering trader's sounds: its own come from `sounds.rs`.
         event.mob.silent = true;
-        // Neutral: it fights back with its beak, and nearby vultures join in (SPECS §4).
+        // Its own size (SPECS §4), in place of the trader's 0.6 × 1.95: a mob's box comes from its type, so it gets a
+        // copy of its type with its own width and height.
+        if event.mob.kind.width != WIDTH {
+            let mut kind = (*event.mob.kind).clone();
+            kind.width = WIDTH;
+            kind.height = HEIGHT;
+            kind.eye_height = EYE_HEIGHT;
+            event.mob.kind = Arc::new(kind);
+        }
+        // Neutral: it fights back with its beak, diving from the air, and nearby vultures join in (SPECS §4).
         event.mob.attrs.attack_damage = ATTACK_DAMAGE;
         let ai = &mut event.mob.ai;
         ai.goals.clear();
@@ -241,7 +275,7 @@ impl Hooks for Vulture {
         ai.goals.add(0, NoFall);
         ai.goals.add(1, Fly::default());
         ai.goals.add(2, tame::Sit);
-        ai.goals.add(2, MeleeAttack::new(1.2, true));
+        ai.goals.add(2, wild::DiveAttack::default());
         ai.goals.add(3, tame::Mate::default());
         ai.goals.add(3, tame::Eat::default());
         ai.goals.add(4, tame::FollowOwner::default());
@@ -312,24 +346,29 @@ impl Hooks for Vulture {
             return Flow::Continue;
         }
         let flapping = flight::flapping(mob.id);
-        let (harness, chests, baby) = state::gear(mob.id);
+        let look = state::look(mob.id);
+        let carrying = talons::carrying(mob.id);
         let shown = |part: &str| match part {
-            "harness" => harness,
-            "chest_left" => chests >= 1,
-            "chest_right" => chests >= 2,
+            "harness" => look.harness,
+            "chest_left" => look.chests >= 1,
+            "chest_right" => look.chests >= 2,
             _ => true,
         };
         // A baby is drawn at half size (SPECS §8), its head a little bigger (`pose` can't scale: it is the body).
         event.draw.push();
-        if baby {
+        if look.baby {
             event.draw.scale([BABY_SCALE; 3]);
+        }
+        // Sitting: settled on its belly, legs folded under it.
+        if look.sitting {
+            event.draw.translate([0.0, -SIT_DROP, 0.0]);
         }
         creature::model::draw_shown(
             host,
             &mut *event.draw,
             &model::VULTURE,
             TEXTURE,
-            &|part| pose(part, mob, flapping),
+            &|part| pose(part, mob, flapping, &look, carrying),
             &shown,
         );
         event.draw.pop();

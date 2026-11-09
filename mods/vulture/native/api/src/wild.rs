@@ -3,7 +3,7 @@
 //! `Soar` flies with the same physics as the ridden flight (`flight::Flight`), steered by its own controls: it takes
 //! off now and then, climbs to 18 to 26 blocks above where it left the ground, circles there for 30 to 60 s and
 //! spirals down until it lands. A vulture left in the air (its rider got off) glides down the same way. Fighting
-//! (`HurtByTarget` and `MeleeAttack`, set in `lib.rs`) and riding come first.
+//! (`DiveAttack`, below, its target from `HurtByTarget`) and riding come first.
 use horizon_client::mobs::goals;
 use horizon_client::mod_api::{Cx, Goal, Mob, RandomSource};
 
@@ -146,6 +146,102 @@ impl Goal for Soar {
                 boost: false,
                 heavy: false,
             },
+        };
+        self.flight.tick(m, &controls);
+    }
+    fn box_clone(&self) -> Box<dyn Goal> {
+        Box::new(self.clone())
+    }
+}
+
+/// Above its target before diving, and how far from it it starts the dive, in blocks.
+const DIVE_ABOVE: f64 = 6.0;
+const DIVE_FROM: f64 = 10.0;
+/// How close a strike lands, in blocks, and the ticks between strikes and spent pulling away after one.
+const STRIKE_REACH: f64 = 1.8;
+const STRIKE_EVERY: i32 = 20;
+const PULL_AWAY: i32 = 20;
+
+/// Fighting in the air (SPECS §4): with a target, it takes off, climbs above it, dives at it, strikes with its beak
+/// when close (vanilla's `doHurtTarget`, its 3 damage), pulls away and comes back. Replaces a ground melee attack, a
+/// vulture fights on the wing.
+#[derive(Clone, Debug, Default)]
+pub struct DiveAttack {
+    flight: Flight,
+    cooldown: i32,
+    away: i32,
+}
+
+impl Goal for DiveAttack {
+    fn flags(&self) -> u8 {
+        goals::MOVE | goals::LOOK | goals::JUMP
+    }
+    fn can_use(&mut self, m: &mut Mob, cx: &mut Cx) -> bool {
+        m.rider.is_none() && m.ai.target.and_then(|t| cx.w.target_info(t)).is_some_and(|t| t.alive)
+    }
+    fn start(&mut self, _: &mut Mob, _: &mut Cx) {
+        self.flight = Flight::default();
+        self.cooldown = 0;
+        self.away = 0;
+    }
+    fn stop(&mut self, m: &mut Mob, _: &mut Cx) {
+        self.flight.land(m);
+    }
+    fn every_tick(&self) -> bool {
+        true
+    }
+    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
+        let Some(who) = m.ai.target else {
+            return;
+        };
+        let Some(t) = cx.w.target_info(who) else {
+            return;
+        };
+        self.cooldown = (self.cooldown - 1).max(0);
+        self.away = (self.away - 1).max(0);
+        let (dx, dz) = (t.position.x - m.position.x, t.position.z - m.position.z);
+        let dy = t.eye_y - (m.position.y + 0.5);
+        let flat = (dx * dx + dz * dz).sqrt();
+        let reach = (flat * flat + dy * dy).sqrt();
+        if reach < STRIKE_REACH && self.cooldown == 0 {
+            m.swing();
+            horizon_client::mobs::ai::do_hurt_target(m, who, cx);
+            self.cooldown = STRIKE_EVERY;
+            self.away = PULL_AWAY;
+        }
+        let to_target = heading_of(dx, dz);
+        let controls = if self.away > 0 {
+            // Pulling away: up and past.
+            Controls {
+                yaw: m.yaw,
+                pitch: -30.0,
+                flap: true,
+                brake: false,
+                boost: false,
+                heavy: false,
+            }
+        } else if flat > DIVE_FROM {
+            // Closing in, above it.
+            let below = t.position.y + DIVE_ABOVE - m.position.y;
+            Controls {
+                yaw: to_target,
+                pitch: (-below * 3.0).clamp(-35.0, 35.0) as f32,
+                flap: true,
+                brake: false,
+                boost: m.on_ground,
+                heavy: false,
+            }
+        } else {
+            // The dive, straight at it.
+            let pitch = (-dy).atan2(flat).to_degrees() as f32;
+            Controls {
+                yaw: to_target,
+                pitch,
+                flap: false,
+                brake: false,
+                boost: m.on_ground,
+                heavy: false,
+            }
         };
         self.flight.tick(m, &controls);
     }
