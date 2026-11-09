@@ -56,13 +56,14 @@ depend on it: `vulture` (prototype: tameable, rideable flying vulture), `butterf
   (the vulture uses the wandering trader, whose behaviour is all goals).
 - Rendering: `native_mob_submit` + `native_draw_cube`, through `creature::model::draw` (cubes, pivots,
   `<mod>:entity/...` textures).
-- Riding: `/ride` and the vulture's `interact.rs` injection put a player on any mob; Horizon copies the rider's keys
+- Riding: `/ride` and `Host::mount` (the vulture's right-click) put a player on any mob; Horizon copies the rider's keys
   into `Mob.rider`, which the `Fly` goal reads. These are internal fields: the Horizon revision is pinned, the same for
   every module.
-- A mixin injection on a right-click (the vulture's `interact.rs`) sees a copy of the mob that the game refreshes from
-  the one the AI ticks: read it, never change it there (changes are lost). Change a mob from the server trait hook and
-  the goals (the vulture's `state::request`); pass a value to injection code through a synced attachment of a std type
-  (`bool`); the clicking player is `acting_player()` there (`level.player_uuid` is unset).
+- Code injected into the right-click (`native_interact_entity`) runs on a client-side copy: what it changes on a mob is
+  lost, and `start_riding` there seats the player on the client only (the mob's goals never see a rider, the client
+  moves the mount itself). Handle clicks in the server trait hook (`interact_entity`), change a mob through its goals
+  (the vulture's `state::request`), mount with `Host::mount`, and read the player from `acting_player()` (its
+  `sneaking`, `entity_id`).
 - Mob sounds are always prefixed with `minecraft:` by Horizon: our mobs are muted and play their own through
   `creature::sounds` (`Host::play_sound`).
 - Custom dimensions (Wyverns) are not documented in Horizon: to prototype first.

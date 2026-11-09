@@ -1,8 +1,8 @@
 //! A vulture's own state (SPECS §5, §6): its owner, whether it sits, its harness and chests.
 //!
-//! It lives on the mob, in `Mob.extra` (`tame`, `owner`, `sitting`, `saddled`, `variant2` = chests, `age`: negative
+//! It lives on the mob, in `Mob.extra` (`tame`, `owner`, `sitting`, `variant2` = chests, `age`: negative
 //! for a baby, positive for a breeding pause, which Horizon leaves alone for a wandering trader), where the goals,
-//! the right-click (`interact.rs` injection) and the drawing read it. A wandering trader saves none of those, so it is
+//! the right-click (`interaction.rs`) and the drawing read it. A wandering trader saves none of those, so it is
 //! also kept in a server attachment (`vulture:state`, saved with the entity), and the two meet here:
 //!
 //! - every tick, the `NoFall` goal hands the mob's state over (`from_mob`), and applies a state loaded from the save
@@ -157,10 +157,10 @@ struct Shared {
     /// Whether it may breed now, for a partner's goal.
     in_love: bool,
     look: Look,
+    /// Its harness, kept here rather than on the mob (`of`).
+    harness: bool,
     /// Below its max health.
     hurt: bool,
-    /// What `RIDEABLE` holds now.
-    rideable: Option<bool>,
 }
 
 /// A baby to bring into the world (from the breeding goal, for the tick hook to summon).
@@ -223,21 +223,6 @@ pub fn pace(id: u32) -> f64 {
 }
 
 static SHARED: Mutex<BTreeMap<u32, Shared>> = Mutex::new(BTreeMap::new());
-
-/// Whether its owner may ride it now (tamed, a harness on, grown up), for the `interact.rs` injection, which can't
-/// read this crate: an attachment of a plain `bool` (the same type there), synced to the client where the injection
-/// runs; its saved copy is set again from the state.
-static RIDEABLE: AttachmentType<bool> = AttachmentType {
-    namespace: "vulture",
-    name: "rideable",
-    default: || false,
-    codec: Some(AttachmentCodec {
-        encode: |v| Ok([("Rideable".into(), Tag::Byte(i8::from(*v)))].into()),
-        decode: |c| Ok(matches!(c.get(&"Rideable".into()), Some(Tag::Byte(1)))),
-    }),
-    copy_on_death: false,
-    sync: true,
-};
 
 /// A change the hooks (its screen) ask of the mob, applied by the goal on its next tick.
 #[derive(Clone, Copy, Debug)]
@@ -323,7 +308,8 @@ pub fn of(m: &Mob) -> Saved {
     Saved {
         owner: if m.extra.tame { m.extra.owner } else { None },
         sitting: m.extra.sitting,
-        harness: m.extra.saddled,
+        // Not on the mob: Horizon drives a mob whose `saddled` is set as its own saddled mount.
+        harness: false,
         chests: m.extra.variant2.min(2),
         age: m.extra.age,
         health: m.attrs.max_health,
@@ -339,7 +325,7 @@ pub fn sync_mob(m: &mut Mob) {
         m.extra.tame = saved.owner.is_some();
         m.extra.owner = saved.owner;
         m.extra.sitting = saved.sitting;
-        m.extra.saddled = saved.harness;
+        shared.harness = saved.harness;
         m.extra.variant2 = saved.chests;
         m.extra.age = saved.age;
         if saved.pace > 0.0 {
@@ -362,8 +348,8 @@ pub fn sync_mob(m: &mut Mob) {
     for change in std::mem::take(&mut shared.pending) {
         match change {
             Change::ToggleSit => m.extra.sitting = !m.extra.sitting,
-            Change::PutHarness => m.extra.saddled = true,
-            Change::RemoveHarness => m.extra.saddled = false,
+            Change::PutHarness => shared.harness = true,
+            Change::RemoveHarness => shared.harness = false,
             Change::AddChest => m.extra.variant2 = (m.extra.variant2 + 1).min(2),
             Change::RemoveChest => m.extra.variant2 = m.extra.variant2.saturating_sub(1),
             Change::InLove => m.extra.in_love = LOVE,
@@ -371,7 +357,10 @@ pub fn sync_mob(m: &mut Mob) {
             Change::Heal => m.heal(HEAL),
         }
     }
-    let now = of(m);
+    // Never a saddled mount for Horizon: it would drive it itself, ignoring the vulture's flight.
+    m.extra.saddled = false;
+    let mut now = of(m);
+    now.harness = shared.harness;
     // The age alone changes every tick: saved once a minute, and when it grows up.
     let aged_only = Saved {
         age: shared.current.age,
@@ -484,9 +473,5 @@ pub fn save(host: &mut dyn Host, dimension: &str, id: u32) {
     }
     if shared.dirty && STATE.set(host, holder, shared.current.clone()).is_ok() {
         shared.dirty = false;
-    }
-    let rideable = shared.current.owner.is_some() && shared.current.harness && shared.current.age >= 0;
-    if shared.rideable != Some(rideable) && RIDEABLE.set(host, holder, rideable).is_ok() {
-        shared.rideable = Some(rideable);
     }
 }

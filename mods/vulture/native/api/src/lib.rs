@@ -2,9 +2,9 @@
 //!
 //! - `vulture:vulture` copies the wandering trader (content part, `content/`): we clear its goals and give it ours,
 //!   `NoFall` and `Fly`.
-//! - Mounting: a right-click on it by its owner, once it wears a harness (`interact.rs` injection), or `/ride`. Horizon then copies the rider's keys into
-//!   `Mob.rider` every tick (`game/mounts.rs`, `tick_mount_riding`): forward/back, left/right, jump (Space), sprint
-//!   (Ctrl). Sneaking gets off.
+//! - Mounting: a right-click on it by its owner, once it wears a harness (`interaction.rs`, `Host::mount`), or
+//!   `/ride`. Horizon then copies the rider's keys into `Mob.rider` every tick (`game/mounts.rs`, `tick_mount_riding`):
+//!   forward/back, left/right, jump (Space), sprint (Ctrl). Sneaking gets off, only on the ground (`ride_keys.rs`).
 //! - Flight (`flight.rs`): it sets the vulture's speed directly, without gravity, flown like a plane, banking into
 //!   arc turns (SPECS §6.2). `Fly` steers it from `Mob.rider`; the wild vulture's `wild::Soar` from its own AI.
 //! - Wild (SPECS §4): it soars in circles high up and glides back down (`wild.rs`), walks about, and fights back
@@ -33,8 +33,8 @@ use horizon_client::mobs::Who;
 use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, Stroll};
 use horizon_client::mod_api::{
     Cx, EntityTickListenedEvent, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent, KeyEvent,
-    LivingDeathEvent, MenuClickedEvent, MenuClosedEvent, MenuInputClosedEvent, Mob, MobSubmitEvent, NativeMobRender,
-    RandomSource, RegisterGoalsEvent,
+    LivingDeathEvent, MenuClickedEvent, MenuClosedEvent, MenuInputClosedEvent, Mob, MobSubmitEvent, ModsEvent,
+    NativeMobRender, NativeMod, RandomSource, RegisterGoalsEvent,
 };
 
 const KIND: &str = "vulture:vulture";
@@ -290,7 +290,7 @@ impl Hooks for Vulture {
         ai.targets.add(3, HurtByTarget::new().alert());
     }
 
-    /// Right-click (`interaction.rs`), once the `interact.rs` injection didn't mount it. Always taken: no trading.
+    /// Right-click (`interaction.rs`). Always taken: no trading.
     fn interact_entity(&self, host: &mut dyn Host, event: &mut InteractEntityEvent<'_>) -> Flow {
         if event.kind != KIND {
             return Flow::Continue;
@@ -321,6 +321,20 @@ impl Hooks for Vulture {
         Flow::Continue
     }
 
+    /// Its page in Options > Mods, where the talons key can be changed.
+    fn mods(&self, _: &mut dyn Host, event: &mut ModsEvent<'_>) {
+        event.mods.push(NativeMod {
+            id: "vulture".into(),
+            title: "Vulture".into(),
+            description: "A vulture you tame, ride and fly (Horizon Creature).".into(),
+            keys: vec![[
+                "talons".into(),
+                "Talons (catch / release)".into(),
+                talons::DEFAULT_KEY.into(),
+            ]],
+        });
+    }
+
     /// The talons key (SPECS §6.4), taken by the ridden vulture.
     fn key(&self, host: &mut dyn Host, event: &mut KeyEvent<'_>) {
         if event.pressed && event.key == host.mod_key("vulture", talons::KEY, talons::DEFAULT_KEY) {
@@ -338,6 +352,7 @@ impl Hooks for Vulture {
             state::save(host, event.dimension, event.entity);
             state::look_for_food(host, event.dimension, event.entity);
             talons::carry(host, event.dimension, event.entity);
+            screen::tick(host, event.entity);
             state::births(host, event.dimension);
         }
     }

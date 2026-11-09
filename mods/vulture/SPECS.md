@@ -85,6 +85,12 @@ library shares are described there; this spec gives the vulture's own rules and 
   under the folded wings. Now the server hook makes every change (`interaction.rs`), the injection only mounts (reading
   a synced `vulture:rideable` attachment), and the harness shows a seat on the back and a breast strap. Tried in game:
   taming with thrown chicken, harness on, mount, save and reload, mount again.
+- **Riding fixed, tested in game** (2026-11-09): mounting is done on the server (`Host::mount`, as `/ride`): mounted
+  from client-side code, its goals never saw the rider and the game moved it itself (fast on foot, no take-off). The
+  harness is no longer `Mob.extra.saddled`, which made Horizon drive it as a saddled mount. Slower flight (cruise 0.4,
+  dive 0.8 blocks per tick), and sneak brings it down at least 0.2 a tick so it lands. The screen opens on the
+  vulture's next tick (Horizon refuses a menu during the click). The talons key is on the mod's page in Options > Mods.
+  Tried in game: right-click mount, take-off with Space, the screen with sneak + right-click.
 - **v1 is written.** What is left is testing everything above in game, then tuning (flight numbers, taming odds,
   speeds, the dive attack) and fixing what the tests find.
 
@@ -236,8 +242,8 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
 - Horizon gets a rider off on sneak before any mod hears of it: the `ride-keys` injection (`ride_keys.rs`) keeps them
   on in the air.
 - ✅ Chests **do not weigh** on its flight. ✅ **No thermals.**
-- Starting numbers ❓ (blocks per tick): cruise 0.6, dive up to 1.2, slowest 0.25 before a stall, glide sink 0.04 when
-  level, take-off climb 0.4.
+- Starting numbers ❓ (blocks per tick): cruise 0.4 × its speed stat, dive up to 0.8, slowest 0.18 before a stall,
+  glide sink 0.04 when level, take-off climb 0.4, descent at least 0.2.
 
 ### 6.3 Chests ✅
 
@@ -255,7 +261,7 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
     babies…);
   - **allies** ✅: a player sneaking under the vulture (sneaking means consent), or a tamed animal.
 - Carrying someone **weighs it down** ❓: cruising speed −25 %, and it climbs at half the rate.
-- The key is a mod key (`key.vulture.talons` in `horizon-mods.txt`, R by default); a sneaking player under it can't be
+- The key is a mod key, R by default, changed on the vulture's page in Options > Mods; a sneaking player under it can't be
   caught in single player (the only player is its rider), so allies are tamed animals for now.
 - It lets go on the key, when the vulture dies or when the rider gets off. The fall deals normal damage.
 - A wild or unridden vulture catches nothing ✅.

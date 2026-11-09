@@ -12,9 +12,9 @@ use horizon_client::mod_api::{Mob, RandomSource};
 use crate::sounds;
 
 /// Speeds in blocks per tick, before air drag (×0.91 per tick).
-pub const CRUISE: f64 = 0.6;
-const DIVE_MAX: f64 = 1.2;
-pub const STALL: f64 = 0.25;
+pub const CRUISE: f64 = 0.4;
+const DIVE_MAX: f64 = 0.8;
+pub const STALL: f64 = 0.18;
 /// What a nose-down tick adds to the speed (× the sine of the pitch), a nose-up one takes away.
 const GRAVITY: f64 = 0.03;
 /// Wing beats close this share of the gap to the cruising speed every tick.
@@ -23,6 +23,9 @@ const GLIDE_DRAG: f64 = 0.004;
 const BRAKE: f64 = 0.04;
 const GLIDE_SINK: f64 = 0.04;
 const TAKE_OFF: f64 = 0.4;
+const MIN_DESCENT: f64 = 0.2;
+/// From this pitch down a flight counts as a descent (smaller ones are a wild vulture holding its height).
+const DESCENT_PITCH: f32 = 10.0;
 /// The steepest climb and dive it takes, and how fast its pitch follows the wanted one, in degrees.
 pub const MAX_CLIMB: f32 = 50.0;
 const MAX_DIVE: f32 = 75.0;
@@ -113,6 +116,10 @@ impl Flight {
         let flapping = c.flap || c.boost;
         // Bumping into something in the air (a tree, a cliff): it climbs over it rather than staying stuck.
         let blocked = m.horizontal_collision && !m.on_ground;
+        // Descending (pitch down), it sinks at least this fast even slow, so it comes down to land.
+        if c.pitch >= DESCENT_PITCH {
+            m.velocity.y = m.velocity.y.min(-MIN_DESCENT);
+        }
         if c.boost || blocked {
             m.velocity.y = m
                 .velocity

@@ -3,10 +3,10 @@
 //! - `Eat`: it walks to the meat the hook found on the ground (`state::food`) and eats it. A wild vulture eating a raw
 //!   chicken is tamed 1 time in 4 (hearts; smoke otherwise), by the player it sees (in single player, the one who
 //!   threw it). A tamed one eats only when hurt, and heals.
-//! - `Sit`: it stays put when told to (right-click, `interact.rs`).
+//! - `Sit`: it stays put when told to (right-click, `interaction.rs`).
 //! - `FollowOwner`: flies to its owner when more than 10 blocks away and lands near them; teleports past 32 blocks.
 //! - `OwnerHurtBy` / `OwnerHurt`: it attacks what hurts its owner, and what its owner attacks (as vanilla's wolf).
-//! - `Mate` (SPECS §8): fed rotten flesh by its owner (`interact.rs`), a grown vulture is in love for 30 s; it walks to
+//! - `Mate` (SPECS §8): fed rotten flesh by its owner (`interaction.rs`), a grown vulture is in love for 30 s; it walks to
 //!   another tamed vulture in love and, once close, they have a baby (born tamed, `state::breed`) and wait 5 minutes.
 use horizon_client::mobs::goals::{self, Cx, Goal};
 use horizon_client::mobs::{MobEvent, Who};

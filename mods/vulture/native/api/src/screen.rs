@@ -1,6 +1,6 @@
 //! The vulture's screen and its chests' contents (SPECS §6.1, §6.3).
 //!
-//! Its owner opens it with sneak + right-click (the `interact.rs` injection leaves that click to `open`). It is one of
+//! Its owner opens it with sneak + right-click (`interaction.rs`, opened on its next tick). It is one of
 //! Horizon's server menus (`Host::open_menu_with_input`), shown as a chest: the top row is the vulture's (its harness,
 //! sit / follow, a button per chest), then 15 slots per chest that hold items as a chest's do. The contents are saved
 //! in the `vulture:chests` attachment when the screen closes; a chest taken off, the harness taken off (only without
@@ -105,9 +105,20 @@ fn layout(saved: &state::Saved, contents: &[Option<ItemStack>]) -> (u8, Vec<Opti
     (rows as u8, items, storage)
 }
 
-/// Sneak + right-click on its own vulture (`interaction.rs` checked it is the owner): the screen.
-pub fn open(host: &mut dyn Host, id: u32) {
-    let Some(player) = host.acting_player() else {
+/// Screens asked for by a click, opened on the vulture's next tick: Horizon refuses a menu while the clicking
+/// player's own action is being handled.
+static ASKED: Mutex<BTreeMap<u32, u128>> = Mutex::new(BTreeMap::new());
+
+/// Sneak + right-click on its own vulture (`interaction.rs` checked it is the owner): its screen, next tick.
+pub fn ask(host: &dyn Host, id: u32) {
+    if let Some(player) = host.acting_player() {
+        ASKED.lock().unwrap().insert(id, player.uuid);
+    }
+}
+
+/// From `entity_tick_post`: opens the screen asked for this vulture.
+pub fn tick(host: &mut dyn Host, id: u32) {
+    let Some(player) = ASKED.lock().unwrap().remove(&id) else {
         return;
     };
     let saved = state::saved(id);
@@ -116,12 +127,12 @@ pub fn open(host: &mut dyn Host, id: u32) {
     let title = Text::translate("container.vulture.vulture", &[]);
     // Without chests there is nothing to hold: a menu of buttons only.
     let window = if storage == 0 {
-        host.open_menu(player.uuid, rows, title, items)
+        host.open_menu(player, rows, title, items)
     } else {
-        host.open_menu_with_input(player.uuid, rows, title, items, ROW..ROW + storage)
+        host.open_menu_with_input(player, rows, title, items, ROW..ROW + storage)
     };
     if let Some(window) = window {
-        OPEN.lock().unwrap().insert(player.uuid, (id, window));
+        OPEN.lock().unwrap().insert(player, (id, window));
     }
 }
 

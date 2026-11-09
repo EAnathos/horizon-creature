@@ -1,15 +1,14 @@
 //! Right-click on a vulture (SPECS §6), on the server, with the acting player's hand (`interact_entity` hook).
 //!
-//! The `interact.rs` injection, which runs first, only mounts: it sees a copy of the mob that the game refreshes from
-//! the one its AI ticks, so what it would change there is lost. Every other click comes here, which changes the mob
-//! through `state::request` (applied by its goal on its next tick) and always takes the click (no trading screen).
+//! It changes the mob through `state::request` (applied by its goal on its next tick), mounts with `Host::mount` (as
+//! `/ride` does, on the server, so its goals see the rider), and always takes the click (no trading screen).
 //!
 //! Only its owner gets anything from it:
 //! - sneaking: its screen (`screen.rs`);
 //! - holding the vulture harness: puts it on (not on a baby); a chest: adds one (two at most, harness needed);
 //! - holding rotten flesh, grown and not resting from breeding: in love for 30 s (SPECS §8);
 //! - holding raw meat: a baby grows a minute older; a hurt vulture heals 4;
-//! - otherwise (no harness, or a baby): sit / follow. With a harness the injection has mounted it already.
+//! - otherwise: mounts it, with a harness on and grown up; else sit / follow.
 use horizon_client::mod_api::{Host, Text};
 
 use crate::state::{self, Change};
@@ -58,8 +57,8 @@ pub fn clicked(host: &mut dyn Host, id: u32) {
         }
         return;
     }
-    if host.sneaking() {
-        screen::open(host, id);
+    if player.sneaking {
+        screen::ask(host, id);
         return;
     }
     let creative = player.game_mode == 1;
@@ -82,7 +81,13 @@ pub fn clicked(host: &mut dyn Host, id: u32) {
                 }
             }
         }
-        // An empty hand, or anything else: sit / follow (a harnessed grown vulture was mounted by the injection).
+        // An empty hand, or anything else: up on its back, else sit / follow.
+        None if saved.harness && !baby => {
+            if saved.sitting {
+                state::request(id, Change::ToggleSit);
+            }
+            host.mount(player.entity_id as u32, id);
+        }
         None => state::request(id, Change::ToggleSit),
     }
 }
