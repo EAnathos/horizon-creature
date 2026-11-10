@@ -3,7 +3,8 @@
 //!
 //! - The key is heard on the client (`key` hook) and taken by the ridden vulture's `Fly` goal within half a second
 //!   (`take_press`), which picks the creature: a small mob (at most 1 × 1 block: chicken, rabbit, pig, sheep, fox, cat,
-//!   wolf, babies...) or a tamed animal, at most 3 blocks below, never itself.
+//!   wolf, babies...) or a tamed animal, at most 4 blocks below and 2.5 around, the nearest, never itself. The legs
+//!   thrust down on every try, caught or missed (`state::grabbed`, drawn by `pose`).
 //! - While it carries one, the server tick hook (`carry`) keeps the creature under its talons; its flight is heavier
 //!   (`flight::Controls::heavy`).
 //! - It lets go on the key, when its rider gets off (`Fly::stop`) or when it dies.
@@ -17,9 +18,9 @@ use horizon_client::mod_api::{Host, Mob};
 
 pub const KEY: &str = "talons";
 pub const DEFAULT_KEY: &str = "key.keyboard.r";
-/// How far below its feet it reaches, and how far around, in blocks.
-const REACH_DOWN: f64 = 3.0;
-const REACH_AROUND: f64 = 1.5;
+/// How far below its feet it reaches, and how far around, in blocks (a circle; 1.5 in a square was too tight to aim).
+const REACH_DOWN: f64 = 4.0;
+const REACH_AROUND: f64 = 2.5;
 /// The biggest creature it lifts, in blocks (width and height).
 const MAX_SIZE: f64 = 1.0;
 /// How far below the vulture's position (its feet) the carried creature's feet are held: its back against the
@@ -65,6 +66,8 @@ pub fn toggle(m: &Mob, w: &MobWorld) {
     if m.on_ground {
         return;
     }
+    // The talons snap down whether they catch anything or not.
+    crate::state::grabbed(m);
     let (x, y, z) = (m.position.x, m.position.y, m.position.z);
     let catch = w
         .others
@@ -75,10 +78,13 @@ pub fn toggle(m: &Mob, w: &MobWorld) {
             let small =
                 hi.x - lo.x <= MAX_SIZE + 0.01 && hi.y - lo.y <= MAX_SIZE + 0.01 && hi.z - lo.z <= MAX_SIZE + 0.01;
             let below = s.position.y <= y && s.position.y >= y - REACH_DOWN;
-            let close = (s.position.x - x).abs() <= REACH_AROUND && (s.position.z - z).abs() <= REACH_AROUND;
+            let close = (s.position.x - x).hypot(s.position.z - z) <= REACH_AROUND;
             (small || s.tame) && below && close
         })
-        .min_by(|a, b| (y - a.position.y).total_cmp(&(y - b.position.y)));
+        .min_by(|a, b| {
+            let d = |p: [f64; 3]| (p[0] - x).powi(2) + (p[1] - y).powi(2) + (p[2] - z).powi(2);
+            d([a.position.x, a.position.y, a.position.z]).total_cmp(&d([b.position.x, b.position.y, b.position.z]))
+        });
     if let Some(s) = catch {
         CARRIED.lock().unwrap().insert(m.id, (s.id, [x, y - HANG, z]));
     }

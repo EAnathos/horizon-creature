@@ -63,7 +63,7 @@ library shares are described there; this spec gives the vulture's own rules and 
   Built; not tested in game yet.
 - **Hitbox, fighting in the air, animations** (§4, §7, 2026-11-09): its own 1.2 × 1.0 hitbox (a copy of its type with
   its own size, in place of the trader's 0.6 × 1.95); it fights on the wing (`DiveAttack`: climbs above its target,
-  dives, strikes for 3, pulls away; in place of vanilla's ground melee); poses for pecking (eating), striking, sitting
+  dives, hovers a block over its head striking for 3, pulls away after three strikes; in place of vanilla's ground melee); poses for pecking (eating), striking, sitting
   (settled, legs folded) and carrying (legs down). Built; not tested in game yet.
 - **Landing on high points** (§4, 2026-11-09): after circling, the wild vulture picks the highest ground within 16
   blocks (a peak, a tree top) and glides down onto it. Built; not tested in game yet.
@@ -106,6 +106,16 @@ library shares are described there; this spec gives the vulture's own rules and 
   `minecraft:movement_speed` 0.3 in `vulture.json` puts strolling and the ridden walk together, ~0.08 to 0.1 block a
   tick; it walks to food twice as fast (1.2 of it; 0.6 felt too slow). Ridden, it flies twice as fast (cruise and dive
   ×2). All tested.
+- **Fights and talons** (2026-11-10, built, to test): attacking, it no longer lands and takes off over and over (its
+  dive aimed at the target's eyes): it dives at a spot a block over the target's head and hovers there on beating
+  wings, striking every second, and pulls away after three strikes. The talons reach further (4 down, 2.5 around) and
+  the legs thrust down on every try.
+- **Bestiary** (common/SPECS.md §9, 2026-11-10, tested): its page, the biomes a wild one was met in (only its spawn
+  biomes: badlands, desert, savanna; a tamed one following its owner elsewhere doesn't count), and two facts: raw
+  chicken "Feed" (once one ate a chicken the player threw), rotten flesh "Breeding" (once the player fed one).
+- **Leads and following** (2026-11-10, tested): a lead ties it, wild or tamed (Horizon refuses leads on the wandering
+  trader it copies, so the vulture ties them itself; Horizon's rope and pull then work), a click unties it and gives
+  the lead back; on a lead it neither follows its owner nor soars. A chick doesn't follow its owner, a juvenile does.
 - **v1 is written.** What is left is testing everything above in game, then tuning (flight numbers, taming odds,
   speeds, the dive attack) and fixing what the tests find.
 
@@ -270,7 +280,8 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
 
 ### 6.4 Talons ✅
 
-- In flight, ridden, with the talons key: catches the creature just below (~3 blocks).
+- In flight, ridden, with the talons key: catches the nearest creature below (up to 4 blocks down, 2.5 around ✅,
+  2026-11-10: 1.5 was too tight). The legs thrust down on every try, caught or missed ✅.
 - It can catch:
   - **small enough mobs** (hitbox ≤ 1 block wide and ≤ 1 block high ✅: chicken, rabbit, pig, sheep, fox, cat, wolf,
     babies…);

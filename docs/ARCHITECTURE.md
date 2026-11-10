@@ -105,7 +105,8 @@ The whole series shares **one creative tab**, "Horizon Creature", owned by the l
 
 ```
 .cargo/config.toml      `cargo creature <command>` alias
-docs/                   series-wide docs: ARCHITECTURE.md (this file), CONVENTIONS.md, HORIZON-ISSUES.md
+docs/                   series-wide docs: ARCHITECTURE.md (this file), CONVENTIONS.md, HORIZON-ISSUES.md,
+                        MODELS.md (generated, with its pictures in models/)
 common/                 the library
   module.toml           repository metadata for the tools (id, name, status, tab icon, its tab items)
   SPECS.md, README.md

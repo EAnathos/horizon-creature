@@ -12,5 +12,7 @@
   "item.vulture.harness": "Vulture Harness",
   "container.vulture.vulture": "Vulture",
   "message.vulture.not_tamed": "This vulture isn't tamed: throw it raw chicken",
-  "message.vulture.not_yours": "This vulture belongs to someone else"
+  "message.vulture.not_yours": "This vulture belongs to someone else",
+  "bestiary.vulture.vulture.tame": "Feed",
+  "bestiary.vulture.vulture.breed": "Breeding"
 }

@@ -156,6 +156,8 @@ struct Shared {
     dimension: String,
     /// Whether it may breed now, for a partner's goal.
     in_love: bool,
+    /// Whether it is on a lead, for the right-click.
+    leashed: bool,
     look: Look,
     /// Its harness, kept here rather than on the mob (`of`).
     harness: bool,
@@ -250,6 +252,10 @@ pub enum Change {
     Grow,
     /// Fed raw meat while hurt: +4 health.
     Heal,
+    /// A lead tied by this player (`Mob.extra.owner`'s form), or taken off: Horizon refuses leads on the wandering
+    /// trader it copies, so the vulture ties them itself; Horizon's lead physics and rope then work as on any mob.
+    Leash([i32; 4]),
+    Unleash,
 }
 
 /// What raw meat heals, and how much older it makes a baby (ticks); how long love lasts.
@@ -282,8 +288,15 @@ pub fn request(id: u32, change: Change) {
         Change::AddChest => shared.current.chests = (shared.current.chests + 1).min(2),
         Change::RemoveChest => shared.current.chests = shared.current.chests.saturating_sub(1),
         Change::InLove => shared.in_love = true,
+        Change::Leash(_) => shared.leashed = true,
+        Change::Unleash => shared.leashed = false,
         Change::Grow | Change::Heal => {}
     }
+}
+
+/// Whether it is on a lead.
+pub fn leashed(id: u32) -> bool {
+    SHARED.lock().unwrap().get(&id).is_some_and(|s| s.leashed)
 }
 
 /// Whether it is hurt (for raw meat to heal it).
@@ -304,6 +317,8 @@ pub struct Look {
     pub striking: bool,
     /// Its age when it last ate, for the peck.
     pub ate_at: u32,
+    /// Its age when its talons last snapped down (SPECS §6.4), caught or missed.
+    pub grabbed_at: u32,
 }
 
 pub fn look(id: u32) -> Look {
@@ -314,6 +329,28 @@ pub fn look(id: u32) -> Look {
 pub fn pecked(m: &Mob) {
     if let Some(s) = SHARED.lock().unwrap().get_mut(&m.id) {
         s.look.ate_at = m.age;
+    }
+}
+
+/// Players who saw a wild vulture eat the raw chicken they threw, for the bestiary (`lib.rs`, `entity_tick_post`).
+static TAMING_SEEN: Mutex<Vec<u128>> = Mutex::new(Vec::new());
+
+/// From the `Eat` goal: `player` (as `Mob.extra.owner` holds it) saw it eat a taming chicken.
+pub fn taming_seen(player: [i32; 4]) {
+    let uuid = player
+        .iter()
+        .fold(0u128, |acc, part| acc << 32 | u128::from(*part as u32));
+    TAMING_SEEN.lock().unwrap().push(uuid);
+}
+
+pub fn take_taming_seen() -> Vec<u128> {
+    std::mem::take(&mut *TAMING_SEEN.lock().unwrap())
+}
+
+/// From the talons (`talons::toggle`): they snap down now.
+pub fn grabbed(m: &Mob) {
+    if let Some(s) = SHARED.lock().unwrap().get_mut(&m.id) {
+        s.look.grabbed_at = m.age;
     }
 }
 
@@ -330,6 +367,14 @@ pub fn of(m: &Mob) -> Saved {
         health: m.attrs.max_health,
         pace: PACES.lock().unwrap().get(&m.id).copied().unwrap_or(0.0),
     }
+}
+
+/// A baby is a chick until this share of its growth, then a juvenile (SPECS §8): only a juvenile follows its owner.
+pub const JUVENILE: f32 = 0.5;
+
+/// Whether a vulture of this `age` is still a chick.
+pub fn chick(age: i32) -> bool {
+    growth(age) < JUVENILE
 }
 
 /// How far a baby of this `age` has grown (0 at birth, 1 grown up); a breeding pause (positive) is grown up.
@@ -368,6 +413,7 @@ pub fn sync_mob(m: &mut Mob) -> bool {
         m.extra.in_love -= 1;
     }
     shared.in_love = m.extra.in_love > 0;
+    shared.leashed = m.extra.leash.is_some();
     if !shared.in_love {
         BRED.lock().unwrap().remove(&m.id);
     }
@@ -385,6 +431,14 @@ pub fn sync_mob(m: &mut Mob) -> bool {
                 fed = true;
             }
             Change::Heal => m.heal(HEAL),
+            Change::Leash(player) => {
+                m.extra.leash = Some(horizon_client::mobs::leash::Holder::Player);
+                m.extra.leash_player = Some(player);
+            }
+            Change::Unleash => {
+                m.extra.leash = None;
+                m.extra.leash_player = None;
+            }
         }
     }
     // Never a saddled mount for Horizon: it would drive it itself, ignoring the vulture's flight.
@@ -406,6 +460,7 @@ pub fn sync_mob(m: &mut Mob) -> bool {
         sitting: now.sitting && m.on_ground,
         striking: m.ai.swinging,
         ate_at: shared.look.ate_at,
+        grabbed_at: shared.look.grabbed_at,
     };
     shared.current = now;
     shared.hurt = m.health < m.attrs.max_health;

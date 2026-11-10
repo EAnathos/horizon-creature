@@ -37,6 +37,11 @@ fn free(m: &Mob) -> bool {
     m.rider.is_none() && m.ai.target.is_none()
 }
 
+/// Following its owner: free, not sitting, not on a lead (the lead leads it), and not a chick (a juvenile does).
+fn may_follow(m: &Mob) -> bool {
+    free(m) && !m.extra.sitting && m.extra.leash.is_none() && !state::chick(m.extra.age)
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct Eat {
     ticks: i32,
@@ -80,6 +85,8 @@ impl Goal for Eat {
         } else if food.taming
             && let Some(p) = cx.w.player.as_ref()
         {
+            // The player who threw it now knows a raw chicken tames a vulture (the bestiary).
+            state::taming_seen(p.uuid);
             if m.random.next_int_bound(TAME_CHANCE).unwrap_or(1) == 0 {
                 m.extra.tame = true;
                 m.extra.owner = Some(p.uuid);
@@ -148,10 +155,10 @@ impl Goal for FollowOwner {
         goals::MOVE | goals::LOOK | goals::JUMP
     }
     fn can_use(&mut self, m: &mut Mob, cx: &mut Cx) -> bool {
-        free(m) && !m.extra.sitting && owner_at(m, cx).is_some_and(|at| distance(m, at) > FOLLOW)
+        may_follow(m) && owner_at(m, cx).is_some_and(|at| distance(m, at) > FOLLOW)
     }
     fn can_continue(&mut self, m: &mut Mob, cx: &mut Cx) -> bool {
-        free(m) && !m.extra.sitting && owner_at(m, cx).is_some() && !(self.landing && m.on_ground)
+        may_follow(m) && owner_at(m, cx).is_some() && !(self.landing && m.on_ground)
     }
     fn start(&mut self, _: &mut Mob, _: &mut Cx) {
         self.flight = Flight::default();

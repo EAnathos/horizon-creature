@@ -4,6 +4,7 @@
 //! cargo creature list                         # the library and the mods, with their status
 //! cargo creature tab                          # writes the series' single creative tab (library)
 //! cargo creature model <mod> [model]          # mods/<mod>/assets/models/<model>.bbmodel -> the mod's native/api/src/
+//! cargo creature preview                     # every mod's .bbmodel -> pictures in docs/models/ and docs/MODELS.md
 //! cargo creature sounds <mod> [folder]        # freesound downloads (default sounds-src/) -> the mod's sounds (vulture)
 //! cargo creature pack <module>                # a module's native/ -> target/<id>.hnmod
 //! cargo creature build [mod...]               # builds the library and the mods (default: all) into target/dist/
@@ -21,6 +22,7 @@ mod install;
 mod model;
 mod modules;
 mod pack;
+mod preview;
 mod sounds;
 mod tab;
 
@@ -37,7 +39,7 @@ pub fn root() -> PathBuf {
 
 pub type Result<T = ()> = std::result::Result<T, String>;
 
-const USAGE: &str = "usage: cargo creature list | tab | model <mod> [model] | sounds <mod> [folder] | pack <module> \
+const USAGE: &str = "usage: cargo creature list | tab | model <mod> [model] | preview | sounds <mod> [folder] | pack <module> \
                      | build [mod...] | check | install [--instance <name>] [mod...]";
 
 fn list() -> Result {
@@ -82,6 +84,7 @@ fn main() -> ExitCode {
         Some("list") => list(),
         Some("tab") => tab::run(),
         Some("model") => arg(1).ok_or(USAGE.into()).and_then(|m| model::run(m, arg(2))),
+        Some("preview") => preview::run(),
         Some("sounds") => arg(1).ok_or(USAGE.into()).and_then(|m| sounds::run(m, arg(2))),
         Some("pack") => arg(1)
             .ok_or(USAGE.into())

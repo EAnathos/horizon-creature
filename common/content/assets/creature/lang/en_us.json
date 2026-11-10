@@ -1,4 +1,9 @@
 {
   "itemGroup.creature": "Horizon Creature",
-  "item.creature.guide": "Creature Guide"
+  "item.creature.guide": "Creature Guide",
+  "bestiary.creature.title": "Bestiary",
+  "bestiary.creature.met": "Species met",
+  "bestiary.creature.empty": "No creature met yet. Go out and look around: the creatures you come across are written down here.",
+  "bestiary.creature.seen_in": "Seen in",
+  "bestiary.creature.nothing_more": "Nothing more known yet."
 }

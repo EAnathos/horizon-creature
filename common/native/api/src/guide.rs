@@ -2,10 +2,10 @@
 //!
 //! "Given" is remembered in the player's persistent data (NeoForge's `Entity.getPersistentData()`, Horizon's
 //! `Host::player_persistent_data`), saved with the player. A full inventory leaves it unmarked: the book comes at the
-//! next login. The book does nothing else yet.
+//! next login. Right-click opens its bestiary (`bestiary.rs`).
 use horizon_client::mod_api::{Host, Tag};
 
-const ITEM: &str = "creature:guide";
+pub const ITEM: &str = "creature:guide";
 /// The key in the player's persistent data.
 const GIVEN: &str = "creature:guide_given";
 

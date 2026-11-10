@@ -1,4 +1,9 @@
 {
   "itemGroup.creature": "Horizon Creature",
-  "item.creature.guide": "Guide des créatures"
+  "item.creature.guide": "Guide des créatures",
+  "bestiary.creature.title": "Bestiaire",
+  "bestiary.creature.met": "Espèces rencontrées",
+  "bestiary.creature.empty": "Aucune créature rencontrée. Partez explorer : les créatures croisées sont notées ici.",
+  "bestiary.creature.seen_in": "Vue dans",
+  "bestiary.creature.nothing_more": "Rien de plus n'est connu pour l'instant."
 }

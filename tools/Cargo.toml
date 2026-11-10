@@ -16,6 +16,8 @@ zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
 flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
 toml = { version = "0.9", default-features = false, features = ["parse", "serde"] }
 serde = { version = "1.0.229", features = ["derive"] }
+# Decodes the models' embedded textures and writes their pictures (`cargo creature preview`).
+png = "0.18"
 
 # Not part of any workspace: `native/api` is built by the Horizon launcher, against Horizon's own lock file.
 [workspace]

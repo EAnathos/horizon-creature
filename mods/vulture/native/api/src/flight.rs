@@ -57,6 +57,12 @@ const HEAVY_CLIMB: f64 = 0.5;
 /// What a rider's flight multiplies its cruising and diving speeds by.
 const RIDDEN_SPEED: f64 = 2.0;
 
+/// Hovering: the share of the distance to its spot it wants to cover a tick, its fastest, and how quickly its velocity
+/// follows.
+const HOVER_PULL: f64 = 0.2;
+const HOVER_SPEED: f64 = 0.3;
+const HOVER_EASE: f64 = 0.25;
+
 /// A flying vulture's momentum.
 #[derive(Clone, Debug, Default)]
 pub struct Flight {
@@ -74,6 +80,35 @@ impl Flight {
         m.head_pitch = 0.0;
         m.no_gravity = false;
         set_flapping(m.id, false);
+    }
+
+    /// Hovering on beating wings towards `at` (its feet's place), facing `yaw`: no momentum like a plane's, it eases its
+    /// velocity towards the spot, at most `HOVER_SPEED` a tick. For a strike from just above its target.
+    pub fn hover(&mut self, m: &mut Mob, at: [f64; 3], yaw: f32) {
+        m.no_gravity = true;
+        let want = [at[0] - m.position.x, at[1] - m.position.y, at[2] - m.position.z];
+        let len = (want[0] * want[0] + want[1] * want[1] + want[2] * want[2]).sqrt();
+        let scale = if len > 0.0 {
+            (len * HOVER_PULL).min(HOVER_SPEED) / len
+        } else {
+            0.0
+        };
+        m.velocity.x += (want[0] * scale - m.velocity.x) * HOVER_EASE;
+        m.velocity.y += (want[1] * scale - m.velocity.y) * HOVER_EASE;
+        m.velocity.z += (want[2] * scale - m.velocity.z) * HOVER_EASE;
+        self.speed = m.velocity.x.hypot(m.velocity.z);
+        // Body up, wings beating: the pitch eases back to level.
+        self.pitch += (0.0 - self.pitch).clamp(-PITCH_RATE, PITCH_RATE);
+        m.head_pitch = self.pitch;
+        let gap = wrap(yaw - m.yaw);
+        m.yaw += gap.clamp(-MAX_TURN * 2.0, MAX_TURN * 2.0);
+        m.body_yaw = m.yaw;
+        m.head_yaw = yaw;
+        if m.age % 6 == 0 {
+            let pitch = 0.9 + m.random.next_float() * 0.2;
+            sounds::queue(m.id, sounds::FLAP, 0.6, pitch);
+        }
+        set_flapping(m.id, true);
     }
 
     /// One tick in the air (or taking off): sets its heading, pitch and velocity.

@@ -103,7 +103,7 @@ fn heading_of(x: f64, z: f64) -> f32 {
 
 /// Only a wild vulture soars on its own; a tamed one follows its owner (`tame.rs`).
 fn idle(m: &Mob) -> bool {
-    !m.extra.tame && m.rider.is_none() && m.ai.target.is_none()
+    !m.extra.tame && m.rider.is_none() && m.ai.target.is_none() && m.extra.leash.is_none()
 }
 
 impl Goal for Soar {
@@ -227,19 +227,27 @@ impl Goal for Soar {
 /// Above its target before diving, and how far from it it starts the dive, in blocks.
 const DIVE_ABOVE: f64 = 6.0;
 const DIVE_FROM: f64 = 10.0;
-/// How close a strike lands, in blocks, and the ticks between strikes and spent pulling away after one.
-const STRIKE_REACH: f64 = 1.8;
+/// How close a strike lands, in blocks (from its feet to the target's eyes), and the ticks between strikes.
+const STRIKE_REACH: f64 = 2.2;
 const STRIKE_EVERY: i32 = 20;
-const PULL_AWAY: i32 = 20;
+/// Within this distance across it hovers over its target, its feet this high above the target's eyes (about a block
+/// over its head).
+const HOVER_FROM: f64 = 4.0;
+const HOVER_ABOVE: f64 = 1.2;
+/// After this many strikes from its hover it pulls away for `PULL_AWAY` ticks and dives again.
+const STRIKES_PER_PASS: i32 = 3;
+const PULL_AWAY: i32 = 30;
 
-/// Fighting in the air (SPECS §4): with a target, it takes off, climbs above it, dives at it, strikes with its beak
-/// when close (vanilla's `doHurtTarget`, its 3 damage), pulls away and comes back. Replaces a ground melee attack, a
-/// vulture fights on the wing.
+/// Fighting in the air (SPECS §4): with a target, it takes off, climbs above it, dives at it and hovers on beating
+/// wings about a block over its head, striking with its beak (vanilla's `doHurtTarget`, its 3 damage); after a few
+/// strikes it pulls away and comes back. It never lands during a fight (it used to dive to the target's eyes, touch
+/// down and take off again). Replaces a ground melee attack, a vulture fights on the wing.
 #[derive(Clone, Debug, Default)]
 pub struct DiveAttack {
     flight: Flight,
     cooldown: i32,
     away: i32,
+    strikes: i32,
 }
 
 impl Goal for DiveAttack {
@@ -253,6 +261,7 @@ impl Goal for DiveAttack {
         self.flight = Flight::default();
         self.cooldown = 0;
         self.away = 0;
+        self.strikes = 0;
     }
     fn stop(&mut self, m: &mut Mob, _: &mut Cx) {
         self.flight.land(m);
@@ -270,16 +279,26 @@ impl Goal for DiveAttack {
         self.cooldown = (self.cooldown - 1).max(0);
         self.away = (self.away - 1).max(0);
         let (dx, dz) = (t.position.x - m.position.x, t.position.z - m.position.z);
-        let dy = t.eye_y - (m.position.y + 0.5);
         let flat = (dx * dx + dz * dz).sqrt();
-        let reach = (flat * flat + dy * dy).sqrt();
-        if reach < STRIKE_REACH && self.cooldown == 0 {
+        let reach = (flat * flat + (m.position.y - t.eye_y).powi(2)).sqrt();
+        if reach < STRIKE_REACH && self.cooldown == 0 && self.away == 0 {
             m.swing();
             horizon_client::mobs::ai::do_hurt_target(m, who, cx);
             self.cooldown = STRIKE_EVERY;
-            self.away = PULL_AWAY;
+            self.strikes += 1;
+            if self.strikes >= STRIKES_PER_PASS {
+                self.strikes = 0;
+                self.away = PULL_AWAY;
+            }
         }
         let to_target = heading_of(dx, dz);
+        // Where it hovers: a block over the target's head.
+        let hover_y = t.eye_y + HOVER_ABOVE;
+        if self.away == 0 && flat < HOVER_FROM {
+            self.flight.hover(m, [t.position.x, hover_y, t.position.z], to_target);
+            return;
+        }
+        let dy = hover_y - m.position.y;
         let controls = if self.away > 0 {
             // Pulling away: up and past.
             Controls {
@@ -304,8 +323,9 @@ impl Goal for DiveAttack {
                 ridden: false,
             }
         } else {
-            // The dive, straight at it.
+            // The dive, at the spot over its head (never below it: it would touch down).
             let pitch = (-dy).atan2(flat).to_degrees() as f32;
+            let pitch = if dy > 0.0 { pitch.min(-10.0) } else { pitch };
             Controls {
                 yaw: to_target,
                 pitch,

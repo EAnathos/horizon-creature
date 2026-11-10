@@ -37,7 +37,7 @@ use horizon_client::mod_api::{
     NativeMobRender, NativeMod, RandomSource, RegisterGoalsEvent,
 };
 
-const KIND: &str = "vulture:vulture";
+pub const KIND: &str = "vulture:vulture";
 /// Its hitbox and eye height, in blocks (SPECS §4). The height is also where a rider sits (Horizon seats a rider on
 /// a mod mob at its box's top), so it is set for the rider to sit on the harness's seat (workaround for
 /// horizon-rust/horizon#13975: back to ~1.0 once a seat can be declared).
@@ -45,7 +45,39 @@ const WIDTH: f64 = 1.2;
 const HEIGHT: f64 = 0.6;
 const EYE_HEIGHT: f64 = 0.55;
 
+/// Its page in the bestiary (common/SPECS.md §9), and what a player can find out about it (SPECS §5, §8).
+static BESTIARY: creature::bestiary::Species = creature::bestiary::Species {
+    id: KIND,
+    // Where it spawns (`content/data/vulture/neoforge/biome_modifier/`: `#is_badlands`, desert, `#is_savanna`).
+    biomes: &[
+        "minecraft:badlands",
+        "minecraft:eroded_badlands",
+        "minecraft:wooded_badlands",
+        "minecraft:desert",
+        "minecraft:savanna",
+        "minecraft:savanna_plateau",
+        "minecraft:windswept_savanna",
+    ],
+    wild: |id| state::saved(id).owner.is_none(),
+    facts: &[
+        creature::bestiary::Fact {
+            id: TAME_FACT,
+            item: state::TAMING_FOOD,
+            key: "bestiary.vulture.vulture.tame",
+        },
+        creature::bestiary::Fact {
+            id: BREED_FACT,
+            item: "minecraft:rotten_flesh",
+            key: "bestiary.vulture.vulture.breed",
+        },
+    ],
+};
+/// Learnt once a vulture ate a raw chicken the player threw, and once the player fed one rotten flesh.
+pub const TAME_FACT: &str = "tame";
+pub const BREED_FACT: &str = "breed";
+
 pub fn hooks() -> Box<dyn Hooks> {
+    creature::bestiary::register(&BESTIARY);
     Box::new(Vulture)
 }
 
@@ -195,9 +227,9 @@ const TEXTURE: &str = "vulture:entity/vulture/tawny";
 const SIT_DROP: f32 = 0.3;
 /// How long a peck lasts, in ticks.
 const PECK: f32 = 10.0;
+/// How long a grab with the talons lasts, in ticks.
+const GRAB: f32 = 12.0;
 
-/// A baby is a chick until this share of its growth, then a juvenile.
-const JUVENILE: f32 = 0.5;
 /// The chick's model is drawn from the first scale at birth to the second; the juvenile is the adult's model, from
 /// `JUVENILE_SCALE` (as tall as the grown chick: 14 × 0.8 ≈ 18 × 0.62 pixels) to full size.
 const CHICK_SCALE: (f32, f32) = (0.6, 0.8);
@@ -244,7 +276,12 @@ fn pose(name: &str, mob: &NativeMobRender<'_>, flapping: bool, look: &state::Loo
     };
     // Walking: like a vanilla quadruped's legs; in flight, the legs are tucked in.
     let step = (mob.walk_position * 0.6662).cos() * 1.4 * mob.walk_speed.min(1.0);
-    let leg = if flying { 60.0 } else { step.to_degrees() };
+    let mut leg = if flying { 60.0 } else { step.to_degrees() };
+    // A grab with the talons (SPECS §6.4): the legs thrust down and forward, then fold back, caught or missed.
+    let since_grab = mob.age - look.grabbed_at as f32;
+    if flying && look.grabbed_at > 0 && (0.0..GRAB).contains(&since_grab) {
+        leg -= (since_grab / GRAB * std::f32::consts::PI).sin() * 110.0;
+    }
     if !flying {
         return match name {
             // Hunched: the back slopes down to the tail, the head and legs straightened against it.
@@ -277,7 +314,7 @@ fn pose(name: &str, mob: &NativeMobRender<'_>, flapping: bool, look: &state::Loo
         "wing_left_tip" => [0.0, 0.0, late],
         "wing_right_tip" => [0.0, 0.0, -late],
         // Carrying, the legs hang down to hold the catch.
-        "leg_left" | "leg_right" if carrying => [0.0, 0.0, 0.0],
+        "leg_left" | "leg_right" if carrying => [leg.min(0.0), 0.0, 0.0],
         "leg_left" | "leg_right" => [leg, 0.0, 0.0],
         "tail" => [-10.0, 0.0, -bank * 0.3],
         _ => [0.0; 3],
@@ -384,6 +421,9 @@ impl Hooks for Vulture {
             talons::carry(host, event.dimension, event.entity);
             screen::tick(host, event.entity);
             state::births(host, event.dimension);
+            for player in state::take_taming_seen() {
+                creature::bestiary::learn(host, player, KIND, TAME_FACT);
+            }
         }
     }
 
@@ -404,15 +444,15 @@ impl Hooks for Vulture {
         };
         // A baby grows little by little (SPECS §8): a chick of its own model (§7: a big head and down) for the first
         // half, then a juvenile, the adult's model growing to full size; both have the same groups and poses.
-        let (part, texture, scale) = if look.growth < JUVENILE {
-            let t = look.growth / JUVENILE;
+        let (part, texture, scale) = if look.growth < state::JUVENILE {
+            let t = look.growth / state::JUVENILE;
             (
                 &model_baby::BABY,
                 BABY_TEXTURE,
                 CHICK_SCALE.0 + (CHICK_SCALE.1 - CHICK_SCALE.0) * t,
             )
         } else {
-            let t = (look.growth - JUVENILE) / (1.0 - JUVENILE);
+            let t = (look.growth - state::JUVENILE) / (1.0 - state::JUVENILE);
             (&model::VULTURE, TEXTURE, JUVENILE_SCALE + (1.0 - JUVENILE_SCALE) * t)
         };
         event.draw.push();

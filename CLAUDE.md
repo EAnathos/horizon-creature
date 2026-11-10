@@ -81,4 +81,5 @@ through `rider.sprint`, `ride_keys.rs`), #2740 (render state in statics), #2741 
 
 - Blockbench 5.2.2 (Flatpak `net.blockbench.Blockbench`) + jasonjgardner MCP plugin v1.10.1, `blockbench` server in
   `.mcp.json` (Blockbench must be open). `.bbmodel` files in `mods/<mod>/assets/models/`; `cargo creature model <mod>`
-  turns `<mod>.bbmodel` into the mod's `native/api/src/model.rs`.
+  turns `<mod>.bbmodel` into the mod's `native/api/src/model.rs`; `cargo creature preview` redraws every model's
+  pictures for `docs/MODELS.md` (run it after changing a model).

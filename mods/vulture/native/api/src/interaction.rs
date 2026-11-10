@@ -6,10 +6,12 @@
 //!
 //! Only its owner gets anything from it:
 //! - sneaking: its screen (`screen.rs`);
+//! - holding a lead: tied on (Horizon refuses leads on the trader it copies); on a lead, any click takes it off;
 //! - holding the vulture harness: puts it on (not on a baby); a chest: adds one (two at most, harness needed);
 //! - holding rotten flesh, grown and not resting from breeding: in love for 30 s (SPECS §8);
 //! - holding raw meat: a baby grows a minute older; a hurt vulture heals 4;
 //! - otherwise: mounts it, with a harness on and grown up; else sit / follow.
+use horizon_client::items::ItemStack;
 use horizon_client::mod_api::{Host, Text};
 
 use crate::state::{self, Change};
@@ -43,6 +45,21 @@ pub fn clicked(host: &mut dyn Host, id: u32) {
     };
     let saved = state::saved(id);
     let held = host.held().map(|(item, _, _)| item).unwrap_or_default();
+    let creative = player.game_mode == 1;
+    // A lead: tied on, as on any animal, wild or tamed, by anyone; on a lead, a click takes it off and gives it back.
+    if state::leashed(id) {
+        state::request(id, Change::Unleash);
+        if !creative {
+            let _ = host.give_stack(player.uuid, ItemStack::new("minecraft:lead", 1));
+        }
+        return;
+    }
+    if held == "minecraft:lead" {
+        if take(host, creative, &held) {
+            state::request(id, Change::Leash(uuid_ints(player.uuid)));
+        }
+        return;
+    }
     if saved.owner != Some(uuid_ints(player.uuid)) {
         // Say why nothing happens, holding what only works on one's own vulture.
         if matches!(
@@ -62,7 +79,6 @@ pub fn clicked(host: &mut dyn Host, id: u32) {
         screen::ask(host, id);
         return;
     }
-    let creative = player.game_mode == 1;
     let baby = saved.age < 0;
     let hurt = state::hurt(id);
     let change = match held.as_str() {
@@ -77,6 +93,9 @@ pub fn clicked(host: &mut dyn Host, id: u32) {
         Some(change) => {
             if take(host, creative, &held) {
                 state::request(id, change);
+                if matches!(change, Change::InLove) {
+                    creature::bestiary::learn(host, player.uuid, crate::KIND, crate::BREED_FACT);
+                }
                 if matches!(change, Change::Heal | Change::Grow | Change::InLove) {
                     sounds::queue(id, sounds::EAT, 1.0, 1.0);
                 }
