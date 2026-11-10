@@ -11,13 +11,17 @@ without Butterflies. Neither mod requires the other.
 
 ## 0. Progress (as of 2026-11-09)
 
-- Folder and spec created. **Not started**.
+- Folder and spec created.
+- **Models** (2026-11-10): `assets/models/butterfly.bbmodel` and `moth.bbmodel` (pictures in docs/MODELS.md), one group
+  tree for both (body, head and antennae, a forewing and a hindwing per side, flat wings cut out by the texture's
+  alpha). The butterfly's texture is greyscale, for the library to tint (§2); the moth's is painted (§2.1). Not in
+  game yet.
 
 ## 1. Technical context
 
 - **Mod id**: `butterflies`. Entities `butterflies:butterfly`, `butterflies:moth` ✅; item `butterflies:butterfly_dust`
   ✅. No jar item of its own: a caught butterfly or moth is in the library's `creature:glass_jar` ✅ (library §6.1).
-- Uses from the library: model drawing and sounds (§3.1, §3.2), **colours and patterns** (§7), **glass jar and
+- Uses from the library: model drawing and sounds (§3.1, §3.2), **colours and patterns** (§7, the butterfly only), **glass jar and
   territories** (§6, which this mod switches on), hitbox size (§8.8).
 - The butterfly and the moth copy the wandering trader (goals only) with a **tiny hitbox**.
 
@@ -38,9 +42,13 @@ without Butterflies. Neither mod requires the other.
 
 The butterflies' night counterpart ✅: a **moth** (`butterflies:moth`), flying **only at night** ✅.
 
-- Proposal ❓: stouter and furrier than a butterfly, wings folded flat like a roof at rest; muted colours (grey, beige,
-  brown, cream, with a rare pale green "luna" and a rosy one ❓) through the same colours and patterns (library §7):
-  plain, eye spots, bands, speckles.
+- Stouter and furrier than a butterfly ✅. At rest its forewings sweep back into a wide triangle over its body, with
+  a gently curved, scalloped and fringed rear edge, and a narrow V between them at the back where the segmented
+  abdomen and the paler hindwings show; thin plain antennae angled forward ✅ (2026-11-10, its model is
+  built in this rest shape; flight spreads the wings from it).
+- **One look** ✅ (2026-11-10): a speckled grey-brown, two faint cross lines and a fringe on the forewing, the
+  hindwing paler, a fuzzy taupe body. Its colours are painted in its texture (`assets/models/moth.bbmodel`): it doesn't use the library's
+  colours and patterns, which only the butterfly does.
 - **Spawning** ❓: at night, near light sources and flowers, 1–2 together; drawn to light: it flutters around lanterns,
   torches and campfires within ~10 blocks ❓. At dawn it rests on a log, a wall or the underside of leaves (no flight)
   and wild ones may despawn.

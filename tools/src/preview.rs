@@ -147,12 +147,26 @@ fn picture(path: &Path, out: &Path, module: &str, name: &str) -> crate::Result<(
     // UVs are in the project's resolution; the texture may be bigger.
     let res = |key: &str, size: usize| size as f64 / model["resolution"][key].as_f64().unwrap_or(size as f64);
     let (su, sv) = (res("width", texture.width), res("height", texture.height));
+    let mut chains = std::collections::HashMap::new();
+    for node in model["outliner"].as_array().into_iter().flatten() {
+        group_chains(&model, node, &mut Vec::new(), &mut chains);
+    }
     let quads: Vec<Quad> = model["elements"]
         .as_array()
         .into_iter()
         .flatten()
         .filter(|e| e["type"].as_str().unwrap_or("cube") == "cube" && e["export"].as_bool() != Some(false))
-        .flat_map(|e| cube(e, su, sv))
+        .flat_map(|e| {
+            let chain = e["uuid"]
+                .as_str()
+                .and_then(|id| chains.get(id))
+                .cloned()
+                .unwrap_or_default();
+            cube(e, su, sv).into_iter().map(move |mut q| {
+                q.corners = q.corners.map(|c| posed(c, &chain));
+                q
+            })
+        })
         .collect();
     let cubes = quads.len() / 6;
     for (view, yaw) in VIEWS {
@@ -161,6 +175,54 @@ fn picture(path: &Path, out: &Path, module: &str, name: &str) -> crate::Result<(
         write_png(&file, &image)?;
     }
     Ok((cubes, (texture.width, texture.height)))
+}
+
+/// A group's pivot and rotation (degrees).
+type Turn = ([f64; 3], [f64; 3]);
+
+/// For each cube in the outliner under `node`, its groups' turns from the outermost in.
+fn group_chains(
+    model: &Value,
+    node: &Value,
+    chain: &mut Vec<Turn>,
+    out: &mut std::collections::HashMap<String, Vec<Turn>>,
+) {
+    if let Some(id) = node.as_str() {
+        out.insert(id.to_owned(), chain.clone());
+        return;
+    }
+    let id = node["uuid"].as_str().unwrap_or("");
+    let group = model["groups"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|g| g["uuid"].as_str() == Some(id));
+    let turn = |key: &str| {
+        let v = group.map(|g| vector(&g[key])).unwrap_or_default();
+        [0, 1, 2].map(|k| v.get(k).copied().unwrap_or(0.0))
+    };
+    chain.push((turn("origin"), turn("rotation")));
+    for child in node["children"].as_array().into_iter().flatten() {
+        group_chains(model, child, chain, out);
+    }
+    chain.pop();
+}
+
+/// A point turned by its groups, the innermost first; each turns about its pivot as Blockbench does (X, then Y,
+/// then Z).
+fn posed(p: [f64; 3], chain: &[Turn]) -> [f64; 3] {
+    let mut p = p;
+    for (origin, rotation) in chain.iter().rev() {
+        let mut q = [p[0] - origin[0], p[1] - origin[1], p[2] - origin[2]];
+        let (sx, cx) = rotation[0].to_radians().sin_cos();
+        q = [q[0], q[1] * cx - q[2] * sx, q[1] * sx + q[2] * cx];
+        let (sy, cy) = rotation[1].to_radians().sin_cos();
+        q = [q[0] * cy + q[2] * sy, q[1], -q[0] * sy + q[2] * cy];
+        let (sz, cz) = rotation[2].to_radians().sin_cos();
+        q = [q[0] * cz - q[1] * sz, q[0] * sz + q[1] * cz, q[2]];
+        p = [q[0] + origin[0], q[1] + origin[1], q[2] + origin[2]];
+    }
+    p
 }
 
 fn vector(v: &Value) -> Vec<f64> {
@@ -231,6 +293,11 @@ fn draw(quads: &[Quad], texture: &Texture, yaw: f64) -> Vec<u8> {
     let mut depth = vec![f64::MIN; w * h];
     for (q, corners) in quads.iter().zip(&seen) {
         let s = corners.map(screen);
+        // Seen from behind (its corners turn the other way on screen): hidden, as the game culls it.
+        let facing = (s[1][0] - s[0][0]) * (s[2][1] - s[0][1]) - (s[2][0] - s[0][0]) * (s[1][1] - s[0][1]);
+        if facing <= 0.0 {
+            continue;
+        }
         for [a, b, c] in [[0, 1, 2], [0, 2, 3]] {
             triangle(
                 [s[a], s[b], s[c]],
