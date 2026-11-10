@@ -291,7 +291,8 @@ pub fn hurt(id: u32) -> bool {
     SHARED.lock().unwrap().get(&id).is_some_and(|s| s.hurt)
 }
 
-/// What the drawing needs of a vulture, which its render state doesn't carry.
+/// What the drawing needs of a vulture, which its render state doesn't carry. Shared through a static, single player
+/// only: `mob_submit` can't read an attachment (workaround for arismoko/horizon#2740).
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Look {
     pub harness: bool,

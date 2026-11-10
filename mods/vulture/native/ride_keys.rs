@@ -2,7 +2,7 @@
 // getting off; only on the ground does sneak dismount, as on any mount. Horizon dismounts on sneak at
 // the start of `tick_mount_riding`, before any mod hears of it: this runs the function again without
 // sneak, then tells the vulture's `Fly` goal through `Rider.sprint` (Ctrl, otherwise unused in flight,
-// descends too).
+// descends too). Workaround for arismoko/horizon#2739.
 fn vulture_ride_keys(game: &mut Game<'_>, keys: Keys) -> ::core::ops::ControlFlow<bool> {
     use ::core::ops::ControlFlow;
     if !keys.shift {

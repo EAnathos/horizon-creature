@@ -16,17 +16,25 @@ the fork** (merged on arismoko/horizon, not yet in a Horizon release players get
 not yet in our pinned revision), **done** (in our pinned revision, workaround removed),
 **closed** (won't change, or not a bug).
 
-Last checked: 2026-11-10. Our pinned revision: `fdc87ae` (the newest release the launcher offers, nightly 2026-11-08) (every `horizon-mixin.toml`, `api/Cargo.toml` and CI's `HORIZON_REV`).
+Last checked: 2026-11-10 (pinned `fdc87ae` and the fork's `51d735c`). Our pinned revision: `fdc87ae` (the newest release the launcher offers, nightly 2026-11-08) (every `horizon-mixin.toml`, `api/Cargo.toml` and CI's `HORIZON_REV`).
 
 ## Open
 
 | Issue | What | Status (2026-11-09) | Our workaround (where) | Drop it when fixed |
 |---|---|---|---|---|
-| [#13971](https://github.com/horizon-rust/horizon/issues/13971) | A mod left out for an invalid injection helper still lets `native-build` exit 0 ("made for another Horizon version") | claimed (iseaprojects), confirmed | `cargo creature install` reads `build.log` and fails on "was left out" (`tools/src/install.rs`, `left_out`) | Keep as a safety net; simplify once the build fails itself |
+| [#13971](https://github.com/horizon-rust/horizon/issues/13971) | A mod left out for an invalid injection helper still lets `native-build` exit 0 ("made for another Horizon version") | claimed (iseaprojects), confirmed | Own sounds of a muted mob ([arismoko#2738](https://github.com/arismoko/horizon/issues/2738)) | Goals have no host: sounds are queued and played on the next `entity_tick_post`; `Mob.silent` also silences what Horizon would play for us (hurt, death), so we play those too | Declared sounds play from the right place at the right time, as vanilla's |
+| Sneak through `rider.sprint` ([arismoko#2739](https://github.com/arismoko/horizon/issues/2739)) | An injection into an internal function, tied to its body; Ctrl in flight can't mean anything else | A real sneak field and a cancellable dismount are the stable path |
+| Render state in statics ([arismoko#2740](https://github.com/arismoko/horizon/issues/2740)) | Single player only: on a server, the client never gets the state (harness, chests, flapping); entries for unloaded vultures linger | Synced attachments read from the renderer work in multiplayer |
+| Mount hearts injection ([arismoko#2741](https://github.com/arismoko/horizon/issues/2741)) | Replaces a whole internal function for one mob | A layer hook plus a row count needs no injection |
+| `cargo creature install` reads `build.log` and fails on "was left out" (`tools/src/install.rs`, `left_out`) | Keep as a safety net; simplify once the build fails itself |
 | [#13972](https://github.com/horizon-rust/horizon/issues/13972) | An injection into `native_interact_entity` sees the client's mob copies (changes lost, `start_riding` client-only); undocumented | open, documentation (cause confirmed: the window's `Game` is a client of the server thread) | Clicks in the `interact_entity` trait hook, mounting with `Host::mount` (`mods/vulture/native/api/src/interaction.rs`) | Nothing to drop: the trait hook is the right path |
 | [#13973](https://github.com/horizon-rust/horizon/issues/13973) | `Mob.extra.saddled` on a mod mob makes Horizon drive it as a steered mount | **fixed on the fork** (2026-11-09, [arismoko/horizon#2540](https://github.com/arismoko/horizon/pull/2540): only a horse or camel takes a saddled player rider's input), not in a release yet; the issue stays open until reported back | The harness is kept in the vulture's state, never in `saddled`, which is forced to false (`mods/vulture/native/api/src/state.rs`) | Once fixed, `saddled` could hold the harness again (not needed) |
 | [#13974](https://github.com/horizon-rust/horizon/issues/13974) | `open_menu` returns `None` from the `interact_entity` hook | claimed (iseaprojects): menus will be queued and opened when the turn ends | The vulture's screen is opened on its next tick (`mods/vulture/native/api/src/screen.rs`, `ask` / `tick`) | Open it directly from the click |
 | [#13975](https://github.com/horizon-rust/horizon/issues/13975) | No way to set the passenger seat of a content mod entity type | **fixed on the fork** (2026-11-09, [arismoko/horizon#2539](https://github.com/arismoko/horizon/pull/2539): `passenger_attachments` in `entity_type` JSON), not in a release yet | Hitbox height 0.6 so the rider sits on the harness (`mods/vulture/native/api/src/lib.rs`, `HEIGHT`) | Height back to ~1.0, seat declared in `content/data/vulture/horizon/entity_type/vulture.json` |
+| [arismoko#2738](https://github.com/arismoko/horizon/issues/2738) | A content mod's living type plays its template's sounds; `MobType.sounds` are always `minecraft:` | open (2026-11-10) | Our mobs are muted and play their own sounds with `Host::play_sound` (`common/native/api/src/sounds.rs`) | `sounds` in `entity_type` JSON, drop the queue and the muting |
+| [arismoko#2739](https://github.com/arismoko/horizon/issues/2739) | A mount can't read its rider's sneak: `tick_mount_riding` dismounts before copying the input, `Rider` has no sneak | open (2026-11-10) | Injection at the head of `tick_mount_riding`, sneak passed through `rider.sprint` (`mods/vulture/native/ride_keys.rs`) | Cancel the dismount in `entity_mount` in the air and read `rider.sneak` |
+| [arismoko#2740](https://github.com/arismoko/horizon/issues/2740) | `mob_submit` can't read a mob's synced attachments (`&dyn Host`, `get` needs `&mut`) | open (2026-11-10) | Render state in statics keyed by entity id (`state.rs`, `Look`; `flight.rs`, `FLAPPING`), single player only | A synced attachment read in `mob_submit` |
+| [arismoko#2741](https://github.com/arismoko/horizon/issues/2741) | The `vehicle_health` layer can be redrawn (`gui_layer_pre`) but its heart count, which places the rows above, can't be changed | open (2026-11-10) | Injection replacing `draw_mount_hud` for the vulture (`mods/vulture/native/mount_hud.rs`) | Redraw the layer from `gui_layer_pre` and set the count |
 | [#6276](https://github.com/horizon-rust/horizon/issues/6276) (not ours; [our comment](https://github.com/horizon-rust/horizon/issues/6276#issuecomment-6743829717)) | An entity's size (design needed); we asked for a static size in `entity_type` JSON | open, design needed | Each vulture gets a cloned `MobType` with its own width and height in `register_goals` (`mods/vulture/native/api/src/lib.rs`) | Size declared in `vulture.json` |
 
 ## Limits of our workarounds
@@ -59,8 +67,12 @@ Horizon without a re-release (below, "Horizon versions and our releases").
 
 Found while developing, not filed yet. File one only with a clean repro.
 
-- **`Host::take_items` takes nothing from a non-plain stack** (an item from the creative tab may carry component data):
-  a "take one from the hand that clicked" helper, or a doc note. We take items only when the player isn't in creative.
+- **`Host::take_items` takes nothing from a non-plain stack** (an item from the creative tab may carry component data).
+  Not filed: the fork's new API no longer has `take_items` (checked 2026-11-10 on `51d735c`); see how its inventory
+  services take items when we migrate. We take items only when the player isn't in creative.
+- **Carrying a creature in the talons** moves it every tick with `Host::teleport_mob` (`talons.rs`). Not filed: once
+  seats are in a release ([arismoko/horizon#2539](https://github.com/arismoko/horizon/pull/2539), several
+  `passenger_attachments`), try mounting the caught mob with `Host::mount` on a seat below the vulture.
 - **Mod keys only appear on the mod's page in Options > Mods**, not in Controls, where players look for them.
 - **Suspected, unconfirmed:** an entity's attachment not readable on its first tick after loading (our "untamed one
   load in four"; we now read again next tick). Needs a repro before filing.

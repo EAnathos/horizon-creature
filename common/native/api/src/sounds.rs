@@ -2,7 +2,7 @@
 //!
 //! Our mobs copy a vanilla mob (the wandering trader) whose sounds they must not play, and Horizon always prefixes mob
 //! sounds with `minecraft:`: the mod mutes its mob (`Mob.silent`) and plays its own, `<mod>:entity.<mob>.*` from its
-//! `sounds.json`, with `Host::play_sound`, which accepts a mod's sounds.
+//! `sounds.json`, with `Host::play_sound`, which accepts a mod's sounds (workaround for arismoko/horizon#2738).
 //!
 //! - Goals, which have no host, queue their sounds (`queue`).
 //! - The mod's `entity_tick_post` calls `tick_post` for its mob: it empties the queue of the mob that just ticked, and

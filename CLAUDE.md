@@ -74,7 +74,8 @@ depend on it: `vulture` (prototype: tameable, rideable flying vulture), `butterf
 Each one is marked in the code with its issue; drop it when moving to a Horizon revision that fixes it:
 #13971 (`cargo creature install` reads the build log), #13972 (clicks in the trait hook, `Host::mount`), #13973
 (harness not in `Mob.extra.saddled`), #13974 (the vulture's screen opens next tick), #13975 (hitbox height 0.6 for the
-seat), #6276 (the vulture's size by a cloned `MobType`). Full tracker: `docs/HORIZON-ISSUES.md`.
+seat), #6276 (the vulture's size by a cloned `MobType`); on arismoko/horizon: #2738 (muted mobs, own sounds), #2739 (sneak
+through `rider.sprint`, `ride_keys.rs`), #2740 (render state in statics), #2741 (mount hearts, `mount_hud.rs`). Full tracker: `docs/HORIZON-ISSUES.md`.
 
 ## Models
 

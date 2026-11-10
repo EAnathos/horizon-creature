@@ -144,7 +144,8 @@ pub fn wrap(degrees: f32) -> f32 {
 }
 
 /// Whether each flying vulture is beating its wings, for `pose` (the render state doesn't carry it). Single player:
-/// the goals and the drawing share the mob's id (multiplayer, v2, will need it sent).
+/// the goals and the drawing share the mob's id (multiplayer, v2, will need it sent; workaround for
+/// arismoko/horizon#2740).
 static FLAPPING: Mutex<BTreeMap<u32, bool>> = Mutex::new(BTreeMap::new());
 
 fn set_flapping(id: u32, flapping: bool) {
