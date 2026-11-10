@@ -51,8 +51,9 @@ pub fn hooks() -> Box<dyn Hooks> {
 
 struct Vulture;
 
-/// Walking speed on the ground, ridden, in blocks per tick.
-const WALK: f64 = 0.12;
+/// Walking speed on the ground, ridden, in blocks per tick: as fast as it walks by itself (its
+/// `minecraft:movement_speed`, 0.3 in `vulture.json`, at `Stroll`'s 0.6).
+const WALK: f64 = 0.1;
 /// Its peck when it fights back (SPECS §4).
 const ATTACK_DAMAGE: f32 = 3.0;
 
@@ -117,6 +118,7 @@ impl Goal for Fly {
             brake: r.forward < 0.0,
             boost: r.jumping,
             heavy: talons::carrying(m.id),
+            ridden: true,
         };
         self.flight.tick(m, &controls);
         if talons::take_press() {
@@ -146,7 +148,16 @@ impl Goal for NoFall {
     }
     fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
         m.fall_distance = 0.0;
-        state::sync_mob(m);
+        // A baby fed raw meat: a burst of hearts as it grows (SPECS §8).
+        if state::sync_mob(m) {
+            cx.events.push(MobEvent::LevelParticles {
+                kind: "minecraft:heart",
+                at: [m.position.x, m.position.y + 0.8, m.position.z],
+                spread: [0.4, 0.3, 0.4],
+                speed: 0.02,
+                count: 5,
+            });
+        }
         // In love: hearts now and then, as vanilla's animals show (SPECS §8).
         if m.extra.in_love > 0 && m.extra.in_love % 10 == 0 {
             cx.events.push(MobEvent::LevelParticles {
@@ -185,8 +196,12 @@ const SIT_DROP: f32 = 0.3;
 /// How long a peck lasts, in ticks.
 const PECK: f32 = 10.0;
 
-/// The baby's model is drawn at this scale.
-const BABY_SCALE: f32 = 0.8;
+/// A baby is a chick until this share of its growth, then a juvenile.
+const JUVENILE: f32 = 0.5;
+/// The chick's model is drawn from the first scale at birth to the second; the juvenile is the adult's model, from
+/// `JUVENILE_SCALE` (as tall as the grown chick: 14 × 0.8 ≈ 18 × 0.62 pixels) to full size.
+const CHICK_SCALE: (f32, f32) = (0.6, 0.8);
+const JUVENILE_SCALE: f32 = 0.62;
 const BABY_TEXTURE: &str = "vulture:entity/vulture/baby";
 
 /// How far its back slopes down to the tail on the ground, in degrees.
@@ -387,16 +402,23 @@ impl Hooks for Vulture {
             "chest_right" => look.chests >= 2,
             _ => true,
         };
-        // A baby is its own model (SPECS §7: a chick with a big head and down), with the same groups and poses.
-        let (part, texture) = if look.baby {
-            (&model_baby::BABY, BABY_TEXTURE)
+        // A baby grows little by little (SPECS §8): a chick of its own model (§7: a big head and down) for the first
+        // half, then a juvenile, the adult's model growing to full size; both have the same groups and poses.
+        let (part, texture, scale) = if look.growth < JUVENILE {
+            let t = look.growth / JUVENILE;
+            (
+                &model_baby::BABY,
+                BABY_TEXTURE,
+                CHICK_SCALE.0 + (CHICK_SCALE.1 - CHICK_SCALE.0) * t,
+            )
         } else {
-            (&model::VULTURE, TEXTURE)
+            let t = (look.growth - JUVENILE) / (1.0 - JUVENILE);
+            (&model::VULTURE, TEXTURE, JUVENILE_SCALE + (1.0 - JUVENILE_SCALE) * t)
         };
         event.draw.push();
         creature::model::death_tilt(&mut *event.draw, mob);
-        if look.baby {
-            event.draw.scale([BABY_SCALE; 3]);
+        if scale < 1.0 {
+            event.draw.scale([scale; 3]);
         }
         // Sitting: settled on its belly, legs folded under it.
         if look.sitting {

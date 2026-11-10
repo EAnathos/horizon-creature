@@ -57,7 +57,7 @@ library shares are described there; this spec gives the vulture's own rules and 
 - **Stats, breeding and babies** (§2, §8, 2026-11-09): each vulture rolls its max health (16 to 30) and flight speed
   (0.6 to 1.2 × base) once, saved. Rotten flesh from its owner puts a grown tamed vulture in love for 30 s; two in love
   within 8 blocks meet and have a baby (tamed to the owner, each stat the average of both parents' and a roll), then
-  wait 5 minutes. A baby is drawn at half size, can't wear a harness or be ridden, grows up in 20 minutes, a minute
+  wait 5 minutes. A baby is drawn small, growing (a chick, then a juvenile, §8), can't wear a harness or be ridden, grows up in 20 minutes, a minute
   faster per raw meat fed. Horizon ages it (a wandering trader's copy is an `AgeableMob`); its age is also saved with its
   state.
   Built; not tested in game yet.
@@ -100,6 +100,12 @@ library shares are described there; this spec gives the vulture's own rules and 
 - **Breeding and speeds** (2026-11-09): rotten flesh worked (tested: two fed vultures had a baby) but showed nothing;
   now hearts rise from a vulture in love, and one baby per pair (two were born). It walks to food at 0.55 of its pace
   (it rushed); flight back up to cruise 0.55, dive 1.0 (0.4 felt too slow).
+- **Growing up and walking** (2026-11-10): a baby fed raw meat shows hearts (tested); it grows little by little, a chick
+  (its own model, 0.6 to 0.8 scale) for the first half of its growth, then a juvenile (the adult's model, 0.62 to full
+  size; tested). It walked twice as fast wild as ridden (the trader's walking speed, 0.5): its own
+  `minecraft:movement_speed` 0.3 in `vulture.json` puts strolling, walking to food (0.6 of it) and the ridden walk
+  (0.1 block a tick) together, ~0.08 to 0.1 block a tick (tested). Ridden, it flies twice as fast (cruise and dive ×2);
+  to try in game.
 - **v1 is written.** What is left is testing everything above in game, then tuning (flight numbers, taming odds,
   speeds, the dive attack) and fixing what the tests find.
 
@@ -251,7 +257,7 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
 - Horizon gets a rider off on sneak before any mod hears of it: the `ride-keys` injection (`ride_keys.rs`) keeps them
   on in the air.
 - ✅ Chests **do not weigh** on its flight. ✅ **No thermals.**
-- Starting numbers ❓ (blocks per tick): cruise 0.55 × its speed stat, dive up to 1.0, slowest 0.18 before a stall,
+- Starting numbers ❓ (blocks per tick): cruise 0.55 × its speed stat (× 2 ridden), dive up to 1.0 (× 2 ridden), slowest 0.18 before a stall,
   glide sink 0.04 when level, take-off climb 0.4, descent at least 0.2.
 
 ### 6.3 Chests ✅
@@ -321,8 +327,9 @@ vulture.
 
 - Two tamed vultures fed **rotten flesh** ✅ (scavengers…) go into breeding mode.
 - The baby is born tamed, with the same owner, and inherits stats (§2) (and its variant once there are variants, §3).
-- The baby is smaller, with a big head and a downy crown. It grows up in 20 min (faster when fed), and can only be ridden
-  once grown.
+- The baby is smaller, with a big head and a downy crown. It grows up in 20 min (faster when fed, with hearts), and can
+  only be ridden once grown. It is seen growing: a chick for the first half, then a juvenile (the adult's shape, smaller)
+  growing to full size ✅.
 - 5 min cooldown before the parents can breed again.
 
 ## 9. v2 (later, kept out of the v1 to-do list) ✅

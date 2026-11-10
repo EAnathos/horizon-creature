@@ -163,6 +163,7 @@ impl Goal for Soar {
                     brake: false,
                     boost: self.ticks < 10,
                     heavy: false,
+                    ridden: false,
                 }
             }
             Phase::Circle => {
@@ -180,6 +181,7 @@ impl Goal for Soar {
                     brake: false,
                     boost: false,
                     heavy: false,
+                    ridden: false,
                 }
             }
             // Down onto its landing spot along a glide path (0.4 block down per block across), steeply over it; with no
@@ -201,6 +203,7 @@ impl Goal for Soar {
                         brake,
                         boost: false,
                         heavy: false,
+                        ridden: false,
                     }
                 }
                 None => Controls {
@@ -210,6 +213,7 @@ impl Goal for Soar {
                     brake: self.flight.speed > CRUISE,
                     boost: false,
                     heavy: false,
+                    ridden: false,
                 },
             },
         };
@@ -285,6 +289,7 @@ impl Goal for DiveAttack {
                 brake: false,
                 boost: false,
                 heavy: false,
+                ridden: false,
             }
         } else if flat > DIVE_FROM {
             // Closing in, above it.
@@ -296,6 +301,7 @@ impl Goal for DiveAttack {
                 brake: false,
                 boost: m.on_ground,
                 heavy: false,
+                ridden: false,
             }
         } else {
             // The dive, straight at it.
@@ -307,6 +313,7 @@ impl Goal for DiveAttack {
                 brake: false,
                 boost: m.on_ground,
                 heavy: false,
+                ridden: false,
             }
         };
         self.flight.tick(m, &controls);

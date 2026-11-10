@@ -47,11 +47,15 @@ pub struct Controls {
     pub boost: bool,
     /// Carrying a creature in its talons (SPECS §6.4): a lower cruising speed and half the climb.
     pub heavy: bool,
+    /// Ridden (SPECS §6.2): twice its own cruising and diving speeds, to travel far.
+    pub ridden: bool,
 }
 
 /// What a catch takes off its cruising speed and its climb.
 const HEAVY_CRUISE: f64 = 0.75;
 const HEAVY_CLIMB: f64 = 0.5;
+/// What a rider's flight multiplies its cruising and diving speeds by.
+const RIDDEN_SPEED: f64 = 2.0;
 
 /// A flying vulture's momentum.
 #[derive(Clone, Debug, Default)]
@@ -98,7 +102,7 @@ impl Flight {
         let (sin_pitch, cos_pitch) = f64::from(self.pitch).to_radians().sin_cos();
         self.speed += GRAVITY * sin_pitch;
         // Its own speed (SPECS §2), then a catch's weight.
-        let pace = crate::state::pace(m.id);
+        let pace = crate::state::pace(m.id) * if c.ridden { RIDDEN_SPEED } else { 1.0 };
         let cruise = CRUISE * pace * if c.heavy { HEAVY_CRUISE } else { 1.0 };
         if c.flap && self.speed < cruise {
             self.speed += (cruise - self.speed) * FLAP;
@@ -127,7 +131,7 @@ impl Flight {
                 .max(if c.heavy { TAKE_OFF * HEAVY_CLIMB } else { TAKE_OFF });
         } else if !flapping {
             // Gliding sinks gently, less the faster it goes.
-            m.velocity.y -= GLIDE_SINK * (1.0 - (self.speed / CRUISE).min(1.0)) + GLIDE_SINK / 2.0;
+            m.velocity.y -= GLIDE_SINK * (1.0 - (self.speed / (CRUISE * pace)).min(1.0)) + GLIDE_SINK / 2.0;
         }
         // One wing beat every 8 ticks while it flaps.
         if flapping && m.age % 8 == 0 {

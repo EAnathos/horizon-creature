@@ -297,7 +297,8 @@ pub fn hurt(id: u32) -> bool {
 pub struct Look {
     pub harness: bool,
     pub chests: u8,
-    pub baby: bool,
+    /// How far a baby has grown, from 0 at birth to 1 grown up (SPECS §8): drawn as a chick, then a juvenile.
+    pub growth: f32,
     pub sitting: bool,
     /// Striking with its beak (`MeleeAttack`'s swing).
     pub striking: bool,
@@ -331,8 +332,18 @@ pub fn of(m: &Mob) -> Saved {
     }
 }
 
-/// From a goal, every tick: applies a state just loaded, then hands the mob's state over.
-pub fn sync_mob(m: &mut Mob) {
+/// How far a baby of this `age` has grown (0 at birth, 1 grown up); a breeding pause (positive) is grown up.
+fn growth(age: i32) -> f32 {
+    if age < 0 {
+        (1.0 - age as f32 / BABY_AGE as f32).clamp(0.0, 1.0)
+    } else {
+        1.0
+    }
+}
+
+/// From a goal, every tick: applies a state just loaded, then hands the mob's state over. Whether a baby was
+/// just fed (for its hearts).
+pub fn sync_mob(m: &mut Mob) -> bool {
     let mut map = SHARED.lock().unwrap();
     let shared = map.entry(m.id).or_default();
     if let Some(saved) = shared.loaded.take() {
@@ -360,6 +371,7 @@ pub fn sync_mob(m: &mut Mob) {
     if !shared.in_love {
         BRED.lock().unwrap().remove(&m.id);
     }
+    let mut fed = false;
     for change in std::mem::take(&mut shared.pending) {
         match change {
             Change::ToggleSit => m.extra.sitting = !m.extra.sitting,
@@ -368,7 +380,10 @@ pub fn sync_mob(m: &mut Mob) {
             Change::AddChest => m.extra.variant2 = (m.extra.variant2 + 1).min(2),
             Change::RemoveChest => m.extra.variant2 = m.extra.variant2.saturating_sub(1),
             Change::InLove => m.extra.in_love = LOVE,
-            Change::Grow => m.extra.age = (m.extra.age + GROW).min(-1),
+            Change::Grow => {
+                m.extra.age = (m.extra.age + GROW).min(-1);
+                fed = true;
+            }
             Change::Heal => m.heal(HEAL),
         }
     }
@@ -387,7 +402,7 @@ pub fn sync_mob(m: &mut Mob) {
     shared.look = Look {
         harness: now.harness,
         chests: now.chests,
-        baby: now.age < 0,
+        growth: growth(now.age),
         sitting: now.sitting && m.on_ground,
         striking: m.ai.swinging,
         ate_at: shared.look.ate_at,
@@ -400,6 +415,7 @@ pub fn sync_mob(m: &mut Mob) {
     if !shared.hungry {
         shared.food = None;
     }
+    fed
 }
 
 /// The meat found for it, if any.

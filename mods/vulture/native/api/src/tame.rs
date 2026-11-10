@@ -17,8 +17,9 @@ use crate::{sounds, state};
 
 /// One raw chicken in this many tames it.
 const TAME_CHANCE: i32 = 4;
-/// How fast it walks to food (a share of its walking speed): a vulture hops to a carcass, it doesn't sprint.
-const FOOD_PACE: f64 = 0.55;
+/// How fast it walks to food (a share of its walking speed, `minecraft:movement_speed` 0.3 in `vulture.json`): a
+/// vulture hops to a carcass, it doesn't sprint; about as fast as it strolls and as it walks ridden (~0.1 block a tick).
+const FOOD_PACE: f64 = 0.6;
 /// What a meat eaten heals a tamed vulture.
 const MEAT_HEAL: f32 = 4.0;
 
@@ -185,6 +186,7 @@ impl Goal for FollowOwner {
                 brake: true,
                 boost: false,
                 heavy: false,
+                ridden: false,
             }
         } else {
             Controls {
@@ -194,6 +196,7 @@ impl Goal for FollowOwner {
                 brake: false,
                 boost: m.on_ground,
                 heavy: false,
+                ridden: false,
             }
         };
         self.flight.tick(m, &controls);

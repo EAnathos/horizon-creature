@@ -1,1 +1,1 @@
-{ "template": "minecraft:wandering_trader" }
+{ "template": "minecraft:wandering_trader", "attributes": { "minecraft:movement_speed": 0.3 } }
