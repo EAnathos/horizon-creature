@@ -64,3 +64,7 @@ The tools (`tools/`, Rust, `cargo creature <command>`):
 | `tools/` | The build tools |
 | `docs/` | Series-wide documentation |
 | `.github/workflows/ci.yml` | CI: format, lint, tests, `cargo creature check`, build with the packages as an artifact |
+
+## Licence
+
+[MIT](LICENSE).

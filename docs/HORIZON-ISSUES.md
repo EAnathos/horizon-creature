@@ -46,6 +46,34 @@ Found while developing, not filed yet. File one only with a clean repro.
   load in four"; we now read again next tick). Needs a repro before filing.
 - **Suspected, unconfirmed:** `/summon` with `horizon:attachments` NBT doesn't set the attachments (maybe our format).
 
+## Horizon versions and our releases
+
+How a native mod follows Horizon (Horizon's `docs/native-mods.md`, "Pinned to a Nightly"):
+
+- **Our mods are pinned** (`[compatibility] horizon_revision`): they read internal fields (`Mob.rider`, `Mob.extra`) and
+  inject into Horizon functions, so they build on one exact commit. Every Nightly keeps its source for good
+  (`nightly-source/<date>-<short>`), so **a pinned mod keeps working**: the player's launcher builds the game on our
+  commit, whatever newer Horizon is out. No release is needed for each new Horizon version.
+- **The cost of staying pinned:** a player with our mods plays our pinned Horizon, without the fixes released after
+  it; and with another mod pinned to another commit, the launcher asks to **Build anyway** (the newest commit, where our
+  mod may not apply). So we move the pin from time to time, not for every Nightly: when a release fixes one of our
+  issues, when it brings an API we need, or when a popular mod has moved on.
+- **What would end the pinning:** a mod that only uses Horizon's stable hook points names the API version it needs
+  (`"hooks": N`, `NATIVE_HOOKS_API`) instead of a commit, and builds on any later Horizon with no re-release (Horizon's
+  own Zoom, Minimap... work this way). Each workaround and internal field we drop gets us closer; the new mod system
+  (below) is built for this.
+
+Moving the pin (all modules at once, docs/ARCHITECTURE.md §6):
+
+1. Pick the newest Nightly or release the launcher offers (`horizon-launcher versions`), take its commit.
+2. Check which of our issues it fixes: a fix merged on arismoko/horizon reaches players only once it is in a
+   horizon-rust/horizon Nightly. `gh api repos/horizon-rust/horizon/compare/<old>...<new> --jq '.commits[].commit.message'`
+   and look for the issue numbers or the fork's PR titles; update the tables above.
+3. Set the commit in every `horizon-mixin.toml`, `api/Cargo.toml` and CI's `HORIZON_REV`; `cargo creature check`;
+   `cargo creature install`; drop the workarounds the new commit fixes; test in game.
+4. Release: bump the modules' versions and publish a GitHub release with the `.hmod` and `.hnmod` files (Horizon's
+   `docs/mods.md`, "Publish your mod").
+
 ## Coming with the new mod system
 
 Announced 2026-11-09 (not in our pinned revision yet), to plan the migration when we move to a newer revision:
