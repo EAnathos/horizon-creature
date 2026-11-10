@@ -11,11 +11,12 @@ rendering, launcher) stays on horizon-rust/horizon. **New** modding issues (prop
 to [arismoko/horizon's issues](https://github.com/arismoko/horizon/issues) (its README); game bugs unrelated to modding
 go to horizon-rust/horizon. Before opening an issue, search both repositories.
 
-Status: **to open** (found, not filed), **open** (filed, nothing merged), **claimed** (someone works on it), **fixed
-upstream** (merged, not yet in our pinned revision), **done** (in our pinned revision, workaround removed),
+Status: **to open** (found, not filed), **open** (filed, nothing merged), **claimed** (someone works on it), **fixed on
+the fork** (merged on arismoko/horizon, not yet in a Horizon release players get), **fixed upstream** (in a release,
+not yet in our pinned revision), **done** (in our pinned revision, workaround removed),
 **closed** (won't change, or not a bug).
 
-Our pinned revision: `fdc87ae` (every `horizon-mixin.toml`, `api/Cargo.toml` and CI's `HORIZON_REV`).
+Last checked: 2026-11-10. Our pinned revision: `fdc87ae` (the newest release the launcher offers, nightly 2026-11-08) (every `horizon-mixin.toml`, `api/Cargo.toml` and CI's `HORIZON_REV`).
 
 ## Open
 
@@ -23,9 +24,9 @@ Our pinned revision: `fdc87ae` (every `horizon-mixin.toml`, `api/Cargo.toml` and
 |---|---|---|---|---|
 | [#13971](https://github.com/horizon-rust/horizon/issues/13971) | A mod left out for an invalid injection helper still lets `native-build` exit 0 ("made for another Horizon version") | claimed (iseaprojects), confirmed | `cargo creature install` reads `build.log` and fails on "was left out" (`tools/src/install.rs`, `left_out`) | Keep as a safety net; simplify once the build fails itself |
 | [#13972](https://github.com/horizon-rust/horizon/issues/13972) | An injection into `native_interact_entity` sees the client's mob copies (changes lost, `start_riding` client-only); undocumented | open, documentation (cause confirmed: the window's `Game` is a client of the server thread) | Clicks in the `interact_entity` trait hook, mounting with `Host::mount` (`mods/vulture/native/api/src/interaction.rs`) | Nothing to drop: the trait hook is the right path |
-| [#13973](https://github.com/horizon-rust/horizon/issues/13973) | `Mob.extra.saddled` on a mod mob makes Horizon drive it as a steered mount | claimed (RLC248): an engine parity bug in `equine::controlled()` (`_ => m.extra.saddled` for every species) | The harness is kept in the vulture's state, never in `saddled`, which is forced to false (`mods/vulture/native/api/src/state.rs`) | Once fixed, `saddled` could hold the harness again (not needed) |
+| [#13973](https://github.com/horizon-rust/horizon/issues/13973) | `Mob.extra.saddled` on a mod mob makes Horizon drive it as a steered mount | **fixed on the fork** (2026-11-09, [arismoko/horizon#2540](https://github.com/arismoko/horizon/pull/2540): only a horse or camel takes a saddled player rider's input), not in a release yet; the issue stays open until reported back | The harness is kept in the vulture's state, never in `saddled`, which is forced to false (`mods/vulture/native/api/src/state.rs`) | Once fixed, `saddled` could hold the harness again (not needed) |
 | [#13974](https://github.com/horizon-rust/horizon/issues/13974) | `open_menu` returns `None` from the `interact_entity` hook | claimed (iseaprojects): menus will be queued and opened when the turn ends | The vulture's screen is opened on its next tick (`mods/vulture/native/api/src/screen.rs`, `ask` / `tick`) | Open it directly from the click |
-| [#13975](https://github.com/horizon-rust/horizon/issues/13975) | No way to set the passenger seat of a content mod entity type | claimed (oloion): `passenger_attachments` in `entity_type` JSON | Hitbox height 0.6 so the rider sits on the harness (`mods/vulture/native/api/src/lib.rs`, `HEIGHT`) | Height back to ~1.0, seat declared in `content/data/vulture/horizon/entity_type/vulture.json` |
+| [#13975](https://github.com/horizon-rust/horizon/issues/13975) | No way to set the passenger seat of a content mod entity type | **fixed on the fork** (2026-11-09, [arismoko/horizon#2539](https://github.com/arismoko/horizon/pull/2539): `passenger_attachments` in `entity_type` JSON), not in a release yet | Hitbox height 0.6 so the rider sits on the harness (`mods/vulture/native/api/src/lib.rs`, `HEIGHT`) | Height back to ~1.0, seat declared in `content/data/vulture/horizon/entity_type/vulture.json` |
 | [#6276](https://github.com/horizon-rust/horizon/issues/6276) (not ours; [our comment](https://github.com/horizon-rust/horizon/issues/6276#issuecomment-6743829717)) | An entity's size (design needed); we asked for a static size in `entity_type` JSON | open, design needed | Each vulture gets a cloned `MobType` with its own width and height in `register_goals` (`mods/vulture/native/api/src/lib.rs`) | Size declared in `vulture.json` |
 
 ## Closed
