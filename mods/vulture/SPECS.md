@@ -103,9 +103,9 @@ library shares are described there; this spec gives the vulture's own rules and 
 - **Growing up and walking** (2026-11-10): a baby fed raw meat shows hearts (tested); it grows little by little, a chick
   (its own model, 0.6 to 0.8 scale) for the first half of its growth, then a juvenile (the adult's model, 0.62 to full
   size; tested). It walked twice as fast wild as ridden (the trader's walking speed, 0.5): its own
-  `minecraft:movement_speed` 0.3 in `vulture.json` puts strolling, walking to food (0.6 of it) and the ridden walk
-  (0.1 block a tick) together, ~0.08 to 0.1 block a tick (tested). Ridden, it flies twice as fast (cruise and dive ×2);
-  to try in game.
+  `minecraft:movement_speed` 0.3 in `vulture.json` puts strolling and the ridden walk together, ~0.08 to 0.1 block a
+  tick; it walks to food twice as fast (1.2 of it; 0.6 felt too slow). Ridden, it flies twice as fast (cruise and dive
+  ×2). All tested.
 - **v1 is written.** What is left is testing everything above in game, then tuning (flight numbers, taming odds,
   speeds, the dive attack) and fixing what the tests find.
 

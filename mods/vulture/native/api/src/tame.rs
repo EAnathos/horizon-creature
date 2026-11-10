@@ -18,8 +18,8 @@ use crate::{sounds, state};
 /// One raw chicken in this many tames it.
 const TAME_CHANCE: i32 = 4;
 /// How fast it walks to food (a share of its walking speed, `minecraft:movement_speed` 0.3 in `vulture.json`): a
-/// vulture hops to a carcass, it doesn't sprint; about as fast as it strolls and as it walks ridden (~0.1 block a tick).
-const FOOD_PACE: f64 = 0.6;
+/// vulture hurries to a carcass, about twice as fast as it strolls (0.6 felt too slow, the trader's 0.5 speed rushed).
+const FOOD_PACE: f64 = 1.2;
 /// What a meat eaten heals a tamed vulture.
 const MEAT_HEAL: f32 = 4.0;
 
