@@ -29,6 +29,26 @@ Last checked: 2026-11-10. Our pinned revision: `fdc87ae` (the newest release the
 | [#13975](https://github.com/horizon-rust/horizon/issues/13975) | No way to set the passenger seat of a content mod entity type | **fixed on the fork** (2026-11-09, [arismoko/horizon#2539](https://github.com/arismoko/horizon/pull/2539): `passenger_attachments` in `entity_type` JSON), not in a release yet | Hitbox height 0.6 so the rider sits on the harness (`mods/vulture/native/api/src/lib.rs`, `HEIGHT`) | Height back to ~1.0, seat declared in `content/data/vulture/horizon/entity_type/vulture.json` |
 | [#6276](https://github.com/horizon-rust/horizon/issues/6276) (not ours; [our comment](https://github.com/horizon-rust/horizon/issues/6276#issuecomment-6743829717)) | An entity's size (design needed); we asked for a static size in `entity_type` JSON | open, design needed | Each vulture gets a cloned `MobType` with its own width and height in `register_goals` (`mods/vulture/native/api/src/lib.rs`) | Size declared in `vulture.json` |
 
+## Limits of our workarounds
+
+Each workaround works today, but each has a cost, and none is meant to stay. They all keep the mods **pinned** to one
+Horizon commit (they lean on internal fields and on how a given commit behaves), and every one is code we maintain in
+place of Horizon's own. Replace each one with the proper way once Horizon offers it in a release players get.
+
+| Workaround | Its limits | Why replace it |
+|---|---|---|
+| Hitbox height 0.6 for the seat ([#13975](https://github.com/horizon-rust/horizon/issues/13975)) | The box is lower than the bird: its head can't be hit or right-clicked, and it fits under one-block gaps it shouldn't; anything that reads the box (collisions, arrows, the talons' reach, other mods) sees a smaller mob | The seat in `entity_type` JSON gives back a 1-block box and a seat where the harness is |
+| Cloned `MobType` for the size ([#6276](https://github.com/horizon-rust/horizon/issues/6276)) | Replaces Horizon's shared type with a copy per vulture: a field Horizon adds to `MobType`, or code comparing types, may break it; it relies on `register_goals` running before the box is used | A size declared in the entity's JSON is read by every system the same way |
+| Harness kept out of `Mob.extra.saddled` ([#13973](https://github.com/horizon-rust/horizon/issues/13973)) | Vanilla and other mods can't see that the vulture is saddled (a saddle drop, a mod showing mount state); forcing `saddled` to false every tick could fight a future Horizon feature | Once the steering rule only applies to horses and camels, the harness could be a real saddle state; low priority |
+| Screen opened on the next tick ([#13974](https://github.com/horizon-rust/horizon/issues/13974)) | One tick of delay; the request is kept in a static keyed by entity id, single player only; if the vulture stops ticking (unloaded) the request waits or is lost | Opening it from the click is simpler and safe in multiplayer |
+| Clicks in the trait hook, mounting with `Host::mount` ([#13972](https://github.com/horizon-rust/horizon/issues/13972)) | Not a workaround so much as the right path; its limit is that state changes go through `state::request`, applied on the vulture's next tick | Nothing to replace; keep it in mind for any new interaction |
+| `cargo creature install` reads `build.log` ([#13971](https://github.com/horizon-rust/horizon/issues/13971)) | Depends on the launcher's log wording ("was left out") and its path; a wording change silences it | Once the build fails by itself, keep it only as a safety net |
+
+The same goes for the rest of our native code that reads internals (`Mob.rider`, `Mob.extra`, `MobWorld`) and for the two
+injections (`mount_hud.rs`, `ride_keys.rs`): they work, but they tie us to a commit and break silently when Horizon
+changes them. Moving them to stable hook points (or to the new mod system's API) is what lets a mod build on any later
+Horizon without a re-release (below, "Horizon versions and our releases").
+
 ## Closed
 
 | Issue | What | Outcome |
