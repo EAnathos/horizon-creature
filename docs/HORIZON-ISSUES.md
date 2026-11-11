@@ -11,8 +11,27 @@ rendering, launcher) stays on horizon-rust/horizon. **New** modding issues (prop
 to [arismoko/horizon's issues](https://github.com/arismoko/horizon/issues) (its README); game bugs unrelated to modding
 go to horizon-rust/horizon. Before opening an issue, search both repositories.
 
+**The fork and the official build** (answer from the Horizon team, 2026-11-11): the mod-API work happens on the fork,
+which keeps syncing from upstream; the official repository works on the game and on splitting it into layers (engine,
+platform, Horizon). Whether and when the fork's modding system comes back upstream is **not decided and has no date**:
+it is for the new Horizon council, and the layer split is what would make it possible (the fork's mod host plugging
+into the engine's hooks). Until then a mod built for the fork may not run on the official build. **Our mods target the
+official build** (what the official launcher installs and builds today): a fix that exists only on the fork doesn't
+let us drop a workaround.
+
+The fork has **its own launcher**, [Horizon Fork Launcher](https://github.com/arismoko/horizon/releases) (Linux and
+Windows; separate settings, game data and accounts; its own Nightlies and prebuilt games, installed only from
+arismoko/horizon). A mod using the fork's fixes would need its players on that launcher. We can use it to try the fixes
+we asked for, in its own instance, without changing what our releases target.
+
+**Fixes on the official build** (answer, 2026-11-11): every mod-related PR goes to the fork, so porting the fork's
+fixes one by one to horizon-rust/horizon is not the agreed path; the official build stays without them until the fork's
+work comes back. Accepting small mod-API fixes on main would be a project choice, put to a poll by a council member.
+Until then **we stay pinned to an official commit and keep our workarounds**: that is the expected way, not a stopgap
+we are late in removing.
+
 Status: **to open** (found, not filed), **open** (filed, nothing merged), **claimed** (someone works on it), **fixed on
-the fork** (merged on arismoko/horizon, not yet in a Horizon release players get), **fixed upstream** (in a release,
+the fork** (merged on arismoko/horizon; not in the official build, and with no planned path there yet, see above), **fixed upstream** (in a release,
 not yet in our pinned revision), **done** (in our pinned revision, workaround removed),
 **closed** (won't change, or not a bug).
 
@@ -100,8 +119,8 @@ How a native mod follows Horizon (Horizon's `docs/native-mods.md`, "Pinned to a 
 Moving the pin (all modules at once, docs/ARCHITECTURE.md §6):
 
 1. Pick the newest Nightly or release the launcher offers (`horizon-launcher versions`), take its commit.
-2. Check which of our issues it fixes: a fix merged on arismoko/horizon reaches players only once it is in a
-   horizon-rust/horizon Nightly. `gh api repos/horizon-rust/horizon/compare/<old>...<new> --jq '.commits[].commit.message'`
+2. Check which of our issues it fixes: only what is in a horizon-rust/horizon Nightly counts (a fix merged only on
+   arismoko/horizon doesn't reach the official build). `gh api repos/horizon-rust/horizon/compare/<old>...<new> --jq '.commits[].commit.message'`
    and look for the issue numbers or the fork's PR titles; update the tables above.
 3. Set the commit in every `horizon-mixin.toml`, `api/Cargo.toml` and CI's `HORIZON_REV`; `cargo creature check`;
    `cargo creature install`; drop the workarounds the new commit fixes; test in game.
@@ -110,7 +129,8 @@ Moving the pin (all modules at once, docs/ARCHITECTURE.md §6):
 
 ## Coming with the new mod system
 
-Announced 2026-11-09 (not in our pinned revision yet), to plan the migration when we move to a newer revision:
+Announced 2026-11-09 for the fork (arismoko/horizon). Not in the official build, and whether it comes upstream is not
+decided (above, "The fork and the official build"): what follows is what we would migrate to if it does, not a plan.
 
 - **Prebuilt game:** the launcher compiles only the mod (~1 s) and links it against a prebuilt game, no game rebuild.
 - **`Hooks` split into `ServerHost` / `ClientHost`** (~260 hooks): our `&mut dyn Host` hooks and helpers get split by
