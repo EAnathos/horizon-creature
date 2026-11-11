@@ -5,5 +5,9 @@
   "bestiary.creature.met": "Espèces rencontrées",
   "bestiary.creature.empty": "Aucune créature rencontrée. Partez explorer : les créatures croisées sont notées ici.",
   "bestiary.creature.seen_in": "Vue dans",
-  "bestiary.creature.nothing_more": "Rien de plus n'est connu pour l'instant."
+  "bestiary.creature.nothing_more": "Rien de plus n'est connu pour l'instant.",
+  "item.creature.glass_jar": "Bocal en verre",
+  "item.creature.glass_jar.filled": "Bocal de %s",
+  "item.creature.glass_jar.look": "%s, %s (%s)",
+  "item.creature.glass_jar.look_plain": "%s"
 }

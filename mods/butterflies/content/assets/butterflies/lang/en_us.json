@@ -1,0 +1,20 @@
+{
+  "entity.butterflies.butterfly": "Butterfly",
+  "entity.butterflies.moth": "Moth",
+  "item.butterflies.butterfly_spawn_egg": "Butterfly Spawn Egg",
+  "item.butterflies.moth_spawn_egg": "Moth Spawn Egg",
+  "look.butterflies.colour.white": "White",
+  "look.butterflies.colour.lemon": "Lemon",
+  "look.butterflies.colour.orange": "Orange",
+  "look.butterflies.colour.red": "Red",
+  "look.butterflies.colour.sky_blue": "Sky blue",
+  "look.butterflies.colour.violet": "Violet",
+  "look.butterflies.colour.brown": "Brown",
+  "look.butterflies.colour.black": "Black",
+  "look.butterflies.pattern.plain": "Plain",
+  "look.butterflies.pattern.eyespots": "eye spots",
+  "look.butterflies.pattern.tips": "wing tips",
+  "look.butterflies.pattern.veins": "veins",
+  "look.butterflies.pattern.dots": "dots",
+  "look.butterflies.pattern.tails": "tails"
+}

@@ -26,8 +26,6 @@ mod talons;
 mod tame;
 mod wild;
 
-use std::sync::Arc;
-
 use flight::{Controls, Flight};
 use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, Stroll};
 use horizon_client::mobs::{MobEvent, Who};
@@ -164,7 +162,7 @@ impl Goal for Fly {
 }
 
 /// No fall damage (SPECS §6), ridden or not: the fall distance is reset every tick, before the move that could land
-/// it. Also keeps it muted and gives it its call.
+/// it. Also gives it its call.
 #[derive(Clone, Debug)]
 struct NoFall;
 
@@ -207,8 +205,6 @@ impl Goal for NoFall {
         {
             m.ai.target = None;
         }
-        // Muted as a wandering trader, every tick: a save read after `register_goals` sets its `Silent` back.
-        m.silent = true;
         // A quiet bird: one call every 20 s on average (a vanilla mob: every 4 s).
         if m.random.next_int_bound(400).unwrap_or(1) == 0 {
             let pitch = 0.8 + m.random.next_float() * 0.3;
@@ -328,20 +324,14 @@ impl Hooks for Vulture {
         }
         // Without the wandering trader's sounds: its own come from `sounds.rs`.
         event.mob.silent = true;
-        // Its own size (SPECS §4), in place of the trader's 0.6 × 1.95: a mob's box comes from its type, so it gets a
-        // copy of its type with its own width and height (workaround for horizon-rust/horizon#6276).
-        if event.mob.kind.width != WIDTH {
-            let mut kind = (*event.mob.kind).clone();
-            kind.width = WIDTH;
-            kind.height = HEIGHT;
-            kind.eye_height = EYE_HEIGHT;
-            event.mob.kind = Arc::new(kind);
-        }
+        // Its own size (SPECS §4), in place of the trader's 0.6 × 1.95 (workaround for horizon-rust/horizon#6276).
+        creature::mob::resize(event.mob, WIDTH, HEIGHT, EYE_HEIGHT);
         // Neutral: it fights back with its beak, diving from the air, and nearby vultures join in (SPECS §4).
         event.mob.attrs.attack_damage = ATTACK_DAMAGE;
         let ai = &mut event.mob.ai;
         ai.goals.clear();
         ai.targets.clear();
+        ai.goals.add(0, creature::mob::Muted);
         ai.goals.add(0, NoFall);
         ai.goals.add(1, Fly::default());
         ai.goals.add(2, tame::Sit);

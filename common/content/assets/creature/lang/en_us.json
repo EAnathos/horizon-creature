@@ -5,5 +5,9 @@
   "bestiary.creature.met": "Species met",
   "bestiary.creature.empty": "No creature met yet. Go out and look around: the creatures you come across are written down here.",
   "bestiary.creature.seen_in": "Seen in",
-  "bestiary.creature.nothing_more": "Nothing more known yet."
+  "bestiary.creature.nothing_more": "Nothing more known yet.",
+  "item.creature.glass_jar": "Glass Jar",
+  "item.creature.glass_jar.filled": "Glass Jar of %s",
+  "item.creature.glass_jar.look": "%s, %s (%s)",
+  "item.creature.glass_jar.look_plain": "%s"
 }

@@ -1,0 +1,20 @@
+{
+  "entity.butterflies.butterfly": "Papillon",
+  "entity.butterflies.moth": "Papillon de nuit",
+  "item.butterflies.butterfly_spawn_egg": "Œuf d'apparition de papillon",
+  "item.butterflies.moth_spawn_egg": "Œuf d'apparition de papillon de nuit",
+  "look.butterflies.colour.white": "Blanc",
+  "look.butterflies.colour.lemon": "Citron",
+  "look.butterflies.colour.orange": "Orange",
+  "look.butterflies.colour.red": "Rouge",
+  "look.butterflies.colour.sky_blue": "Bleu ciel",
+  "look.butterflies.colour.violet": "Violet",
+  "look.butterflies.colour.brown": "Brun",
+  "look.butterflies.colour.black": "Noir",
+  "look.butterflies.pattern.plain": "Uni",
+  "look.butterflies.pattern.eyespots": "ocelles",
+  "look.butterflies.pattern.tips": "pointes des ailes",
+  "look.butterflies.pattern.veins": "nervures",
+  "look.butterflies.pattern.dots": "points",
+  "look.butterflies.pattern.tails": "queues"
+}

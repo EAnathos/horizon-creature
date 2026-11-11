@@ -5,4 +5,4 @@ status = "prototype"
 # The shared creative tab's button: the creature guide book (common/SPECS.md §3.3).
 icon = "creature:guide"
 # The library's own items, first in the shared tab.
-creative = ["creature:guide"]
+creative = ["creature:guide", "creature:glass_jar"]

@@ -1,6 +1,6 @@
 # Butterflies's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
 id = "butterflies"
 name = "Butterflies"
-status = "planned"
+status = "in progress"
 # Its items in the series' creative tab, in order.
-creative = []
+creative = ["butterflies:butterfly_spawn_egg", "butterflies:moth_spawn_egg"]

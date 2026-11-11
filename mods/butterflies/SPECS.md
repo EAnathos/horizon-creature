@@ -12,6 +12,15 @@ without Butterflies. Neither mod requires the other.
 ## 0. Progress (as of 2026-11-09)
 
 - Folder and spec created.
+- **In game** (2026-11-11, tested): `butterflies:butterfly` and `butterflies:moth`, with spawn eggs (in the library's
+  tab), copies of the wandering trader with their goals cleared, a tiny box, 1 health, muted. A butterfly gets a look
+  the first time it is seen, from the library's colours and patterns (common/SPECS.md §7): 8 colours, 6 patterns
+  (plain, eye spots, wing tips, veins, dots, tails), weighted per biome as in §2; the look is saved and comes back
+  after a reload (tested). On the ground it opens and closes its wings slowly. The moth is drawn with its painted
+  texture. Right-click does nothing (no trading screen); both are caught and released with the library's glass jar,
+  the butterfly keeping its look (tested), each with its own jar icon. Their wings are thin slabs a little apart (flat
+  wings flickered). Their shadow is too big (Horizon gives a mod mob 0.5; docs/HORIZON-ISSUES.md, "To open"). Not yet: flight,
+  landing on flowers, spawning in the wild, settling (territories), the dust, the bestiary page.
 - **Models** (2026-11-10): `assets/models/butterfly.bbmodel` and `moth.bbmodel` (pictures in docs/MODELS.md), one group
   tree for both (body, head and antennae, a forewing and a hindwing per side, flat wings cut out by the texture's
   alpha). The butterfly's texture is greyscale, for the library to tint (§2); the moth's is painted (§2.1). Not in

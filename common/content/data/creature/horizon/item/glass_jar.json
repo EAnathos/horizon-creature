@@ -1,0 +1,10 @@
+{
+  "template": "minecraft:paper",
+  "max_stack_size": 16,
+  "components": {
+    "minecraft:item_model": "creature:glass_jar",
+    "minecraft:item_name": {
+      "translate": "item.creature.glass_jar"
+    }
+  }
+}

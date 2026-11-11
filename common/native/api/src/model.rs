@@ -9,6 +9,12 @@ pub const WHITE: u32 = 0xFFFFFF;
 /// Vanilla's red hurt flash (`OverlayTexture`'s red, about 30 % over the texture), as a tint.
 const HURT: u32 = 0xFF6464;
 
+/// Two tints applied together (0xRRGGBB, channel by channel): a creature's colour and the hurt flash.
+pub fn multiply(a: u32, b: u32) -> u32 {
+    let channel = |shift: u32| ((a >> shift & 0xFF) * (b >> shift & 0xFF) / 255) << shift;
+    channel(16) | channel(8) | channel(0)
+}
+
 /// The tint for a mob this frame: red while hurt or dying, as vanilla's `LivingEntityRenderState.hasRedOverlay`.
 pub fn tint(mob: &NativeMobRender<'_>) -> u32 {
     if mob.hurt_time > 0 || mob.death_time > 0 {
@@ -71,6 +77,23 @@ pub fn draw_shown(
     shown: &dyn Fn(&str) -> bool,
     tint: u32,
 ) {
+    draw_layer(host, draw, part, texture, pose, shown, tint, 0.0);
+}
+
+/// `draw_shown` with every cube grown by `inflate` texels on each side: a layer drawn over the model (a pattern, common
+/// SPECS §7) is grown a little so it shows over the faces below instead of fighting them, as vanilla's
+/// `CubeDeformation` for the tropical fish's pattern.
+#[allow(clippy::too_many_arguments)]
+pub fn draw_layer(
+    host: &dyn Host,
+    draw: &mut BlockEntityDraw,
+    part: &Part,
+    texture: &'static str,
+    pose: &dyn Fn(&str) -> [f32; 3],
+    shown: &dyn Fn(&str) -> bool,
+    tint: u32,
+    inflate: f32,
+) {
     if !shown(part.name) {
         return;
     }
@@ -93,10 +116,12 @@ pub fn draw_shown(
                 uv: Some(uv),
             })
         });
-        host.draw_cube(draw, cube.from, cube.to, faces, tint);
+        let from = cube.from.map(|v| v - inflate);
+        let to = cube.to.map(|v| v + inflate);
+        host.draw_cube(draw, from, to, faces, tint);
     }
     for child in part.children {
-        draw_shown(host, draw, child, texture, pose, shown, tint);
+        draw_layer(host, draw, child, texture, pose, shown, tint, inflate);
     }
     draw.pop();
 }

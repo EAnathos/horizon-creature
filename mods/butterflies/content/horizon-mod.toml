@@ -1,0 +1,8 @@
+id = "butterflies"
+name = "Butterflies"
+version = "0.0.1"
+description = "Butterflies and moths (in progress). Needs Horizon Creature."
+authors = ["EAnathos"]
+api = "0.2"
+side = "both"
+capabilities = ["registries"]

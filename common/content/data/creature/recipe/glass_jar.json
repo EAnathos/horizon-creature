@@ -1,0 +1,36 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:or",
+      "values": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "butterflies"
+        },
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "worms"
+        },
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "fireflies"
+        }
+      ]
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " S ",
+    "G G",
+    "GGG"
+  ],
+  "key": {
+    "S": "minecraft:oak_slab",
+    "G": "minecraft:glass"
+  },
+  "result": {
+    "id": "creature:glass_jar",
+    "count": 2
+  }
+}

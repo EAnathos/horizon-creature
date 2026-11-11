@@ -23,11 +23,31 @@ several creature mods share, and the series' single creative tab. It adds no cre
   chicken they threw; rotten flesh "Breeding", once they fed one). Kept in the player's persistent data on the server and sent to their client when the book opens. Each mod
   registers its species and facts (`creature::bestiary::register`, `learn`). It doesn't open while riding.
 
+- **Colours and patterns** (§7, 2026-11-11, tested with the butterfly): `creature::colours`. A mod gives a `Scheme`
+  (colours, patterns as textures over a greyscale base, weights per biome); the library rolls a look the first time
+  it sees a creature, saves it (`creature:look`, by id) and draws two tinted layers, the pattern a little grown over
+  the base (`model::draw_layer`). The drawing reads the looks from a static map (single player, arismoko/horizon#2740).
+  Eggs and offspring (inheriting a parent's look) wait for Snakes.
+
+- **Glass jar** (§6.1, 2026-11-11, tested with the butterfly): `creature:glass_jar` (16 a stack; recipe only with
+  Butterflies, Worms or Fireflies installed: 3 glass in a U and an oak slab, makes 2). `creature::jar`: a mod registers
+  what can be caught, with the icon of a jar holding it; an empty jar catches it (right-click, the library's
+  `interact_entity`), a filled jar (`minecraft:custom_data`, its kind and look; its own name and icon; one a stack)
+  releases it with its look on the face clicked (`use_item_on`). Under its name a filled jar says what it holds
+  (colour, pattern and pattern colour, `look.<mod>.colour.<id>` / `look.<mod>.pattern.<id>` in the mod's language
+  files) and "Horizon Creature" in blue, as the creative tab names the items it lists (a filled jar is in no tab). The
+  other hand isn't used in the click a jar takes (Horizon would still place an off-hand torch). In creative the jar
+  isn't used up. Not yet: the jar
+  placed as a block, settling (territories, §6.2), the jar hidden when no mod uses it (it is in the tab whatever is
+  installed: the tab is one generated file).
+- **Mob helpers** (2026-11-11): `creature::mob::resize` (a creature's own box, a copy of its template's type) and
+  `creature::mob::Muted` (silent every tick), used by the vulture and the butterflies.
+
 ### To do
 
 - §4 Incubator (Wyverns, Snakes) and §5 naming on hatch (Snakes).
 - §6 Glass jar and territories (Butterflies, Worms, Fireflies).
-- §7 Colours and patterns (Butterflies, Snakes).
+- §7 Colours and patterns: offspring inheriting a look (Snakes).
 - §8 The systems that move from the vulture, each when its second user is implemented.
 
 ## 1. Role and rules ✅

@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:wandering_trader_spawn_egg",
+  "components": {
+    "minecraft:item_model": "butterflies:butterfly_spawn_egg",
+    "minecraft:item_name": {
+      "translate": "item.butterflies.butterfly_spawn_egg"
+    }
+  }
+}

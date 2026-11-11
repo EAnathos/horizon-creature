@@ -6,16 +6,22 @@
 //!
 //! - `model`: draws a Blockbench model converted by `cargo creature model` (SPECS §3.1).
 //! - `sounds`: a mod mob's own sounds, since Horizon prefixes mob sounds with `minecraft:` (SPECS §3.2).
+//! - `colours`: colours and patterns, rolled per biome, saved, drawn as two tinted layers (SPECS §7).
+//! - `jar`: the glass jar, catching a small creature and releasing it, its look kept (SPECS §6.1).
+//! - `mob`: a creature's own size and silence, its template's being a vanilla mob's (SPECS §3.2, §8.8).
 //! - `guide`: the creature guide book, given at a player's first login (SPECS §9).
 //! - `bestiary`: the book's pages, what each player met and found out (SPECS §9).
 pub mod bestiary;
+pub mod colours;
 mod guide;
+pub mod jar;
+pub mod mob;
 pub mod model;
 pub mod sounds;
 
 use horizon_client::mod_api::{
-    EntityTickPostEvent, Flow, Hooks, Host, NetFromServerEvent, PlayerLoggedInEvent, ScreenMouseButtonPressedPreEvent,
-    ScreenRenderPostEvent, UseItemEvent,
+    EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, NetFromServerEvent, PlayerLoggedInEvent,
+    ScreenMouseButtonPressedPreEvent, ScreenRenderPostEvent, UseItemEvent, UseItemOnEvent,
 };
 
 pub fn hooks() -> Box<dyn Hooks> {
@@ -36,11 +42,33 @@ impl Hooks for Creature {
 
     /// Right-click with the guide: the bestiary opens.
     fn use_item(&self, host: &mut dyn Host, event: &mut UseItemEvent<'_>) -> Flow {
+        // The other hand, in a click a jar took.
+        if jar::same_click(host) {
+            return Flow::Cancel;
+        }
         if &*event.stack.item != guide::ITEM {
             return Flow::Continue;
         }
         bestiary::open(host);
         Flow::Cancel
+    }
+
+    /// An empty glass jar catches a registered creature (before the mods' own right-click).
+    fn interact_entity(&self, host: &mut dyn Host, event: &mut InteractEntityEvent<'_>) -> Flow {
+        if jar::catch(host, event) || jar::same_click(host) {
+            Flow::Cancel
+        } else {
+            Flow::Continue
+        }
+    }
+
+    /// A filled glass jar releases its creature on the block clicked.
+    fn use_item_on(&self, host: &mut dyn Host, event: &mut UseItemOnEvent<'_>) -> Flow {
+        if jar::release(host, event) || jar::same_click(host) {
+            Flow::Cancel
+        } else {
+            Flow::Continue
+        }
     }
 
     fn net_from_server(&self, host: &mut dyn Host, event: &mut NetFromServerEvent<'_>) {
