@@ -27,7 +27,7 @@ giant of the mountains that hurls boulders, and whose eye is a rare crafting mat
   while a player holds it, in either hand, the farm animals within 12 blocks follow them (sheep, cows, mooshrooms,
   pigs, goats, chickens), a cyclops's sheep too. `cyclops:club`: a heavy wooden weapon (8 damage, slow, extra
   knockback, 250 uses), crafted from 4 logs and a stick, and dropped worn by a cyclops a player kills (1 in 3). The eye
-  now has its own icon, and drops only when a player kills the cyclops (the loot's condition fixed to 26.3's form).
+  now has its own icon. Neither the club nor the crook can be enchanted (no `enchantable`; tested at a table). The eye has its own icon, and drops only when a player kills the cyclops (the loot's condition fixed to 26.3's form).
 - Not yet: the boulder throw, its eye as a weak spot, its own sounds.
 
 ## 1. Technical context

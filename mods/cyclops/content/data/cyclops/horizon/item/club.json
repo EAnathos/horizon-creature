@@ -29,6 +29,7 @@
         "operation": "add_value",
         "slot": "mainhand"
       }
-    ]
+    ],
+    "!minecraft:enchantable": {}
   }
 }

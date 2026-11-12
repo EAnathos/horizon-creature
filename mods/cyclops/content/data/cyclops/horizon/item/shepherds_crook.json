@@ -6,6 +6,7 @@
     "minecraft:item_model": "cyclops:shepherds_crook",
     "minecraft:item_name": {
       "translate": "item.cyclops.shepherds_crook"
-    }
+    },
+    "!minecraft:enchantable": {}
   }
 }
