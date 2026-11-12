@@ -18,8 +18,8 @@ like Butterflies ✅.
   crawls only on that farmland (tested) and, every 20 s, makes one crop of its garden grow a stage (tested: 4 wheat
   stages in about a minute with random ticks off); more than 3 worms in one garden count as 3. A garden shrunk below
   10 frees it. Wild ones despawn far from players, settled ones never. Spawns in plains, meadows, forests and taigas,
-  1 or 2 together. Bestiary page (Catch, Garden). Not yet: more worms after rain, the farmland kept moist, particles
-  on a crop it helped.
+  1 or 2 together. Bestiary page (Catch, Garden). Green sparkles on the crop it helped. While it rains, worms come up on
+  grass and dirt near players (a chance every 5 s, up to 6 within 24 blocks).
 
 ## 1. Technical context
 
@@ -34,7 +34,7 @@ like Butterflies ✅.
 
 - Small ambient earthworms: harmless, slow, crawling.
 - **Found in nature, on the dirt** ✅: on dirt, grass, coarse dirt and rooted dirt ❓, in groups of 1–2, more after rain
-  ❓; they don't despawn while in sight ❓.
+  ✅ (while it rains, one chance in 3 every 5 s for each player, 4 to 16 blocks away, up to 6 worms within 24 blocks); they don't despawn while in sight ❓.
 - Pink-brown, segmented model, crawling animation; no sound ❓.
 
 ## 3. Jar and garden ✅
@@ -49,8 +49,7 @@ like Butterflies ✅.
 - A settled worm makes the crops of its garden grow **faster, with a slow bonus** ✅. Proposal ❓:
   - each worm gives the crops of its garden an extra growth chance equal to **+10 %** of the normal rate ✅;
   - bonuses add up to **+30 %** per garden ✅ (3 worms), so a big farm needs worms in several gardens;
-  - the farmland it crawls on stays moist ❓.
-- Faint particles on a crop that got a worm's bonus ❓.
+- Faint particles on a crop that got a worm's bonus ✅ (green sparkles, as bone meal).
 
 ## 5. Out of scope for v1
 

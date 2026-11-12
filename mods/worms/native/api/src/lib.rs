@@ -4,8 +4,8 @@
 //! drawn with its own segmented model (`model_worm.rs`, from `assets/models/worm.bbmodel`), wiggling as it goes. Caught
 //! in the library's glass jar, released on farmland (or a crop on it) of a garden of at least 10 connected farmland
 //! blocks, it settles there (the library's garden rule) and crawls only on that farmland; every `GROW_EVERY` ticks it
-//! makes one crop of its garden grow a stage, at most `MAX_WORMS` worms counting per garden (SPECS §4). Wild ones
-//! despawn far from players.
+//! makes one crop of its garden grow a stage, with green sparkles on it, at most `MAX_WORMS` worms counting per garden
+//! (SPECS §4). While it rains, worms come up near players (`rain`). Wild ones despawn far from players.
 mod model_worm;
 
 use std::collections::BTreeMap;
@@ -16,8 +16,9 @@ use creature::jar::Catchable;
 use creature::territory::{self, Rule};
 use horizon_client::mobs::goals;
 use horizon_client::mod_api::{
-    BlockEntityDraw, Cx, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent, LivingDeathEvent, Mob,
-    MobSubmitEvent, RandomSource, RegisterGoalsEvent,
+    BlockEntityDraw, Compound, Cx, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent,
+    LevelTickPostEvent, LivingDeathEvent, Mob, MobSubmitEvent, ParticleOptions, ParticleType, RandomSource,
+    RegisterGoalsEvent,
 };
 
 pub const WORM: &str = "worms:worm";
@@ -244,7 +245,91 @@ fn tend(host: &mut dyn Host, entity: u32) {
         return;
     }
     let (crop, age, _) = crops[(random.next() % crops.len() as u64) as usize];
-    host.set_block_property(crop, "age", &(age + 1).to_string());
+    if host.set_block_property(crop, "age", &(age + 1).to_string()) {
+        // A few green sparkles on the crop it helped, as bone meal shows.
+        let at = [
+            f64::from(crop[0]) + 0.5,
+            f64::from(crop[1]) + 0.4,
+            f64::from(crop[2]) + 0.5,
+        ];
+        let sparkle = ParticleOptions::simple(ParticleType::HappyVillager);
+        host.send_particles(&sparkle, None, at, [0.3, 0.25, 0.3], 0.0, 6);
+    }
+}
+
+/// After rain (SPECS §2): while it rains, worms come up on the grass and dirt near players, in the biomes they live in.
+/// Every `RAIN_EVERY` ticks, one chance in `RAIN_CHANCE` for each player, while fewer than `RAIN_CAP` worms are within
+/// `RAIN_NEAR` blocks of them; it comes up `RAIN_MIN` to `RAIN_MAX` blocks away.
+const RAIN_EVERY: u32 = 100;
+const RAIN_CHANCE: u64 = 3;
+const RAIN_CAP: usize = 6;
+const RAIN_NEAR: f64 = 24.0;
+const RAIN_MIN: f64 = 4.0;
+const RAIN_MAX: f64 = 16.0;
+const SOIL: [&str; 5] = [
+    "minecraft:grass_block",
+    "minecraft:dirt",
+    "minecraft:coarse_dirt",
+    "minecraft:rooted_dirt",
+    "minecraft:podzol",
+];
+
+/// Where each worm is, from its tick (for the rain's cap).
+static WORMS_AT: Mutex<BTreeMap<u32, [f64; 3]>> = Mutex::new(BTreeMap::new());
+static RAIN_TICKS: Mutex<u32> = Mutex::new(0);
+
+/// From `level_tick_post`, in the overworld: worms come up near players while it rains.
+fn rain(host: &mut dyn Host, dimension: &str) {
+    if dimension != "minecraft:overworld" {
+        return;
+    }
+    {
+        let mut t = RAIN_TICKS.lock().unwrap();
+        *t += 1;
+        if *t < RAIN_EVERY {
+            return;
+        }
+        *t = 0;
+    }
+    if host.weather().0 < 0.2 {
+        return;
+    }
+    let mut random = creature::colours::Random::new(RAIN_EVERY);
+    for player in host.server_players().into_iter().filter(|p| p.dimension == dimension) {
+        if random.next() % RAIN_CHANCE != 0 {
+            continue;
+        }
+        let p = player.position;
+        let near = WORMS_AT
+            .lock()
+            .unwrap()
+            .values()
+            .filter(|w| (w[0] - p[0]).hypot(w[2] - p[2]) < RAIN_NEAR)
+            .count();
+        if near >= RAIN_CAP {
+            continue;
+        }
+        let angle = (random.next() % 360) as f64;
+        let distance = RAIN_MIN + (random.next() % 1000) as f64 / 1000.0 * (RAIN_MAX - RAIN_MIN);
+        let (x, z) = (
+            (p[0] + angle.to_radians().cos() * distance).floor() as i32,
+            (p[2] + angle.to_radians().sin() * distance).floor() as i32,
+        );
+        // The ground there: the first soil block under air, from a little above the player down.
+        let top = (p[1] as i32 - 8..=p[1] as i32 + 8)
+            .rev()
+            .find(|&y| SOIL.contains(&host.block([x, y, z]).as_str()) && host.block([x, y + 1, z]) == "minecraft:air");
+        let Some(y) = top else {
+            continue;
+        };
+        let lives_here = host
+            .biome([x, y + 1, z])
+            .is_some_and(|b| BESTIARY.biomes.contains(&b.as_str()));
+        if lives_here {
+            let at = [f64::from(x) + 0.5, f64::from(y + 1), f64::from(z) + 0.5];
+            host.summon(dimension, WORM, at, Compound::new());
+        }
+    }
 }
 
 pub fn hooks() -> Box<dyn Hooks> {
@@ -278,15 +363,23 @@ impl Hooks for Worms {
         }
     }
 
+    fn level_tick_post(&self, host: &mut dyn Host, event: &mut LevelTickPostEvent<'_>) {
+        rain(host, event.dimension);
+    }
+
     fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
         if event.kind != WORM {
             return;
         }
         territory::tick(host, event.entity);
         tend(host, event.entity);
+        if let Some(at) = host.entity(event.entity).and_then(|e| host.entity_position(e)) {
+            WORMS_AT.lock().unwrap().insert(event.entity, at);
+        }
         if creature::mob::despawn_far(host, event.dimension, event.entity, territory::settled(event.entity)) {
             territory::forget(event.entity);
             TICKS.lock().unwrap().remove(&event.entity);
+            WORMS_AT.lock().unwrap().remove(&event.entity);
         }
     }
 
@@ -294,6 +387,7 @@ impl Hooks for Worms {
         if event.kind == WORM {
             territory::forget(event.entity);
             TICKS.lock().unwrap().remove(&event.entity);
+            WORMS_AT.lock().unwrap().remove(&event.entity);
         }
         Flow::Continue
     }
