@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:wandering_trader_spawn_egg",
+  "components": {
+    "minecraft:item_model": "worms:worm_spawn_egg",
+    "minecraft:item_name": {
+      "translate": "item.worms.worm_spawn_egg"
+    }
+  }
+}

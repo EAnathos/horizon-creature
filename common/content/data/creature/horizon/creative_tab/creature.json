@@ -11,7 +11,8 @@
     "vulture:harness",
     "vulture:feather",
     "vulture:raw_vulture",
-    "vulture:cooked_vulture"
+    "vulture:cooked_vulture",
+    "worms:worm_spawn_egg"
   ],
   "title": "itemGroup.creature"
 }

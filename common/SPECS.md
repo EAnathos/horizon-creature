@@ -46,8 +46,11 @@ several creature mods share, and the series' single creative tab. It adds no cre
 - **Territories** (§6.2, 2026-11-12, tested with the butterfly): `creature::territory`, the flower patch rule. A
   creature released from a jar on a flower settles there (its anchor, saved as `creature:territory`); the mod's goals
   get its patch's flowers (`check`, every few seconds; a broken anchor moves to the nearest flower within 8 blocks, or
-  the creature is free again) and keep to it. A catch teaches the bestiary fact `jar`. Not yet: the garden rule
-  (Worms), never despawning (nothing despawns them yet).
+  the creature is free again) and keep to it. A catch teaches the bestiary fact `jar`. The garden rule (2026-11-12,
+  tested with the worm): released on farmland (or a crop on it) of at least 10 connected farmland blocks, the creature
+  settles and its goals get the garden's farmland (`check_garden`; a garden shrunk below 10 frees it); a hook gets it
+  with `garden_of`. A release in a garden teaches the bestiary fact `garden`. A jar's `Catchable` says which rule its
+  creature settles by (`settles`).
 - **Jar on display** (§6.1, 2026-11-12, tested with a butterfly): sneak + right-click with a filled jar places it as a
   small glass block (`creature:jar`, `creature:lit_jar` at light 7 for a creature that glows) whose block entity holds
   the creature (kind, look) and draws it inside with the species' bestiary drawing; broken, it gives the filled jar

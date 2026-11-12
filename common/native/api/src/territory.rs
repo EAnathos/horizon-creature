@@ -1,6 +1,9 @@
 //! Territories (SPECS §6.2): a creature released from a jar settles in an area it won't leave.
 //!
-//! Only the **flower patch** rule so far (Butterflies): released on a flower, that flower is its anchor; its area is
+//! Two rules (`Rule`). The **garden** (Worms): released on farmland (or a crop on it), the farmland connected to it (4
+//! ways, the same level or one up or down) is its area, which must count at least `GARDEN_MIN` blocks, or it won't
+//! settle; if the garden shrinks below that, it is free again. The **flower patch** (Butterflies, Fireflies): released on
+//! a flower, that flower is its anchor; its area is
 //! the flowers within `PATCH` blocks of the anchor, plus `AROUND` blocks around them and `ABOVE` blocks up. If the anchor
 //! flower is broken, the anchor moves to the nearest flower within `PATCH` blocks, or the creature is free again.
 //!
@@ -14,6 +17,19 @@ use horizon_client::mod_api::{AttachmentCodec, AttachmentError, AttachmentType, 
 
 /// The flowers within this many blocks of the anchor make the area; it reaches this far around them and up.
 pub const PATCH: i32 = 8;
+/// A garden counts at least this many farmland blocks; it is looked for up to `GARDEN_MAX`.
+pub const GARDEN_MIN: usize = 10;
+const GARDEN_MAX: usize = 256;
+const FARMLAND: &str = "minecraft:farmland";
+
+/// Where a released creature settles.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Rule {
+    /// The flowers around the one it was released on.
+    FlowerPatch,
+    /// The farmland connected to the block it was released on, at least `GARDEN_MIN` blocks.
+    Garden,
+}
 pub const AROUND: i32 = 2;
 pub const ABOVE: i32 = 4;
 const FLOWERS: &str = "minecraft:flowers";
@@ -161,4 +177,73 @@ pub fn inside(flowers: &[[i32; 3]], p: [i32; 3]) -> bool {
     flowers.iter().any(|f| {
         (p[0] - f[0]).abs() <= AROUND && (p[2] - f[2]).abs() <= AROUND && p[1] >= f[1] - 1 && p[1] <= f[1] + ABOVE
     })
+}
+
+/// The farmland connected to `start` (4 ways, the same level or one up or down), at most `GARDEN_MAX` blocks;
+/// `farmland` says whether a block is.
+fn garden_from(start: [i32; 3], farmland: impl Fn([i32; 3]) -> bool) -> Vec<[i32; 3]> {
+    let mut seen = std::collections::BTreeSet::from([start]);
+    let mut queue = std::collections::VecDeque::from([start]);
+    let mut found = Vec::new();
+    while let Some(p) = queue.pop_front() {
+        found.push(p);
+        if found.len() >= GARDEN_MAX {
+            break;
+        }
+        for (dx, dz) in [(1, 0), (-1, 0), (0, 1), (0, -1)] {
+            for dy in [0, 1, -1] {
+                let q = [p[0] + dx, p[1] + dy, p[2] + dz];
+                if !seen.contains(&q) && farmland(q) {
+                    seen.insert(q);
+                    queue.push_back(q);
+                    break;
+                }
+            }
+        }
+    }
+    found
+}
+
+/// From the jar's release: the farmland a creature released on `clicked` (farmland, or a crop on farmland) would
+/// settle on, if its garden is big enough.
+pub fn garden_at(host: &dyn Host, clicked: [i32; 3]) -> Option<[i32; 3]> {
+    let below = [clicked[0], clicked[1] - 1, clicked[2]];
+    let start = if host.block(clicked) == FARMLAND {
+        clicked
+    } else if host.block(below) == FARMLAND {
+        below
+    } else {
+        return None;
+    };
+    (garden_from(start, |p| host.block(p) == FARMLAND).len() >= GARDEN_MIN).then_some(start)
+}
+
+/// From a hook: the farmland of creature `entity`'s garden (empty if it isn't settled).
+pub fn garden_of(host: &dyn Host, entity: u32) -> Vec<[i32; 3]> {
+    match anchor(entity) {
+        Some(a) => garden_from(a, |p| host.block(p) == FARMLAND),
+        None => Vec::new(),
+    }
+}
+
+/// From a goal, every few seconds: the farmland of its garden; a garden grown too small (or its anchor no longer
+/// farmland) lets it go free.
+pub fn check_garden(cx: &Cx, entity: u32) -> Vec<[i32; 3]> {
+    let Some(anchor) = anchor(entity) else {
+        return Vec::new();
+    };
+    let is_farmland = |p: [i32; 3]| block_name(cx, p) == FARMLAND;
+    let garden = if is_farmland(anchor) {
+        garden_from(anchor, is_farmland)
+    } else {
+        Vec::new()
+    };
+    if garden.len() >= GARDEN_MIN {
+        return garden;
+    }
+    if let Some(k) = ANCHORS.lock().unwrap().get_mut(&entity) {
+        k.anchor = None;
+        k.dirty = true;
+    }
+    Vec::new()
 }

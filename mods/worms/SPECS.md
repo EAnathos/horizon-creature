@@ -10,7 +10,16 @@ like Butterflies ✅.
 
 ## 0. Progress (as of 2026-11-09)
 
-- Folder and spec created. **Not started**.
+- Folder and spec created.
+- **In game** (2026-11-12, tested): `worms:worm` and its spawn egg; model `assets/models/worm.bbmodel` (six segments, a
+  lighter band, each segment a group: a wave runs along it as it crawls). It crawls slowly (0.015 block a tick) a few
+  blocks around where it first crawled, with pauses. Caught in the glass jar (its own jar icon); released on farmland
+  or a crop on it, in a garden of at least 10 connected farmland blocks (the library's garden rule), it settles: it
+  crawls only on that farmland (tested) and, every 20 s, makes one crop of its garden grow a stage (tested: 4 wheat
+  stages in about a minute with random ticks off); more than 3 worms in one garden count as 3. A garden shrunk below
+  10 frees it. Wild ones despawn far from players, settled ones never. Spawns in plains, meadows, forests and taigas,
+  1 or 2 together. Bestiary page (Catch, Garden). Not yet: more worms after rain, the farmland kept moist, particles
+  on a crop it helped.
 
 ## 1. Technical context
 

@@ -26,6 +26,8 @@ pub const ITEM: &str = "creature:glass_jar";
 pub const JAR_FACT: &str = "jar";
 /// The bestiary fact a release on a flower teaches, when the creature settles there.
 pub const FLOWER_FACT: &str = "flower";
+/// The bestiary fact a release in a garden teaches, when the creature settles there.
+pub const GARDEN_FACT: &str = "garden";
 /// The key of the jar's data in `minecraft:custom_data`.
 const DATA: &str = "creature";
 
@@ -33,8 +35,8 @@ const DATA: &str = "creature";
 pub struct Catchable {
     pub kind: &'static str,
     pub model: &'static str,
-    /// Released on a flower, it settles there (`territory`, the flower patch rule, SPECS §6.2).
-    pub flower_patch: bool,
+    /// Where it settles when released (`territory`, SPECS §6.2): on a flower (its patch) or on farmland (its garden).
+    pub settles: Option<crate::territory::Rule>,
     /// A jar holding it, placed as a block, gives light (fireflies).
     pub glows: bool,
 }
@@ -141,10 +143,31 @@ fn lore(kind: &str, look: Option<[String; 3]>) -> String {
 
 /// The acting player's slot holding `stack` (the hotbar and inventory, then the off hand).
 fn slot_of(host: &mut dyn Host, stack: &ItemStack) -> Option<i32> {
+    // The selected hotbar slot, when it holds this stack: Horizon doesn't say which slot is selected, but `held` reads
+    // it, so each hotbar slot holding the same stack is marked a moment (its count changed, then put back) to see which
+    // one `held` sees. Without that, a jar in another slot looking the same was filled in place of the held one.
+    for s in 0..9 {
+        let Some(count) = host.carried_stack(s).filter(|c| **c == *stack).map(|c| c.count) else {
+            continue;
+        };
+        if let Some(c) = host.carried_stack(s) {
+            c.count = count + MARK;
+        }
+        let selected = host.held().is_some_and(|(_, n, _)| n == count + MARK);
+        if let Some(c) = host.carried_stack(s) {
+            c.count = count;
+        }
+        if selected {
+            return Some(s);
+        }
+    }
     (0..36)
         .chain([-106])
         .find(|&s| host.carried_stack(s).is_some_and(|c| *c == *stack))
 }
+
+/// A count no stack has, to tell the selected slot (`slot_of`).
+const MARK: u32 = 1000;
 
 /// From the library's `interact_entity`: an empty jar catches a registered creature.
 pub fn catch(host: &mut dyn Host, event: &InteractEntityEvent<'_>) -> bool {
@@ -230,8 +253,16 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
     }
     // On a flower (which a click hits itself, a flower being no full block) it comes out in the flower, and settles
     // there if its kind does; elsewhere on the face clicked.
+    use crate::territory::Rule;
     let on_flower = crate::territory::is_flower(host, &host.block(event.pos));
-    let block = if on_flower {
+    // On farmland (or a crop on it) of a big enough garden, it comes out on the farmland and settles in its garden.
+    let garden = match c.settles {
+        Some(Rule::Garden) => crate::territory::garden_at(host, event.pos),
+        _ => None,
+    };
+    let block = if let Some(f) = garden {
+        [f[0], f[1] + 1, f[2]]
+    } else if on_flower {
         event.pos
     } else {
         [
@@ -251,7 +282,10 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
     if let Some(look) = &look {
         colours::restore(host, id, look);
     }
-    if on_flower && c.flower_patch {
+    if let Some(f) = garden {
+        crate::territory::settle(host, id, f);
+        crate::bestiary::learn(host, player.uuid, c.kind, GARDEN_FACT);
+    } else if on_flower && c.settles == Some(Rule::FlowerPatch) {
         crate::territory::settle(host, id, block);
         crate::bestiary::learn(host, player.uuid, c.kind, FLOWER_FACT);
     }

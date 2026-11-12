@@ -44,7 +44,7 @@ static FLIGHT: creature::flutter::Kind = creature::flutter::Kind {
 static IN_JAR: Catchable = Catchable {
     kind: FIREFLY,
     model: "fireflies:firefly_jar",
-    flower_patch: true,
+    settles: Some(creature::territory::Rule::FlowerPatch),
     glows: true,
 };
 

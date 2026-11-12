@@ -37,3 +37,11 @@ The Blockbench models of each mod, as built (at rest; the game poses them). Gene
 `mods/vulture/assets/models/vulture.bbmodel`: 37 cubes, texture 128×128.
 
 ![vulture, front](models/vulture-vulture-front.png) ![vulture, back](models/vulture-vulture-back.png)
+
+## worms
+
+### worm
+
+`mods/worms/assets/models/worm.bbmodel`: 6 cubes, texture 32×32.
+
+![worm, front](models/worms-worm-front.png) ![worm, back](models/worms-worm-back.png)

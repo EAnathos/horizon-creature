@@ -189,13 +189,13 @@ static IN_JAR: [Catchable; 2] = [
     Catchable {
         kind: BUTTERFLY,
         model: "butterflies:butterfly_jar",
-        flower_patch: true,
+        settles: Some(creature::territory::Rule::FlowerPatch),
         glows: false,
     },
     Catchable {
         kind: MOTH,
         model: "butterflies:moth_jar",
-        flower_patch: true,
+        settles: Some(creature::territory::Rule::FlowerPatch),
         glows: false,
     },
 ];
