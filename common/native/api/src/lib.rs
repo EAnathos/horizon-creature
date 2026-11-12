@@ -26,11 +26,12 @@ pub mod sounds;
 pub mod territory;
 
 use horizon_client::first_person::Hand;
+use horizon_client::mod_api::BlockPos;
 use horizon_client::mod_api::{
     BlockEntityEvent, BlockEntitySubmitEvent, BlockEntityUpdateTagEvent, Compound, DestroyBlockEvent,
-    EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, InteractionKeyEvent, LivingChangeTargetEvent,
-    LivingDeathEvent, NetFromServerEvent, PlayerLoggedInEvent, ScreenMouseButtonPressedPreEvent,
-    ScreenMouseScrolledPreEvent, ScreenRenderPostEvent, UseItemEvent, UseItemOnEvent,
+    EntityTickPostEvent, ExplosionDetonateEvent, Flow, Hooks, Host, InteractEntityEvent, InteractionKeyEvent,
+    LevelHost, LivingChangeTargetEvent, LivingDeathEvent, NetFromServerEvent, PistonMoveEvent, PlayerLoggedInEvent,
+    ScreenMouseButtonPressedPreEvent, ScreenMouseScrolledPreEvent, ScreenRenderPostEvent, UseItemEvent, UseItemOnEvent,
 };
 
 pub fn hooks() -> Box<dyn Hooks> {
@@ -43,6 +44,21 @@ pub fn hooks() -> Box<dyn Hooks> {
 struct Creature;
 
 impl Hooks for Creature {
+    /// A piston doesn't move or break a placed jar.
+    fn piston_move(&self, level: &dyn LevelHost, event: &mut PistonMoveEvent<'_>) -> Flow {
+        let jar = |p: &BlockPos| jar::is_jar_state(level.block_state([p.x, p.y, p.z]).0);
+        if event.push.iter().chain(event.destroy).any(jar) {
+            Flow::Cancel
+        } else {
+            Flow::Continue
+        }
+    }
+
+    /// A blast spares the placed jars.
+    fn explosion_detonate(&self, host: &mut dyn Host, event: &mut ExplosionDetonateEvent<'_>) {
+        jar::spare_from_blast(host, event.blocks);
+    }
+
     /// Monsters leave our creatures alone: a target change onto one of them is cancelled.
     fn living_change_target(&self, event: &mut LivingChangeTargetEvent<'_>) -> Flow {
         match event.target_mob {
@@ -57,6 +73,7 @@ impl Hooks for Creature {
     }
 
     fn player_logged_in(&self, host: &mut dyn Host, event: &mut PlayerLoggedInEvent<'_>) {
+        jar::remember_states(host);
         guide::on_login(host, event.player);
     }
 

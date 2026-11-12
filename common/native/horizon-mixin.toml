@@ -11,3 +11,16 @@ horizon_revision = "fdc87aecdbd116bf1e08adcd062fcbaea8c2e2ca"
 
 [api]
 path = "api"
+
+# The glass jar left out of the creative tab when no mod uses it (no Butterflies, Worms or Fireflies): a tab entry
+# can't be conditional (common/SPECS.md §3.3).
+[[injection]]
+id = "jar-tab"
+target = "horizon_client::mod_content::Plan<'_>::creative_tabs"
+kind = "HEAD"
+cancellable = true
+helper = "jar_tab.rs"
+bindings = [
+  { name = "plan", ty = "&Plan<'_>", value = "self" },
+  { name = "doc", ty = "&mut J", value = "&mut *doc" },
+]

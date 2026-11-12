@@ -29,7 +29,13 @@ giant of the mountains that hurls boulders, and whose eye is a rare crafting mat
   knockback, 250 uses), crafted from 4 logs and a stick, and dropped worn by a cyclops a player kills (1 in 3). Neither can
   be enchanted (no `enchantable`; tested at a table). The eye has its own icon, and drops only when a player kills the
   cyclops (the loot's condition fixed to 26.3's form).
-- Not yet: the boulder throw, its eye as a weak spot, its own sounds.
+- **Boulder, weak eye, smaller head** (2026-11-12, tested): at 7 to 24 blocks it lifts a boulder over its head and
+  hurls it on an arc (`cyclops:boulder`, 10 damage, a push; it shatters on a hit, the ground or a wall, breaks no
+  blocks). An arrow or trident in its eye deals double damage and dazes it 2 s (stars, its head lolling, a ravager's
+  stunned cry). Head shrunk, torso 3 px taller (still 4 blocks); bestiary view scaled to fit. Spawn biomes chosen:
+  mountain pastures, windswept heights, cherry groves and stony shores. Club and crook refused at the anvil with an
+  enchanted book or item.
+- Not yet: its own sounds.
 
 ## 1. Technical context
 

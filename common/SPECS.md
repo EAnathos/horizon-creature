@@ -9,6 +9,9 @@ several creature mods share, and the series' single creative tab. It adds no cre
 
 ### Done
 
+- **Jar rough edges and tab** (2026-11-12): a placed jar is spared by blasts and not moved by pistons (tested); the
+  glass jar is taken out of the creative tabs when no Butterflies, Worms or Fireflies item exists (an injection into
+  `creative_tabs`, `common/native/jar_tab.rs`; built, the check in game is pending).
 - **Monsters spare our creatures** (§3.4, 2026-11-12): zombies and illagers no longer hunt them (tested); the
   placed jar drawn as glass panes, framed, its far side seen through.
 - **Library created** (2026-11-08): content half (`creature.hmod`) and native half (`creature.hnmod`, crate

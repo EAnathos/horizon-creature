@@ -4,5 +4,6 @@
   "item.cyclops.cyclops_eye": "Œil de cyclope",
   "bestiary.cyclops.flock": "Troupeau",
   "item.cyclops.club": "Gourdin de cyclope",
-  "item.cyclops.shepherds_crook": "Houlette de berger"
+  "item.cyclops.shepherds_crook": "Houlette de berger",
+  "entity.cyclops.boulder": "Rocher"
 }

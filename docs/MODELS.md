@@ -18,6 +18,12 @@ The Blockbench models of each mod, as built (at rest; the game poses them). Gene
 
 ## cyclops
 
+### boulder
+
+`mods/cyclops/assets/models/boulder.bbmodel`: 8 cubes, texture 64×64.
+
+![boulder, front](models/cyclops-boulder-front.png) ![boulder, back](models/cyclops-boulder-back.png)
+
 ### cyclops
 
 `mods/cyclops/assets/models/cyclops.bbmodel`: 31 cubes, texture 128×128.

@@ -2,11 +2,15 @@
 //!
 //! A cyclops is a copy of the wandering trader (its behaviour is all goals) with its own 4-block box, drawn with its
 //! own model (`model.rs`, from `assets/models/cyclops.bbmodel`). Hostile: it goes for a player it sees within
-//! `SIGHT` blocks, and for whoever hurts it or one of its sheep, with a slow overhead blow of its club (`Smash`). It appears rarely at a cave mouth near
-//! a player (`spawn`), with a flock of sheep that follow it (`flock`). It drops its eye when a player kills it, and
+//! `SIGHT` blocks, and for whoever hurts it or one of its sheep, with a slow overhead blow of its club, or out of
+//! reach a boulder hurled over its head (`Smash`, `boulder.rs`). Its eye is its weak spot (`eye.rs`). It appears rarely
+//! at a cave mouth near a player (`spawn`), with a flock of sheep that follow it (`flock`). It drops its eye when a player kills it, and
 //! sometimes its club; the eye makes a shepherd's crook, which herds farm animals (`crook.rs`).
+mod boulder;
 mod crook;
+mod eye;
 mod model;
+mod model_boulder;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Mutex;
@@ -16,12 +20,13 @@ use creature::bestiary::{Fact, Species};
 use horizon_client::mobs::Who;
 use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, NearestTarget, RandomLookAround, Stroll};
 use horizon_client::mod_api::{
-    BlockEntityDraw, Compound, Cx, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent,
+    AnvilUpdateEvent, BlockEntityDraw, Compound, Cx, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent,
     LevelTickPostEvent, LivingDeathEvent, LivingIncomingDamageEvent, Mob, MobSubmitEvent, NativeHeightmap,
     NativeMobRender, RegisterGoalsEvent,
 };
 
 pub const CYCLOPS: &str = "cyclops:cyclops";
+const CLUB: &str = "cyclops:club";
 const TEXTURE: &str = "cyclops:entity/cyclops/cyclops";
 
 /// Its box (blocks: width, height, eye height), SPECS §2.
@@ -33,9 +38,11 @@ const KNOCKBACK_RESISTANCE: f64 = 0.6;
 /// How far it sees a player to go for (blocks; its follow range).
 const SIGHT: f64 = 16.0;
 
-/// The biomes it appears in (at a cave mouth, SPECS §2): hills and mountains, and the grass around them.
+/// The biomes it appears in (at a cave mouth, SPECS §2): the mountain pastures and windswept heights where a
+/// shepherd grazes a flock, and the rocky shores, as Polyphemus's cave by the sea.
 const BIOMES: &[&str] = &[
     "minecraft:meadow",
+    "minecraft:cherry_grove",
     "minecraft:grove",
     "minecraft:snowy_slopes",
     "minecraft:stony_peaks",
@@ -44,8 +51,7 @@ const BIOMES: &[&str] = &[
     "minecraft:windswept_forest",
     "minecraft:windswept_savanna",
     "minecraft:savanna_plateau",
-    "minecraft:plains",
-    "minecraft:taiga",
+    "minecraft:stony_shore",
 ];
 
 /// Its flock: the sheep that came with it carry this tag (kept with the sheep), and it is a fact in the bestiary.
@@ -66,7 +72,7 @@ static BESTIARY: Species = Species {
     draw: book_view,
 };
 
-/// The bestiary's 3D view: standing, about a block tall.
+/// The bestiary's 3D view: standing, its whole height in the view.
 fn book_view(host: &dyn Host, draw: &mut BlockEntityDraw, _: Option<creature::colours::Look>) {
     draw.push();
     draw.translate([0.5, 0.0, 0.5]);
@@ -74,7 +80,7 @@ fn book_view(host: &dyn Host, draw: &mut BlockEntityDraw, _: Option<creature::co
     creature::model::draw(host, draw, &model::CYCLOPS, TEXTURE, &|_| [0.0; 3]);
     draw.pop();
 }
-const BOOK_SCALE: f32 = 0.3;
+const BOOK_SCALE: f32 = 0.22;
 
 /// Its sounds: a ravager's, lower (no sounds of its own yet).
 const VOICE: creature::sounds::Voice = creature::sounds::Voice {
@@ -97,15 +103,28 @@ const WINDUP: i32 = 14;
 const EVERY: i32 = 40;
 const CHASE_SPEED: f64 = 1.1;
 const GIVE_UP: f64 = 32.0;
+/// The boulder (SPECS §2): thrown at a target it sees `THROW_FROM` to `THROW_TO` blocks away, raised over its head for
+/// `THROW_WINDUP` ticks first, at most once every `THROW_EVERY` ticks; from just over its head.
+const THROW_FROM: f64 = 7.0;
+const THROW_TO: f64 = 24.0;
+const THROW_WINDUP: i32 = 20;
+const THROW_EVERY: i32 = 100;
+const THROW_HEIGHT: f64 = 4.05;
+/// Where it holds the boulder before the throw: between its raised hands (blocks from its feet).
+const HELD_HEIGHT: f32 = 4.4;
+const THROW: &str = "minecraft:entity.snowball.throw";
 
-/// When each cyclops raised its club last, for the drawing (single player; arismoko/horizon#2740).
+/// When each cyclops raised its club, or a boulder, last, for the drawing (single player; arismoko/horizon#2740).
 static RAISED: Mutex<BTreeMap<u32, Instant>> = Mutex::new(BTreeMap::new());
+static LIFTED: Mutex<BTreeMap<u32, Instant>> = Mutex::new(BTreeMap::new());
 
 #[derive(Clone, Debug, Default)]
 struct Smash {
     windup: i32,
     cooldown: i32,
     repath: i32,
+    throwing: i32,
+    throw_cooldown: i32,
 }
 
 impl Goal for Smash {
@@ -131,9 +150,11 @@ impl Goal for Smash {
     }
     fn start(&mut self, _: &mut Mob, _: &mut Cx) {
         self.repath = 0;
+        self.throw_cooldown = self.throw_cooldown.max(THROW_WINDUP);
     }
     fn stop(&mut self, m: &mut Mob, _: &mut Cx) {
         self.windup = 0;
+        self.throwing = 0;
         m.ai.nav.stop();
     }
     fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
@@ -158,6 +179,31 @@ impl Goal for Smash {
                 creature::sounds::queue(m.id, BLOW, 1.2, 0.7);
                 self.cooldown = EVERY;
             }
+            return;
+        }
+        if self.throwing > 0 {
+            // The boulder up: it stands, then hurls it at where the target is.
+            self.throwing -= 1;
+            if self.throwing == 0 {
+                let from = [m.position.x, m.position.y + THROW_HEIGHT, m.position.z];
+                let to = [t.position.x, t.position.y + 0.9, t.position.z];
+                let velocity = boulder::aim(from, to);
+                boulder::THROWS.lock().unwrap().push(boulder::Throw {
+                    from,
+                    velocity,
+                    target: who,
+                });
+                m.swing();
+                creature::sounds::queue(m.id, THROW, 1.2, 0.4);
+                self.throw_cooldown = THROW_EVERY;
+            }
+            return;
+        }
+        self.throw_cooldown -= 1;
+        if (THROW_FROM..THROW_TO).contains(&reach) && self.throw_cooldown <= 0 && m.sees(cx.w, who) {
+            self.throwing = THROW_WINDUP;
+            m.ai.nav.stop();
+            LIFTED.lock().unwrap().insert(m.id, Instant::now());
             return;
         }
         if reach < REACH && self.cooldown <= 0 {
@@ -459,23 +505,78 @@ fn club(since: f32) -> f32 {
     }
 }
 
-/// A group's rotation this frame: heavy strides, arms swinging, the head looking about, the club's blow.
-fn pose(name: &str, mob: &NativeMobRender<'_>, since_raised: Option<f32>) -> [f32; 3] {
+/// The boulder raised over its head with both hands, then hurled forward (degrees on both arms), `since` seconds after
+/// it was lifted.
+fn hurl(since: f32) -> f32 {
+    let up = THROW_WINDUP as f32 / 20.0;
+    if since < up {
+        let t = since / up;
+        -170.0 * t * (2.0 - t)
+    } else if since < up + 0.15 {
+        -170.0 + 130.0 * (since - up) / 0.15
+    } else if since < up + 0.6 {
+        -40.0 * (1.0 - (since - up - 0.15) / 0.45)
+    } else {
+        0.0
+    }
+}
+
+/// What it is doing, for its drawing: seconds since it raised its club, lifted a boulder, was struck in the eye.
+struct Moment {
+    raised: Option<f32>,
+    lifted: Option<f32>,
+    dazed: Option<f32>,
+}
+
+impl Moment {
+    fn of(id: u32) -> Moment {
+        let since = |m: &Mutex<BTreeMap<u32, Instant>>| {
+            m.lock()
+                .unwrap()
+                .get(&id)
+                .map(|at| at.elapsed().as_secs_f32())
+                .filter(|s| *s < 2.0)
+        };
+        Moment {
+            raised: since(&RAISED),
+            lifted: since(&LIFTED),
+            dazed: eye::dazed(id),
+        }
+    }
+    /// Whether it holds a boulder over its head now.
+    fn holds_boulder(&self) -> bool {
+        self.lifted.is_some_and(|s| s < THROW_WINDUP as f32 / 20.0)
+    }
+}
+
+/// A group's rotation this frame: heavy strides, arms swinging, the head looking about, the club's blow, the boulder
+/// lifted and hurled, the head lolling while dazed.
+fn pose(name: &str, mob: &NativeMobRender<'_>, now: &Moment) -> [f32; 3] {
     let stride = ((mob.walk_position * 0.6662).cos() * 1.4 * mob.walk_speed).to_degrees() * 0.6;
-    let blow = since_raised.map_or(0.0, club);
+    let blow = now.raised.map_or(0.0, club);
+    let hurl = now.lifted.map_or(0.0, hurl);
+    let loll = now.dazed.map_or(0.0, |s| (s * 9.0).sin() * 18.0);
     match name {
-        "head" => [mob.pitch, -mob.head_yaw, 0.0],
+        "head" => [mob.pitch + loll.abs() * 0.5, -mob.head_yaw, loll],
         "leg_left" => [stride, 0.0, 0.0],
         "leg_right" => [-stride, 0.0, 0.0],
-        "arm_left" => [-stride * 0.6, 0.0, 0.0],
-        "arm_right" => [stride * 0.6 + blow, 0.0, 0.0],
-        "body" => [blow * 0.06, 0.0, 0.0],
+        "arm_left" => [-stride * 0.6 + hurl, 0.0, 0.0],
+        "arm_right" => [stride * 0.6 + blow + hurl, 0.0, 0.0],
+        "body" => [(blow + hurl) * 0.06, 0.0, 0.0],
         _ => [0.0; 3],
     }
 }
 
 impl Hooks for Cyclops {
     fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
+        if event.mob.kind.id == boulder::BOULDER {
+            let (w, h, e) = boulder::SIZE;
+            creature::mob::ours(event.mob, w, h, e);
+            event.mob.attrs.attack_damage = boulder::DAMAGE;
+            event.mob.attrs.attack_knockback = boulder::KNOCKBACK;
+            event.mob.ai.goals.add(1, boulder::Flight::default());
+            return;
+        }
         if event.mob.kind.id != CYCLOPS {
             return;
         }
@@ -486,6 +587,7 @@ impl Hooks for Cyclops {
         event.mob.attrs.follow_range = SIGHT;
         let ai = &mut event.mob.ai;
         ai.goals.add(0, goals::Float);
+        ai.goals.add(0, eye::Stunned::default());
         ai.goals.add(1, Smash::default());
         ai.goals.add(5, Stroll::new(0.6));
         ai.goals.add(6, LookAtPlayer::new(12.0));
@@ -495,17 +597,29 @@ impl Hooks for Cyclops {
         ai.targets.add(3, NearestTarget::player(true));
     }
 
-    /// Right-click: nothing (no trading screen, which its template would open).
+    /// The club and the crook take no enchantment at an anvil either (the table offers none: no `enchantable`): no
+    /// result with an enchanted book or an enchanted item on the right. Repairing and renaming still work.
+    fn anvil_update(&self, _: &mut dyn Host, event: &mut AnvilUpdateEvent<'_>) -> Flow {
+        let ours = [CLUB, crook::CROOK].contains(&&*event.left.item);
+        let enchants = event
+            .right
+            .is_some_and(|r| &*r.item == "minecraft:enchanted_book" || !r.enchantments().is_empty());
+        if ours && enchants { Flow::Cancel } else { Flow::Continue }
+    }
+
+    /// Right-click: nothing (no trading screen, which their template would open).
     fn interact_entity(&self, _: &mut dyn Host, event: &mut InteractEntityEvent<'_>) -> Flow {
-        if event.kind == CYCLOPS {
+        if event.kind == CYCLOPS || event.kind == boulder::BOULDER {
             Flow::Cancel
         } else {
             Flow::Continue
         }
     }
 
-    /// One of its sheep hurt by a mob or a player's blow: its cyclops turns on the attacker.
+    /// An arrow or trident in its eye (`eye.rs`); one of its sheep hurt by a mob or a player's blow: its cyclops turns
+    /// on the attacker.
     fn living_incoming_damage(&self, event: &mut LivingIncomingDamageEvent<'_>) -> Flow {
+        eye::struck(event);
         let attacker = match u32::try_from(event.causing) {
             Ok(id) if id > 0 => Some(Some(id)),
             _ if event.damage_type == "minecraft:player_attack" => Some(None),
@@ -527,9 +641,14 @@ impl Hooks for Cyclops {
         }
         crook::tick(host, event.dimension);
         flock(host, event.dimension);
+        eye::watch(host, event.dimension);
     }
 
     fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
+        if event.kind == boulder::BOULDER {
+            boulder::tick(host, event.dimension, event.entity);
+            return;
+        }
         if event.kind != CYCLOPS {
             return;
         }
@@ -537,7 +656,9 @@ impl Hooks for Cyclops {
             CYCLOPS_AT.lock().unwrap().insert(event.entity, at);
             let mut random = creature::colours::Random::new(event.entity);
             voice(event.entity, at, &mut random);
+            eye::tick(host, event.entity, at);
         }
+        boulder::launch(host, event.dimension);
         creature::sounds::tick_post(host, event, &VOICE, creature::sounds::NEUTRAL);
     }
 
@@ -545,8 +666,12 @@ impl Hooks for Cyclops {
         if event.kind == CYCLOPS {
             CYCLOPS_AT.lock().unwrap().remove(&event.entity);
             RAISED.lock().unwrap().remove(&event.entity);
+            LIFTED.lock().unwrap().remove(&event.entity);
             LAST_AT.lock().unwrap().remove(&event.entity);
             ANGERED.lock().unwrap().remove(&event.entity);
+            eye::forget(event.entity);
+        } else if event.kind == boulder::BOULDER {
+            boulder::forget(event.entity);
         } else if event.kind == "minecraft:sheep" {
             FLOCK.lock().unwrap().remove(&event.entity);
             SHEPHERD.lock().unwrap().remove(&event.entity);
@@ -556,15 +681,14 @@ impl Hooks for Cyclops {
 
     fn mob_submit(&self, host: &dyn Host, event: &mut MobSubmitEvent<'_>) -> Flow {
         let mob = event.mob;
+        if mob.kind == boulder::BOULDER {
+            boulder::submit(host, event);
+            return Flow::Cancel;
+        }
         if mob.kind != CYCLOPS {
             return Flow::Continue;
         }
-        let since_raised = RAISED
-            .lock()
-            .unwrap()
-            .get(&mob.id)
-            .map(|at| at.elapsed().as_secs_f32())
-            .filter(|s| *s < 2.0);
+        let now = Moment::of(mob.id);
         event.draw.push();
         creature::model::death_tilt(&mut *event.draw, mob);
         creature::model::draw_shown(
@@ -572,10 +696,13 @@ impl Hooks for Cyclops {
             &mut *event.draw,
             &model::CYCLOPS,
             TEXTURE,
-            &|part| pose(part, mob, since_raised),
+            &|part| pose(part, mob, &now),
             &|_| true,
             creature::model::tint(mob),
         );
+        if now.holds_boulder() {
+            boulder::held(host, &mut *event.draw, [0.0, HELD_HEIGHT, 0.0]);
+        }
         event.draw.pop();
         Flow::Cancel
     }

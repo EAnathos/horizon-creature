@@ -266,6 +266,33 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
 pub const BLOCK: &str = "creature:jar";
 pub const LIT_BLOCK: &str = "creature:lit_jar";
 
+/// The placed jars' block states (the jar and the lit jar), for hooks that only see state ids (a piston's).
+static JAR_STATES: Mutex<Vec<u32>> = Mutex::new(Vec::new());
+
+/// From a hook with a host before any piston can move a jar (the library's `player_logged_in`): notes the jars' states.
+pub fn remember_states(host: &dyn Host) {
+    let mut states = JAR_STATES.lock().unwrap();
+    if states.is_empty() {
+        states.extend(
+            [BLOCK, LIT_BLOCK]
+                .iter()
+                .filter_map(|b| state_of(host, b))
+                .map(|id| id.0),
+        );
+    }
+}
+
+/// From the library's `piston_move`: a piston doesn't push or break a placed jar (its creature would be lost; a
+/// block entity doesn't move). Whether `state` is a jar's.
+pub fn is_jar_state(state: u32) -> bool {
+    JAR_STATES.lock().unwrap().contains(&state)
+}
+
+/// From the library's `explosion_detonate`: a blast spares the placed jars (their creature would be lost).
+pub fn spare_from_blast(host: &dyn Host, blocks: &mut Vec<[i32; 3]>) {
+    blocks.retain(|&pos| !is_jar_block(&host.block(pos)));
+}
+
 fn is_jar_block(name: &str) -> bool {
     name == BLOCK || name == LIT_BLOCK
 }
