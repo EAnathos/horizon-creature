@@ -24,8 +24,8 @@ pub mod territory;
 use horizon_client::first_person::Hand;
 use horizon_client::mod_api::{
     BlockEntitySubmitEvent, EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, InteractionKeyEvent,
-    NetFromServerEvent, PlayerLoggedInEvent, ScreenMouseButtonPressedPreEvent, ScreenRenderPostEvent, UseItemEvent,
-    UseItemOnEvent,
+    NetFromServerEvent, PlayerLoggedInEvent, ScreenMouseButtonPressedPreEvent, ScreenMouseScrolledPreEvent,
+    ScreenRenderPostEvent, UseItemEvent, UseItemOnEvent,
 };
 
 pub fn hooks() -> Box<dyn Hooks> {
@@ -91,6 +91,15 @@ impl Hooks for Creature {
 
     fn screen_render_post(&self, host: &dyn Host, event: &mut ScreenRenderPostEvent<'_>) {
         bestiary::draw(host, event);
+    }
+
+    /// The wheel over the book's morph swatches scrolls them.
+    fn screen_mouse_scrolled_pre(&self, host: &dyn Host, event: &mut ScreenMouseScrolledPreEvent<'_>) -> Flow {
+        if bestiary::scrolled(host, event.screen, event.scroll[1]) {
+            Flow::Cancel
+        } else {
+            Flow::Continue
+        }
     }
 
     fn screen_mouse_button_pressed_pre(

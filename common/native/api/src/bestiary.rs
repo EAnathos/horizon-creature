@@ -254,14 +254,36 @@ pub fn open(host: &mut dyn Host) {
 struct Book {
     entries: Vec<Entry>,
     selected: usize,
+    /// The morph picked (in the sorted order) and the first swatch row seen.
     morph: usize,
+    scroll: usize,
 }
 
 static BOOK: Mutex<Book> = Mutex::new(Book {
     entries: Vec::new(),
     selected: 0,
     morph: 0,
+    scroll: 0,
 });
+
+/// The morphs `entry` met, sorted by colour, then pattern, then pattern colour (the scheme's order).
+fn sorted_morphs(sp: &Species, entry: &Entry) -> Vec<Look> {
+    let Some(scheme) = sp.scheme else {
+        return Vec::new();
+    };
+    let mut morphs: Vec<Look> = entry
+        .morphs
+        .iter()
+        .filter_map(|m| colours::from_key(scheme, m))
+        .collect();
+    morphs.sort_by_key(|m| (m.base, m.pattern, m.pattern_colour));
+    morphs
+}
+
+/// The swatch grid's rows for `count` morphs.
+fn rows(count: usize) -> usize {
+    count.div_ceil(PER_LINE)
+}
 
 /// From the library's `net_from_server`: the bestiary arrived, the book opens.
 pub fn received(host: &mut dyn Host, channel: &str, data: &[u8]) {
@@ -286,6 +308,7 @@ pub fn received(host: &mut dyn Host, channel: &str, data: &[u8]) {
         book.entries = entries;
         book.selected = book.selected.min(book.entries.len().saturating_sub(1));
         book.morph = 0;
+        book.scroll = 0;
     }
     host.mod_screen_open(MOD_ID);
 }
@@ -308,9 +331,13 @@ const VIEW_SCALE: f32 = 48.0;
 const VIEW_PITCH: f32 = 22.0;
 /// One turn of the creature, in milliseconds.
 const SPIN: u128 = 12_000;
-/// The morph swatches along the left page's bottom.
+/// The morph swatches at the left page's bottom: a grid of `PER_LINE` a row, `ROWS_SHOWN` rows seen at once (the wheel
+/// scrolls the others), the name of the one picked under it.
 const SWATCH: f32 = 10.0;
-const SWATCHES_TOP: f32 = HEIGHT - MARGIN - SWATCH - 10.0;
+const STEP: f32 = SWATCH + 3.0;
+const PER_LINE: usize = 10;
+const ROWS_SHOWN: usize = 2;
+const SWATCHES_TOP: f32 = HEIGHT - MARGIN - LINE - ROWS_SHOWN as f32 * STEP + 1.0;
 
 const COVER: u32 = 0xFF5A3A22;
 const PAPER: u32 = 0xFFEFE4C8;
@@ -479,14 +506,7 @@ pub fn draw(host: &dyn Host, event: &mut ScreenRenderPostEvent<'_>) {
     };
     let (px, width) = (x + MARGIN, PAGE - 2.0 * MARGIN);
     host.text(batch, &tr(&entity_key(&entry.species)), [px, y + 8.0], INK, false);
-    let morphs: Vec<Look> = match sp.scheme {
-        Some(scheme) => entry
-            .morphs
-            .iter()
-            .filter_map(|m| colours::from_key(scheme, m))
-            .collect(),
-        None => Vec::new(),
-    };
+    let morphs = sorted_morphs(sp, entry);
     let look = sp.scheme.map(|_| morphs.get(book.morph).copied().unwrap_or_default());
     let view_box = [x + VIEW[0], y + VIEW[1], VIEW[2], VIEW[3]];
     host.fill(batch, view_box, VIEW_BACK);
@@ -516,9 +536,11 @@ pub fn draw(host: &dyn Host, event: &mut ScreenRenderPostEvent<'_>) {
     // Its morphs met: a swatch each (its colour, the pattern's colour in the middle); the one picked is outlined.
     if let Some(scheme) = sp.scheme {
         let rgb = |i: usize| 0xFF00_0000 | scheme.colours.get(i).map_or(0xFFFFFF, |c| c.rgb);
-        for (k, m) in morphs.iter().enumerate() {
-            let sx = px + k as f32 * (SWATCH + 3.0);
-            let sy = y + SWATCHES_TOP;
+        let first = book.scroll * PER_LINE;
+        for (k, m) in morphs.iter().enumerate().skip(first).take(ROWS_SHOWN * PER_LINE) {
+            let shown = k - first;
+            let sx = px + (shown % PER_LINE) as f32 * STEP;
+            let sy = y + SWATCHES_TOP + (shown / PER_LINE) as f32 * STEP;
             if k == book.morph {
                 host.fill(batch, [sx - 1.0, sy - 1.0, SWATCH + 2.0, SWATCH + 2.0], PICKED);
             }
@@ -543,7 +565,26 @@ pub fn draw(host: &dyn Host, event: &mut ScreenRenderPostEvent<'_>) {
                     name("colour", scheme.colours[m.pattern_colour].id)
                 );
             }
-            host.text(batch, &text, [px, y + SWATCHES_TOP + SWATCH + 2.0], FADED, false);
+            host.text(
+                batch,
+                &text,
+                [px, y + SWATCHES_TOP + ROWS_SHOWN as f32 * STEP],
+                FADED,
+                false,
+            );
+        }
+        // More rows than shown: a thin scrollbar beside the grid.
+        let total = rows(morphs.len());
+        if total > ROWS_SHOWN {
+            let (bx, by, bh) = (
+                px + PER_LINE as f32 * STEP,
+                y + SWATCHES_TOP,
+                ROWS_SHOWN as f32 * STEP - 3.0,
+            );
+            host.fill(batch, [bx, by, 2.0, bh], FOLD);
+            let thumb = bh * ROWS_SHOWN as f32 / total as f32;
+            let top = by + (bh - thumb) * book.scroll as f32 / (total - ROWS_SHOWN) as f32;
+            host.fill(batch, [bx, top, 2.0, thumb], 0xFF00_0000 | FADED);
         }
     }
 }
@@ -561,16 +602,41 @@ pub fn clicked(host: &dyn Host, event: &ScreenMouseButtonPressedPreEvent<'_>) ->
         if mx >= cx && mx < cx + CELL && my >= cy && my < cy + CELL {
             book.selected = k;
             book.morph = 0;
+            book.scroll = 0;
             return true;
         }
     }
-    let sy = y + SWATCHES_TOP;
-    if my >= sy && my < sy + SWATCH && mx >= x + MARGIN {
-        let k = ((mx - x - MARGIN) / (SWATCH + 3.0)) as usize;
+    let (gx, gy) = (x + MARGIN, y + SWATCHES_TOP);
+    if mx >= gx && mx < gx + PER_LINE as f32 * STEP && my >= gy && my < gy + ROWS_SHOWN as f32 * STEP {
+        let (col, row) = (((mx - gx) / STEP) as usize, ((my - gy) / STEP) as usize);
+        let k = (book.scroll + row) * PER_LINE + col;
         let count = book.entries.get(book.selected).map_or(0, |e| e.morphs.len());
         if k < count {
             book.morph = k;
         }
+    }
+    true
+}
+
+/// From the library's `screen_mouse_scrolled_pre`: the wheel over the swatches scrolls them a row at a time. Whether it
+/// was taken.
+pub fn scrolled(host: &dyn Host, screen: &horizon_client::mod_api::NativeScreenView<'_>, scroll: f64) -> bool {
+    if !is_mine(host, screen.id) {
+        return false;
+    }
+    let [x, y] = origin(screen.rect);
+    let [mx, my] = screen.mouse;
+    let (gx, gy) = (x + MARGIN, y + SWATCHES_TOP);
+    if !(mx >= gx && mx < gx + PER_LINE as f32 * STEP + 4.0 && my >= gy && my < gy + ROWS_SHOWN as f32 * STEP) {
+        return true;
+    }
+    let mut book = BOOK.lock().unwrap();
+    let count = book.entries.get(book.selected).map_or(0, |e| e.morphs.len());
+    let last = rows(count).saturating_sub(ROWS_SHOWN);
+    if scroll > 0.0 {
+        book.scroll = book.scroll.saturating_sub(1);
+    } else if scroll < 0.0 {
+        book.scroll = (book.scroll + 1).min(last);
     }
     true
 }
