@@ -9,6 +9,7 @@
 //! - `colours`: colours and patterns, rolled per biome, saved, drawn as two tinted layers (SPECS §7).
 //! - `jar`: the glass jar, catching a small creature and releasing it, its look kept (SPECS §6.1).
 //! - `mob`: a creature's own size and silence, its template's being a vanilla mob's (SPECS §3.2, §8.8).
+//! - `territory`: where a released creature settles and stays (SPECS §6.2).
 //! - `guide`: the creature guide book, given at a player's first login (SPECS §9).
 //! - `bestiary`: the book's pages, what each player met and found out (SPECS §9).
 pub mod bestiary;
@@ -18,6 +19,7 @@ pub mod jar;
 pub mod mob;
 pub mod model;
 pub mod sounds;
+pub mod territory;
 
 use horizon_client::mod_api::{
     EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, NetFromServerEvent, PlayerLoggedInEvent,

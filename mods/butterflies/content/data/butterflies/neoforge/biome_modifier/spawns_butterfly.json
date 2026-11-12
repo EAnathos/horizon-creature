@@ -1,0 +1,20 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": [
+    "minecraft:flower_forest",
+    "minecraft:meadow",
+    "minecraft:sunflower_plains",
+    "minecraft:cherry_grove",
+    "minecraft:plains",
+    "minecraft:forest",
+    "minecraft:birch_forest",
+    "minecraft:jungle",
+    "minecraft:sparse_jungle"
+  ],
+  "spawners": {
+    "type": "butterflies:butterfly",
+    "weight": 6,
+    "minCount": 1,
+    "maxCount": 3
+  }
+}

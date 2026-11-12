@@ -11,9 +11,12 @@ Staff.
 ## What works
 
 - The butterfly and the moth: `/summon butterflies:butterfly`, `/summon butterflies:moth`, or their spawn eggs
-  (creative tab "Horizon Creature"). They don't fly yet.
+  (creative tab "Horizon Creature"), or in the wild: butterflies flutter by day around flowers in flower forests, meadows,
+  plains, forests and jungles; moths come out at night. They land on flowers and fly off when you sprint at them.
 - Each butterfly has its own look: a colour (white, lemon, orange, red, sky blue, violet, brown, black) and a pattern
   (plain, eye spots, wing tips, veins, dots, tails) in a second colour, likelier per biome. The moth has one look.
 - Catch one with a **glass jar** (Horizon Creature's, crafted from 3 glass and an oak slab) by right-clicking it, and
-  release it on a block by right-clicking with the filled jar: it keeps its colours.
+  release it on a block by right-clicking with the filled jar: it keeps its colours. Released on a flower, it stays
+  around the flowers nearby.
+- **Butterfly dust** drops from butterflies and moths.
 - Models: [docs/MODELS.md](../../docs/MODELS.md).

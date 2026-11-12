@@ -19,8 +19,17 @@ without Butterflies. Neither mod requires the other.
   after a reload (tested). On the ground it opens and closes its wings slowly. The moth is drawn with its painted
   texture. Right-click does nothing (no trading screen); both are caught and released with the library's glass jar,
   the butterfly keeping its look (tested), each with its own jar icon. Their wings are thin slabs a little apart (flat
-  wings flickered). Their shadow is too big (Horizon gives a mod mob 0.5; docs/HORIZON-ISSUES.md, "To open"). Not yet: flight,
-  landing on flowers, spawning in the wild, settling (territories), the dust, the bestiary page.
+  wings flickered). Their shadow is too big (Horizon gives a mod mob 0.5; docs/HORIZON-ISSUES.md, "To open").
+- **Flight, spawning, dust, bestiary** (2026-11-12, flight and settling tested): butterflies fly by day in fair
+  weather, moths by night; short erratic flights 1 to 3.5 blocks up around where they first fluttered, then they land
+  on a flower within 6 blocks (or the ground) for 5 to 30 seconds. A sprinting player within 4 blocks makes them fly
+  off, away from them. No fall damage (with 1 health, a drop off a ledge killed one). Released from a jar on a flower
+  they settle (the library's flower patch) and only fly over and land on its flowers. They spawn: butterflies in flower
+  forests, meadows, sunflower plains, cherry groves, plains, forests, birch forests and jungles; moths in forests,
+  birch and dark forests, taigas, plains and meadows (a biome modifier can't ask for night or flowers: they spawn
+  anywhere in those biomes and rest when it isn't their time). Butterfly dust drops from both (1, Looting adds up to
+  1). Bestiary pages: met wild (not settled) in those biomes; the fact "Catch" once one is caught in a jar. Not yet:
+  moths drawn to light, despawning, the jar placed as a block, the dust in the Wyvern Staff (Wyverns isn't started).
 - **Models** (2026-11-10): `assets/models/butterfly.bbmodel` and `moth.bbmodel` (pictures in docs/MODELS.md), one group
   tree for both (body, head and antennae, a forewing and a hindwing per side, flat wings cut out by the texture's
   alpha). The butterfly's texture is greyscale, for the library to tint (§2); the moth's is painted (§2.1). Not in

@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:sugar",
+  "components": {
+    "minecraft:item_model": "butterflies:butterfly_dust",
+    "minecraft:item_name": {
+      "translate": "item.butterflies.butterfly_dust"
+    }
+  }
+}

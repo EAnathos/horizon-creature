@@ -96,7 +96,7 @@ Found while developing, not filed yet. File one only with a clean repro.
   `passenger_attachments`), try mounting the caught mob with `Host::mount` on a seat below the vulture.
 - **The other hand is still used after a hook takes a click**: a filled jar released from the main hand
   (`use_item_on`, `Flow::Cancel`) and the torch in the off hand was placed too; vanilla stops at the hand that acted.
-  Workaround: the library takes the other hand's use within 60 ms of a jar's click (`common/native/api/src/jar.rs`,
+  Workaround: the library takes the other hand's use within 250 ms of a jar's click (60 ms let a real click's torch through) (`common/native/api/src/jar.rs`,
   `same_click`). Seen 2026-11-11.
 - **A content mod's living entity type can't set its shadow**: `shadows::shadow_params` knows vanilla's ids only, so
   a mod mob gets 0.5 (a butterfly's shadow is as wide as a villager's); `minecraft:scale` doesn't change it on a

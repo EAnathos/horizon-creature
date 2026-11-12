@@ -3,4 +3,4 @@ id = "butterflies"
 name = "Butterflies"
 status = "in progress"
 # Its items in the series' creative tab, in order.
-creative = ["butterflies:butterfly_spawn_egg", "butterflies:moth_spawn_egg"]
+creative = ["butterflies:butterfly_spawn_egg", "butterflies:moth_spawn_egg", "butterflies:butterfly_dust"]

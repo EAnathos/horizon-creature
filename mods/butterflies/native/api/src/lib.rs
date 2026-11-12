@@ -5,7 +5,9 @@
 //! `model_moth.rs`, from `assets/models/`). A butterfly gets a look the first time it is seen (the library's colours
 //! and patterns, common/SPECS.md §7): a base colour, a pattern and a pattern colour, more or less likely per biome
 //! (`SCHEME`). The moth has one look, painted in its texture (SPECS §2.1). On the ground a butterfly opens and closes
-//! its wings slowly. No flight yet.
+//! its wings slowly. They fly by day (butterflies) or by night (moths) and land on flowers (`flight.rs`); released
+//! from a glass jar on a flower they settle around it (the library's territory). Butterfly dust drops from them.
+mod flight;
 mod model_butterfly;
 mod model_moth;
 
@@ -170,16 +172,68 @@ static IN_JAR: [Catchable; 2] = [
     Catchable {
         kind: BUTTERFLY,
         model: "butterflies:butterfly_jar",
+        flower_patch: true,
     },
     Catchable {
         kind: MOTH,
         model: "butterflies:moth_jar",
+        flower_patch: true,
     },
+];
+
+/// Their pages in the bestiary (common/SPECS.md §9): met wild (not settled) in the biomes they spawn in; caught in a jar.
+const JAR_FACTS: &[creature::bestiary::Fact] = &[creature::bestiary::Fact {
+    id: creature::jar::JAR_FACT,
+    item: creature::jar::ITEM,
+    key: "bestiary.butterflies.jar",
+}];
+
+fn wild(id: u32) -> bool {
+    !creature::territory::settled(id)
+}
+
+static BESTIARY: [creature::bestiary::Species; 2] = [
+    creature::bestiary::Species {
+        id: BUTTERFLY,
+        biomes: BUTTERFLY_BIOMES,
+        wild,
+        facts: JAR_FACTS,
+    },
+    creature::bestiary::Species {
+        id: MOTH,
+        biomes: MOTH_BIOMES,
+        wild,
+        facts: JAR_FACTS,
+    },
+];
+
+/// Where they spawn (`content/data/butterflies/neoforge/biome_modifier/`).
+const BUTTERFLY_BIOMES: &[&str] = &[
+    "minecraft:flower_forest",
+    "minecraft:meadow",
+    "minecraft:sunflower_plains",
+    "minecraft:cherry_grove",
+    "minecraft:plains",
+    "minecraft:forest",
+    "minecraft:birch_forest",
+    "minecraft:jungle",
+    "minecraft:sparse_jungle",
+];
+const MOTH_BIOMES: &[&str] = &[
+    "minecraft:forest",
+    "minecraft:birch_forest",
+    "minecraft:dark_forest",
+    "minecraft:taiga",
+    "minecraft:plains",
+    "minecraft:meadow",
 ];
 
 pub fn hooks() -> Box<dyn Hooks> {
     for c in &IN_JAR {
         creature::jar::register(c);
+    }
+    for species in &BESTIARY {
+        creature::bestiary::register(species);
     }
     Box::new(Butterflies)
 }
@@ -193,10 +247,19 @@ fn ours(kind: &str) -> bool {
 /// A group's rotation for this frame (degrees): on the ground a butterfly opens and closes its wings slowly, basking;
 /// a moth rests with its wings flat.
 fn pose(name: &str, mob: &NativeMobRender<'_>, butterfly: bool) -> [f32; 3] {
-    if !butterfly {
+    let open = if flight::flying(mob.id) {
+        // Flying: quick beats, the wings meeting above it.
+        if butterfly {
+            30.0 + 50.0 * (mob.age * 1.3).sin()
+        } else {
+            15.0 + 35.0 * (mob.age * 1.6).sin()
+        }
+    } else if butterfly {
+        // Resting: a butterfly opens and closes its wings slowly, a moth keeps them flat.
+        35.0 + 35.0 * (mob.age * 0.08).sin()
+    } else {
         return [0.0; 3];
-    }
-    let open = 35.0 + 35.0 * (mob.age * 0.08).sin();
+    };
     match name {
         "wing_left" => [0.0, 0.0, open],
         "wing_right" => [0.0, 0.0, -open],
@@ -215,6 +278,8 @@ impl Hooks for Butterflies {
         ai.goals.clear();
         ai.targets.clear();
         ai.goals.add(0, creature::mob::Muted);
+        let moth = event.mob.kind.id == MOTH;
+        event.mob.ai.goals.add(1, flight::Flutter::new(moth));
     }
 
     /// Right-click: nothing (no trading screen, which their template would open).
@@ -226,10 +291,15 @@ impl Hooks for Butterflies {
         if event.kind == BUTTERFLY {
             creature::colours::tick(host, event.entity, &SCHEME);
         }
+        if ours(event.kind) {
+            creature::territory::tick(host, event.entity);
+        }
     }
 
     fn living_death(&self, _: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
         creature::colours::forget(event.entity);
+        creature::territory::forget(event.entity);
+        flight::forget(event.entity);
         Flow::Continue
     }
 

@@ -9,7 +9,8 @@
 //!   look, and the jar is empty again. A jar whose creature's mod isn't installed any more stays full.
 //!
 //! In creative, as a bucket, the jar isn't used up: catching keeps the empty jar and releasing keeps the full one.
-//! Not yet: placing a filled jar as a block, and settling (territories, §6.2).
+//! Released on a flower, a creature whose kind settles in a flower patch settles there (`territory`, §6.2). Not yet:
+//! placing a filled jar as a block.
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
@@ -19,6 +20,8 @@ use horizon_client::mod_api::{Compound, Host, InteractEntityEvent, Tag, UseItemO
 use crate::colours;
 
 pub const ITEM: &str = "creature:glass_jar";
+/// The bestiary fact a catch teaches (a species lists it among its facts to show it).
+pub const JAR_FACT: &str = "jar";
 /// The key of the jar's data in `minecraft:custom_data`.
 const DATA: &str = "creature";
 
@@ -26,6 +29,8 @@ const DATA: &str = "creature";
 pub struct Catchable {
     pub kind: &'static str,
     pub model: &'static str,
+    /// Released on a flower, it settles there (`territory`, the flower patch rule, SPECS §6.2).
+    pub flower_patch: bool,
 }
 
 static CATCHABLE: Mutex<Vec<&'static Catchable>> = Mutex::new(Vec::new());
@@ -34,8 +39,9 @@ static CATCHABLE: Mutex<Vec<&'static Catchable>> = Mutex::new(Vec::new());
 /// click (a torch in the off hand was placed by a release), where vanilla stops at the hand that acted. The other
 /// hand's use within the same click is taken too (`same_click`).
 static USED: Mutex<Option<(u128, Instant)>> = Mutex::new(None);
-/// Both hands are used in the same tick.
-const CLICK: Duration = Duration::from_millis(60);
+/// The other hand's use comes with the same click, in the same tick or the next ones (60 ms was too short: a torch was
+/// still placed). A player can't right-click twice this fast.
+const CLICK: Duration = Duration::from_millis(250);
 
 fn used(player: u128) {
     *USED.lock().unwrap() = Some((player, Instant::now()));
@@ -182,6 +188,8 @@ pub fn catch(host: &mut dyn Host, event: &InteractEntityEvent<'_>) -> bool {
         s.count -= 1;
     }
     used(player.uuid);
+    // The bestiary: they now know a jar catches it.
+    crate::bestiary::learn(host, player.uuid, c.kind, JAR_FACT);
     if let Some(rest) = host.give_stack(player.uuid, jar) {
         drop_stack(host, &player.dimension, player.position, &rest);
     }
@@ -215,10 +223,23 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
     if catchable(&kind).is_none() {
         return true;
     }
+    let c = catchable(&kind).expect("checked above");
+    // On a flower (which a click hits itself, a flower being no full block) it comes out in the flower, and settles
+    // there if its kind does; elsewhere on the face clicked.
+    let on_flower = crate::territory::is_flower(host, &host.block(event.pos));
+    let block = if on_flower {
+        event.pos
+    } else {
+        [
+            event.pos[0] + event.face[0],
+            event.pos[1] + event.face[1],
+            event.pos[2] + event.face[2],
+        ]
+    };
     let at = [
-        f64::from(event.pos[0] + event.face[0]) + 0.5,
-        f64::from(event.pos[1] + event.face[1]),
-        f64::from(event.pos[2] + event.face[2]) + 0.5,
+        f64::from(block[0]) + 0.5,
+        f64::from(block[1]),
+        f64::from(block[2]) + 0.5,
     ];
     let Some(id) = host.summon(&player.dimension, &kind, at, Compound::new()) else {
         return true;
@@ -226,6 +247,9 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
     used(player.uuid);
     if let Some(look) = &look {
         colours::restore(host, id, look);
+    }
+    if on_flower && c.flower_patch {
+        crate::territory::settle(host, id, block);
     }
     if player.game_mode != 1
         && let Some(slot) = slot_of(host, event.stack)

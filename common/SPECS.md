@@ -38,8 +38,13 @@ several creature mods share, and the series' single creative tab. It adds no cre
   files) and "Horizon Creature" in blue, as the creative tab names the items it lists (a filled jar is in no tab). The
   other hand isn't used in the click a jar takes (Horizon would still place an off-hand torch). In creative the jar
   isn't used up. Not yet: the jar
-  placed as a block, settling (territories, §6.2), the jar hidden when no mod uses it (it is in the tab whatever is
+  placed as a block, the jar hidden when no mod uses it (it is in the tab whatever is
   installed: the tab is one generated file).
+- **Territories** (§6.2, 2026-11-12, tested with the butterfly): `creature::territory`, the flower patch rule. A
+  creature released from a jar on a flower settles there (its anchor, saved as `creature:territory`); the mod's goals
+  get its patch's flowers (`check`, every few seconds; a broken anchor moves to the nearest flower within 8 blocks, or
+  the creature is free again) and keep to it. A catch teaches the bestiary fact `jar`. Not yet: the garden rule
+  (Worms), never despawning (nothing despawns them yet).
 - **Mob helpers** (2026-11-11): `creature::mob::resize` (a creature's own box, a copy of its template's type) and
   `creature::mob::Muted` (silent every tick), used by the vulture and the butterflies.
 
