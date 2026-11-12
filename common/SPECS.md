@@ -9,6 +9,8 @@ several creature mods share, and the series' single creative tab. It adds no cre
 
 ### Done
 
+- **Monsters spare our creatures** (§3.4, 2026-11-12): zombies and illagers no longer hunt them (tested); the
+  placed jar drawn as glass panes, framed, its far side seen through.
 - **Library created** (2026-11-08): content half (`creature.hmod`) and native half (`creature.hnmod`, crate
   `mod-creature`); the vulture depends on it (`[dependencies] creature = "^0.1"`), built and tested in game.
 - **Model drawing** (§3.1) and **mob sounds** (§3.2), moved from the vulture. `tint` and `death_tilt`
@@ -121,6 +123,14 @@ several creature mods share, and the series' single creative tab. It adds no cre
   not craftable. A tab file can't be conditional today, so how is to prototype ❓: a conditional tab entry if Horizon's
   conditions reach tabs, else a second tab file chosen by the library's native half, else the item registered only when
   a jar user is installed.
+
+### 3.4 Monsters leave our creatures alone (`creature::mob`) ✅
+
+- Our mobs copy the wandering trader, which zombies, husks and illagers hunt. Horizon has no hook on a mob's choice of
+  target, so the library gives every other mob a last target goal, `Spare`, that drops a target that is one of our
+  creatures in the tick it is picked, before the attack goals see it (2026-11-12, tested with zombies).
+- `mob::ours(mob, width, height, eye)` from the mod's `register_goals`: muted, its own box, its template's goals cleared,
+  and spared. Users: every mob of the series.
 
 ## 4. Incubator ✅
 

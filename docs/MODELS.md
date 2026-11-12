@@ -16,6 +16,14 @@ The Blockbench models of each mod, as built (at rest; the game poses them). Gene
 
 ![moth, front](models/butterflies-moth-front.png) ![moth, back](models/butterflies-moth-back.png)
 
+## cyclops
+
+### cyclops
+
+`mods/cyclops/assets/models/cyclops.bbmodel`: 31 cubes, texture 128×128.
+
+![cyclops, front](models/cyclops-cyclops-front.png) ![cyclops, back](models/cyclops-cyclops-back.png)
+
 ## fireflies
 
 ### firefly

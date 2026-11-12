@@ -360,11 +360,7 @@ impl Goal for Flutter {
 /// From the mod's `register_goals`, for one of its fliers: muted, its own tiny box (blocks: width, height, eye height),
 /// its template's goals replaced by this flight.
 pub fn register(mob: &mut Mob, size: (f64, f64, f64), kind: &'static Kind) {
-    mob.silent = true;
-    crate::mob::resize(mob, size.0, size.1, size.2);
-    mob.ai.goals.clear();
-    mob.ai.targets.clear();
-    mob.ai.goals.add(0, crate::mob::Muted);
+    crate::mob::ours(mob, size.0, size.1, size.2);
     mob.ai.goals.add(1, Flutter::new(kind));
 }
 

@@ -345,13 +345,8 @@ impl Hooks for Worms {
         if event.mob.kind.id != WORM {
             return;
         }
-        event.mob.silent = true;
-        creature::mob::resize(event.mob, SIZE.0, SIZE.1, SIZE.2);
-        let ai = &mut event.mob.ai;
-        ai.goals.clear();
-        ai.targets.clear();
-        ai.goals.add(0, creature::mob::Muted);
-        ai.goals.add(1, Crawl::default());
+        creature::mob::ours(event.mob, SIZE.0, SIZE.1, SIZE.2);
+        event.mob.ai.goals.add(1, Crawl::default());
     }
 
     /// Right-click: nothing (no trading screen, which its template would open).

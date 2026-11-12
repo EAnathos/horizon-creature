@@ -5,7 +5,9 @@ drops its eye. With Wyverns, the cyclops eye takes the eye of ender's place in t
 
 **Requires** Horizon Creature (`creature`), the series' library.
 
-> **Status:** planned. Only the specification exists: [SPECS.md](SPECS.md). Nothing is implemented yet.
+> **Status:** planned. The specification ([SPECS.md](SPECS.md)) and the Blockbench model
+> (`assets/models/cyclops.bbmodel`, see [docs/MODELS.md](../../docs/MODELS.md#cyclops)) exist; nothing is implemented
+> yet.
 
 When implementation starts, this folder gets `content/` and `native/` like [the vulture's](../vulture/README.md)
 (see [docs/ARCHITECTURE.md §7](../../docs/ARCHITECTURE.md#7-adding-a-mod)).

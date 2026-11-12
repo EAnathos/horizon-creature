@@ -1,10 +1,61 @@
 //! What every creature of the series needs from its mob, since each is a copy of a vanilla mob (the wandering trader):
-//! its own size, silence (SPECS §3.2, §8.8), and for small wild ones, despawning far from players.
-use std::sync::Arc;
+//! its own size, silence (SPECS §3.2, §8.8), monsters leaving it alone (§3.4), and for small wild ones, despawning far from
+//! players.
+use std::collections::BTreeSet;
+use std::sync::{Arc, Mutex};
 
+use horizon_client::mobs::Who;
 use horizon_client::mod_api::{Cx, Goal, Host, Mob, Tag};
 
 use crate::colours::Random;
+
+/// From the mod's `register_goals`, for each of its creatures: muted, its own box (`resize`), its template's goals and
+/// targets cleared for the mod's own, and spared by monsters (`Spare`).
+pub fn ours(mob: &mut Mob, width: f64, height: f64, eye_height: f64) {
+    mob.silent = true;
+    resize(mob, width, height, eye_height);
+    mob.ai.goals.clear();
+    mob.ai.targets.clear();
+    mob.ai.goals.add(0, Muted);
+    SPARED.lock().unwrap().insert(mob.id);
+}
+
+/// The series' creatures alive in the world (their ids), which monsters leave alone.
+static SPARED: Mutex<BTreeSet<u32>> = Mutex::new(BTreeSet::new());
+
+/// From the library's `living_death`: creature `entity` is gone.
+pub fn forget(entity: u32) {
+    SPARED.lock().unwrap().remove(&entity);
+}
+
+/// Monsters leave the series' creatures alone (SPECS §3.4): as copies of the wandering trader, zombies and illagers
+/// would hunt them as they hunt villagers, and Horizon has no hook to change a mob's choice of target. So every other
+/// mob gets this target goal after its own: it drops a target that is one of our creatures in the tick it was picked,
+/// before its attack goals see it. Added by the library's `register_goals`.
+#[derive(Clone, Debug)]
+pub struct Spare;
+
+impl Goal for Spare {
+    fn flags(&self) -> u8 {
+        0
+    }
+    fn can_use(&mut self, _: &mut Mob, _: &mut Cx) -> bool {
+        true
+    }
+    fn every_tick(&self) -> bool {
+        true
+    }
+    fn tick(&mut self, m: &mut Mob, _: &mut Cx) {
+        if let Some(Who::Mob(id)) = m.ai.target
+            && SPARED.lock().unwrap().contains(&id)
+        {
+            m.ai.target = None;
+        }
+    }
+    fn box_clone(&self) -> Box<dyn Goal> {
+        Box::new(self.clone())
+    }
+}
 
 /// Gives `mob` its own box (blocks) in place of its template's: a mob's box comes from its type, so it gets a copy of
 /// its type with this size (workaround for horizon-rust/horizon#6276; an `entity_size` hook exists on the fork only).

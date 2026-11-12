@@ -11,7 +11,11 @@ giant of the mountains that hurls boulders, and whose eye is a rare crafting mat
 
 ## 0. Progress (as of 2026-11-09)
 
-- Folder and spec created. **Not started**.
+- Folder and spec created.
+- **Model** (2026-11-12): `assets/models/cyclops.bbmodel`, 31 cubes, texture 128×128 (docs/MODELS.md): 4 blocks
+  tall, blue skin, one big amber eye under a heavy brow, tusks, a hide loincloth, a knotted wooden club in its right
+  hand (group `club`, child of `arm_right`). Groups for posing: `leg_*`, `body`, `head`, `arm_*`, `club`. No content or
+  native half yet: the logic comes later.
 
 ## 1. Technical context
 
@@ -23,8 +27,8 @@ giant of the mountains that hurls boulders, and whose eye is a rare crafting mat
 
 ## 2. The cyclops ❓
 
-- A **giant** (~3 blocks tall ❓, hitbox ~1.4 × 3 ❓): grey-green skin, a single huge eye in the middle of its brow, a
-  heavy jaw with tusks, a loincloth of hide, a tree-trunk club ❓.
+- A **giant**, **4 blocks tall** ✅ (hitbox ~2 × 4 ❓): **blue skin** ✅, a **single huge eye** ✅ in the middle of its
+  brow, a heavy jaw with tusks, a loincloth of hide, a **wooden club** ✅.
 - **Neutral until provoked** ❓, or hostile on sight within ~16 blocks ❓. Slow, heavy steps that shake the screen a
   little ❓.
 - **Attacks** ❓:

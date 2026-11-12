@@ -345,16 +345,12 @@ impl Hooks for Vulture {
         if event.mob.kind.id != KIND {
             return;
         }
-        // Without the wandering trader's sounds: its own come from `sounds.rs`.
-        event.mob.silent = true;
-        // Its own size (SPECS §4), in place of the trader's 0.6 × 1.95 (workaround for horizon-rust/horizon#6276).
-        creature::mob::resize(event.mob, WIDTH, HEIGHT, EYE_HEIGHT);
+        // Without the wandering trader's sounds (its own come from `sounds.rs`), goals or size: its own size (SPECS §4)
+        // in place of the trader's 0.6 × 1.95 (workaround for horizon-rust/horizon#6276), spared by monsters.
+        creature::mob::ours(event.mob, WIDTH, HEIGHT, EYE_HEIGHT);
         // Neutral: it fights back with its beak, diving from the air, and nearby vultures join in (SPECS §4).
         event.mob.attrs.attack_damage = ATTACK_DAMAGE;
         let ai = &mut event.mob.ai;
-        ai.goals.clear();
-        ai.targets.clear();
-        ai.goals.add(0, creature::mob::Muted);
         ai.goals.add(0, NoFall);
         ai.goals.add(1, Fly::default());
         ai.goals.add(2, tame::Sit);
