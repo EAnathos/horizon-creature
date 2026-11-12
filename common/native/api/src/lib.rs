@@ -7,6 +7,7 @@
 //! - `model`: draws a Blockbench model converted by `cargo creature model` (SPECS §3.1).
 //! - `sounds`: a mod mob's own sounds, since Horizon prefixes mob sounds with `minecraft:` (SPECS §3.2).
 //! - `colours`: colours and patterns, rolled per biome, saved, drawn as two tinted layers (SPECS §7).
+//! - `hand`: the item in hand, for items the server's hooks use (the jar, the guide, throwables).
 //! - `jar`: the glass jar, catching a small creature and releasing it, its look kept (SPECS §6.1).
 //! - `mob`: a creature's own size and silence, its template's being a vanilla mob's (SPECS §3.2, §8.8).
 //! - `territory`: where a released creature settles and stays (SPECS §6.2).
@@ -17,6 +18,7 @@ pub mod bestiary;
 pub mod colours;
 pub mod flutter;
 mod guide;
+pub mod hand;
 pub mod jar;
 pub mod mob;
 pub mod model;
@@ -32,6 +34,8 @@ use horizon_client::mod_api::{
 };
 
 pub fn hooks() -> Box<dyn Hooks> {
+    hand::server_used(jar::ITEM);
+    hand::server_used(guide::ITEM);
     Box::new(Creature)
 }
 
@@ -108,11 +112,10 @@ impl Hooks for Creature {
         }
     }
 
-    /// The use key: with a jar or the guide in the main hand, the off hand isn't tried (`jar::holds_jar`): the client
-    /// can't tell that their use acted (the server's hooks do it) and would place an off-hand torch.
+    /// The use key: with a jar, the guide or a mod's throwable in the main hand, the off hand isn't tried
+    /// (`hand::holds_server_used`): the client can't tell that their use acted and would place an off-hand torch.
     fn interaction_key(&self, host: &mut dyn Host, event: &mut InteractionKeyEvent<'_>) -> Flow {
-        let guide = host.held().is_some_and(|(item, _, _)| item == guide::ITEM);
-        if event.button == 1 && event.hand == Hand::Off && (jar::holds_jar(host) || guide) {
+        if event.button == 1 && event.hand == Hand::Off && hand::holds_server_used(host) {
             event.swing_hand = false;
             return Flow::Cancel;
         }

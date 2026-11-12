@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:paper",
+  "components": {
+    "minecraft:item_model": "butterflies:confetti",
+    "minecraft:item_name": {
+      "translate": "item.butterflies.confetti"
+    }
+  }
+}

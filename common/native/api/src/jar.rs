@@ -141,34 +141,6 @@ fn lore(kind: &str, look: Option<[String; 3]>) -> String {
     lines.join(",")
 }
 
-/// The acting player's slot holding `stack` (the hotbar and inventory, then the off hand).
-fn slot_of(host: &mut dyn Host, stack: &ItemStack) -> Option<i32> {
-    // The selected hotbar slot, when it holds this stack: Horizon doesn't say which slot is selected, but `held` reads
-    // it, so each hotbar slot holding the same stack is marked a moment (its count changed, then put back) to see which
-    // one `held` sees. Without that, a jar in another slot looking the same was filled in place of the held one.
-    for s in 0..9 {
-        let Some(count) = host.carried_stack(s).filter(|c| **c == *stack).map(|c| c.count) else {
-            continue;
-        };
-        if let Some(c) = host.carried_stack(s) {
-            c.count = count + MARK;
-        }
-        let selected = host.held().is_some_and(|(_, n, _)| n == count + MARK);
-        if let Some(c) = host.carried_stack(s) {
-            c.count = count;
-        }
-        if selected {
-            return Some(s);
-        }
-    }
-    (0..36)
-        .chain([-106])
-        .find(|&s| host.carried_stack(s).is_some_and(|c| *c == *stack))
-}
-
-/// A count no stack has, to tell the selected slot (`slot_of`).
-const MARK: u32 = 1000;
-
 /// From the library's `interact_entity`: an empty jar catches a registered creature.
 pub fn catch(host: &mut dyn Host, event: &InteractEntityEvent<'_>) -> bool {
     let Some(stack) = event.stack.filter(|s| &*s.item == ITEM && held(s).is_none()) else {
@@ -192,7 +164,7 @@ pub fn catch(host: &mut dyn Host, event: &InteractEntityEvent<'_>) -> bool {
     crate::bestiary::learn(host, player.uuid, c.kind, JAR_FACT);
     // The only jar in hand becomes the filled one, in its slot; from a stack, one is taken (not in creative, as a
     // bucket) and the filled jar goes to the inventory.
-    let slot = slot_of(host, stack);
+    let slot = crate::hand::slot_of(host, stack);
     if stack.count == 1
         && let Some(s) = slot.and_then(|slot| host.carried_stack(slot))
     {
@@ -219,14 +191,6 @@ fn drop_stack(host: &mut dyn Host, dimension: &str, at: [f64; 3], stack: &ItemSt
     }
     let nbt: Compound = [("Item".into(), Tag::Compound(item))].into();
     host.summon(dimension, "minecraft:item", at, nbt);
-}
-
-/// From the library's `interaction_key`, on the window's client, for each hand the use key tries: with a jar in the
-/// main hand, the off hand's turn is skipped. The client can't tell that the jar acted (the server's hooks do it), so it
-/// would go on to the off hand and place its torch (shown, then undone by the server, and the torch spent); vanilla
-/// stops at the hand that acted.
-pub fn holds_jar(host: &dyn Host) -> bool {
-    host.held().is_some_and(|(item, _, _)| item == ITEM)
 }
 
 /// From the library's `use_item_on`: a filled jar releases its creature on the face clicked. Whether the click was the
@@ -290,7 +254,7 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
         crate::bestiary::learn(host, player.uuid, c.kind, FLOWER_FACT);
     }
     if player.game_mode != 1
-        && let Some(slot) = slot_of(host, event.stack)
+        && let Some(slot) = crate::hand::slot_of(host, event.stack)
         && let Some(s) = host.carried_stack(slot)
     {
         *s = ItemStack::new(ITEM, 1);
@@ -346,7 +310,7 @@ fn place(
     });
     host.block_entity_sync(at);
     if player.game_mode != 1
-        && let Some(slot) = slot_of(host, event.stack)
+        && let Some(slot) = crate::hand::slot_of(host, event.stack)
         && let Some(s) = host.carried_stack(slot)
     {
         s.count = 0;

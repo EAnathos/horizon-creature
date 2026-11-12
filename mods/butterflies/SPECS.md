@@ -98,6 +98,10 @@ The butterflies' night counterpart ✅: a **moth** (`butterflies:moth`), flying 
   Butterflies).
 - **Dropped when a butterfly is killed** ✅ (1 dust ✅; Looting adds 1 ✅).
 - **One dust item for every colour** ✅ (`butterflies:butterfly_dust`).
+- **Thrown** ✅ (2026-11-12): right-click throws a shimmering cloud of it ahead (pale dust, glints, a chime); one used
+  up (not in creative).
+- **Confetti** ✅ (2026-11-12): `butterflies:confetti`, 8 from paper and butterfly dust (shapeless). Right-click throws a
+  burst of bright colours a little ahead (a firework's twinkle); one used up (not in creative). Particles only.
 
 ## 5. Out of scope for v1
 

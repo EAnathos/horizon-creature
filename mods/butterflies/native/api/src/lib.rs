@@ -9,12 +9,13 @@
 //! from a glass jar on a flower they settle around it (the library's territory). Butterfly dust drops from them.
 mod model_butterfly;
 mod model_moth;
+mod throw;
 
 use creature::colours::{Colour, Pattern, Scheme, Variety};
 use creature::jar::Catchable;
 use horizon_client::mod_api::{
     BlockEntityDraw, EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, LivingDeathEvent, MobSubmitEvent,
-    NativeMobRender, RegisterGoalsEvent,
+    NativeMobRender, RegisterGoalsEvent, UseItemEvent,
 };
 
 pub const BUTTERFLY: &str = "butterflies:butterfly";
@@ -294,6 +295,8 @@ const MOTH_BIOMES: &[&str] = &[
 ];
 
 pub fn hooks() -> Box<dyn Hooks> {
+    creature::hand::server_used(throw::DUST);
+    creature::hand::server_used(throw::CONFETTI);
     for c in &IN_JAR {
         creature::jar::register(c);
     }
@@ -333,6 +336,15 @@ fn pose(name: &str, mob: &NativeMobRender<'_>, butterfly: bool) -> [f32; 3] {
 }
 
 impl Hooks for Butterflies {
+    /// Right-click with butterfly dust or confetti: thrown (`throw.rs`).
+    fn use_item(&self, host: &mut dyn Host, event: &mut UseItemEvent<'_>) -> Flow {
+        if throw::thrown(host, event.stack) {
+            Flow::Cancel
+        } else {
+            Flow::Continue
+        }
+    }
+
     fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
         if !ours(&event.mob.kind.id) {
             return;

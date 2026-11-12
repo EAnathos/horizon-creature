@@ -17,8 +17,8 @@ giant of the mountains that hurls boulders, and whose eye is a rare crafting mat
   hand (group `club`, child of `arm_right`). Groups for posing: `leg_*`, `body`, `head`, `arm_*`, `club`.
 - **The cyclops in game** (2026-11-12, tested): `cyclops:cyclops` (a copy of the wandering trader, box 1.8 × 4, 80
   health), its spawn egg, the cyclops eye (dropped when a player kills it, with 1 to 3 leather), English and French
-  names, a bestiary page (the Flock fact). Neutral: it strolls and watches players; hurt, or one of its sheep hurt, it
-  walks up and brings its club down from over its head (12 damage, a strong push), and lets go 32 blocks away. Heavy
+  names, a bestiary page (the Flock fact). Hostile (2026-11-12): it goes for a player it sees within 16 blocks, and
+  for whoever hurts it or one of its sheep: it walks up and brings its club down from over its head (12 damage, a strong push), and lets go 32 blocks away. Heavy
   steps and a grumble (a ravager's sounds, lower, until it has its own). **Spawning**: rarely, at a cave mouth (open
   ground at the foot of a covered passage into a hillside) 24 to 64 blocks from a player, never within 160 blocks of
   another cyclops, with a **flock of 3 to 5 sheep** (tagged `cyclops.flock`) that follow it (tested: it appeared at a
@@ -37,7 +37,8 @@ giant of the mountains that hurls boulders, and whose eye is a rare crafting mat
 
 - A **giant**, **4 blocks tall** ✅ (hitbox ~2 × 4 ❓): **blue skin** ✅, a **single huge eye** ✅ in the middle of its
   brow, a heavy jaw with tusks, a loincloth of hide, a **wooden club** ✅.
-- **Neutral until provoked** ✅: by a hit on it or on one of its sheep ✅ (a shepherd, as Polyphemus). Slow, heavy steps that shake the screen a
+- **Hostile** ✅: it goes for a player it sees within ~16 blocks, and for whoever hurts it or one of its sheep ✅ (a
+  shepherd, as Polyphemus). Slow, heavy steps that shake the screen a
   little ❓.
 - **Attacks** ❓:
   - **club smash**: a slow overhead blow (12 damage ❓) that knocks back;
@@ -61,6 +62,6 @@ giant of the mountains that hurls boulders, and whose eye is a rare crafting mat
 
 ## 5. Open questions
 
-- Q1: Neutral or hostile? Its size, health and attacks (§2).
+- ~~Q1: Neutral or hostile?~~ Hostile. Its size, health and attacks (§2) still to balance.
 - Q2: Where it spawns and how rare it is.
 - Q3: The eye's drop rate and any use besides the Wyvern Staff (§3).

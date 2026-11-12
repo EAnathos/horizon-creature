@@ -1,8 +1,8 @@
 //! Cyclops (SPECS.md): a one-eyed giant shepherd at the mouths of caves, of the Horizon Creature series.
 //!
 //! A cyclops is a copy of the wandering trader (its behaviour is all goals) with its own 4-block box, drawn with its
-//! own model (`model.rs`, from `assets/models/cyclops.bbmodel`). Neutral: it strolls and watches, and turns on whoever
-//! hurts it or one of its sheep, with a slow overhead blow of its club (`Smash`). It appears rarely at a cave mouth near
+//! own model (`model.rs`, from `assets/models/cyclops.bbmodel`). Hostile: it goes for a player it sees within
+//! `SIGHT` blocks, and for whoever hurts it or one of its sheep, with a slow overhead blow of its club (`Smash`). It appears rarely at a cave mouth near
 //! a player (`spawn`), with a flock of sheep that follow it (`flock`). It drops its eye when a player kills it.
 mod model;
 
@@ -12,7 +12,7 @@ use std::time::Instant;
 
 use creature::bestiary::{Fact, Species};
 use horizon_client::mobs::Who;
-use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, RandomLookAround, Stroll};
+use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, NearestTarget, RandomLookAround, Stroll};
 use horizon_client::mod_api::{
     BlockEntityDraw, Compound, Cx, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent,
     LevelTickPostEvent, LivingDeathEvent, LivingIncomingDamageEvent, Mob, MobSubmitEvent, NativeHeightmap,
@@ -28,6 +28,8 @@ const SIZE: (f64, f64, f64) = (1.8, 4.0, 3.5);
 const ATTACK_DAMAGE: f32 = 12.0;
 const ATTACK_KNOCKBACK: f64 = 2.0;
 const KNOCKBACK_RESISTANCE: f64 = 0.6;
+/// How far it sees a player to go for (blocks; its follow range).
+const SIGHT: f64 = 16.0;
 
 /// The biomes it appears in (at a cave mouth, SPECS §2): hills and mountains, and the grass around them.
 const BIOMES: &[&str] = &[
@@ -478,6 +480,7 @@ impl Hooks for Cyclops {
         event.mob.attrs.attack_damage = ATTACK_DAMAGE;
         event.mob.attrs.attack_knockback = ATTACK_KNOCKBACK;
         event.mob.attrs.knockback_resistance = KNOCKBACK_RESISTANCE;
+        event.mob.attrs.follow_range = SIGHT;
         let ai = &mut event.mob.ai;
         ai.goals.add(0, goals::Float);
         ai.goals.add(1, Smash::default());
@@ -486,6 +489,7 @@ impl Hooks for Cyclops {
         ai.goals.add(7, RandomLookAround::default());
         ai.targets.add(1, HurtByTarget::new());
         ai.targets.add(2, Shepherd);
+        ai.targets.add(3, NearestTarget::player(true));
     }
 
     /// Right-click: nothing (no trading screen, which its template would open).

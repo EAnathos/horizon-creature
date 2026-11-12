@@ -35,6 +35,9 @@ library shares are described there; this spec gives the vulture's own rules and 
 - **Drops** (§4, 2026-11-09): `vulture:feather`, `vulture:raw_vulture` and `vulture:cooked_vulture` (mutton's food
   values; furnace, smoker and campfire), the loot table (0–2 feathers, 1–2 meat, cooked when it burns, Looting), in the
   creative tab. Built; not tested in game yet.
+- **Vulture feathers for feathers** (2026-11-12): arrows, the brush and the book and quill also craft with a vulture
+  feather (`recipe/*_from_vulture_feather.json`, copies of vanilla's; tested loaded). Not the firework star's feather
+  burst, a special recipe.
 - **Wild vulture, first part** (§4, 2026-11-09): it soars (takes off every ~30 s on average, climbs 18 to 26 blocks,
   circles 30 to 60 s with a bank, spirals down and lands; left in the air, it glides down), walks about, looks at
   players; neutral, it fights back (3 damage) and nearby vultures join in (vanilla's `HurtByTarget` and
@@ -209,7 +212,7 @@ Variant names are simple colour names ✅, so players need not know the species.
 | Biomes ✅ | Desert, badlands, savanna; groups of 1–3 |
 | Wild flight | Slow circles high up, lands on high points |
 | Scavenger | Drawn to meat on the ground and recently dead mobs (~16 blocks) |
-| Drops ✅ | 0–2 **vulture feathers** + 1–2 **raw vulture meat** (cookable, ordinary meat ✅) |
+| Drops ✅ | 0–2 **vulture feathers** (a feather in arrows, the brush, the book and quill ✅) + 1–2 **raw vulture meat** (cookable, ordinary meat ✅) |
 
 ## 5. Taming ✅
 
