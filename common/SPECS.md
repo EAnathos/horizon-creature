@@ -126,9 +126,9 @@ several creature mods share, and the series' single creative tab. It adds no cre
 
 ### 3.4 Monsters leave our creatures alone (`creature::mob`) ✅
 
-- Our mobs copy the wandering trader, which zombies, husks and illagers hunt. Horizon has no hook on a mob's choice of
-  target, so the library gives every other mob a last target goal, `Spare`, that drops a target that is one of our
-  creatures in the tick it is picked, before the attack goals see it (2026-11-12, tested with zombies).
+- Our mobs copy the wandering trader, which zombies, husks and illagers hunt. The library's `living_change_target`
+  cancels a mob's change of target onto one of our creatures (and the blow its tick dealt with it): `mob::spared`
+  (2026-11-12, tested with zombies).
 - `mob::ours(mob, width, height, eye)` from the mod's `register_goals`: muted, its own box, its template's goals cleared,
   and spared. Users: every mob of the series.
 

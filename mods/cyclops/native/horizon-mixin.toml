@@ -1,0 +1,16 @@
+# Cyclops: the native part (a trait mod, Horizon's docs/native-mods.md, "Trait mods").
+# Built and installed by `cargo creature install cyclops`.
+[mod]
+id = "cyclops"
+version = "0.0.1"
+
+# Reads internal `Mob` fields: pinned, as the whole series (docs/CONVENTIONS.md).
+[compatibility]
+horizon_revision = "fdc87aecdbd116bf1e08adcd062fcbaea8c2e2ca"
+
+[api]
+path = "api"
+
+# The series' library, reached as the `creature` crate (common/SPECS.md).
+[dependencies]
+creature = "^0.1"

@@ -26,8 +26,8 @@ pub mod territory;
 use horizon_client::first_person::Hand;
 use horizon_client::mod_api::{
     BlockEntityEvent, BlockEntitySubmitEvent, BlockEntityUpdateTagEvent, Compound, DestroyBlockEvent,
-    EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, InteractionKeyEvent, LivingDeathEvent,
-    NetFromServerEvent, PlayerLoggedInEvent, RegisterGoalsEvent, ScreenMouseButtonPressedPreEvent,
+    EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, InteractionKeyEvent, LivingChangeTargetEvent,
+    LivingDeathEvent, NetFromServerEvent, PlayerLoggedInEvent, ScreenMouseButtonPressedPreEvent,
     ScreenMouseScrolledPreEvent, ScreenRenderPostEvent, UseItemEvent, UseItemOnEvent,
 };
 
@@ -39,10 +39,12 @@ pub fn hooks() -> Box<dyn Hooks> {
 struct Creature;
 
 impl Hooks for Creature {
-    /// Every mob, before its mod's own goals: a last target goal that spares our creatures (`mob::ours` takes it off
-    /// them, clearing their targets).
-    fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
-        event.mob.ai.targets.add(i32::MAX, mob::Spare);
+    /// Monsters leave our creatures alone: a target change onto one of them is cancelled.
+    fn living_change_target(&self, event: &mut LivingChangeTargetEvent<'_>) -> Flow {
+        match event.target_mob {
+            Some(target) if mob::spared(event.entity, target) => Flow::Cancel,
+            _ => Flow::Continue,
+        }
     }
 
     fn living_death(&self, _: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {

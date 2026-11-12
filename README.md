@@ -12,7 +12,7 @@ tab, "Horizon Creature". The game text is in English and French.
 | [Wyverns](mods/wyverns/README.md) (`wyverns`) | A dark mountainous dimension of harpies and wyverns, the Harpy Queen boss, wyverns hatched and ridden | planned |
 | [Snakes](mods/snakes/README.md) (`snakes`) | Aggressive snakes in many colours, whose eggs hatch into named pets | planned |
 | [Worms](mods/worms/README.md) (`worms`) | Earthworms you carry in a jar to your garden, where they help crops grow | planned |
-| [Cyclops](mods/cyclops/README.md) (`cyclops`) | A one-eyed, boulder-hurling giant of the mountains, and its eye | planned |
+| [Cyclops](mods/cyclops/README.md) (`cyclops`) | A one-eyed giant shepherd at cave mouths, with its flock, and its eye | in progress |
 | [Fireflies](mods/fireflies/README.md) (`fireflies`) | Fireflies that light up the night, kept in a glass jar as a soft light | planned |
 
 > Single player only for now; multiplayer comes later for the whole series.

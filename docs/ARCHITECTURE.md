@@ -13,9 +13,9 @@ on it.
 | Butterflies | `mods/butterflies/` | `butterflies` | planned (spec) | [mods/butterflies/SPECS.md](../mods/butterflies/SPECS.md) |
 | Wyverns | `mods/wyverns/` | `wyverns` | planned (spec) | [mods/wyverns/SPECS.md](../mods/wyverns/SPECS.md) |
 | Snakes | `mods/snakes/` | `snakes` | planned (spec) | [mods/snakes/SPECS.md](../mods/snakes/SPECS.md) |
-| Worms | `mods/worms/` | `worms` | planned (spec) | [mods/worms/SPECS.md](../mods/worms/SPECS.md) |
-| Cyclops | `mods/cyclops/` | `cyclops` | planned (spec) | [mods/cyclops/SPECS.md](../mods/cyclops/SPECS.md) |
-| Fireflies | `mods/fireflies/` | `fireflies` | planned (spec) | [mods/fireflies/SPECS.md](../mods/fireflies/SPECS.md) |
+| Worms | `mods/worms/` | `worms` | in progress | [mods/worms/SPECS.md](../mods/worms/SPECS.md) |
+| Cyclops | `mods/cyclops/` | `cyclops` | in progress | [mods/cyclops/SPECS.md](../mods/cyclops/SPECS.md) |
+| Fireflies | `mods/fireflies/` | `fireflies` | in progress | [mods/fireflies/SPECS.md](../mods/fireflies/SPECS.md) |
 
 `cargo creature list` prints the same table from the modules' `module.toml`.
 

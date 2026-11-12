@@ -4,13 +4,12 @@
 use std::collections::BTreeSet;
 use std::sync::{Arc, Mutex};
 
-use horizon_client::mobs::Who;
 use horizon_client::mod_api::{Cx, Goal, Host, Mob, Tag};
 
 use crate::colours::Random;
 
 /// From the mod's `register_goals`, for each of its creatures: muted, its own box (`resize`), its template's goals and
-/// targets cleared for the mod's own, and spared by monsters (`Spare`).
+/// targets cleared for the mod's own, and spared by monsters (`spared`).
 pub fn ours(mob: &mut Mob, width: f64, height: f64, eye_height: f64) {
     mob.silent = true;
     resize(mob, width, height, eye_height);
@@ -28,33 +27,12 @@ pub fn forget(entity: u32) {
     SPARED.lock().unwrap().remove(&entity);
 }
 
-/// Monsters leave the series' creatures alone (SPECS §3.4): as copies of the wandering trader, zombies and illagers
-/// would hunt them as they hunt villagers, and Horizon has no hook to change a mob's choice of target. So every other
-/// mob gets this target goal after its own: it drops a target that is one of our creatures in the tick it was picked,
-/// before its attack goals see it. Added by the library's `register_goals`.
-#[derive(Clone, Debug)]
-pub struct Spare;
-
-impl Goal for Spare {
-    fn flags(&self) -> u8 {
-        0
-    }
-    fn can_use(&mut self, _: &mut Mob, _: &mut Cx) -> bool {
-        true
-    }
-    fn every_tick(&self) -> bool {
-        true
-    }
-    fn tick(&mut self, m: &mut Mob, _: &mut Cx) {
-        if let Some(Who::Mob(id)) = m.ai.target
-            && SPARED.lock().unwrap().contains(&id)
-        {
-            m.ai.target = None;
-        }
-    }
-    fn box_clone(&self) -> Box<dyn Goal> {
-        Box::new(self.clone())
-    }
+/// Whether mob `entity` may not take mob `target` as its target (SPECS §3.4): our creatures are copies of the
+/// wandering trader, which zombies and illagers hunt as they hunt villagers. From the library's `living_change_target`,
+/// which cancels the change (and the blow that came with it). Our own creatures may still target each other.
+pub fn spared(entity: u32, target: u32) -> bool {
+    let spared = SPARED.lock().unwrap();
+    spared.contains(&target) && !spared.contains(&entity)
 }
 
 /// Gives `mob` its own box (blocks) in place of its template's: a mob's box comes from its type, so it gets a copy of

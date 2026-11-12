@@ -5,9 +5,10 @@ drops its eye. With Wyverns, the cyclops eye takes the eye of ender's place in t
 
 **Requires** Horizon Creature (`creature`), the series' library.
 
-> **Status:** planned. The specification ([SPECS.md](SPECS.md)) and the Blockbench model
-> (`assets/models/cyclops.bbmodel`, see [docs/MODELS.md](../../docs/MODELS.md#cyclops)) exist; nothing is implemented
-> yet.
+> **Status:** in progress ([SPECS.md](SPECS.md) §0). A blue one-eyed giant shepherd that appears rarely at cave mouths
+> with a flock of sheep that follow it. Neutral: hurt it or one of its sheep and it brings its club down on you. Drops
+> its eye. Spawn egg, bestiary page.
 
-When implementation starts, this folder gets `content/` and `native/` like [the vulture's](../vulture/README.md)
-(see [docs/ARCHITECTURE.md §7](../../docs/ARCHITECTURE.md#7-adding-a-mod)).
+- `content/`: the entity type, the spawn egg, the cyclops eye, its loot, English and French names.
+- `native/`: its goals (the club's blow, defending the flock), the flock following it, its spawning at cave mouths, its
+  drawing (`model.rs` from `assets/models/cyclops.bbmodel`, see [docs/MODELS.md](../../docs/MODELS.md#cyclops)).

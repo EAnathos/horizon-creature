@@ -1,0 +1,10 @@
+{
+  "template": "minecraft:prismarine_crystals",
+  "components": {
+    "minecraft:item_model": "cyclops:cyclops_eye",
+    "minecraft:item_name": {
+      "translate": "item.cyclops.cyclops_eye"
+    }
+  },
+  "rarity": "uncommon"
+}
