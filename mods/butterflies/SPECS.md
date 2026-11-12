@@ -28,8 +28,13 @@ without Butterflies. Neither mod requires the other.
   forests, meadows, sunflower plains, cherry groves, plains, forests, birch forests and jungles; moths in forests,
   birch and dark forests, taigas, plains and meadows (a biome modifier can't ask for night or flowers: they spawn
   anywhere in those biomes and rest when it isn't their time). Butterfly dust drops from both (1, Looting adds up to
-  1). Bestiary pages: met wild (not settled) in those biomes; the fact "Catch" once one is caught in a jar. Not yet:
-  moths drawn to light, despawning, the jar placed as a block, the dust in the Wyvern Staff (Wyverns isn't started).
+  1). Bestiary pages: met wild (not settled) in those biomes; the fact "Catch" once one is caught in a jar. Not yet: the
+  dust in the Wyvern Staff (Wyverns isn't started).
+- **Light, despawning, jar on display** (2026-11-12, tested): at night a moth is drawn to the nearest bright light
+  within 10 blocks (a torch, a lantern, a campfire...) and flutters around it without landing. Wild butterflies and
+  moths despawn far from players (the library's `mob::despawn_far`: at once beyond 128 blocks, now and then beyond
+  32), never a settled or named one. A filled jar placed with sneak + right-click shows its butterfly or moth inside
+  (the library's jar block).
 - **Models** (2026-11-10): `assets/models/butterfly.bbmodel` and `moth.bbmodel` (pictures in docs/MODELS.md), one group
   tree for both (body, head and antennae, a forewing and a hindwing per side, flat wings cut out by the texture's
   alpha). The butterfly's texture is greyscale, for the library to tint (§2); the moth's is painted (§2.1). Not in

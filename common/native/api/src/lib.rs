@@ -23,9 +23,10 @@ pub mod territory;
 
 use horizon_client::first_person::Hand;
 use horizon_client::mod_api::{
-    BlockEntitySubmitEvent, EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, InteractionKeyEvent,
-    NetFromServerEvent, PlayerLoggedInEvent, ScreenMouseButtonPressedPreEvent, ScreenMouseScrolledPreEvent,
-    ScreenRenderPostEvent, UseItemEvent, UseItemOnEvent,
+    BlockEntityEvent, BlockEntitySubmitEvent, BlockEntityUpdateTagEvent, Compound, DestroyBlockEvent,
+    EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, InteractionKeyEvent, NetFromServerEvent,
+    PlayerLoggedInEvent, ScreenMouseButtonPressedPreEvent, ScreenMouseScrolledPreEvent, ScreenRenderPostEvent,
+    UseItemEvent, UseItemOnEvent,
 };
 
 pub fn hooks() -> Box<dyn Hooks> {
@@ -40,9 +41,25 @@ impl Hooks for Creature {
         guide::on_login(host, event.player);
     }
 
-    /// The bestiary's 3D view: the creature shown, drawn in the book's scene.
+    /// The bestiary's 3D view (the creature shown, in the book's scene), and the creature in a placed jar.
     fn block_entity_submit(&self, host: &dyn Host, event: &mut BlockEntitySubmitEvent<'_>) {
         bestiary::specimen(host, event);
+        jar::draw_inside(host, event);
+    }
+
+    /// A placed jar has a block entity, holding its creature.
+    fn block_entity(&self, _: &mut dyn Host, event: &mut BlockEntityEvent<'_>) -> Option<(String, Compound)> {
+        jar::block_entity(event.block)
+    }
+
+    fn block_entity_update_tag(&self, event: &mut BlockEntityUpdateTagEvent<'_>) -> Option<Compound> {
+        jar::update_tag(event.entity)
+    }
+
+    /// A placed jar broken gives its filled jar back.
+    fn destroy_block(&self, host: &mut dyn Host, event: &mut DestroyBlockEvent) -> Flow {
+        jar::broken(host, event.pos);
+        Flow::Continue
     }
 
     fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {

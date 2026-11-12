@@ -173,11 +173,13 @@ static IN_JAR: [Catchable; 2] = [
         kind: BUTTERFLY,
         model: "butterflies:butterfly_jar",
         flower_patch: true,
+        glows: false,
     },
     Catchable {
         kind: MOTH,
         model: "butterflies:moth_jar",
         flower_patch: true,
+        glows: false,
     },
 ];
 
@@ -339,6 +341,13 @@ impl Hooks for Butterflies {
         }
         if ours(event.kind) {
             creature::territory::tick(host, event.entity);
+            // Wild ones go when no player is near (SPECS §2); a settled one stays.
+            let settled = creature::territory::settled(event.entity);
+            if creature::mob::despawn_far(host, event.dimension, event.entity, settled) {
+                creature::colours::forget(event.entity);
+                creature::territory::forget(event.entity);
+                flight::forget(event.entity);
+            }
         }
     }
 

@@ -4,6 +4,8 @@
 //! - Resting, it sits a few seconds to half a minute (on a flower if it found one), then flies off again.
 //! - Flying, it flutters towards a point a few blocks off, changing its mind often, a little up and down; after a few
 //!   seconds it looks for a flower near it and lands on it, or on the ground.
+//! - A moth at night is drawn to the nearest bright light within 10 blocks (a torch, a lantern, a campfire...) and
+//!   flutters all around it, never landing while it is there.
 //! - A sprinting player close by makes it fly off at once, away from them.
 //! - Settled (released from a jar on a flower, the library's territory), it only flies over the flowers of its patch
 //!   and lands on them.
@@ -34,6 +36,37 @@ const FLOWER_SEARCH: i32 = 6;
 const FLEE: f64 = 4.0;
 /// How often a settled one checks its patch (ticks).
 const CHECK_EVERY: i32 = 100;
+/// A moth is drawn to light sources this bright (a torch is 14, a lantern 15, a campfire 15) within `LIGHT_SEARCH`
+/// blocks, and flutters this close around one.
+const LIGHT_MIN: u8 = 10;
+const LIGHT_SEARCH: i32 = 10;
+const LIGHT_ORBIT: f64 = 1.6;
+
+/// The nearest bright light source around `at` (a block giving at least `LIGHT_MIN`), for a moth.
+fn brightest_light(cx: &Cx, at: [f64; 3]) -> Option<[i32; 3]> {
+    let c = block_of(at);
+    let world = cx.w.world;
+    let mut best: Option<([i32; 3], i32)> = None;
+    for dy in -4..=4 {
+        for dx in -LIGHT_SEARCH..=LIGHT_SEARCH {
+            for dz in -LIGHT_SEARCH..=LIGHT_SEARCH {
+                let p = [c[0] + dx, c[1] + dy, c[2] + dz];
+                let state = world.block(p[0], p[1], p[2]);
+                let bright =
+                    cx.w.facts
+                        .states
+                        .get(state.0 as usize)
+                        .is_some_and(|f| f.emission >= LIGHT_MIN);
+                let d = dx * dx + dy * dy + dz * dz;
+                if bright && best.is_none_or(|b| d < b.1) {
+                    best = Some((p, d));
+                }
+            }
+        }
+    }
+    best.map(|b| b.0)
+}
+
 /// Where on a flower it sits, above the flower block's bottom.
 const ON_FLOWER: f64 = 0.4;
 
@@ -70,6 +103,8 @@ pub struct Flutter {
     check: i32,
     /// Where a wild one first fluttered: it wanders around it rather than drifting off for good.
     home: Option<[f64; 3]>,
+    /// A moth's light: the brightest light source near it, looked for every `CHECK_EVERY` ticks (SPECS §2.1).
+    light: Option<[i32; 3]>,
 }
 
 impl Flutter {
@@ -108,6 +143,14 @@ impl Flutter {
     /// A point to flutter to: over its patch when settled, else a few blocks around, a little above the ground.
     fn wander(&self, m: &mut Mob, cx: &Cx) -> [f64; 3] {
         let r = |m: &mut Mob| f64::from(m.random.next_float()) * 2.0 - 1.0;
+        // A moth flutters around a light it found, close and all around it, a little above and below.
+        if let Some(l) = self.light {
+            return [
+                f64::from(l[0]) + 0.5 + r(m) * LIGHT_ORBIT,
+                f64::from(l[1]) + 0.5 + r(m) * LIGHT_ORBIT,
+                f64::from(l[2]) + 0.5 + r(m) * LIGHT_ORBIT,
+            ];
+        }
         let home = self.home.unwrap_or([m.position.x, m.position.y, m.position.z]);
         let (x, z) = match self.patch.len() {
             0 => (home[0] + r(m) * WANDER * 1.5, home[2] + r(m) * WANDER * 1.5),
@@ -204,6 +247,9 @@ impl Goal for Flutter {
         if self.check <= 0 {
             self.check = CHECK_EVERY;
             self.patch = territory::check(cx, m.id);
+            if self.moth {
+                self.light = brightest_light(cx, [m.position.x, m.position.y, m.position.z]);
+            }
         }
         // A sprinting player close by: off it goes, away from them.
         if let Some(p) = cx.w.player.as_ref()
@@ -248,6 +294,10 @@ impl Goal for Flutter {
                 // There, or changing its mind: somewhere else.
                 if self.steer(m, target, SPEED) || m.random.next_int_bound(40).unwrap_or(1) == 0 {
                     self.target = Some(self.wander(m, cx));
+                }
+                // Around a light a moth keeps fluttering.
+                if self.ticks <= 0 && awake && self.light.is_some() {
+                    self.ticks = FLIGHT.0;
                 }
                 if self.ticks <= 0 || !awake {
                     let (spot, on_flower) = self.landing(m, cx);

@@ -9,8 +9,11 @@
 //!   look, and the jar is empty again. A jar whose creature's mod isn't installed any more stays full.
 //!
 //! In creative, as a bucket, the jar isn't used up: catching keeps the empty jar and releasing keeps the full one.
-//! Released on a flower, a creature whose kind settles in a flower patch settles there (`territory`, §6.2). Not yet:
-//! placing a filled jar as a block.
+//! Released on a flower, a creature whose kind settles in a flower patch settles there (`territory`, §6.2).
+//!
+//! **Display**: sneak + right-click with a filled jar places it as a small block (`creature:jar`, or `creature:lit_jar`
+//! giving light for a creature that glows), the creature drawn inside with its species' own drawing (its bestiary 3D
+//! view); broken, it gives the filled jar back (not in creative).
 use std::sync::Mutex;
 
 use horizon_client::items::ItemStack;
@@ -32,6 +35,8 @@ pub struct Catchable {
     pub model: &'static str,
     /// Released on a flower, it settles there (`territory`, the flower patch rule, SPECS §6.2).
     pub flower_patch: bool,
+    /// A jar holding it, placed as a block, gives light (fireflies).
+    pub glows: bool,
 }
 
 static CATCHABLE: Mutex<Vec<&'static Catchable>> = Mutex::new(Vec::new());
@@ -218,6 +223,11 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
         return true;
     }
     let c = catchable(&kind).expect("checked above");
+    // Sneaking: the jar is placed as a block, the creature inside (`display`).
+    if player.sneaking {
+        place(host, event, &player, c, look.as_ref());
+        return true;
+    }
     // On a flower (which a click hits itself, a flower being no full block) it comes out in the flower, and settles
     // there if its kind does; elsewhere on the face clicked.
     let on_flower = crate::territory::is_flower(host, &host.block(event.pos));
@@ -253,3 +263,139 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
     }
     true
 }
+
+/// The jar placed as a block (SPECS §6.1, "display"): plain, or giving light for a creature that glows.
+pub const BLOCK: &str = "creature:jar";
+pub const LIT_BLOCK: &str = "creature:lit_jar";
+
+fn is_jar_block(name: &str) -> bool {
+    name == BLOCK || name == LIT_BLOCK
+}
+
+fn state_of(host: &dyn Host, name: &str) -> Option<horizon_client::mod_api::BlockStateId> {
+    host.block_states()
+        .iter()
+        .find(|(_, f)| &*f.name == name)
+        .map(|(id, _)| id)
+}
+
+/// Sneak + right-click with a filled jar: placed as a block on the face clicked, holding its creature (kind and look in
+/// its block entity), the hand's jar used up (not in creative).
+fn place(
+    host: &mut dyn Host,
+    event: &UseItemOnEvent<'_>,
+    player: &horizon_client::mod_api::NativeServerPlayer,
+    c: &Catchable,
+    look: Option<&Compound>,
+) {
+    let at = [
+        event.pos[0] + event.face[0],
+        event.pos[1] + event.face[1],
+        event.pos[2] + event.face[2],
+    ];
+    if host.block(at) != "minecraft:air" {
+        return;
+    }
+    let Some(state) = state_of(host, if c.glows { LIT_BLOCK } else { BLOCK }) else {
+        return;
+    };
+    if !host.set_block(&player.dimension, at, state, 3) {
+        return;
+    }
+    let kind = c.kind;
+    let look = look.cloned();
+    host.change_mod_block_entity(at, &mut |e| {
+        e.nbt.insert("Kind".into(), Tag::String(kind.into()));
+        if let Some(l) = &look {
+            e.nbt.insert("Look".into(), Tag::Compound(l.clone()));
+        }
+    });
+    host.block_entity_sync(at);
+    if player.game_mode != 1
+        && let Some(slot) = slot_of(host, event.stack)
+        && let Some(s) = host.carried_stack(slot)
+    {
+        s.count = 0;
+    }
+}
+
+/// What a placed jar holds: from its block entity's data.
+fn held_in(nbt: &Compound) -> Option<(String, Option<Compound>)> {
+    let kind = match nbt.get(&"Kind".into()) {
+        Some(Tag::String(s)) => s.to_string_lossy(),
+        _ => return None,
+    };
+    let look = match nbt.get(&"Look".into()) {
+        Some(Tag::Compound(c)) => Some(c.clone()),
+        _ => None,
+    };
+    Some((kind, look))
+}
+
+/// From the library's `block_entity`: a placed jar has a block entity, to hold its creature.
+pub fn block_entity(block: &str) -> Option<(String, Compound)> {
+    is_jar_block(block).then(|| (BLOCK.to_string(), Compound::new()))
+}
+
+/// From the library's `block_entity_update_tag`: clients get what a placed jar holds, to draw it.
+pub fn update_tag(entity: &horizon_client::containers::ModBlockEntity) -> Option<Compound> {
+    (entity.id == BLOCK).then(|| entity.nbt.clone())
+}
+
+/// From the library's `destroy_block`: a placed jar broken gives back the filled jar (not in creative, as a block).
+pub fn broken(host: &mut dyn Host, pos: [i32; 3]) {
+    if !is_jar_block(&host.block(pos)) {
+        return;
+    }
+    let Some(player) = host.acting_player() else {
+        return;
+    };
+    if player.game_mode == 1 {
+        return;
+    }
+    let Some(entity) = host.mod_block_entity(pos) else {
+        return;
+    };
+    let Some((kind, look)) = held_in(&entity.nbt) else {
+        return;
+    };
+    let item = match catchable(&kind) {
+        Some(c) => filled(host, c, look.as_ref()),
+        None => Some(ItemStack::new(ITEM, 1)),
+    };
+    if let Some(item) = item {
+        let at = [
+            f64::from(pos[0]) + 0.5,
+            f64::from(pos[1]) + 0.3,
+            f64::from(pos[2]) + 0.5,
+        ];
+        drop_stack(host, &player.dimension, at, &item);
+    }
+}
+
+/// From the library's `block_entity_submit`: draws the creature inside a placed jar, small, in the middle, with the
+/// species' own drawing (its bestiary 3D view).
+pub fn draw_inside(host: &dyn Host, event: &mut horizon_client::mod_api::BlockEntitySubmitEvent<'_>) {
+    if !is_jar_block(event.block) {
+        return;
+    }
+    let Some((kind, look)) = held_in(&event.entity.nbt) else {
+        return;
+    };
+    let Some(species) = crate::bestiary::species_of(&kind) else {
+        return;
+    };
+    let look = species
+        .scheme
+        .and_then(|scheme| look.as_ref().and_then(|l| colours::from_compound(scheme, l)));
+    let draw = &mut *event.draw;
+    draw.push();
+    draw.translate([0.5, 0.06, 0.5]);
+    draw.scale([INSIDE; 3]);
+    draw.translate([-0.5, 0.0, -0.5]);
+    (species.draw)(host, draw, look);
+    draw.pop();
+}
+
+/// The creature's size in a placed jar, against its size in the bestiary (about a block).
+const INSIDE: f32 = 0.4;

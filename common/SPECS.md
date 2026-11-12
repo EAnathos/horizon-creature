@@ -48,8 +48,13 @@ several creature mods share, and the series' single creative tab. It adds no cre
   get its patch's flowers (`check`, every few seconds; a broken anchor moves to the nearest flower within 8 blocks, or
   the creature is free again) and keep to it. A catch teaches the bestiary fact `jar`. Not yet: the garden rule
   (Worms), never despawning (nothing despawns them yet).
+- **Jar on display** (§6.1, 2026-11-12, tested with a butterfly): sneak + right-click with a filled jar places it as a
+  small glass block (`creature:jar`, `creature:lit_jar` at light 7 for a creature that glows) whose block entity holds
+  the creature (kind, look) and draws it inside with the species' bestiary drawing; broken, it gives the filled jar
+  back (not in creative). Broken by an explosion or a piston, the creature is lost for now.
 - **Mob helpers** (2026-11-11): `creature::mob::resize` (a creature's own box, a copy of its template's type) and
-  `creature::mob::Muted` (silent every tick), used by the vulture and the butterflies.
+  `creature::mob::Muted` (silent every tick), used by the vulture and the butterflies; `creature::mob::despawn_far`
+  (2026-11-12, small wild creatures far from players, as vanilla's ambient mobs).
 
 ### To do
 

@@ -9,5 +9,7 @@
   "item.creature.glass_jar": "Bocal en verre",
   "item.creature.glass_jar.filled": "Bocal de %s",
   "item.creature.glass_jar.look": "%s, %s (%s)",
-  "item.creature.glass_jar.look_plain": "%s"
+  "item.creature.glass_jar.look_plain": "%s",
+  "block.creature.jar": "Bocal en verre",
+  "block.creature.lit_jar": "Bocal en verre"
 }

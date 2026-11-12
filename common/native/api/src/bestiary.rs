@@ -58,6 +58,11 @@ pub fn register(species: &'static Species) {
     }
 }
 
+/// A registered species, by its entity type.
+pub fn species_of(id: &str) -> Option<&'static Species> {
+    species(id)
+}
+
 fn species(id: &str) -> Option<&'static Species> {
     SPECIES.lock().unwrap().iter().copied().find(|s| s.id == id)
 }

@@ -150,6 +150,11 @@ pub fn from_key(scheme: &Scheme, key: &str) -> Option<Look> {
     )
 }
 
+/// The look a saved compound (`saved`, a jar's) names, if its ids are still the scheme's.
+pub fn from_compound(scheme: &Scheme, look: &Compound) -> Option<Look> {
+    from_saved(scheme, &decode(look).ok()?)
+}
+
 /// Creature `entity`'s saved look, as stored (`creature:look`), for the jar to carry it.
 pub fn saved(host: &mut dyn Host, entity: u32) -> Option<Compound> {
     let saved = LOOK.get_existing(host, Holder::Entity(entity)).ok().flatten()?;
