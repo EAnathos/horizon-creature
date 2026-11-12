@@ -130,6 +130,26 @@ pub fn tick(host: &mut dyn Host, entity: u32, scheme: &Scheme) {
     LOOKS.lock().unwrap().insert(entity, look);
 }
 
+/// A look as a short text (`orange/eyespots/black`, its ids), for the bestiary's morphs.
+pub fn key(scheme: &Scheme, look: Look) -> String {
+    let colour = |i: usize| scheme.colours.get(i).map_or("", |c| c.id);
+    let pattern = scheme.patterns.get(look.pattern).map_or("", |p| p.id);
+    format!("{}/{pattern}/{}", colour(look.base), colour(look.pattern_colour))
+}
+
+/// The look a `key` names, if its ids are still the scheme's.
+pub fn from_key(scheme: &Scheme, key: &str) -> Option<Look> {
+    let mut parts = key.split('/');
+    from_saved(
+        scheme,
+        &Saved {
+            base: parts.next()?.into(),
+            pattern: parts.next()?.into(),
+            pattern_colour: parts.next()?.into(),
+        },
+    )
+}
+
 /// Creature `entity`'s saved look, as stored (`creature:look`), for the jar to carry it.
 pub fn saved(host: &mut dyn Host, entity: u32) -> Option<Compound> {
     let saved = LOOK.get_existing(host, Holder::Entity(entity)).ok().flatten()?;

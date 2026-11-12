@@ -30,9 +30,9 @@ use flight::{Controls, Flight};
 use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, Stroll};
 use horizon_client::mobs::{MobEvent, Who};
 use horizon_client::mod_api::{
-    Cx, EntityTickListenedEvent, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent, KeyEvent,
-    LivingDeathEvent, MenuClickedEvent, MenuClosedEvent, MenuInputClosedEvent, Mob, MobSubmitEvent, ModsEvent,
-    NativeMobRender, NativeMod, RandomSource, RegisterGoalsEvent,
+    BlockEntityDraw, Cx, EntityTickListenedEvent, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent,
+    KeyEvent, LivingDeathEvent, MenuClickedEvent, MenuClosedEvent, MenuInputClosedEvent, Mob, MobSubmitEvent,
+    ModsEvent, NativeMobRender, NativeMod, RandomSource, RegisterGoalsEvent,
 };
 
 pub const KIND: &str = "vulture:vulture";
@@ -69,7 +69,30 @@ static BESTIARY: creature::bestiary::Species = creature::bestiary::Species {
             key: "bestiary.vulture.vulture.breed",
         },
     ],
+    icon: "vulture:vulture_spawn_egg",
+    scheme: None,
+    draw: book_view,
 };
+
+/// The vulture in the bestiary's 3D view: its model as built (wings spread), without harness or chests, scaled to about
+/// a block across.
+fn book_view(host: &dyn Host, draw: &mut BlockEntityDraw, _: Option<creature::colours::Look>) {
+    draw.push();
+    draw.translate([0.5, 0.0, 0.5]);
+    draw.scale([BOOK_SCALE; 3]);
+    let worn = |part: &str| !matches!(part, "harness" | "chest_left" | "chest_right");
+    creature::model::draw_shown(
+        host,
+        draw,
+        &model::VULTURE,
+        TEXTURE,
+        &|_| [0.0; 3],
+        &worn,
+        creature::model::WHITE,
+    );
+    draw.pop();
+}
+const BOOK_SCALE: f32 = 0.33;
 /// Learnt once a vulture ate a raw chicken the player threw, and once the player fed one rotten flesh.
 pub const TAME_FACT: &str = "tame";
 pub const BREED_FACT: &str = "breed";

@@ -14,8 +14,8 @@ mod model_moth;
 use creature::colours::{Colour, Pattern, Scheme, Variety};
 use creature::jar::Catchable;
 use horizon_client::mod_api::{
-    EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, LivingDeathEvent, MobSubmitEvent, NativeMobRender,
-    RegisterGoalsEvent,
+    BlockEntityDraw, EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, LivingDeathEvent, MobSubmitEvent,
+    NativeMobRender, RegisterGoalsEvent,
 };
 
 pub const BUTTERFLY: &str = "butterflies:butterfly";
@@ -182,11 +182,51 @@ static IN_JAR: [Catchable; 2] = [
 ];
 
 /// Their pages in the bestiary (common/SPECS.md §9): met wild (not settled) in the biomes they spawn in; caught in a jar.
-const JAR_FACTS: &[creature::bestiary::Fact] = &[creature::bestiary::Fact {
-    id: creature::jar::JAR_FACT,
-    item: creature::jar::ITEM,
-    key: "bestiary.butterflies.jar",
-}];
+const JAR_FACTS: &[creature::bestiary::Fact] = &[
+    creature::bestiary::Fact {
+        id: creature::jar::JAR_FACT,
+        item: creature::jar::ITEM,
+        key: "bestiary.butterflies.jar",
+    },
+    creature::bestiary::Fact {
+        id: creature::jar::FLOWER_FACT,
+        item: "minecraft:poppy",
+        key: "bestiary.butterflies.flower",
+    },
+];
+
+/// The bestiary's 3D view: the model at rest, scaled to about a block across; the butterfly in the morph picked, its
+/// wings a little open.
+fn butterfly_view(host: &dyn Host, draw: &mut BlockEntityDraw, look: Option<creature::colours::Look>) {
+    draw.push();
+    draw.translate([0.5, 0.1, 0.5]);
+    draw.scale([BOOK_SCALE; 3]);
+    let open = |part: &str| match part {
+        "wing_left" => [0.0, 0.0, 20.0],
+        "wing_right" => [0.0, 0.0, -20.0],
+        _ => [0.0; 3],
+    };
+    let look = look.unwrap_or_default();
+    creature::colours::draw(
+        host,
+        draw,
+        &model_butterfly::BUTTERFLY,
+        &SCHEME,
+        look,
+        &open,
+        creature::model::WHITE,
+    );
+    draw.pop();
+}
+
+fn moth_view(host: &dyn Host, draw: &mut BlockEntityDraw, _: Option<creature::colours::Look>) {
+    draw.push();
+    draw.translate([0.5, 0.1, 0.5]);
+    draw.scale([BOOK_SCALE; 3]);
+    creature::model::draw(host, draw, &model_moth::MOTH, MOTH_TEXTURE, &|_| [0.0; 3]);
+    draw.pop();
+}
+const BOOK_SCALE: f32 = 1.2;
 
 fn wild(id: u32) -> bool {
     !creature::territory::settled(id)
@@ -198,12 +238,18 @@ static BESTIARY: [creature::bestiary::Species; 2] = [
         biomes: BUTTERFLY_BIOMES,
         wild,
         facts: JAR_FACTS,
+        icon: "butterflies:butterfly_spawn_egg",
+        scheme: Some(&SCHEME),
+        draw: butterfly_view,
     },
     creature::bestiary::Species {
         id: MOTH,
         biomes: MOTH_BIOMES,
         wild,
         facts: JAR_FACTS,
+        icon: "butterflies:moth_spawn_egg",
+        scheme: None,
+        draw: moth_view,
     },
 ];
 

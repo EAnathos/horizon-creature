@@ -23,8 +23,9 @@ pub mod territory;
 
 use horizon_client::first_person::Hand;
 use horizon_client::mod_api::{
-    EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, InteractionKeyEvent, NetFromServerEvent,
-    PlayerLoggedInEvent, ScreenMouseButtonPressedPreEvent, ScreenRenderPostEvent, UseItemEvent, UseItemOnEvent,
+    BlockEntitySubmitEvent, EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, InteractionKeyEvent,
+    NetFromServerEvent, PlayerLoggedInEvent, ScreenMouseButtonPressedPreEvent, ScreenRenderPostEvent, UseItemEvent,
+    UseItemOnEvent,
 };
 
 pub fn hooks() -> Box<dyn Hooks> {
@@ -35,9 +36,13 @@ pub fn hooks() -> Box<dyn Hooks> {
 struct Creature;
 
 impl Hooks for Creature {
-    fn player_logged_in(&self, _: &mut dyn Host, _: &mut PlayerLoggedInEvent<'_>) {
-        // The guide isn't given at the first login while its book is switched off (SPECS §9): `guide::on_login`
-        // comes back with it.
+    fn player_logged_in(&self, host: &mut dyn Host, event: &mut PlayerLoggedInEvent<'_>) {
+        guide::on_login(host, event.player);
+    }
+
+    /// The bestiary's 3D view: the creature shown, drawn in the book's scene.
+    fn block_entity_submit(&self, host: &dyn Host, event: &mut BlockEntitySubmitEvent<'_>) {
+        bestiary::specimen(host, event);
     }
 
     fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
@@ -45,12 +50,11 @@ impl Hooks for Creature {
     }
 
     /// Right-click with the guide: the bestiary opens.
-    fn use_item(&self, _: &mut dyn Host, event: &mut UseItemEvent<'_>) -> Flow {
+    fn use_item(&self, host: &mut dyn Host, event: &mut UseItemEvent<'_>) -> Flow {
         if &*event.stack.item != guide::ITEM {
             return Flow::Continue;
         }
-        // The book stays shut for now: it waits for Horizon to draw creatures in 3D in a screen (SPECS §9). What players
-        // meet and find out is still written down, for when it opens.
+        bestiary::open(host);
         Flow::Cancel
     }
 

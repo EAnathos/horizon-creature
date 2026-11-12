@@ -21,6 +21,8 @@ use crate::colours;
 pub const ITEM: &str = "creature:glass_jar";
 /// The bestiary fact a catch teaches (a species lists it among its facts to show it).
 pub const JAR_FACT: &str = "jar";
+/// The bestiary fact a release on a flower teaches, when the creature settles there.
+pub const FLOWER_FACT: &str = "flower";
 /// The key of the jar's data in `minecraft:custom_data`.
 const DATA: &str = "creature";
 
@@ -241,6 +243,7 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
     }
     if on_flower && c.flower_patch {
         crate::territory::settle(host, id, block);
+        crate::bestiary::learn(host, player.uuid, c.kind, FLOWER_FACT);
     }
     if player.game_mode != 1
         && let Some(slot) = slot_of(host, event.stack)
