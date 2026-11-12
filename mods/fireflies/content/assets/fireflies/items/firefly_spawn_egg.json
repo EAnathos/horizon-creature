@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "fireflies:item/firefly_spawn_egg"
+  }
+}

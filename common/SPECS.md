@@ -52,6 +52,10 @@ several creature mods share, and the series' single creative tab. It adds no cre
   small glass block (`creature:jar`, `creature:lit_jar` at light 7 for a creature that glows) whose block entity holds
   the creature (kind, look) and draws it inside with the species' bestiary drawing; broken, it gives the filled jar
   back (not in creative). Broken by an explosion or a piston, the creature is lost for now.
+- **Small fliers** (§8, 2026-11-12): `creature::flutter`, moved from Butterflies when Fireflies needed it: the flight
+  goal (a `Kind` per creature: day or night, speed, height, flight and rest lengths, drawn to light, landing on
+  flowers), plus `register` (size, muted, goals), `tick_post` (territory, despawning) and `gone`. Used by butterflies,
+  moths and fireflies.
 - **Mob helpers** (2026-11-11): `creature::mob::resize` (a creature's own box, a copy of its template's type) and
   `creature::mob::Muted` (silent every tick), used by the vulture and the butterflies; `creature::mob::despawn_far`
   (2026-11-12, small wild creatures far from players, as vanilla's ambient mobs).

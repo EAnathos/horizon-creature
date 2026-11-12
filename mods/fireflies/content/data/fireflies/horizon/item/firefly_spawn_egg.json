@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:wandering_trader_spawn_egg",
+  "components": {
+    "minecraft:item_model": "fireflies:firefly_spawn_egg",
+    "minecraft:item_name": {
+      "translate": "item.fireflies.firefly_spawn_egg"
+    }
+  }
+}

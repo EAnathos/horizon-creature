@@ -5,9 +5,8 @@
 //! `model_moth.rs`, from `assets/models/`). A butterfly gets a look the first time it is seen (the library's colours
 //! and patterns, common/SPECS.md §7): a base colour, a pattern and a pattern colour, more or less likely per biome
 //! (`SCHEME`). The moth has one look, painted in its texture (SPECS §2.1). On the ground a butterfly opens and closes
-//! its wings slowly. They fly by day (butterflies) or by night (moths) and land on flowers (`flight.rs`); released
+//! its wings slowly. They fly by day (butterflies) or by night (moths) and land on flowers (the library's `flutter`); released
 //! from a glass jar on a flower they settle around it (the library's territory). Butterfly dust drops from them.
-mod flight;
 mod model_butterfly;
 mod model_moth;
 
@@ -160,6 +159,24 @@ static VARIETIES: [Variety; 5] = [
     },
 ];
 
+/// How they fly (the library's `flutter`, SPECS §2, §2.1): a butterfly by day, landing on flowers; a moth at night,
+/// drawn to light.
+static BUTTERFLY_FLIGHT: creature::flutter::Kind = creature::flutter::Kind {
+    night: false,
+    speed: 0.16,
+    height: (1.0, 3.5),
+    flight: (80, 240),
+    rest: (100, 600),
+    wander: 6.0,
+    drawn_to_light: false,
+    lands_on_flowers: true,
+};
+static MOTH_FLIGHT: creature::flutter::Kind = creature::flutter::Kind {
+    night: true,
+    drawn_to_light: true,
+    ..BUTTERFLY_FLIGHT
+};
+
 pub static SCHEME: Scheme = Scheme {
     colours: &COLOURS,
     patterns: &PATTERNS,
@@ -295,7 +312,7 @@ fn ours(kind: &str) -> bool {
 /// A group's rotation for this frame (degrees): on the ground a butterfly opens and closes its wings slowly, basking;
 /// a moth rests with its wings flat.
 fn pose(name: &str, mob: &NativeMobRender<'_>, butterfly: bool) -> [f32; 3] {
-    let open = if flight::flying(mob.id) {
+    let open = if creature::flutter::flying(mob.id) {
         // Flying: quick beats, the wings meeting above it.
         if butterfly {
             30.0 + 50.0 * (mob.age * 1.3).sin()
@@ -320,14 +337,12 @@ impl Hooks for Butterflies {
         if !ours(&event.mob.kind.id) {
             return;
         }
-        event.mob.silent = true;
-        creature::mob::resize(event.mob, WIDTH, HEIGHT, EYE_HEIGHT);
-        let ai = &mut event.mob.ai;
-        ai.goals.clear();
-        ai.targets.clear();
-        ai.goals.add(0, creature::mob::Muted);
-        let moth = event.mob.kind.id == MOTH;
-        event.mob.ai.goals.add(1, flight::Flutter::new(moth));
+        let kind = if event.mob.kind.id == MOTH {
+            &MOTH_FLIGHT
+        } else {
+            &BUTTERFLY_FLIGHT
+        };
+        creature::flutter::register(event.mob, (WIDTH, HEIGHT, EYE_HEIGHT), kind);
     }
 
     /// Right-click: nothing (no trading screen, which their template would open).
@@ -340,21 +355,14 @@ impl Hooks for Butterflies {
             creature::colours::tick(host, event.entity, &SCHEME);
         }
         if ours(event.kind) {
-            creature::territory::tick(host, event.entity);
-            // Wild ones go when no player is near (SPECS §2); a settled one stays.
-            let settled = creature::territory::settled(event.entity);
-            if creature::mob::despawn_far(host, event.dimension, event.entity, settled) {
-                creature::colours::forget(event.entity);
-                creature::territory::forget(event.entity);
-                flight::forget(event.entity);
-            }
+            creature::flutter::tick_post(host, event.dimension, event.entity);
         }
     }
 
     fn living_death(&self, _: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
-        creature::colours::forget(event.entity);
-        creature::territory::forget(event.entity);
-        flight::forget(event.entity);
+        if ours(event.kind) {
+            creature::flutter::gone(event.entity);
+        }
         Flow::Continue
     }
 

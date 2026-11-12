@@ -10,10 +10,12 @@
 //! - `jar`: the glass jar, catching a small creature and releasing it, its look kept (SPECS §6.1).
 //! - `mob`: a creature's own size and silence, its template's being a vanilla mob's (SPECS §3.2, §8.8).
 //! - `territory`: where a released creature settles and stays (SPECS §6.2).
+//! - `flutter`: how small fliers move (butterflies, moths, fireflies): short flights, landing, resting (SPECS §8).
 //! - `guide`: the creature guide book, given at a player's first login (SPECS §9).
 //! - `bestiary`: the book's pages, what each player met and found out (SPECS §9).
 pub mod bestiary;
 pub mod colours;
+pub mod flutter;
 mod guide;
 pub mod jar;
 pub mod mob;

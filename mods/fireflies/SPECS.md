@@ -10,7 +10,17 @@ scope, like Butterflies ✅.
 
 ## 0. Progress (as of 2026-11-09)
 
-- Folder and spec created. **Not started**.
+- Folder and spec created.
+- **In game** (2026-11-12, built, partly tested): `fireflies:firefly` and its spawn egg; model
+  `assets/models/firefly.bbmodel` (a small beetle: dark wing cases with a pale edge, a pink-orange shield with a dark
+  spot, short antennae, flight wings under the wing cases, a yellow-green lantern), drawn at half size. It flies with
+  the library's `flutter` (the butterflies' flight, shared): at night, slow (0.05 block a tick), low (0.5 to 2 blocks),
+  long drifts, short rests on the ground by day. Its lantern pulses on its own rhythm (lit about a second out of three):
+  a lit texture whose lantern is full-bright (`emissive`) and a soft yellow-green visual light around up to 8 lit
+  fireflies (`visuals`, lighting nothing in the world). Caught in the glass jar (its own jar icon), released on a flower
+  it settles (flower patch), a jar of fireflies on display gives light 7 (`creature:lit_jar`). Spawns in swamps,
+  mangroves, rivers, plains, meadows, forests, birch and flower forests, 3 to 6 together. Bestiary page (Catch,
+  Settles). Seen in game flying at night with their lanterns; the glow and the visual light still to check by eye.
 
 ## 1. Technical context
 
@@ -46,6 +56,6 @@ scope, like Butterflies ✅.
 
 ## 5. Open questions
 
-- Q1: Settled fireflies: the "flower patch" rule, or a rule of their own (tall grass and water ❓)?
-- Q2: The jar's light level, and whether it pulses.
-- Q3: Do fireflies give any light while flying (dynamic light is not in Horizon ❓)?
+- ~~Q1: Settled fireflies?~~ The flower patch rule, as butterflies (2026-11-12).
+- ~~Q2: The jar's light?~~ Light 7, steady.
+- ~~Q3: Light while flying?~~ No world light: a full-bright lantern and Horizon's visual light (seen, lights nothing).

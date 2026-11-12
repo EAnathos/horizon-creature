@@ -1,12 +1,14 @@
-//! How butterflies and moths move (SPECS §2, §2.1, §3): short erratic flights, landing on flowers, resting.
+//! Small fliers (SPECS §8): short erratic flights, landing (on flowers), resting; butterflies, moths and fireflies.
 //!
-//! - A butterfly is about by day in fair weather, a moth at night; otherwise each rests where it is.
-//! - Resting, it sits a few seconds to half a minute (on a flower if it found one), then flies off again.
-//! - Flying, it flutters towards a point a few blocks off, changing its mind often, a little up and down; after a few
-//!   seconds it looks for a flower near it and lands on it, or on the ground.
-//! - A moth at night is drawn to the nearest bright light within 10 blocks (a torch, a lantern, a campfire...) and
-//!   flutters all around it, never landing while it is there.
-//! - A sprinting player close by makes it fly off at once, away from them.
+//! A mod gives each of its creatures a `Kind` (out by day or at night, speed, height, how long it flies and rests,
+//! drawn to light, landing on flowers) and adds `Flutter::new(&KIND)` to its goals.
+//!
+//! - It is about by day in fair weather (or at night, for a night kind); otherwise it rests where it is.
+//! - Resting, it sits a while (on a flower if it found one and its kind lands on flowers), then flies off again.
+//! - Flying, it flutters towards a point a few blocks off, changing its mind often, a little up and down, staying
+//!   around where it first fluttered; after a while it looks for a flower near it and lands on it, or on the ground.
+//! - A kind drawn to light flutters around the nearest bright light within 10 blocks at its time, never landing there.
+//! - A sprinting player close by makes it fly off at once, away from them. No fall damage (1 health).
 //! - Settled (released from a jar on a flower, the library's territory), it only flies over the flowers of its patch
 //!   and lands on them.
 //!
@@ -15,21 +17,33 @@
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use creature::territory;
+use crate::territory;
 use horizon_client::mobs::goals;
-use horizon_client::mod_api::{Cx, Goal, Mob, RandomSource};
+use horizon_client::mod_api::{Cx, Goal, Host, Mob, RandomSource};
 
-/// Flying speed (blocks a tick), how quickly it turns towards its target, and its flutter.
-const SPEED: f64 = 0.16;
+/// How a kind of flier behaves.
+#[derive(Debug)]
+pub struct Kind {
+    /// Out at night (moths, fireflies) rather than by day in fair weather (butterflies).
+    pub night: bool,
+    /// Flying speed, blocks a tick (a butterfly 0.16).
+    pub speed: f64,
+    /// How high above the ground it flies, at least and at most.
+    pub height: (f64, f64),
+    /// How long a flight and a rest last (ticks), at least and at most.
+    pub flight: (i32, i32),
+    pub rest: (i32, i32),
+    /// How far it wanders off on a flight (it stays within 1.5 times this of where it first fluttered).
+    pub wander: f64,
+    /// Drawn to bright lights at its time (moths).
+    pub drawn_to_light: bool,
+    /// Lands on flowers (else on the ground).
+    pub lands_on_flowers: bool,
+}
+
+/// How quickly it turns towards its target, and its flutter.
 const STEER: f64 = 0.035;
 const JITTER: f64 = 0.03;
-/// How long a flight and a rest last (ticks), at least and at most.
-const FLIGHT: (i32, i32) = (80, 240);
-const REST: (i32, i32) = (100, 600);
-/// How far it wanders off on a flight (a wild one stays within 1.5 times this of where it first fluttered), and how high
-/// above the ground it flies.
-const WANDER: f64 = 6.0;
-const HEIGHT: (f64, f64) = (1.0, 3.5);
 /// How far it looks for a flower to land on.
 const FLOWER_SEARCH: i32 = 6;
 /// A sprinting player this close makes it flee.
@@ -89,10 +103,9 @@ enum Mode {
     Land,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct Flutter {
-    /// A moth (out at night) rather than a butterfly (out by day).
-    moth: bool,
+    kind: &'static Kind,
     mode: Mode,
     ticks: i32,
     target: Option<[f64; 3]>,
@@ -108,16 +121,22 @@ pub struct Flutter {
 }
 
 impl Flutter {
-    pub fn new(moth: bool) -> Flutter {
+    pub fn new(kind: &'static Kind) -> Flutter {
         Flutter {
-            moth,
+            kind,
+            mode: Mode::Rest,
             ticks: 40,
-            ..Flutter::default()
+            target: None,
+            perched: false,
+            patch: Vec::new(),
+            check: 0,
+            home: None,
+            light: None,
         }
     }
 
     fn awake(&self, cx: &Cx) -> bool {
-        if self.moth {
+        if self.kind.night {
             !cx.w.daylight
         } else {
             cx.w.daylight && !cx.w.raining
@@ -153,7 +172,10 @@ impl Flutter {
         }
         let home = self.home.unwrap_or([m.position.x, m.position.y, m.position.z]);
         let (x, z) = match self.patch.len() {
-            0 => (home[0] + r(m) * WANDER * 1.5, home[2] + r(m) * WANDER * 1.5),
+            0 => (
+                home[0] + r(m) * self.kind.wander * 1.5,
+                home[2] + r(m) * self.kind.wander * 1.5,
+            ),
             n => {
                 let f = self.patch[m.random.next_int_bound(n as i32).unwrap_or(0) as usize];
                 let reach = f64::from(territory::AROUND);
@@ -163,17 +185,19 @@ impl Flutter {
                 )
             }
         };
-        let height = HEIGHT.0 + f64::from(m.random.next_float()) * (HEIGHT.1 - HEIGHT.0);
+        let height = self.kind.height.0 + f64::from(m.random.next_float()) * (self.kind.height.1 - self.kind.height.0);
         [x, ground(cx, x.floor() as i32, z.floor() as i32) + height, z]
     }
 
     /// Where to land: a flower near it (one of its patch's when settled), else the ground below it.
     fn landing(&self, m: &Mob, cx: &Cx) -> ([f64; 3], bool) {
         let here = block_of([m.position.x, m.position.y, m.position.z]);
-        let flowers = if self.patch.is_empty() {
+        let flowers = if !self.patch.is_empty() {
+            self.patch.clone()
+        } else if self.kind.lands_on_flowers {
             territory::flowers_near(cx, here, FLOWER_SEARCH)
         } else {
-            self.patch.clone()
+            Vec::new()
         };
         let distance = |f: &[i32; 3]| (0..3).map(|k| (f[k] - here[k]).pow(2)).sum::<i32>();
         match flowers.iter().min_by_key(|f| distance(f)) {
@@ -191,7 +215,7 @@ impl Flutter {
 
     fn take_off(&mut self, m: &mut Mob, cx: &Cx) {
         self.mode = Mode::Fly;
-        self.ticks = between(m, FLIGHT);
+        self.ticks = between(m, self.kind.flight);
         self.target = Some(self.wander(m, cx));
         self.perched = false;
     }
@@ -247,7 +271,7 @@ impl Goal for Flutter {
         if self.check <= 0 {
             self.check = CHECK_EVERY;
             self.patch = territory::check(cx, m.id);
-            if self.moth {
+            if self.kind.drawn_to_light {
                 self.light = brightest_light(cx, [m.position.x, m.position.y, m.position.z]);
             }
         }
@@ -262,10 +286,14 @@ impl Goal for Flutter {
             let away = [m.position.x - p.position.x, m.position.z - p.position.z];
             let len = away[0].hypot(away[1]).max(0.1);
             let (x, z) = (
-                m.position.x + away[0] / len * WANDER,
-                m.position.z + away[1] / len * WANDER,
+                m.position.x + away[0] / len * self.kind.wander,
+                m.position.z + away[1] / len * self.kind.wander,
             );
-            self.target = Some([x, ground(cx, x.floor() as i32, z.floor() as i32) + HEIGHT.1, z]);
+            self.target = Some([
+                x,
+                ground(cx, x.floor() as i32, z.floor() as i32) + self.kind.height.1,
+                z,
+            ]);
         }
         let awake = self.awake(cx);
         self.ticks -= 1;
@@ -281,7 +309,7 @@ impl Goal for Flutter {
                     if awake {
                         self.take_off(m, cx);
                     } else {
-                        self.ticks = REST.0;
+                        self.ticks = self.kind.rest.0;
                     }
                 }
             }
@@ -292,12 +320,12 @@ impl Goal for Flutter {
                     None => self.wander(m, cx),
                 };
                 // There, or changing its mind: somewhere else.
-                if self.steer(m, target, SPEED) || m.random.next_int_bound(40).unwrap_or(1) == 0 {
+                if self.steer(m, target, self.kind.speed) || m.random.next_int_bound(40).unwrap_or(1) == 0 {
                     self.target = Some(self.wander(m, cx));
                 }
                 // Around a light a moth keeps fluttering.
                 if self.ticks <= 0 && awake && self.light.is_some() {
-                    self.ticks = FLIGHT.0;
+                    self.ticks = self.kind.flight.0;
                 }
                 if self.ticks <= 0 || !awake {
                     let (spot, on_flower) = self.landing(m, cx);
@@ -310,7 +338,7 @@ impl Goal for Flutter {
             Mode::Land => {
                 m.no_gravity = true;
                 let target = self.target.unwrap_or([m.position.x, m.position.y, m.position.z]);
-                let there = self.steer(m, target, SPEED * 0.6);
+                let there = self.steer(m, target, self.kind.speed * 0.6);
                 // Down, or too long trying: it rests where it is.
                 if there || m.on_ground || self.ticks <= 0 {
                     m.velocity.x = 0.0;
@@ -318,7 +346,7 @@ impl Goal for Flutter {
                     m.velocity.z = 0.0;
                     self.perched = there && self.perched;
                     self.mode = Mode::Rest;
-                    self.ticks = between(m, REST);
+                    self.ticks = between(m, self.kind.rest);
                 }
             }
         }
@@ -327,4 +355,32 @@ impl Goal for Flutter {
     fn box_clone(&self) -> Box<dyn Goal> {
         Box::new(self.clone())
     }
+}
+
+/// From the mod's `register_goals`, for one of its fliers: muted, its own tiny box (blocks: width, height, eye height),
+/// its template's goals replaced by this flight.
+pub fn register(mob: &mut Mob, size: (f64, f64, f64), kind: &'static Kind) {
+    mob.silent = true;
+    crate::mob::resize(mob, size.0, size.1, size.2);
+    mob.ai.goals.clear();
+    mob.ai.targets.clear();
+    mob.ai.goals.add(0, crate::mob::Muted);
+    mob.ai.goals.add(1, Flutter::new(kind));
+}
+
+/// From the mod's `entity_tick_post`, for each of its fliers: its territory loaded and saved, and a wild one despawned
+/// far from players (a settled one stays).
+pub fn tick_post(host: &mut dyn Host, dimension: &str, entity: u32) {
+    territory::tick(host, entity);
+    let settled = territory::settled(entity);
+    if crate::mob::despawn_far(host, dimension, entity, settled) {
+        gone(entity);
+    }
+}
+
+/// From the mod's `living_death` (and when one despawns): what the library kept about it is dropped.
+pub fn gone(entity: u32) {
+    crate::colours::forget(entity);
+    territory::forget(entity);
+    forget(entity);
 }

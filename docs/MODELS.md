@@ -16,6 +16,14 @@ The Blockbench models of each mod, as built (at rest; the game poses them). Gene
 
 ![moth, front](models/butterflies-moth-front.png) ![moth, back](models/butterflies-moth-back.png)
 
+## fireflies
+
+### firefly
+
+`mods/fireflies/assets/models/firefly.bbmodel`: 10 cubes, texture 32×32.
+
+![firefly, front](models/fireflies-firefly-front.png) ![firefly, back](models/fireflies-firefly-back.png)
+
 ## vulture
 
 ### baby

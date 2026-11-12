@@ -1,0 +1,19 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": [
+    "minecraft:swamp",
+    "minecraft:mangrove_swamp",
+    "minecraft:river",
+    "minecraft:plains",
+    "minecraft:meadow",
+    "minecraft:forest",
+    "minecraft:birch_forest",
+    "minecraft:flower_forest"
+  ],
+  "spawners": {
+    "type": "fireflies:firefly",
+    "weight": 6,
+    "minCount": 3,
+    "maxCount": 6
+  }
+}
