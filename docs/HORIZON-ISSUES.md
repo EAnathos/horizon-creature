@@ -98,7 +98,7 @@ Found while developing, not filed yet. File one only with a clean repro.
   item id (`game/remote.rs`, `performUseItemOn`); a content item it doesn't know passes, so the client goes on to the
   off hand (a torch is placed, then undone by the server, and spent) while the server's hook did take the click. A
   content item's client-side use result (`SUCCESS` when a mod's server hook claims it) would do. Workaround: the
-  library's `interaction_key` skips the off hand's turn when a jar is in the main hand (`common/native/api/src/jar.rs`,
+  library's `interaction_key` skips the off hand's turn when a jar or the guide is in the main hand (`common/native/api/src/jar.rs`,
   `holds_jar`). Seen 2026-11-11, understood 2026-11-12.
 - **A content mod's living entity type can't set its shadow**: `shadows::shadow_params` knows vanilla's ids only, so
   a mod mob gets 0.5 (a butterfly's shadow is as wide as a villager's); `minecraft:scale` doesn't change it on a

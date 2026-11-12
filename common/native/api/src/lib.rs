@@ -76,9 +76,11 @@ impl Hooks for Creature {
         }
     }
 
-    /// The use key: with a jar in the main hand, the off hand isn't tried (`jar::holds_jar`).
+    /// The use key: with a jar or the guide in the main hand, the off hand isn't tried (`jar::holds_jar`): the client
+    /// can't tell that their use acted (the server's hooks do it) and would place an off-hand torch.
     fn interaction_key(&self, host: &mut dyn Host, event: &mut InteractionKeyEvent<'_>) -> Flow {
-        if event.button == 1 && event.hand == Hand::Off && jar::holds_jar(host) {
+        let guide = host.held().is_some_and(|(item, _, _)| item == guide::ITEM);
+        if event.button == 1 && event.hand == Hand::Off && (jar::holds_jar(host) || guide) {
             event.swing_hand = false;
             return Flow::Cancel;
         }
