@@ -265,8 +265,11 @@ A book about the series' creatures, given to every player.
 - **For now it does nothing else** ✅: right-click opens nothing (or a cover page ❓).
 - **The bestiary** ✅ (2026-11-10), **switched off for now** ✅ (2026-11-12): the book should show each creature met in
   3D, which needs Horizon to draw a creature's model in a screen; it comes back when the API allows it. Meanwhile
-  right-click does nothing, but what each player meets and finds out is still recorded, so their book is full when it
-  opens. When it was on: right-click opened it. Only what the player came across: the species met, the
+  it isn't given at the first login and right-click does nothing, but what each player meets and finds out is still
+  recorded, so their book is full when it opens. The 3D view is possible with what Horizon has (2026-11-12):
+  `native_draw_scene` draws a small scene of blocks into a box of a screen, as Create's Ponder does, and a mod block
+  entity in it draws through `native_block_entity_submit`, whose drawing takes the same cubes as our mobs'
+  (`creature::model::draw`): a library block entity drawing a creature's model would show it in the book, turning. When it was on: right-click opened it. Only what the player came across: the species met, the
   biomes each was met in, and the facts found out in play (how it is tamed, what makes it breed...), each with its
   item. Nothing about a species not met yet, not even how many there are.
 - **Later** (not v1): more pages about each installed mod's creatures, **discovered little by little** ✅ (seeing, catching,

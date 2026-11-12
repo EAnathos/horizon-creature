@@ -35,8 +35,9 @@ pub fn hooks() -> Box<dyn Hooks> {
 struct Creature;
 
 impl Hooks for Creature {
-    fn player_logged_in(&self, host: &mut dyn Host, event: &mut PlayerLoggedInEvent<'_>) {
-        guide::on_login(host, event.player);
+    fn player_logged_in(&self, _: &mut dyn Host, _: &mut PlayerLoggedInEvent<'_>) {
+        // The guide isn't given at the first login while its book is switched off (SPECS §9): `guide::on_login`
+        // comes back with it.
     }
 
     fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {

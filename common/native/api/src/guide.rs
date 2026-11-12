@@ -9,7 +9,9 @@ pub const ITEM: &str = "creature:guide";
 /// The key in the player's persistent data.
 const GIVEN: &str = "creature:guide_given";
 
-/// From `player_logged_in`: gives `player` the guide if they never had it.
+/// From `player_logged_in`: gives `player` the guide if they never had it. Not called while the book is switched
+/// off (SPECS §9).
+#[allow(dead_code)]
 pub fn on_login(host: &mut dyn Host, player: u128) {
     let Some(mut data) = host.player_persistent_data(player) else {
         return;
