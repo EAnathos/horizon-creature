@@ -201,7 +201,9 @@ pub fn tick(host: &mut dyn Host, dimension: &str, entity: u32, kind: &str) {
     }
 }
 
-/// From the library's `use_item`, the guide in hand: sends the acting player their bestiary, their client opens it.
+/// The guide in hand: sends the acting player their bestiary, their client opens it. Not called for now: the book
+/// waits for creatures drawn in 3D (SPECS §9).
+#[allow(dead_code)]
 pub fn open(host: &mut dyn Host) {
     let Some(player) = host.acting_player() else {
         return;

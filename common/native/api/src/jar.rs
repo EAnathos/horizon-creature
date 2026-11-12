@@ -12,7 +12,6 @@
 //! Released on a flower, a creature whose kind settles in a flower patch settles there (`territory`, §6.2). Not yet:
 //! placing a filled jar as a block.
 use std::sync::Mutex;
-use std::time::{Duration, Instant};
 
 use horizon_client::items::ItemStack;
 use horizon_client::mod_api::{Compound, Host, InteractEntityEvent, Tag, UseItemOnEvent};
@@ -34,28 +33,6 @@ pub struct Catchable {
 }
 
 static CATCHABLE: Mutex<Vec<&'static Catchable>> = Mutex::new(Vec::new());
-
-/// The player whose click a jar just took, and when: Horizon still uses the other hand's item after a hook takes the
-/// click (a torch in the off hand was placed by a release), where vanilla stops at the hand that acted. The other
-/// hand's use within the same click is taken too (`same_click`).
-static USED: Mutex<Option<(u128, Instant)>> = Mutex::new(None);
-/// The other hand's use comes with the same click, in the same tick or the next ones (60 ms was too short: a torch was
-/// still placed). A player can't right-click twice this fast.
-const CLICK: Duration = Duration::from_millis(250);
-
-fn used(player: u128) {
-    *USED.lock().unwrap() = Some((player, Instant::now()));
-}
-
-/// Whether the acting player's click was just taken by a jar (their other hand's use is then refused).
-pub fn same_click(host: &dyn Host) -> bool {
-    let Some(player) = host.acting_player() else {
-        return false;
-    };
-    USED.lock()
-        .unwrap()
-        .is_some_and(|(who, at)| who == player.uuid && at.elapsed() < CLICK)
-}
 
 /// From a mod's `hooks()`: its creatures can be caught.
 pub fn register(catchable: &'static Catchable) {
@@ -181,15 +158,22 @@ pub fn catch(host: &mut dyn Host, event: &InteractEntityEvent<'_>) -> bool {
         return false;
     }
     colours::forget(id);
+    // The bestiary: they now know a jar catches it.
+    crate::bestiary::learn(host, player.uuid, c.kind, JAR_FACT);
+    // The only jar in hand becomes the filled one, in its slot; from a stack, one is taken (not in creative, as a
+    // bucket) and the filled jar goes to the inventory.
+    let slot = slot_of(host, stack);
+    if stack.count == 1
+        && let Some(s) = slot.and_then(|slot| host.carried_stack(slot))
+    {
+        *s = jar;
+        return true;
+    }
     if player.game_mode != 1
-        && let Some(slot) = slot_of(host, stack)
-        && let Some(s) = host.carried_stack(slot)
+        && let Some(s) = slot.and_then(|slot| host.carried_stack(slot))
     {
         s.count -= 1;
     }
-    used(player.uuid);
-    // The bestiary: they now know a jar catches it.
-    crate::bestiary::learn(host, player.uuid, c.kind, JAR_FACT);
     if let Some(rest) = host.give_stack(player.uuid, jar) {
         drop_stack(host, &player.dimension, player.position, &rest);
     }
@@ -205,6 +189,14 @@ fn drop_stack(host: &mut dyn Host, dimension: &str, at: [f64; 3], stack: &ItemSt
     }
     let nbt: Compound = [("Item".into(), Tag::Compound(item))].into();
     host.summon(dimension, "minecraft:item", at, nbt);
+}
+
+/// From the library's `interaction_key`, on the window's client, for each hand the use key tries: with a jar in the
+/// main hand, the off hand's turn is skipped. The client can't tell that the jar acted (the server's hooks do it), so it
+/// would go on to the off hand and place its torch (shown, then undone by the server, and the torch spent); vanilla
+/// stops at the hand that acted.
+pub fn holds_jar(host: &dyn Host) -> bool {
+    host.held().is_some_and(|(item, _, _)| item == ITEM)
 }
 
 /// From the library's `use_item_on`: a filled jar releases its creature on the face clicked. Whether the click was the
@@ -244,7 +236,6 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
     let Some(id) = host.summon(&player.dimension, &kind, at, Compound::new()) else {
         return true;
     };
-    used(player.uuid);
     if let Some(look) = &look {
         colours::restore(host, id, look);
     }

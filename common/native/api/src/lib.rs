@@ -21,9 +21,10 @@ pub mod model;
 pub mod sounds;
 pub mod territory;
 
+use horizon_client::first_person::Hand;
 use horizon_client::mod_api::{
-    EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, NetFromServerEvent, PlayerLoggedInEvent,
-    ScreenMouseButtonPressedPreEvent, ScreenRenderPostEvent, UseItemEvent, UseItemOnEvent,
+    EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, InteractionKeyEvent, NetFromServerEvent,
+    PlayerLoggedInEvent, ScreenMouseButtonPressedPreEvent, ScreenRenderPostEvent, UseItemEvent, UseItemOnEvent,
 };
 
 pub fn hooks() -> Box<dyn Hooks> {
@@ -43,21 +44,18 @@ impl Hooks for Creature {
     }
 
     /// Right-click with the guide: the bestiary opens.
-    fn use_item(&self, host: &mut dyn Host, event: &mut UseItemEvent<'_>) -> Flow {
-        // The other hand, in a click a jar took.
-        if jar::same_click(host) {
-            return Flow::Cancel;
-        }
+    fn use_item(&self, _: &mut dyn Host, event: &mut UseItemEvent<'_>) -> Flow {
         if &*event.stack.item != guide::ITEM {
             return Flow::Continue;
         }
-        bestiary::open(host);
+        // The book stays shut for now: it waits for Horizon to draw creatures in 3D in a screen (SPECS §9). What players
+        // meet and find out is still written down, for when it opens.
         Flow::Cancel
     }
 
     /// An empty glass jar catches a registered creature (before the mods' own right-click).
     fn interact_entity(&self, host: &mut dyn Host, event: &mut InteractEntityEvent<'_>) -> Flow {
-        if jar::catch(host, event) || jar::same_click(host) {
+        if jar::catch(host, event) {
             Flow::Cancel
         } else {
             Flow::Continue
@@ -66,11 +64,20 @@ impl Hooks for Creature {
 
     /// A filled glass jar releases its creature on the block clicked.
     fn use_item_on(&self, host: &mut dyn Host, event: &mut UseItemOnEvent<'_>) -> Flow {
-        if jar::release(host, event) || jar::same_click(host) {
+        if jar::release(host, event) {
             Flow::Cancel
         } else {
             Flow::Continue
         }
+    }
+
+    /// The use key: with a jar in the main hand, the off hand isn't tried (`jar::holds_jar`).
+    fn interaction_key(&self, host: &mut dyn Host, event: &mut InteractionKeyEvent<'_>) -> Flow {
+        if event.button == 1 && event.hand == Hand::Off && jar::holds_jar(host) {
+            event.swing_hand = false;
+            return Flow::Cancel;
+        }
+        Flow::Continue
     }
 
     fn net_from_server(&self, host: &mut dyn Host, event: &mut NetFromServerEvent<'_>) {
