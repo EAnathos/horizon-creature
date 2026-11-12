@@ -3,7 +3,9 @@
 //! A cyclops is a copy of the wandering trader (its behaviour is all goals) with its own 4-block box, drawn with its
 //! own model (`model.rs`, from `assets/models/cyclops.bbmodel`). Hostile: it goes for a player it sees within
 //! `SIGHT` blocks, and for whoever hurts it or one of its sheep, with a slow overhead blow of its club (`Smash`). It appears rarely at a cave mouth near
-//! a player (`spawn`), with a flock of sheep that follow it (`flock`). It drops its eye when a player kills it.
+//! a player (`spawn`), with a flock of sheep that follow it (`flock`). It drops its eye when a player kills it, and
+//! sometimes its club; the eye makes a shepherd's crook, which herds farm animals (`crook.rs`).
+mod crook;
 mod model;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -257,7 +259,8 @@ fn flock(host: &mut dyn Host, dimension: &str) {
             FLOCK.lock().unwrap().insert(*sheep, tagged);
             tagged
         });
-        if !of_flock {
+        // Not while a player's crook herds it.
+        if !of_flock || crook::HERDED.lock().unwrap().contains(sheep) {
             continue;
         }
         SHEPHERD.lock().unwrap().insert(*sheep, shepherd);
@@ -522,6 +525,7 @@ impl Hooks for Cyclops {
         if event.dimension == "minecraft:overworld" {
             spawn(host, event.dimension);
         }
+        crook::tick(host, event.dimension);
         flock(host, event.dimension);
     }
 

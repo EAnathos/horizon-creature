@@ -1,0 +1,11 @@
+{
+  "template": "minecraft:stick",
+  "max_stack_size": 1,
+  "rarity": "uncommon",
+  "components": {
+    "minecraft:item_model": "cyclops:shepherds_crook",
+    "minecraft:item_name": {
+      "translate": "item.cyclops.shepherds_crook"
+    }
+  }
+}

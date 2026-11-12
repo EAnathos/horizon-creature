@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " LL",
+    " LL",
+    "S  "
+  ],
+  "key": {
+    "L": "#minecraft:logs",
+    "S": "minecraft:stick"
+  },
+  "result": {
+    "id": "cyclops:club"
+  }
+}

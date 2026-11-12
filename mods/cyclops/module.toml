@@ -3,4 +3,4 @@ id = "cyclops"
 name = "Cyclops"
 status = "in progress"
 # Its items in the series' creative tab, in order.
-creative = ["cyclops:cyclops_spawn_egg", "cyclops:cyclops_eye"]
+creative = ["cyclops:cyclops_spawn_egg", "cyclops:cyclops_eye", "cyclops:club", "cyclops:shepherds_crook"]

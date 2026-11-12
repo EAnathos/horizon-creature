@@ -2,5 +2,7 @@
   "entity.cyclops.cyclops": "Cyclope",
   "item.cyclops.cyclops_spawn_egg": "Œuf d'apparition de cyclope",
   "item.cyclops.cyclops_eye": "Œil de cyclope",
-  "bestiary.cyclops.flock": "Troupeau"
+  "bestiary.cyclops.flock": "Troupeau",
+  "item.cyclops.club": "Gourdin de cyclope",
+  "item.cyclops.shepherds_crook": "Houlette de berger"
 }

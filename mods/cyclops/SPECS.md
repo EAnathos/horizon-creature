@@ -23,6 +23,11 @@ giant of the mountains that hurls boulders, and whose eye is a rare crafting mat
   ground at the foot of a covered passage into a hillside) 24 to 64 blocks from a player, never within 160 blocks of
   another cyclops, with a **flock of 3 to 5 sheep** (tagged `cyclops.flock`) that follow it (tested: it appeared at a
   cave mouth with 5 sheep; its sheep walked after it; hitting one made it attack).
+- **Shepherd's crook and club** (2026-11-12, tested): `cyclops:shepherds_crook` (a cyclops eye, 4 sticks and wool):
+  while a player holds it, in either hand, the farm animals within 12 blocks follow them (sheep, cows, mooshrooms,
+  pigs, goats, chickens), a cyclops's sheep too. `cyclops:club`: a heavy wooden weapon (8 damage, slow, extra
+  knockback, 250 uses), crafted from 4 logs and a stick, and dropped worn by a cyclops a player kills (1 in 3). The eye
+  now has its own icon, and drops only when a player kills the cyclops (the loot's condition fixed to 26.3's form).
 - Not yet: the boulder throw, its eye as a weak spot, its own sounds.
 
 ## 1. Technical context
@@ -54,7 +59,8 @@ giant of the mountains that hurls boulders, and whose eye is a rare crafting mat
 
 - `cyclops:cyclops_eye`: dropped when a cyclops is killed (1 ✅ ❓; Looting doesn't add any ❓).
 - **Wyvern Staff** ✅: with Wyverns installed, it replaces the eye of ender in the staff's recipe (Wyverns §2).
-- Other uses ❓: a brewing ingredient (a potion of night vision with a longer time ❓), or nothing else in v1.
+- **Shepherd's crook** ✅: crafted with it (§0). Other uses ❓ (ideas: an all-seeing lantern, a boulder sling, a
+  potion of keen sight).
 
 ## 4. Out of scope for v1
 

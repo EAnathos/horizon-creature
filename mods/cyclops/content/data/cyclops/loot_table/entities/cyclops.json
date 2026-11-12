@@ -3,13 +3,42 @@
   "pools": [
     {
       "rolls": 1,
+      "condition": {
+        "type": "minecraft:killed_by_player"
+      },
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "cyclops:cyclops_eye",
-          "conditions": [
+          "name": "cyclops:cyclops_eye"
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "condition": {
+        "type": "minecraft:all_of",
+        "terms": [
+          {
+            "type": "minecraft:killed_by_player"
+          },
+          {
+            "type": "minecraft:random_chance",
+            "chance": 0.33
+          }
+        ]
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "cyclops:club",
+          "modifier": [
             {
-              "condition": "minecraft:killed_by_player"
+              "type": "minecraft:set_damage",
+              "damage": {
+                "type": "minecraft:uniform",
+                "min": 0.3,
+                "max": 0.8
+              }
             }
           ]
         }
