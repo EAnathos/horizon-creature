@@ -34,7 +34,6 @@ several creature mods share, and the series' single creative tab. It adds no cre
   (colours, patterns as textures over a greyscale base, weights per biome); the library rolls a look the first time
   it sees a creature, saves it (`creature:look`, by id) and draws two tinted layers, the pattern a little grown over
   the base (`model::draw_layer`). The drawing reads the looks from a static map (single player, arismoko/horizon#2740).
-  Eggs and offspring (inheriting a parent's look) wait for Snakes.
 
 - **Glass jar** (§6.1, 2026-11-11, tested with the butterfly): `creature:glass_jar` (16 a stack; recipe only with
   Butterflies, Worms or Fireflies installed: 3 glass in a U and an oak slab, makes 2). `creature::jar`: a mod registers
@@ -70,9 +69,6 @@ several creature mods share, and the series' single creative tab. It adds no cre
 
 ### To do
 
-- §4 Incubator (Wyverns, Snakes) and §5 naming on hatch (Snakes).
-- §6 Glass jar and territories (Butterflies, Worms, Fireflies).
-- §7 Colours and patterns: offspring inheriting a look (Snakes).
 - §8 The systems that move from the vulture, each when its second user is implemented.
 
 ## 1. Role and rules ✅
@@ -84,7 +80,7 @@ several creature mods share, and the series' single creative tab. It adds no cre
   species and numbers (registration at start, or parameters).
 - A library feature that only makes sense with some mods is **switched on by them** (registration, conditional recipe),
   e.g. the glass jar (§6). The same goes for optional content between mods: a recipe that uses another mod's item when
-  it is installed and a vanilla item otherwise (the Wyvern Staff) is two conditional recipes, never a requirement.
+  it is installed and a vanilla item otherwise is two conditional recipes, never a requirement.
 - A system moved here keeps working for the mod it came from, in the same commit.
 
 ## 2. Technical context
@@ -93,8 +89,7 @@ several creature mods share, and the series' single creative tab. It adds no cre
 - **Native half**: a trait mod with an `[api]` crate (`mod-creature`), which the mods reach as the `creature` crate.
   Its `hooks()` runs before theirs (dependency order), so a mod registers its species from its own `hooks()`. It
   publishes functions, types and statics; shared state is behind `Mutex`es.
-- **Content half**: the series' tab, shared blocks and items (`creature:incubator`, `creature:glass_jar`,
-  `creature:guide`), their recipes
+- **Content half**: the series' tab, shared blocks and items (`creature:glass_jar`, `creature:guide`, the jar blocks), their recipes
   (conditional when a feature depends on a mod), textures and translations (`en_us`, `fr_fr`).
 - **Pinned** to the series' Horizon revision (docs/CONVENTIONS.md). Version `0.1.0`; a breaking API change bumps the
   minor version while in `0.x`.
@@ -135,79 +130,7 @@ several creature mods share, and the series' single creative tab. It adds no cre
 - `mob::ours(mob, width, height, eye)` from the mod's `register_goals`: muted, its own box, its template's goals cleared,
   and spared. Users: every mob of the series.
 
-## 4. Incubator ✅
-
-A block that hatches the eggs of any mod of the series. Users: **Wyverns**, **Snakes**; any future mod with eggs.
-Eggs hatch **only in the incubator** ✅ (a placed egg does nothing).
-
-### 4.1 Gameplay
-
-- **Block** `creature:incubator`, a furnace-like block with a screen: a copper body with a glass dome where the egg
-  shows, glowing more as it heats. **Recipe** ✅ (our design), shaped:
-
-  ```
-  G G G     G = glass          (the dome)
-  C H C     C = copper ingot   H = hay bale (the nest)
-  C F C     F = furnace        (the heater)
-  ```
-- **One egg** at a time ✅: one egg slot, one fuel slot.
-- **Fuel** ✅: anything that burns in a furnace (coal, charcoal, wood, lava bucket, blaze rod…), with the furnace's burn
-  times.
-- **Temperature** ✅: in **degrees, from 0 to 150 °C** ✅, set to **any whole value** ✅ (e.g. 134 °C), not a few
-  stages. On the screen: a slider, with − / + buttons for single degrees ❓ (a text field if Horizon's screens have one ❓).
-- **The hotter, the more fuel it burns** ✅: a furnace's burn rate × (setting / 50) ✅. So 50 °C burns fuel like a
-  furnace, 38 °C (a snake egg) ×0.76, 134 °C (a fire wyvern egg) ×2.68 and 150 °C ×3; a coal (80 s in a furnace) lasts
-  ~105 s for a snake egg and ~30 s for a fire wyvern egg. A setting at or below the room's temperature (20 °C ✅) burns
-  nothing. The actual temperature moves towards the setting by **2 °C per second** ✅ while there is fuel, and cools by
-  **1 °C per second** ✅ without fuel, down to 20 °C: running out of fuel gives a few seconds before an egg leaves its
-  tolerance, then the grace, then it cracks.
-- Each egg needs **its own temperature** ✅ (each species a different one), with a **tolerance of ±10 °C** ✅, and **the
-  closer, the faster it hatches** ✅, full speed at the exact temperature, falling linearly to half speed at
-  ±10 °C. Outside the tolerance, progress stops and the egg has **a few seconds' grace** ✅ (6 s ✅, shown by a
-  warning on the screen and steam particles); after that it **cracks** ✅ (lost: shell particles and a crack sound).
-  Putting an egg in a cold incubator therefore cracks it: heat the incubator first.
-- The screen shows the setting, the actual temperature, the fuel left and the progress.
-- **Owner** ✅: the player who put the egg in. The creature hatches next to the incubator, as a baby, tamed to its owner.
-- Hoppers: fuel from the side, like a furnace ✅; eggs only by hand ✅.
-
-### 4.2 Registration (native API)
-
-Each mod registers its eggs at start, from its `hooks()`:
-
-```rust
-creature::incubator::register(EggKind {
-    item: "snakes:snake_egg",
-    hatches: "snakes:snake",
-    temperature: 38,         // °C, ±10, faster the closer
-    ticks: 12_000,           // 10 min
-    named: true,             // §5: a naming screen opens when it hatches
-    on_hatch: Some(snake_hatched), // the mod sets its colours, pattern, owner data…
-});
-```
-
-- The library knows nothing of the species: egg item, entity, temperature, time and naming come from the mod. An egg it
-  doesn't know is refused by the slot.
-- Eggs are **items in the mod's namespace**; the incubator, its screen and its rules are the library's.
-
-### 4.3 Egg data
-
-- An egg item may carry data (an item component ❓) set when it drops: the parent's colours and pattern (§7) or stats, so
-  the baby inherits them ✅. Otherwise the baby rolls its own.
-
-### 4.4 Technical notes
-
-- Horizon allows a mod block with a block entity, a container menu (`native_block_entity_container`), a mod screen with
-  buttons (`native_screen`, `native_menu_button`) and a machine tick (`native_machines.rs`): to prototype first.
-  Spawning the baby: `native_summon` with its data.
-
-## 5. Naming on hatch ✅
-
-- For an egg registered with `named: true` (Snakes ✅), **a naming screen opens when it hatches** ✅, as in Mo' Creatures:
-  a text field ("Name your snake") and a "Done" button. The creature takes that name (as a name tag would give it).
-- The screen opens for the owner. If the owner is not near the incubator ✅ (more than 32 blocks), the creature stays unnamed. (it can be renamed with a name tag)
-- Technical ❓: Horizon's mod screens have buttons; a text field is to be checked (fallback: a mod screen drawing its
-  own field from the keys typed).
-- Reusable by any mod (Wyverns ❓).
+(§4 and §5, the incubator and naming on hatch, were removed on 2026-11-13 with Wyverns and Snakes.)
 
 ## 6. Glass jar and territories ✅
 
@@ -252,33 +175,26 @@ the block it was released on, by the mod's rule:
 
 ## 7. Colours and patterns ✅
 
-One species with **several colours and patterns** ✅. Users: **Butterflies**, **Snakes**.
+One species with **several colours and patterns** ✅. Users: **Butterflies**.
 
 - A creature rolls a **base colour**, a **pattern** and a **pattern colour** at spawn (from lists the mod gives, each
-  weighted, per biome ✅). Saved on the entity, kept in jars and eggs.
+  weighted, per biome ✅). Saved on the entity, kept in jars.
 - Drawn as two layers: a base texture tinted by the base colour, then the pattern texture tinted by the pattern colour
   (`draw_cube` takes a colour), like vanilla's tropical fish. So 8 colours × 6 patterns × 8 colours need only 7
   textures.
-- Offspring (eggs) take one parent's colours and pattern, with a small mutation chance ✅.
 
-## 8. Systems moving from the vulture
+## 8. Systems that could move from the vulture
 
-Each moves here when the second mod that needs it is implemented. Until then it stays in the vulture.
+Each moves here when a second mod needs it. Until then it stays in the vulture.
 
-| # | System | Users (current → planned) | Today |
-|---|---|---|---|
-| 8.1 | **Riding and flight**: mount by right-click (the `interact` injection, with a list of rideable kinds), **dynamic ridden flight** (steered by the look, banking into arc turns like a plane, vulture/SPECS.md §6.2) with each species' numbers, dismount, mount hearts (`mount-hud` injection), a **saddle / harness** slot | vulture → wyverns | in the vulture |
-| 8.3 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | vulture → wyverns, snakes | specified in the vulture |
-| 8.4 | **Inherited stats** (health, speed) | vulture → wyverns ❓ | specified in the vulture |
-| 8.5 | **Babies and growth**: smaller model, growth time, faster when fed, **rideable from a given age** (wyverns: 40 of 60 min ✅) | vulture → wyverns, snakes | specified in the vulture |
-| 8.6 | **Ridden special attack**: a key that makes the mount attack (vulture talons, wyvern breath ✅) | vulture → wyverns | specified in the vulture |
-| 8.7 | **Ranged attack goal**: a mob shooting projectiles (harpy feathers ✅, wyvern breath, Queen) | wyverns (several mobs), cyclops (boulders) ❓ |: |
-| 8.8 | **Hitbox size**: a mod mob's size other than its template's | all | to investigate |
-| 8.9 | **Sound making tool**: `cargo creature sounds` with a per-mod source list | vulture → all | vulture only |
-
-(8.2, stamina, is gone: the vulture has none, so it would only be the Wyverns' own if they keep one.)
-
-Not shared: the Wyverns dimension, its staff and the Harpy Queen.
+| # | System | Today |
+|---|---|---|
+| 8.1 | **Riding and flight**: mount by right-click, **dynamic ridden flight** (steered by the look, banking into arc turns like a plane, vulture/SPECS.md §6.2), dismount, mount hearts (`mount-hud` injection), a saddle | in the vulture |
+| 8.3 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | in the vulture |
+| 8.5 | **Babies and growth**: smaller model, growth time, faster when fed | in the vulture |
+| 8.6 | **Ridden special attack**: a key that makes the mount attack (the vulture's talons) | in the vulture |
+| 8.8 | **Hitbox size**: a mod mob's size other than its template's | `creature::mob::resize`, every mob |
+| 8.9 | **Sound making tool**: `cargo creature sounds` with a per-mod source list | vulture only |
 
 ## 9. Creature guide book ✅
 
@@ -293,9 +209,9 @@ A book about the series' creatures, given to every player.
   icons; picking one opens its page on the left: the creature turning in 3D (as Create's Ponder), the biomes it was met
   in, what was found out (how it is tamed, what makes it breed, a jar catches it, it settles on a flower...) and, for
   a species with looks, the morphs met. Nothing about a species not met yet, not even how many there are.
-- **Later** (not v1): more pages about each installed mod's creatures, **discovered little by little** ✅ (seeing, catching,
-  hatching or taming one unlocks its page and then its details): where it lives, what it eats, how it's tamed, its
-  **egg's incubation temperature** ✅, and the **creature drawn in 3D** in the page ✅ (turning slowly, like Create's
+- **Later** (not v1): more pages about each installed mod's creatures, **discovered little by little** ✅ (seeing, catching
+  or taming one unlocks its page and then its details): where it lives, what it eats, how it's tamed, and the
+  **creature drawn in 3D** in the page ✅ (turning slowly, like Create's
   Ponder scenes). Each mod registers its pages, the library draws the book.
 
 ## 10. Out of scope for v1
@@ -306,15 +222,6 @@ A book about the series' creatures, given to every player.
 
 ## 11. Open questions
 
-- ~~Q1: Incubator: fuel or heat from blocks? One egg or several?~~ Fuel like a furnace, one egg, a set temperature;
-  the hotter, the more fuel; wrong temperature cracks the egg (§4.1).
-- ~~Q2: Who owns a hatched creature?~~ The player who put the egg in.
-- ~~Q6: When does a wrong temperature crack the egg?~~ After a few seconds' grace.
-- ~~Q7: Naming?~~ A naming screen opens when it hatches, as in Mo' Creatures.
-- ~~Temperature scale~~ 0 to 150 °C, any whole value; a different temperature per species.
-- ~~Q4: Can eggs hatch placed in the world?~~ No, only in the incubator.
-- ~~Q3~~ Tolerance ±10 °C, faster the closer; the recipe as designed; fuel use × (setting / 50), 2 °C/s heating, 1 °C/s
-  cooling (§4.1).
 - ~~Q8: Filled jars: one item per creature mod, or one `creature:glass_jar` holding anything?~~ One jar for every
   creature (§6.1).
 - ~~Q9: Can a filled jar be placed as a decorative block?~~ Yes, sneak + right-click (§6.1).

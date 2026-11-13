@@ -4,8 +4,6 @@ A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Ja
 flowery places, that you catch in a glass jar and settle where you like. Deliberately small in scope ✅.
 
 **Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)).
-**Used by** Wyverns when both are installed ✅: its staff is then crafted with butterfly dust (§4), and with gunpowder
-without Butterflies. Neither mod requires the other.
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 
@@ -28,8 +26,7 @@ without Butterflies. Neither mod requires the other.
   forests, meadows, sunflower plains, cherry groves, plains, forests, birch forests and jungles; moths in forests,
   birch and dark forests, taigas, plains and meadows (a biome modifier can't ask for night or flowers: they spawn
   anywhere in those biomes and rest when it isn't their time). Butterfly dust drops from both (1, Looting adds up to
-  1). Bestiary pages: met wild (not settled) in those biomes; the fact "Catch" once one is caught in a jar. Not yet: the
-  dust in the Wyvern Staff (Wyverns isn't started).
+  1). Bestiary pages: met wild (not settled) in those biomes; the fact "Catch" once one is caught in a jar.
 - **Light, despawning, jar on display** (2026-11-12, tested): at night a moth is drawn to the nearest bright light
   within 10 blocks (a torch, a lantern, a campfire...) and flutters around it without landing. Wild butterflies and
   moths despawn far from players (the library's `mob::despawn_far`: at once beyond 128 blocks, now and then beyond
@@ -94,8 +91,6 @@ The butterflies' night counterpart ✅: a **moth** (`butterflies:moth`), flying 
 
 ## 4. Butterfly dust ✅
 
-- An ingredient of the Wyvern Staff when Wyverns is installed ✅ (Wyverns uses gunpowder in its place without
-  Butterflies).
 - **Dropped when a butterfly is killed** ✅ (1 dust ✅; Looting adds 1 ✅).
 - **One dust item for every colour** ✅ (`butterflies:butterfly_dust`).
 - **Thrown** ✅ (2026-11-12): right-click throws a shimmering cloud of it ahead (pale dust, glints, a chime); one used

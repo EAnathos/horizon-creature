@@ -246,7 +246,7 @@ Variant names are simple colour names ✅, so players need not know the species.
 
 ### 6.2 Dynamic flight ✅
 
-> Riding and flight are shared with Wyverns (common/SPECS.md §8.1). The vulture's keys and numbers below. **No
+> Riding and flight stay in the vulture until a second mod needs them (common/SPECS.md §8.1). The vulture's keys and numbers below. **No
 > stamina** ✅: the vulture flies as long as the rider wants.
 
 Flown like a plane, not like a flying camera: the vulture always moves forward along its heading, the rider turns it
@@ -341,7 +341,7 @@ vulture.
 
 ## 8. Breeding ✅ (v1)
 
-> Shared system: common/SPECS.md §8.5. The vulture gives birth to a live baby (no egg, no incubator) ✅.
+> Shared system: common/SPECS.md §8.5. The vulture gives birth to a live baby (no egg) ✅.
 
 - Two tamed vultures fed **rotten flesh** ✅ (scavengers…) go into breeding mode.
 - The baby is born tamed, with the same owner, and inherits stats (§2) (and its variant once there are variants, §3).

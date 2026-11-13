@@ -10,9 +10,7 @@ on it.
 |---|---|---|---|---|
 | **Horizon Creature** (library) | `common/` | `creature` | prototype | [common/SPECS.md](../common/SPECS.md) |
 | Vulture | `mods/vulture/` | `vulture` | prototype | [mods/vulture/SPECS.md](../mods/vulture/SPECS.md) |
-| Butterflies | `mods/butterflies/` | `butterflies` | planned (spec) | [mods/butterflies/SPECS.md](../mods/butterflies/SPECS.md) |
-| Wyverns | `mods/wyverns/` | `wyverns` | planned (spec) | [mods/wyverns/SPECS.md](../mods/wyverns/SPECS.md) |
-| Snakes | `mods/snakes/` | `snakes` | planned (spec) | [mods/snakes/SPECS.md](../mods/snakes/SPECS.md) |
+| Butterflies | `mods/butterflies/` | `butterflies` | in progress | [mods/butterflies/SPECS.md](../mods/butterflies/SPECS.md) |
 | Worms | `mods/worms/` | `worms` | in progress | [mods/worms/SPECS.md](../mods/worms/SPECS.md) |
 | Cyclops | `mods/cyclops/` | `cyclops` | in progress | [mods/cyclops/SPECS.md](../mods/cyclops/SPECS.md) |
 | Fireflies | `mods/fireflies/` | `fireflies` | in progress | [mods/fireflies/SPECS.md](../mods/fireflies/SPECS.md) |
@@ -28,12 +26,12 @@ on it.
                                         │
                     ┌───────────────────┴──────────────────┐
                     │    Horizon Creature (`creature`)     │  library: shared systems, the series' creative tab
-                    └─▲─────▲─────▲─────▲─────▲─────▲─────▲┘
-                      │     │     │     │     │     │     │   required dependency, never the other way round
-                   vulture  │  wyverns  │   worms   │ fireflies
-                       butterflies   snakes      cyclops
+                    └───▲───────▲───────▲───────▲───────▲──┘
+                        │       │       │       │       │      required dependency, never the other way round
+                     vulture    │     worms     │    cyclops
+                           butterflies      fireflies
 
-       No mod requires another: Wyverns uses butterfly dust and the cyclops eye when those mods are there.
+                        No mod requires another.
 ```
 
 - Every mod **requires** the library, and the library never depends on a mod (it does not even know their ids, except
@@ -41,9 +39,8 @@ on it.
 - Mods are **independent**: any subset can be installed with the library. A mod-to-mod requirement would be the
   exception, decided in the specs, never circular, and declared everywhere it matters (below). **Today there is none**
   ✅.
-- **Optional content** between mods goes through conditional recipes, never a requirement: the Wyvern Staff takes
-  butterfly dust with Butterflies (gunpowder without) and a cyclops eye with Cyclops (an eye of ender without), from
-  one recipe file per combination (`mod_loaded`, `not`).
+- **Optional content** between mods goes through conditional recipes, never a requirement: a recipe using another
+  mod's item has one file per combination (`neoforge:conditions` with `mod_loaded`, `not`).
 - A *system* needed by two mods is never a reason for one to require the other: it belongs in the library (§3). Only
   *content* (an item used in a recipe) justifies a mod-to-mod requirement.
 - **Optional** features that switch on with a mod are the library's: e.g. the glass jar (common/SPECS.md §6) is only
@@ -69,15 +66,15 @@ day a second mod needs it (the move is part of that second mod's work, not a cop
 
 | In the library (`creature`) | In a mod |
 |---|---|
-| Generic systems, configured by data or by Rust parameters: incubator, glass jar and territories, riding and flight, taming and owners, naming, variants and patterns, breeding and growth, model drawing, mob sounds | The species: entity types, models, textures, sounds, items, recipes, loot, spawns, AI tuning, balance numbers |
-| Shared blocks and items (`creature:incubator`, `creature:glass_jar`, `creature:guide`) | The mod's own blocks and items, eggs included (`wyverns:fire_wyvern_egg`) |
+| Generic systems, configured by data or by Rust parameters: glass jar and territories, the small fliers' flight, colours and patterns, model drawing, mob sounds, monsters sparing our creatures, the bestiary | The species: entity types, models, textures, sounds, items, recipes, loot, spawns, AI tuning, balance numbers |
+| Shared blocks and items (`creature:glass_jar`, `creature:guide`) | The mod's own blocks and items (`cyclops:club`) |
 | The series' creative tab | The list of its items for that tab (`module.toml`) |
 | Shared translations (`creature` lang files) | Its own translations |
 
 The full list of shared systems, done and planned, is in [common/SPECS.md](../common/SPECS.md) §3 to §9.
 
 **API shape.** A mod uses the library by calling it from its own hooks (`creature::model::draw(...)`), or by
-registering its species with it at start (`creature::incubator::register(...)`, planned): the mod's `hooks()` runs after
+registering its species with it at start (`creature::jar::register(...)`, `creature::bestiary::register(...)`): the mod's `hooks()` runs after
 the library's, in dependency order. The library publishes plain functions, types and statics; its state is behind
 `Mutex`es, since hooks can be reentrant.
 

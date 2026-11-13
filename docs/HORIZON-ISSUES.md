@@ -143,13 +143,10 @@ decided (above, "The fork and the official build"): what follows is what we woul
 - **`Hooks` split into `ServerHost` / `ClientHost`** (~260 hooks): our `&mut dyn Host` hooks and helpers get split by
   side; a client call in server code no longer compiles.
 - **Parts** (`ItemPart`, `BlockPart`, `EntityPart` coming): behaviour attached to an item, block or entity, like
-  overriding `Item` in Java. Fits the harness, the incubator, the glass jar.
+  overriding `Item` in Java. Fits the vulture's saddle, the glass jar.
 - **`[[inject]]` in `horizon-mod.toml`** replaces `[[injection]]` in `horizon-mixin.toml`: `access = "api"` (host and
   copied parameters, native and wasm, no rebuild) or `access = "internals"` (the real `Game`, native only; a pinned
   fingerprint refuses a changed target). Our two remaining injections (`mount_hud.rs`, `ride_keys.rs`) move there.
 - **Mods extending mods:** plain Rust dependencies between mods already work (our `creature` crate); coming: a library
   declaring its own hooks, Part kinds, services, registries, and injection points into other mods. The library could
-  then publish events (a creature hatched, a creature caught in a jar) that mods listen to.
-- **Dimensions (NeoForge-style) are in:** dimension types, biome sources, sky / fog / clouds, per-level sea level and
-  clocks, entity teleport. The main risk of Wyverns (a custom dimension, `mods/wyverns/SPECS.md` §1.1) should be
-  removable on the new revision.
+  then publish events (a creature tamed, a creature caught in a jar) that mods listen to.

@@ -10,11 +10,11 @@ Rules shared by every module of the Horizon Creature series ([ARCHITECTURE.md](A
 
 ## Ids and namespaces
 
-- A module's mod id is its folder name, `[a-z0-9_]`, plural for a family of creatures (`butterflies`, `wyverns`) and
+- A module's mod id is its folder name, `[a-z0-9_]`, plural for a family of creatures (`butterflies`, `worms`) and
   singular for one species (`vulture`). The library is `creature`.
 - A module only declares content in **its own namespace** (Horizon refuses two mods owning one namespace). Shared things
-  live in `creature:`, species things in the mod's namespace: `creature:incubator`, `wyverns:fire_wyvern_egg`.
-- Names: `<species>` for an entity (`vulture:vulture`, `wyverns:fire_wyvern`), `<species>_spawn_egg`, `<species>_egg`
+  live in `creature:`, species things in the mod's namespace: `creature:glass_jar`, `cyclops:cyclops_eye`.
+- Names: `<species>` for an entity (`vulture:vulture`, `cyclops:cyclops`), `<species>_spawn_egg`, `<species>_egg`
   for a real egg, `<thing>` for an item. Entity texture paths: `<id>:entity/<species>/<variant>`.
 - Lang keys follow vanilla: `entity.<id>.<name>`, `item.<id>.<name>`, `block.<id>.<name>`,
   `subtitles.entity.<id>.<sound>`. Only the library has an `itemGroup` key.

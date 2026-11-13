@@ -4,8 +4,6 @@ A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Ja
 giant of the mountains that hurls boulders, and whose eye is a rare crafting material ✅.
 
 **Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)).
-**Used by** Wyverns when both are installed ✅: the Wyvern Staff then takes a cyclops eye in place of the eye of ender
-(Wyverns §2). Neither mod requires the other.
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 
@@ -65,7 +63,6 @@ giant of the mountains that hurls boulders, and whose eye is a rare crafting mat
 ## 3. Cyclops eye ✅
 
 - `cyclops:cyclops_eye`: dropped when a cyclops is killed (1 ✅ ❓; Looting doesn't add any ❓).
-- **Wyvern Staff** ✅: with Wyverns installed, it replaces the eye of ender in the staff's recipe (Wyverns §2).
 - **Shepherd's crook** ✅: crafted with it (§0). Other uses ❓ (ideas: an all-seeing lantern, a boulder sling, a
   potion of keen sight).
 
@@ -77,4 +74,4 @@ giant of the mountains that hurls boulders, and whose eye is a rare crafting mat
 
 - ~~Q1: Neutral or hostile?~~ Hostile. Its size, health and attacks (§2) still to balance.
 - Q2: Where it spawns and how rare it is.
-- Q3: The eye's drop rate and any use besides the Wyvern Staff (§3).
+- Q3: The eye's drop rate (§3).

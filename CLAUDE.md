@@ -2,8 +2,8 @@
 
 A series of native Rust mods for **Minecraft Horizon** (a Rust reimplementation of Minecraft Java 26.3): one mandatory
 library, **Horizon Creature** (`common/`, mod id `creature`), and independent creature mods in `mods/<mod>/` that all
-depend on it: `vulture` (prototype: tameable, rideable flying vulture), `butterflies` (and moths), `wyverns`
-(dimension, harpies, wyverns, Harpy Queen boss), `snakes`, `worms`, `cyclops`, `fireflies` (specs only).
+depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and moths), `worms`, `fireflies`,
+`cyclops`.
 
 - **Architecture**: `docs/ARCHITECTURE.md` (modules, dependencies, what goes in the library, the single creative tab,
   adding a mod). **Conventions**: `docs/CONVENTIONS.md`. **Horizon issues** we raised or follow, and our workarounds:
@@ -12,7 +12,7 @@ depend on it: `vulture` (prototype: tameable, rideable flying vulture), `butterf
   spec links to `common/SPECS.md` for shared systems instead of describing them.
 - **Rule of two**: a system used (or specified) by two or more mods goes in the library; species content stays in mods.
   Never duplicate a system between mods. No mod requires another: optional content between mods goes through
-  conditional recipes (the Wyvern Staff: butterfly dust or gunpowder, cyclops eye or eye of ender; `mod_loaded`, `not`).
+  conditional recipes (`neoforge:conditions`, `mod_loaded`, `not`).
   Library features tied to some mods (the glass jar: Butterflies, Worms or Fireflies) switch on through registration and
   conditional recipes (`neoforge:conditions`, `mod_loaded`).
 - **Creative tab**: only the library has one, generated from each module's `module.toml` (`creative` list) by
@@ -67,7 +67,6 @@ depend on it: `vulture` (prototype: tameable, rideable flying vulture), `butterf
   `sneaking`, `entity_id`).
 - Mob sounds are always prefixed with `minecraft:` by Horizon: our mobs are muted and play their own through
   `creature::sounds` (`Host::play_sound`).
-- Custom dimensions (Wyverns) are not documented in Horizon: to prototype first.
 
 ## Horizon workarounds
 

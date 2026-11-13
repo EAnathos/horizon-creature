@@ -1,7 +1,7 @@
 # Cyclops
 
-A mod of the [Horizon Creature](../../README.md) series: a one-eyed giant of the mountains that hurls boulders, and
-drops its eye. With Wyverns, the cyclops eye takes the eye of ender's place in the Wyvern Staff.
+A mod of the [Horizon Creature](../../README.md) series: a one-eyed giant shepherd at cave mouths that hurls boulders,
+and drops its eye.
 
 **Requires** Horizon Creature (`creature`), the series' library.
 

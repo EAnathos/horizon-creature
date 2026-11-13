@@ -1,6 +1,0 @@
-# Wyverns's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
-id = "wyverns"
-name = "Wyverns"
-status = "planned"
-# Its items in the series' creative tab, in order.
-creative = []
