@@ -48,6 +48,14 @@ The `.bbmodel` files are the sources: edit them in Blockbench (their texture is 
 
 ![firefly, front](models/fireflies-firefly-front.png) ![firefly, back](models/fireflies-firefly-back.png)
 
+## jellyfish
+
+### jellyfish
+
+`mods/jellyfish/assets/models/jellyfish.bbmodel`: 65 cubes, texture 64×64.
+
+![jellyfish, front](models/jellyfish-jellyfish-front.png) ![jellyfish, back](models/jellyfish-jellyfish-back.png)
+
 ## living_flowers
 
 ### allium

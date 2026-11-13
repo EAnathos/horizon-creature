@@ -100,11 +100,14 @@ The slow crawl on the ground of worms and dung beetles: the worm's `Crawl` goal 
 the Dung Beetles are built, with what a beetle adds (walking toward a target, backwards). Users: **Worms**, **Dung
 Beetles**.
 
-### 3.7 Chickens peck small creatures (`creature::prey`), planned ✅
+### 3.7 Vanilla hunters eat small creatures (`creature::prey`), planned ✅
 
-A chicken that sees a small creature within 6 blocks walks over and pecks it: the creature is eaten (no drop), wild or
-settled, so a player keeps chickens out of a garden or a pasture. A mod registers its kinds as prey. Users: **Worms**,
-**Dung Beetles** (mods/dung_beetles/SPECS.md §2). Not on creatures in a jar or on display.
+A vanilla animal that sees one of its prey within its range goes over and eats it: the creature is gone (no drop),
+wild or settled. A mod registers its kinds as prey of a hunter. Not on creatures in a jar, on display or in a bucket.
+
+- **Chickens** peck small creatures within 6 blocks, so a player keeps chickens out of a garden or a pasture. Users:
+  **Worms**, **Dung Beetles** (mods/dung_beetles/SPECS.md §2).
+- **Sea turtles** swim to jellyfish within 8 blocks and eat them. User: **Jellyfish** (mods/jellyfish/SPECS.md §3).
 
 ### 3.8 Feathers (`creature:feathers`), planned ✅
 
