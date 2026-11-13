@@ -164,7 +164,7 @@ Each moves here when a second mod needs it. Until then it stays in the vulture.
 | # | System | Today |
 |---|---|---|
 | 6.1 | **Riding and flight**: mount by right-click, **dynamic ridden flight** (steered by the look, banking into arc turns like a plane, vulture/SPECS.md §6.2), dismount, mount hearts (`mount-hud` injection), a saddle | in the vulture |
-| 6.2 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | in the vulture |
+| 6.2 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | in the vulture; moves here with the Sporelins (planned, mods/sporelins/SPECS.md §3) |
 | 6.3 | **Babies and growth**: smaller model, growth time, faster when fed | in the vulture |
 | 6.4 | **Ridden special attack**: a key that makes the mount attack (the vulture's talons) | in the vulture |
 

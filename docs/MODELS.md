@@ -48,6 +48,20 @@ The `.bbmodel` files are the sources: edit them in Blockbench (their texture is 
 
 ![firefly, front](models/fireflies-firefly-front.png) ![firefly, back](models/fireflies-firefly-back.png)
 
+## sporelins
+
+### sporelin
+
+`mods/sporelins/assets/models/sporelin.bbmodel`: 7 cubes, texture 32×32.
+
+![sporelin, front](models/sporelins-sporelin-front.png) ![sporelin, back](models/sporelins-sporelin-back.png)
+
+### sporelin_brown
+
+`mods/sporelins/assets/models/sporelin_brown.bbmodel`: 7 cubes, texture 32×32.
+
+![sporelin_brown, front](models/sporelins-sporelin_brown-front.png) ![sporelin_brown, back](models/sporelins-sporelin_brown-back.png)
+
 ## vulture
 
 ### baby

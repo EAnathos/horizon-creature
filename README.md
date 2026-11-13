@@ -13,7 +13,7 @@ Install the ones you like: each works alone, with one shared library. The game t
 | ![](docs/models/cyclops-cyclops-front.png) | [Cyclops](mods/cyclops/README.md) | A one-eyed giant shepherd at cave mouths, with its flock, its club and its boulders |
 
 Planned: [Dung Beetles](mods/dung_beetles/README.md), beetles that roll dung balls under the stars and turn worn
-pastures back into grass.
+pastures back into grass; [Sporelins](mods/sporelins/README.md), shy mushroom sprites that tend a mushroom patch.
 
 Every mod needs **[Horizon Creature](common/README.md)**, the library: it adds the glass jar, the creature guide and
 the "Horizon Creature" creative tab, where all the series' items are.
