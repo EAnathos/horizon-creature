@@ -1,0 +1,6 @@
+# Storm Spirits's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
+id = "storm_spirits"
+name = "Storm Spirits"
+status = "planned"
+# Its items in the series' creative tab, in order (none until implementation starts).
+creative = []

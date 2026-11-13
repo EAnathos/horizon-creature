@@ -174,6 +174,14 @@ The `.bbmodel` files are the sources: edit them in Blockbench (their texture is 
 
 ![sporelin_brown, front](models/sporelins-sporelin_brown-front.png) ![sporelin_brown, back](models/sporelins-sporelin_brown-back.png)
 
+## storm_spirits
+
+### storm_spirit
+
+`mods/storm_spirits/assets/models/storm_spirit.bbmodel`: 33 cubes, texture 64×64.
+
+![storm_spirit, front](models/storm_spirits-storm_spirit-front.png) ![storm_spirit, back](models/storm_spirits-storm_spirit-back.png)
+
 ## vulture
 
 ### baby

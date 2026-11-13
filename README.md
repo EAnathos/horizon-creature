@@ -17,6 +17,7 @@ pastures back into grass; [Sporelins](mods/sporelins/README.md), shy mushroom sp
 [Seagulls](mods/seagulls/README.md), coastal food thieves that become fishing companions;
 [Living Flowers](mods/living_flowers/README.md), every small and tall vanilla flower come alive, to ambush you or guard
 you;
+[Storm Spirits](mods/storm_spirits/README.md), spirits of living lightning born in storms, whose sparks call lightning;
 [Vanilla Bestiary](mods/vanilla_bestiary/README.md), Minecraft's own creatures in the creature guide.
 
 Every mod needs **[Horizon Creature](common/README.md)**, the library: it adds the glass jar, the creature guide and
