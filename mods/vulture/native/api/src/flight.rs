@@ -104,7 +104,7 @@ impl Flight {
         m.yaw += gap.clamp(-MAX_TURN * 2.0, MAX_TURN * 2.0);
         m.body_yaw = m.yaw;
         m.head_yaw = yaw;
-        if m.age % 6 == 0 {
+        if m.age.is_multiple_of(6) {
             let pitch = 0.9 + m.random.next_float() * 0.2;
             sounds::queue(m.id, sounds::FLAP, 0.6, pitch);
         }
@@ -169,7 +169,7 @@ impl Flight {
             m.velocity.y -= GLIDE_SINK * (1.0 - (self.speed / (CRUISE * pace)).min(1.0)) + GLIDE_SINK / 2.0;
         }
         // One wing beat every 8 ticks while it flaps.
-        if flapping && m.age % 8 == 0 {
+        if flapping && m.age.is_multiple_of(8) {
             let pitch = 0.9 + m.random.next_float() * 0.2;
             sounds::queue(m.id, sounds::FLAP, 0.6, pitch);
         }

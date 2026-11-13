@@ -297,7 +297,7 @@ fn rain(host: &mut dyn Host, dimension: &str) {
     }
     let mut random = creature::colours::Random::new(RAIN_EVERY);
     for player in host.server_players().into_iter().filter(|p| p.dimension == dimension) {
-        if random.next() % RAIN_CHANCE != 0 {
+        if !random.next().is_multiple_of(RAIN_CHANCE) {
             continue;
         }
         let p = player.position;

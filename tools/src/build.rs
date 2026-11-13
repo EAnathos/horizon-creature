@@ -1,6 +1,6 @@
 //! Builds modules without installing them: the library always, then the mods asked for and the mods they require (all
 //! the buildable ones by default). Each module's content part (`cargo horizon-mod build`) and native part (`pack.rs`,
-//! then `cargo horizon-mod check`) end up in `target/dist/`. The native Rust itself is compiled by the launcher, in an
+//! then `cargo horizon-mod check`) are made in `target/` and copied to `target/dist/`. The native Rust itself is compiled by the launcher, in an
 //! instance (`install`).
 use std::path::PathBuf;
 
@@ -54,7 +54,14 @@ pub fn module(m: &Module) -> crate::Result<Built> {
     };
     if let Some(content) = m.content() {
         run_in(&content, "cargo", &["horizon-mod", "build"])?;
-        built.hmod = Some(content.join(format!("target/horizon-mod/{}.hmod", m.id)));
+        // `cargo horizon-mod build` writes into the mod's own `target/`: the file goes to the repository's, beside the
+        // `.hnmod`, and the source folder is left clean.
+        let made = content.join("target");
+        let hmod = crate::root().join(format!("target/{}.hmod", m.id));
+        let from = made.join(format!("horizon-mod/{}.hmod", m.id));
+        std::fs::copy(&from, &hmod).map_err(|e| format!("{}: {e}", from.display()))?;
+        std::fs::remove_dir_all(&made).map_err(|e| format!("{}: {e}", made.display()))?;
+        built.hmod = Some(hmod);
     }
     if m.native().is_some() {
         let hnmod = crate::pack::run(m)?;

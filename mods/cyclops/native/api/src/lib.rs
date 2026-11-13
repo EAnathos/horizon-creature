@@ -350,7 +350,7 @@ fn spawn(host: &mut dyn Host, dimension: &str) {
     }
     let mut random = creature::colours::Random::new(SPAWN_EVERY);
     for player in host.server_players().into_iter().filter(|p| p.dimension == dimension) {
-        if random.next() % SPAWN_CHANCE != 0 {
+        if !random.next().is_multiple_of(SPAWN_CHANCE) {
             continue;
         }
         let p = player.position;
@@ -476,10 +476,10 @@ fn voice(entity: u32, at: [f64; 3], random: &mut creature::colours::Random) {
         .unwrap()
         .insert(entity, at)
         .is_some_and(|last| (at[0] - last[0]).hypot(at[2] - last[2]) > 0.04);
-    if moved && random.next() % STEP_CHANCE == 0 {
+    if moved && random.next().is_multiple_of(STEP_CHANCE) {
         creature::sounds::queue(entity, STEP, 1.0, 0.6);
     }
-    if random.next() % AMBIENT_CHANCE == 0 {
+    if random.next().is_multiple_of(AMBIENT_CHANCE) {
         creature::sounds::queue(entity, AMBIENT, 1.2, 0.6);
     }
 }

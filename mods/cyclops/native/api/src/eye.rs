@@ -22,8 +22,10 @@ const FACE: f64 = 0.4;
 const STUN: i32 = 40;
 const WATCH: f64 = 10.0;
 
+/// A projectile's position and velocity.
+type Motion = ([f64; 3], [f64; 3]);
 /// The arrows and tridents near a cyclops, last tick: where and how fast.
-static FLYING: Mutex<BTreeMap<u32, ([f64; 3], [f64; 3])>> = Mutex::new(BTreeMap::new());
+static FLYING: Mutex<BTreeMap<u32, Motion>> = Mutex::new(BTreeMap::new());
 /// Each cyclops's feet and facing (degrees), from its tick.
 static FACING: Mutex<BTreeMap<u32, ([f64; 3], f32)>> = Mutex::new(BTreeMap::new());
 /// Struck in the eye: the stun to start (its goal), the cry to play (its tick), when (the drawing).

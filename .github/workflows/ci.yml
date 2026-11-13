@@ -1,8 +1,8 @@
 # Lint, test, check and build every module (docs/ARCHITECTURE.md §6).
 #
-# The native Rust (`native/api/`, the injections) is formatted here but not compiled: only the Horizon launcher can
-# build it, against Horizon's own lock file and with the library injected as the `creature` crate. Compile it locally
-# with `cargo creature install` before pushing native changes.
+# The native crates (`native/api/`) are compiled with Clippy against the pinned Horizon source (`cargo creature
+# native-check`); the injections (`native/*.rs` helpers) compile only in the launcher's build, inside Horizon's own
+# crates: run `cargo creature install` after changing one.
 name: CI
 
 on:
@@ -42,6 +42,31 @@ jobs:
         run: cargo test --manifest-path tools/Cargo.toml --locked
       - name: Repository consistency
         run: cargo creature check
+
+  native:
+    name: Native code (Clippy against the pinned Horizon)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: System libraries
+        run: sudo apt-get update -q && sudo apt-get install -yq pkg-config libasound2-dev libudev-dev
+      - name: Horizon source at the pinned revision
+        run: |
+          git init -q "$RUNNER_TEMP/horizon"
+          cd "$RUNNER_TEMP/horizon"
+          git remote add origin https://github.com/horizon-rust/horizon
+          git fetch -q --depth 1 origin "$HORIZON_REV"
+          git checkout -q FETCH_HEAD
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            tools
+            target/native-check
+      - name: Clippy on the native crates
+        run: cargo creature native-check "$RUNNER_TEMP/horizon"
 
   build:
     name: Build the mods

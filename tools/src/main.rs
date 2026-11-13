@@ -9,6 +9,7 @@
 //! cargo creature pack <module>                # a module's native/ -> target/<id>.hnmod
 //! cargo creature build [mod...]               # builds the library and the mods (default: all) into target/dist/
 //! cargo creature check                        # the repository's consistency (tab, manifests, pins, lang, JSON, docs)
+//! cargo creature native-check <horizon-src>   # compiles the native crates (clippy) against a Horizon source
 //! cargo creature install [--instance <name>] [mod...]
 //!                                             # builds the library and the mods (default: all), installs them in the
 //!                                             # instance (default creature-dev), runs its native build
@@ -21,6 +22,7 @@ mod check;
 mod install;
 mod model;
 mod modules;
+mod native_check;
 mod pack;
 mod preview;
 mod sounds;
@@ -40,7 +42,8 @@ pub fn root() -> PathBuf {
 pub type Result<T = ()> = std::result::Result<T, String>;
 
 const USAGE: &str = "usage: cargo creature list | tab | model <mod> [model] | preview | sounds <mod> [folder] | pack <module> \
-                     | build [mod...] | check | install [--instance <name>] [mod...]";
+                     | build [mod...] | check | native-check <horizon-source> \
+                     | install [--instance <name>] [mod...]";
 
 fn list() -> Result {
     for m in std::iter::once(modules::library()?).chain(modules::mods()?) {
@@ -92,6 +95,7 @@ fn main() -> ExitCode {
             .and_then(|m| pack::run(&m).map(|_| ())),
         Some("build") => build::run(&args[1..]),
         Some("check") => check::run(),
+        Some("native-check") => arg(1).ok_or(USAGE.into()).and_then(native_check::run),
         Some("install") => install(&args[1..]),
         _ => Err(USAGE.into()),
     };

@@ -235,7 +235,8 @@ impl Random {
         Random(u64::from(seed) ^ time ^ salt | 1)
     }
 
-    /// xorshift64*.
+    /// xorshift64*. Not an `Iterator`: it never ends, and every mod calls it `next`.
+    #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> u64 {
         self.0 ^= self.0 >> 12;
         self.0 ^= self.0 << 25;

@@ -7,6 +7,10 @@
 //!   the library and on every mod its `module.toml` requires.
 //! - A mod's tab items are declared items; its `requires` name mods of the series, without cycles.
 //! - Every JSON file parses; each module's `en_us` and `fr_fr` lang files have the same keys.
+//! - Generated files are up to date: each model's Rust (`cargo creature model`), and each model has its pictures in
+//!   `docs/models/` and its entry in `docs/MODELS.md` (`cargo creature preview`).
+//! - The mods that use the glass jar are the same in its recipe's condition and in the creative tab injection
+//!   (`common/native/jar_tab.rs`).
 //! - The Markdown docs use no em dash.
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -41,6 +45,10 @@ pub fn run() -> crate::Result {
     for m in std::iter::once(&library).chain(&mods) {
         module(m, &mods, &revision, &mut errors);
     }
+    for m in std::iter::once(&library).chain(&mods) {
+        models(m, &mut errors);
+    }
+    jar_users(&root, &mut errors);
     let ids: Vec<String> = mods.iter().map(|m| m.id.clone()).collect();
     if let Err(e) = modules::with_requirements(&ids) {
         errors.push(e);
@@ -157,6 +165,91 @@ fn module(m: &Module, mods: &[Module], revision: &str, errors: &mut Vec<String>)
                 rel(&m.dir.join("module.toml"))
             ));
         }
+    }
+}
+
+/// Each of the module's `.bbmodel` files: its Rust as `cargo creature model` makes it, its pictures and its entry in
+/// `docs/MODELS.md`.
+fn models(m: &Module, errors: &mut Vec<String>) {
+    let Ok(entries) = std::fs::read_dir(m.dir.join("assets/models")) else {
+        return;
+    };
+    let docs = crate::root().join("docs");
+    let index = std::fs::read_to_string(docs.join("MODELS.md")).unwrap_or_default();
+    for path in entries.flatten().map(|e| e.path()) {
+        let Some(name) = path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .and_then(|n| n.strip_suffix(".bbmodel"))
+        else {
+            continue;
+        };
+        match crate::model::render(&m.id, Some(name)) {
+            Ok((out, rust, _)) => {
+                if std::fs::read_to_string(&out).ok().as_deref() != Some(&rust) {
+                    let args = if name == m.id {
+                        m.id.clone()
+                    } else {
+                        format!("{} {name}", m.id)
+                    };
+                    errors.push(format!("{}: out of date, run `cargo creature model {args}`", rel(&out)));
+                }
+            }
+            Err(e) => errors.push(e),
+        }
+        let pictures = ["front", "back"].map(|side| docs.join(format!("models/{}-{name}-{side}.png", m.id)));
+        if !pictures.iter().all(|p| p.is_file()) || !index.contains(&rel(&path)) {
+            errors.push(format!(
+                "{}: no pictures in docs/, run `cargo creature preview`",
+                rel(&path)
+            ));
+        }
+    }
+}
+
+/// The mods the glass jar's recipe waits for (`mod_loaded`) are the ones the creative tab injection keeps it for.
+fn jar_users(root: &Path, errors: &mut Vec<String>) {
+    let recipe = root.join("common/content/data/creature/recipe/glass_jar.json");
+    let injection = root.join("common/native/jar_tab.rs");
+    let mut in_recipe = BTreeSet::new();
+    if let Ok(v) = read_json(&recipe) {
+        collect_modids(&v, &mut in_recipe);
+    }
+    let text = std::fs::read_to_string(&injection).unwrap_or_default();
+    let in_injection: BTreeSet<String> = text
+        .lines()
+        .find(|l| l.contains("const USERS"))
+        .map(|l| {
+            l.split('"')
+                .skip(1)
+                .step_by(2)
+                .map(|s| s.trim_end_matches(':').to_owned())
+                .collect()
+        })
+        .unwrap_or_default();
+    if in_recipe.is_empty() || in_recipe != in_injection {
+        errors.push(format!(
+            "{} and {}: the jar's mods differ ({} / {})",
+            rel(&recipe),
+            rel(&injection),
+            in_recipe.into_iter().collect::<Vec<_>>().join(", "),
+            in_injection.into_iter().collect::<Vec<_>>().join(", ")
+        ));
+    }
+}
+
+fn collect_modids(v: &serde_json::Value, out: &mut BTreeSet<String>) {
+    match v {
+        serde_json::Value::Object(o) => {
+            if o.get("type").and_then(|t| t.as_str()) == Some("neoforge:mod_loaded")
+                && let Some(id) = o.get("modid").and_then(|i| i.as_str())
+            {
+                out.insert(id.to_owned());
+            }
+            o.values().for_each(|v| collect_modids(v, out));
+        }
+        serde_json::Value::Array(a) => a.iter().for_each(|v| collect_modids(v, out)),
+        _ => {}
     }
 }
 

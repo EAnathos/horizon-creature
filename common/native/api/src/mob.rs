@@ -93,7 +93,7 @@ pub fn despawn_far(host: &mut dyn Host, dimension: &str, entity: u32, keep: bool
         .filter(|p| p.dimension == dimension)
         .map(|p| (0..3).map(|k| (p.position[k] - at[k]).powi(2)).sum::<f64>().sqrt())
         .fold(f64::MAX, f64::min);
-    let gone = nearest > GONE || (nearest > NEAR && Random::new(entity).next() % CHANCE == 0);
+    let gone = nearest > GONE || (nearest > NEAR && Random::new(entity).next().is_multiple_of(CHANCE));
     if !gone {
         return false;
     }

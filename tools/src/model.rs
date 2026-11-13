@@ -7,12 +7,27 @@
 //! The library draws these cubes with the mod's texture (`content/assets/<mod>/textures/entity/...`).
 use std::collections::HashMap;
 use std::fmt::Write as _;
+use std::path::PathBuf;
 
 use serde_json::Value;
 
 const FACES: [&str; 6] = ["down", "up", "north", "south", "west", "east"];
 
 pub fn run(module: &str, name: Option<&str>) -> crate::Result {
+    let (out, rust, model) = render(module, name)?;
+    std::fs::write(&out, rust).map_err(|e| format!("{}: {e}", out.display()))?;
+    let count = |key: &str| model[key].as_array().map_or(0, Vec::len);
+    println!(
+        "{}: {} cubes, {} groups",
+        out.display(),
+        count("elements"),
+        count("groups")
+    );
+    Ok(())
+}
+
+/// Where a model's Rust goes and what it is, without writing it (`cargo creature check` compares).
+pub fn render(module: &str, name: Option<&str>) -> crate::Result<(PathBuf, String, Value)> {
     let m = crate::modules::find(module)?;
     let name = name.unwrap_or(&m.id);
     let src = m.dir.join(format!("assets/models/{name}.bbmodel"));
@@ -32,15 +47,7 @@ pub fn run(module: &str, name: Option<&str>) -> crate::Result {
         format!("{module} {name}")
     };
     let rust = convert(&model, &args, &source, name)?;
-    std::fs::write(&out, rust).map_err(|e| format!("{}: {e}", out.display()))?;
-    let count = |key: &str| model[key].as_array().map_or(0, Vec::len);
-    println!(
-        "{}: {} cubes, {} groups",
-        out.display(),
-        count("elements"),
-        count("groups")
-    );
-    Ok(())
+    Ok((out, rust, model))
 }
 
 /// The whole `model.rs` for a parsed `.bbmodel`: `pub static <NAME>: Part`. `args` and `source` go in its header.
@@ -142,9 +149,10 @@ fn vector(v: &Value) -> Vec<f64> {
     v.as_array().into_iter().flatten().filter_map(Value::as_f64).collect()
 }
 
-/// `[1.0, 0.25]`: `{:?}` keeps a `.0` on whole numbers, so every value is an `f32` literal.
+/// `[1.0, 0.25]`: `{:?}` keeps a `.0` on whole numbers, so every value is an `f32` literal, written with the digits an
+/// `f32` holds (no more: Clippy's `excessive_precision`).
 fn list(values: &[f64]) -> String {
-    let items: Vec<String> = values.iter().map(|v| format!("{v:?}")).collect();
+    let items: Vec<String> = values.iter().map(|v| format!("{:?}", *v as f32)).collect();
     format!("[{}]", items.join(", "))
 }
 

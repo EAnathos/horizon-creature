@@ -1,0 +1,116 @@
+# The vulture's sounds, made by `cargo creature sounds vulture` from freesound downloads (all CC0, nothing to credit).
+# A downloaded file keeps the name freesound gives it (`740195__el_boss__goose-hiss.wav`): it is found by its number.
+# Each clip: a slice of a source (`start` and `length` in seconds of the output; no `length` keeps the rest of the
+# file), resampled by `pitch` (slower and lower below 1), faded out over `fade` seconds, `gain` in dB.
+out = "sounds/vulture"
+
+[sources]
+goose_a = 740195 # el_boss, Goose Hiss
+goose_b = 844558 # TheKingOfGeeks360, White Chinese Goose; Hiss
+call = 188041    # AntumDeluge, Vulture (imitation)
+wings = 670509   # 2create, Huge wing flaps
+takeoff = 389634 # _stubb, Wing Flap 1
+eat = 234237     # ProductionNow, Eating Juicy Meat
+
+# Cuts picked from the files' non-silent passages (ffmpeg `silencedetect`, -22 to -35 dB): each goose's long hiss,
+# then the short puffs after el_boss's (1.57 s and 2.79 s). A vulture hisses lower than a goose: 4 semitones (x0.79).
+[[clip]]
+name = "ambient1"
+source = "goose_a"
+start = 0.0
+length = 1.7
+pitch = 0.79
+
+[[clip]]
+name = "ambient2"
+source = "goose_b"
+start = 0.0
+length = 1.95
+pitch = 0.79
+
+[[clip]]
+name = "ambient3"
+source = "goose_a"
+start = 1.5
+length = 2.0
+pitch = 0.79
+fade = 0.3
+
+[[clip]]
+name = "call"
+source = "call"
+start = 0.0
+pitch = 0.9
+
+# Hurt: a short puff, pitched down less; death: the longest hiss, lower, fading out.
+[[clip]]
+name = "hurt1"
+source = "goose_a"
+start = 1.55
+length = 0.35
+pitch = 0.9
+fade = 0.08
+
+[[clip]]
+name = "hurt2"
+source = "goose_a"
+start = 2.77
+length = 0.35
+pitch = 0.9
+fade = 0.08
+
+[[clip]]
+name = "death"
+source = "goose_b"
+start = 0.0
+length = 2.4
+pitch = 0.65
+fade = 0.9
+
+# Flaps: three clean beats of the big wings, with their whoosh.
+[[clip]]
+name = "flap1"
+source = "wings"
+start = 1.0
+length = 0.5
+fade = 0.12
+gain = -3.0
+
+[[clip]]
+name = "flap2"
+source = "wings"
+start = 2.42
+length = 0.7
+fade = 0.12
+gain = -3.0
+
+[[clip]]
+name = "flap3"
+source = "wings"
+start = 3.7
+length = 0.5
+fade = 0.12
+gain = -3.0
+
+[[clip]]
+name = "takeoff"
+source = "takeoff"
+start = 0.0
+length = 0.93
+fade = 0.3
+
+[[clip]]
+name = "eat1"
+source = "eat"
+start = 0.22
+length = 0.95
+fade = 0.1
+gain = -4.0
+
+[[clip]]
+name = "eat2"
+source = "eat"
+start = 5.4
+length = 0.7
+fade = 0.1
+gain = -4.0

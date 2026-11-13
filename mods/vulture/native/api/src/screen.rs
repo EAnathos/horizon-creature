@@ -46,6 +46,8 @@ fn stack_nbt(stack: &ItemStack) -> Compound {
     c
 }
 
+// `&Vec`: the attachment's codec takes `fn(&T)` with `T` its type, a `Vec`.
+#[allow(clippy::ptr_arg)]
 fn encode(items: &Vec<Option<ItemStack>>) -> Result<Compound, AttachmentError> {
     let list = items
         .iter()
