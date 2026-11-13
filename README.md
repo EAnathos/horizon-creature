@@ -15,7 +15,8 @@ Install the ones you like: each works alone, with one shared library. The game t
 Planned: [Dung Beetles](mods/dung_beetles/README.md), beetles that roll dung balls under the stars and turn worn
 pastures back into grass; [Sporelins](mods/sporelins/README.md), shy mushroom sprites that tend a mushroom patch;
 [Seagulls](mods/seagulls/README.md), coastal food thieves that become fishing companions;
-[Living Flowers](mods/living_flowers/README.md), every vanilla flower come alive, to ambush you or guard you;
+[Living Flowers](mods/living_flowers/README.md), every small and tall vanilla flower come alive, to ambush you or guard
+you;
 [Vanilla Bestiary](mods/vanilla_bestiary/README.md), Minecraft's own creatures in the creature guide.
 
 Every mod needs **[Horizon Creature](common/README.md)**, the library: it adds the glass jar, the creature guide and

@@ -68,12 +68,6 @@ The `.bbmodel` files are the sources: edit them in Blockbench (their texture is 
 
 ![blue_orchid, front](models/living_flowers-blue_orchid-front.png) ![blue_orchid, back](models/living_flowers-blue_orchid-back.png)
 
-### cactus_flower
-
-`mods/living_flowers/assets/models/cactus_flower.bbmodel`: 16 cubes, texture 32×32.
-
-![cactus_flower, front](models/living_flowers-cactus_flower-front.png) ![cactus_flower, back](models/living_flowers-cactus_flower-back.png)
-
 ### cornflower
 
 `mods/living_flowers/assets/models/cornflower.bbmodel`: 16 cubes, texture 32×32.
@@ -116,12 +110,6 @@ The `.bbmodel` files are the sources: edit them in Blockbench (their texture is 
 
 ![peony, front](models/living_flowers-peony-front.png) ![peony, back](models/living_flowers-peony-back.png)
 
-### pink_petals
-
-`mods/living_flowers/assets/models/pink_petals.bbmodel`: 16 cubes, texture 32×32.
-
-![pink_petals, front](models/living_flowers-pink_petals-front.png) ![pink_petals, back](models/living_flowers-pink_petals-back.png)
-
 ### pitcher_plant
 
 `mods/living_flowers/assets/models/pitcher_plant.bbmodel`: 14 cubes, texture 32×32.
@@ -157,12 +145,6 @@ The `.bbmodel` files are the sources: edit them in Blockbench (their texture is 
 `mods/living_flowers/assets/models/tulip.bbmodel`: 15 cubes, texture 32×32.
 
 ![tulip, front](models/living_flowers-tulip-front.png) ![tulip, back](models/living_flowers-tulip-back.png)
-
-### wildflowers
-
-`mods/living_flowers/assets/models/wildflowers.bbmodel`: 16 cubes, texture 32×32.
-
-![wildflowers, front](models/living_flowers-wildflowers-front.png) ![wildflowers, back](models/living_flowers-wildflowers-back.png)
 
 ### wither_rose
 
