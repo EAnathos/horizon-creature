@@ -19,6 +19,7 @@ on it.
 | Living Flowers | `mods/living_flowers/` | `living_flowers` | planned | [mods/living_flowers/SPECS.md](../mods/living_flowers/SPECS.md) |
 | Storm Spirits | `mods/storm_spirits/` | `storm_spirits` | planned | [mods/storm_spirits/SPECS.md](../mods/storm_spirits/SPECS.md) |
 | Jellyfish | `mods/jellyfish/` | `jellyfish` | planned | [mods/jellyfish/SPECS.md](../mods/jellyfish/SPECS.md) |
+| Magma Golem | `mods/magma_golem/` | `magma_golem` | planned | [mods/magma_golem/SPECS.md](../mods/magma_golem/SPECS.md) |
 | Seagulls | `mods/seagulls/` | `seagulls` | planned | [mods/seagulls/SPECS.md](../mods/seagulls/SPECS.md) |
 | Vanilla Bestiary | `mods/vanilla_bestiary/` | `vanilla_bestiary` | planned | [mods/vanilla_bestiary/SPECS.md](../mods/vanilla_bestiary/SPECS.md) |
 

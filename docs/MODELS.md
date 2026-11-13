@@ -160,6 +160,14 @@ The `.bbmodel` files are the sources: edit them in Blockbench (their texture is 
 
 ![wither_rose, front](models/living_flowers-wither_rose-front.png) ![wither_rose, back](models/living_flowers-wither_rose-back.png)
 
+## magma_golem
+
+### magma_golem
+
+`mods/magma_golem/assets/models/magma_golem.bbmodel`: 48 cubes, texture 128×128.
+
+![magma_golem, front](models/magma_golem-magma_golem-front.png) ![magma_golem, back](models/magma_golem-magma_golem-back.png)
+
 ## seagulls
 
 ### seagull

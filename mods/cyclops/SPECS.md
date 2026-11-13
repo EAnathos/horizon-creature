@@ -38,7 +38,7 @@ as players report.
 - **Mod id**: `cyclops`. Entity `cyclops:cyclops`, items `cyclops:cyclops_eye` ✅, `cyclops:cyclops_spawn_egg`;
   `cyclops:boulder` (projectile ✅).
 - Uses from the library: model drawing and sounds (§3.1, §3.2), **hitbox size** (§3.4, a big mob) and the creature
-  guide's pages (§7). The boulder throw is the cyclops's own goal.
+  guide's pages (§7). The boulder throw is the cyclops's own goal today; it moves to the library with the Magma Golem (common/SPECS.md §3.9, lobbed projectiles).
 - A hostile mob ✅: it copies the wandering trader, with our own goals and target goals.
 
 ## 2. The cyclops ✅

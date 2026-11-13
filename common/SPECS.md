@@ -117,6 +117,14 @@ library's recipes for arrows, the brush and the book and quill take any feather 
 when implementing: that Horizon merges a tag from several content mods (else the library's tag lists every mod's
 feather, the missing ones left out).
 
+### 3.9 Lobbed projectiles (`creature::lob`), planned ✅
+
+A big mob lifts something over its head and hurls it on an arc at a target: the throw goal (range, wind-up, aim on
+an arc) and the projectile (damage, a push, what happens where it lands: blocks torn up in a radius, sparing liquids,
+containers, placed jars and unbreakable blocks, or none, or a burst of fire). A mod gives its projectile entity and
+these values. Users: **Cyclops** (its boulder, `cyclops:boulder`, whose goal and projectile move here) and **Magma
+Golem** (planned, its magma glob, mods/magma_golem/SPECS.md §2).
+
 ## 4. Glass jar and territories ✅
 
 Catching small creatures and settling them in a place they won't leave. Users: **Butterflies**, **Worms**, **Fireflies**
