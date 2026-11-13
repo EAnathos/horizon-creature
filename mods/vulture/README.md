@@ -16,9 +16,9 @@ Tried in game: the vulture, its spawn egg, mounting and the ridden flight. Built
 - The tawny vulture, `vulture:vulture`: `/summon vulture:vulture`, the **spawn egg** (creative tab "Horizon Creature"),
   or in the wild in deserts, badlands and savannas, where it soars in circles and lands again.
 - **Taming**: throw it raw chicken (Q). It walks to the meat and eats it: 1 chance in 4 to tame it (hearts).
-- **Its owner's right-click**: a **vulture harness** (5 leather, 2 string, 1 iron ingot) puts it on, a **chest** adds
-  one (two at most), raw meat heals it, rotten flesh makes it want a mate; otherwise mount it (with a harness) or tell
-  it to sit or follow. **Sneak + right-click**: its screen (harness, sit / follow, chests and their 15 slots each).
+- **Its owner's right-click**: a plain **saddle** puts it on (drawn as a seat and a breast strap), a **chest** adds
+  one (two at most), raw meat heals it, rotten flesh makes it want a mate; otherwise mount it (saddled) or tell it to
+  sit or follow. **Sneak + right-click**: its screen (saddle, sit / follow, chests and their 15 slots each).
 - **Fly**, like a plane: it always flies forward and goes where you look.
 
   | Key | Effect |

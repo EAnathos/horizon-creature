@@ -84,6 +84,9 @@ library shares are described there; this spec gives the vulture's own rules and 
   (the library's `tint` and `death_tilt`), so the drops no longer seem to come early; wild vultures no longer land in
   tree tops (leaves skipped), climb over what they bump into in flight, and give up a landing spot after 20 s. The
   tab's button is the guide book.
+- **Saddle instead of the harness** (2026-11-13): right-click with a vanilla saddle; the screen's slot and the death
+  drop give a saddle back. The `vulture:harness` item, recipe, texture and names are removed (saved vultures keep
+  theirs: the state's flag is unchanged).
 - **Harness fixed, tested in game** (2026-11-09): right-clicks were changing a copy of the mob that the game refreshes
   (lost), the owner check read an unset player id, a requested change was never saved, and the harness was hidden
   under the folded wings. Now the server hook makes every change (`interaction.rs`), the injection only mounts (reading
@@ -235,9 +238,10 @@ Variant names are simple colour names ✅, so players need not know the species.
   - sneak + right-click = the vulture's screen (which also has a sit/follow button);
   - right-click with rotten flesh = breeding mode (§8).
 
-### 6.1 Harness ✅
+### 6.1 Saddle ✅
 
-- **Vulture harness** item, unstackable, recipe: 5 leather + 2 string + 1 iron ingot (U shape, iron in the middle) ✅.
+- A plain **saddle** (vanilla's `minecraft:saddle`) ✅ (2026-11-13: the vulture harness item and its recipe are gone;
+  the gear is still drawn as a seat and a breast strap, and the code and saves still call it the harness).
 - Needed to ride it **and** to carry chests ✅. Goes in a slot of the vulture's screen, and shows on the model.
 
 ### 6.2 Dynamic flight ✅

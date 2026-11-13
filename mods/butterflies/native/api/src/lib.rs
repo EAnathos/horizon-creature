@@ -260,6 +260,7 @@ static BESTIARY: [creature::bestiary::Species; 2] = [
         facts: JAR_FACTS,
         icon: "butterflies:butterfly_spawn_egg",
         scheme: Some(&SCHEME),
+        rarity: creature::bestiary::Rarity::Common,
         draw: butterfly_view,
     },
     creature::bestiary::Species {
@@ -269,6 +270,7 @@ static BESTIARY: [creature::bestiary::Species; 2] = [
         facts: JAR_FACTS,
         icon: "butterflies:moth_spawn_egg",
         scheme: None,
+        rarity: creature::bestiary::Rarity::Common,
         draw: moth_view,
     },
 ];

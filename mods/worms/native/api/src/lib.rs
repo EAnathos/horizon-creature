@@ -63,6 +63,7 @@ static BESTIARY: Species = Species {
     ],
     icon: "worms:worm_spawn_egg",
     scheme: None,
+    rarity: creature::bestiary::Rarity::Common,
     draw: book_view,
 };
 

@@ -71,6 +71,7 @@ static BESTIARY: creature::bestiary::Species = creature::bestiary::Species {
     ],
     icon: "vulture:vulture_spawn_egg",
     scheme: None,
+    rarity: creature::bestiary::Rarity::Uncommon,
     draw: book_view,
 };
 

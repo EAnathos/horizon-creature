@@ -7,15 +7,19 @@
 //! Only its owner gets anything from it:
 //! - sneaking: its screen (`screen.rs`);
 //! - holding a lead: tied on (Horizon refuses leads on the trader it copies); on a lead, any click takes it off;
-//! - holding the vulture harness: puts it on (not on a baby); a chest: adds one (two at most, harness needed);
+//! - holding a saddle (vanilla's): puts it on, drawn as a seat and a breast strap (not on a baby); a chest: adds one
+//!   (two at most, saddle needed);
 //! - holding rotten flesh, grown and not resting from breeding: in love for 30 s (SPECS §8);
 //! - holding raw meat: a baby grows a minute older; a hurt vulture heals 4;
-//! - otherwise: mounts it, with a harness on and grown up; else sit / follow.
+//! - otherwise: mounts it, saddled and grown up; else sit / follow.
 use horizon_client::items::ItemStack;
 use horizon_client::mod_api::{Host, Text};
 
 use crate::state::{self, Change};
 use crate::{screen, sounds};
+
+/// What makes it rideable: a plain saddle (its state still calls the gear its harness).
+pub const SADDLE: &str = "minecraft:saddle";
 
 const RAW_MEATS: [&str; 5] = [
     "minecraft:chicken",
@@ -62,10 +66,7 @@ pub fn clicked(host: &mut dyn Host, id: u32) {
     }
     if saved.owner != Some(uuid_ints(player.uuid)) {
         // Say why nothing happens, holding what only works on one's own vulture.
-        if matches!(
-            held.as_str(),
-            "vulture:harness" | "minecraft:chest" | "minecraft:rotten_flesh"
-        ) {
+        if matches!(held.as_str(), SADDLE | "minecraft:chest" | "minecraft:rotten_flesh") {
             let key = if saved.owner.is_some() {
                 "message.vulture.not_yours"
             } else {
@@ -82,7 +83,7 @@ pub fn clicked(host: &mut dyn Host, id: u32) {
     let baby = saved.age < 0;
     let hurt = state::hurt(id);
     let change = match held.as_str() {
-        "vulture:harness" if !saved.harness && !baby => Some(Change::PutHarness),
+        SADDLE if !saved.harness && !baby => Some(Change::PutHarness),
         "minecraft:chest" if saved.harness && saved.chests < 2 => Some(Change::AddChest),
         "minecraft:rotten_flesh" if saved.age == 0 && !state::in_love(id) => Some(Change::InLove),
         meat if RAW_MEATS.contains(&meat) && baby => Some(Change::Grow),

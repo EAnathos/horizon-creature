@@ -43,9 +43,39 @@ pub struct Species {
     pub icon: &'static str,
     /// Its looks, when it has some (the morphs met are noted and shown).
     pub scheme: Option<&'static Scheme>,
+    /// How rare it is, shown on its page (indicative: how often a player comes across one).
+    pub rarity: Rarity,
     /// Draws it in the book's 3D view, standing on the block's floor, centred on the block, about a block across (the
     /// mod scales its model to fit), in `look` when it has looks.
     pub draw: fn(&dyn Host, &mut BlockEntityDraw, Option<Look>),
+}
+
+/// How rare a species is, as its page shows it (in vanilla's rarity colours, darkened for the paper).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Rarity {
+    Common,
+    Uncommon,
+    Rare,
+    VeryRare,
+}
+
+impl Rarity {
+    fn key(self) -> &'static str {
+        match self {
+            Rarity::Common => "bestiary.creature.rarity.common",
+            Rarity::Uncommon => "bestiary.creature.rarity.uncommon",
+            Rarity::Rare => "bestiary.creature.rarity.rare",
+            Rarity::VeryRare => "bestiary.creature.rarity.very_rare",
+        }
+    }
+    fn colour(self) -> u32 {
+        match self {
+            Rarity::Common => 0xFF6B6455,
+            Rarity::Uncommon => 0xFFA87C00,
+            Rarity::Rare => 0xFF1E7FA0,
+            Rarity::VeryRare => 0xFF9A2FA8,
+        }
+    }
 }
 
 static SPECIES: Mutex<Vec<&'static Species>> = Mutex::new(Vec::new());
@@ -511,6 +541,10 @@ pub fn draw(host: &dyn Host, event: &mut ScreenRenderPostEvent<'_>) {
     };
     let (px, width) = (x + MARGIN, PAGE - 2.0 * MARGIN);
     host.text(batch, &tr(&entity_key(&entry.species)), [px, y + 8.0], INK, false);
+    // How rare it is, on the right of its name.
+    let rarity = tr(sp.rarity.key());
+    let rx_end = x + PAGE - MARGIN - host.text_width(&rarity);
+    host.text(batch, &rarity, [rx_end, y + 8.0], sp.rarity.colour(), false);
     let morphs = sorted_morphs(sp, entry);
     let look = sp.scheme.map(|_| morphs.get(book.morph).copied().unwrap_or_default());
     let view_box = [x + VIEW[0], y + VIEW[1], VIEW[2], VIEW[3]];

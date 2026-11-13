@@ -76,6 +76,7 @@ static BESTIARY: Species = Species {
     ],
     icon: "fireflies:firefly_spawn_egg",
     scheme: None,
+    rarity: creature::bestiary::Rarity::Uncommon,
     draw: book_view,
 };
 

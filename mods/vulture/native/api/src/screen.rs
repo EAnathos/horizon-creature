@@ -1,9 +1,9 @@
 //! The vulture's screen and its chests' contents (SPECS §6.1, §6.3).
 //!
 //! Its owner opens it with sneak + right-click (`interaction.rs`, opened on its next tick). It is one of
-//! Horizon's server menus (`Host::open_menu_with_input`), shown as a chest: the top row is the vulture's (its harness,
+//! Horizon's server menus (`Host::open_menu_with_input`), shown as a chest: the top row is the vulture's (its saddle,
 //! sit / follow, a button per chest), then 15 slots per chest that hold items as a chest's do. The contents are saved
-//! in the `vulture:chests` attachment when the screen closes; a chest taken off, the harness taken off (only without
+//! in the `vulture:chests` attachment when the screen closes; a chest taken off, the saddle taken off (only without
 //! chests) or the vulture's death gives everything back (to the owner, or on the ground).
 use std::collections::BTreeMap;
 use std::sync::Mutex;
@@ -87,7 +87,7 @@ fn layout(saved: &state::Saved, contents: &[Option<ItemStack>]) -> (u8, Vec<Opti
     let storage = PER_CHEST * usize::from(saved.chests);
     let rows = 1 + storage.div_ceil(ROW);
     let mut items = vec![button("minecraft:gray_stained_glass_pane"); rows * ROW];
-    items[HARNESS as usize] = saved.harness.then(|| ItemStack::new("vulture:harness", 1));
+    items[HARNESS as usize] = saved.harness.then(|| ItemStack::new(crate::interaction::SADDLE, 1));
     items[SIT as usize] = button(if saved.sitting {
         "minecraft:lead"
     } else {
@@ -190,7 +190,7 @@ pub fn clicked(host: &mut dyn Host, event: &MenuClickedEvent) {
                 event.uuid,
                 &dimension,
                 at,
-                vec![ItemStack::new("vulture:harness", 1)],
+                vec![ItemStack::new(crate::interaction::SADDLE, 1)],
             );
             state::request(id, Change::RemoveHarness);
         }
@@ -234,7 +234,7 @@ pub fn died(host: &mut dyn Host, dimension: &str, id: u32) {
         .flatten()
         .collect();
     if saved.harness {
-        stacks.push(ItemStack::new("vulture:harness", 1));
+        stacks.push(ItemStack::new(crate::interaction::SADDLE, 1));
     }
     if saved.chests > 0 {
         stacks.push(ItemStack::new("minecraft:chest", u32::from(saved.chests)));

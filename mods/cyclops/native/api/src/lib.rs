@@ -69,6 +69,7 @@ static BESTIARY: Species = Species {
     }],
     icon: "cyclops:cyclops_spawn_egg",
     scheme: None,
+    rarity: creature::bestiary::Rarity::Rare,
     draw: book_view,
 };
 

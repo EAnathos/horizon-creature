@@ -11,5 +11,9 @@
   "item.creature.glass_jar.look": "%s, %s (%s)",
   "item.creature.glass_jar.look_plain": "%s",
   "block.creature.jar": "Glass Jar",
-  "block.creature.lit_jar": "Glass Jar"
+  "block.creature.lit_jar": "Glass Jar",
+  "bestiary.creature.rarity.common": "Common",
+  "bestiary.creature.rarity.uncommon": "Uncommon",
+  "bestiary.creature.rarity.rare": "Rare",
+  "bestiary.creature.rarity.very_rare": "Very rare"
 }
