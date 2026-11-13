@@ -14,6 +14,7 @@ Install the ones you like: each works alone, with one shared library. The game t
 
 Planned: [Dung Beetles](mods/dung_beetles/README.md), beetles that roll dung balls under the stars and turn worn
 pastures back into grass; [Sporelins](mods/sporelins/README.md), shy mushroom sprites that tend a mushroom patch;
+[Seagulls](mods/seagulls/README.md), coastal food thieves that become fishing companions;
 [Vanilla Bestiary](mods/vanilla_bestiary/README.md), Minecraft's own creatures in the creature guide.
 
 Every mod needs **[Horizon Creature](common/README.md)**, the library: it adds the glass jar, the creature guide and

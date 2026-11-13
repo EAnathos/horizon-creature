@@ -106,6 +106,14 @@ A chicken that sees a small creature within 6 blocks walks over and pecks it: th
 settled, so a player keeps chickens out of a garden or a pasture. A mod registers its kinds as prey. Users: **Worms**,
 **Dung Beetles** (mods/dung_beetles/SPECS.md §2). Not on creatures in a jar or on display.
 
+### 3.8 Feathers (`creature:feathers`), planned ✅
+
+A mod's own feather works as a feather: the item tag `creature:feathers` (vanilla's feather and each mod's), and the
+library's recipes for arrows, the brush and the book and quill take any feather of it. Users: **Vulture** (its
+`vulture:feather`, whose three recipes move here) and **Seagulls** (planned, mods/seagulls/SPECS.md §5). To check
+when implementing: that Horizon merges a tag from several content mods (else the library's tag lists every mod's
+feather, the missing ones left out).
+
 ## 4. Glass jar and territories ✅
 
 Catching small creatures and settling them in a place they won't leave. Users: **Butterflies**, **Worms**, **Fireflies**
@@ -163,8 +171,8 @@ Each moves here when a second mod needs it. Until then it stays in the vulture.
 
 | # | System | Today |
 |---|---|---|
-| 6.1 | **Riding and flight**: mount by right-click, **dynamic ridden flight** (steered by the look, banking into arc turns like a plane, vulture/SPECS.md §6.2), dismount, mount hearts (`mount-hud` injection), a saddle | in the vulture |
-| 6.2 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | in the vulture; moves here with the Sporelins (planned, mods/sporelins/SPECS.md §3) |
+| 6.1 | **Riding and flight**: mount by right-click, **dynamic ridden flight** (steered by the look, banking into arc turns like a plane, vulture/SPECS.md §6.2), dismount, mount hearts (`mount-hud` injection), a saddle | in the vulture; the flight itself (glide, soaring, landing, the wing poses) moves here with the Seagulls (planned, mods/seagulls/SPECS.md §1), riding stays |
+| 6.2 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | in the vulture; moves here with the Sporelins and the Seagulls (planned) |
 | 6.3 | **Babies and growth**: smaller model, growth time, faster when fed | in the vulture |
 | 6.4 | **Ridden special attack**: a key that makes the mount attack (the vulture's talons) | in the vulture |
 

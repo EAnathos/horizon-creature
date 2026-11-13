@@ -1,0 +1,6 @@
+# Seagulls's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
+id = "seagulls"
+name = "Seagulls"
+status = "planned"
+# Its items in the series' creative tab, in order (none until implementation starts).
+creative = []

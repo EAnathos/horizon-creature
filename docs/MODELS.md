@@ -48,6 +48,14 @@ The `.bbmodel` files are the sources: edit them in Blockbench (their texture is 
 
 ![firefly, front](models/fireflies-firefly-front.png) ![firefly, back](models/fireflies-firefly-back.png)
 
+## seagulls
+
+### seagull
+
+`mods/seagulls/assets/models/seagull.bbmodel`: 18 cubes, texture 64×64.
+
+![seagull, front](models/seagulls-seagull-front.png) ![seagull, back](models/seagulls-seagull-back.png)
+
 ## sporelins
 
 ### sporelin
