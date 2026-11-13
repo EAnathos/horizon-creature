@@ -154,7 +154,7 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
 | A / D (Q / D on AZERTY) | Steers to that side ✅: its wanted heading is 45° from the look while held, so it banks and turns the same way |
 | W (Z on AZERTY) | Flaps: speeds up to its cruising speed (wing beats, flap sound) |
 | (nothing) | Glides: keeps its speed slowly falling off, sinks gently when level |
-| S | Nothing in the air ✅ |
+| S | Air brake ✅: slows down, much faster than a glide (and so sinks more, down to a stall) |
 | Space (held) | Noses up and **climbs** with strong flaps ✅ (loses speed); on the ground, **takes off** |
 | Sneak (held) | Noses down and **descends** ✅ (gains speed, up to the dive speed); Ctrl does the same |
 | (neither) | Flies level |
@@ -259,5 +259,5 @@ vulture.
 ## 10. Remaining open questions
 
 - ~~Q27: The flight's numbers, the bank and turn limits, and what A / D and S do in the air?~~ The numbers as built, to
-  balance in game; A / D steer, S does nothing in the air and backs up on the ground (§6.2).
+  balance in game; A / D steer, S brakes in the air and backs up on the ground (§6.2).
 - ~~Q28: What a passenger in its talons does to its flight?~~ Nothing: no weight (§6.4).

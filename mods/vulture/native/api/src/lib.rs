@@ -120,7 +120,7 @@ const DESCEND_PITCH: f32 = 35.0;
 const STEER: f32 = 45.0;
 
 /// Ridden flight (SPECS §6.2): the rider's look turns it and the keys steer `flight::Flight`. W flaps up to the
-/// cruising speed, A / D steer to a side, Space climbs with strong flaps (and takes off from the ground), sneak
+/// cruising speed, S brakes, A / D steer to a side, Space climbs with strong flaps (and takes off from the ground), sneak
 /// descends (getting off only on the ground, `ride_keys.rs`); on the ground it walks, and S backs it up slowly.
 #[derive(Clone, Debug, Default)]
 struct Fly {
@@ -170,12 +170,12 @@ impl Goal for Fly {
         } else {
             0.0
         };
-        // A (a positive strafe) turns it left, towards a lower yaw; S does nothing in the air.
+        // A (a positive strafe) turns it left, towards a lower yaw.
         let controls = Controls {
             yaw: r.yaw - r.strafe.clamp(-1.0, 1.0) * STEER,
             pitch,
             flap: r.forward > 0.0,
-            brake: false,
+            brake: r.forward < 0.0,
             boost: r.jumping,
             ridden: true,
         };

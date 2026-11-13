@@ -41,7 +41,7 @@ pub struct Controls {
     pub pitch: f32,
     /// Wing beats up to the cruising speed (W).
     pub flap: bool,
-    /// Air brake (its own flight only: a rider's S does nothing in the air).
+    /// Air brake (S).
     pub brake: bool,
     /// A strong flap that climbs, and takes off from the ground (Space).
     pub boost: bool,

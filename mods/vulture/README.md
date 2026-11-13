@@ -40,7 +40,7 @@ It always flies forward and goes where you look, banking into its turns.
 | Sneak (held) | Descend |
 | W | Flap, up to cruising speed |
 | (nothing) | Glide, slowly losing height |
-| S | Nothing in the air; on the ground, back up slowly |
+| S | Brake; on the ground, back up slowly |
 | R | Talons: catch the small creature below, let it go |
 | Sneak on the ground | Get off |
 
