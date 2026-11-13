@@ -34,7 +34,8 @@ fn creature_jar_tab(plan: &Plan<'_>, doc: &mut J) -> ::core::ops::ControlFlow<Re
             };
             let items = len(tab, "items");
             for key in ["items", "lines", "tags"] {
-                if len(tab, key).is_some() && (key == "items" || len(tab, key) == items)
+                if len(tab, key).is_some()
+                    && (key == "items" || len(tab, key) == items)
                     && let Some(J::Arr(list)) = tab.get_mut(key)
                 {
                     list.remove(at);
