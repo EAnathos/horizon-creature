@@ -172,7 +172,7 @@ Each moves here when a second mod needs it. Until then it stays in the vulture.
 | # | System | Today |
 |---|---|---|
 | 6.1 | **Riding and flight**: mount by right-click, **dynamic ridden flight** (steered by the look, banking into arc turns like a plane, vulture/SPECS.md §6.2), dismount, mount hearts (`mount-hud` injection), a saddle | in the vulture; the flight itself (glide, soaring, landing, the wing poses) moves here with the Seagulls (planned, mods/seagulls/SPECS.md §1), riding stays |
-| 6.2 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | in the vulture; moves here with the Sporelins and the Seagulls (planned) |
+| 6.2 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | in the vulture; moves here with the Sporelins, the Seagulls and the Living Flowers (planned) |
 | 6.3 | **Babies and growth**: smaller model, growth time, faster when fed | in the vulture |
 | 6.4 | **Ridden special attack**: a key that makes the mount attack (the vulture's talons) | in the vulture |
 
@@ -190,6 +190,11 @@ A book about the series' creatures, given to every player.
   a species with looks, the morphs met. Nothing about a species not met yet, not even how many there are.
 - Each mod registers its species and the facts a player can learn about them (`creature::bestiary::register`); the
   library draws the book. A page opens when a player first meets a wild one, and each fact when they find it out.
+
+- **Morphs**, planned ✅: today the morphs are the colours and patterns of the library's looks (§5). They become any look
+  a species gives: a colour and pattern, or a **kind with a model of its own** (the Living Flowers' poppy, dandelion
+  and cornflower, the Sporelins' red and brown caps), each shown at the bottom of the page by an icon (a swatch, or the
+  kind's item) and drawn by the species when picked.
 
 ### 7.1 Tabs, planned ✅
 

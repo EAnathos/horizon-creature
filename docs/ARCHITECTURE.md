@@ -16,6 +16,7 @@ on it.
 | Fireflies | `mods/fireflies/` | `fireflies` | playable | [mods/fireflies/SPECS.md](../mods/fireflies/SPECS.md) |
 | Dung Beetles | `mods/dung_beetles/` | `dung_beetles` | planned | [mods/dung_beetles/SPECS.md](../mods/dung_beetles/SPECS.md) |
 | Sporelins | `mods/sporelins/` | `sporelins` | planned | [mods/sporelins/SPECS.md](../mods/sporelins/SPECS.md) |
+| Living Flowers | `mods/living_flowers/` | `living_flowers` | planned | [mods/living_flowers/SPECS.md](../mods/living_flowers/SPECS.md) |
 | Seagulls | `mods/seagulls/` | `seagulls` | planned | [mods/seagulls/SPECS.md](../mods/seagulls/SPECS.md) |
 | Vanilla Bestiary | `mods/vanilla_bestiary/` | `vanilla_bestiary` | planned | [mods/vanilla_bestiary/SPECS.md](../mods/vanilla_bestiary/SPECS.md) |
 

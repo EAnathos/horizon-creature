@@ -48,6 +48,128 @@ The `.bbmodel` files are the sources: edit them in Blockbench (their texture is 
 
 ![firefly, front](models/fireflies-firefly-front.png) ![firefly, back](models/fireflies-firefly-back.png)
 
+## living_flowers
+
+### allium
+
+`mods/living_flowers/assets/models/allium.bbmodel`: 14 cubes, texture 32×32.
+
+![allium, front](models/living_flowers-allium-front.png) ![allium, back](models/living_flowers-allium-back.png)
+
+### azure_bluet
+
+`mods/living_flowers/assets/models/azure_bluet.bbmodel`: 12 cubes, texture 32×32.
+
+![azure_bluet, front](models/living_flowers-azure_bluet-front.png) ![azure_bluet, back](models/living_flowers-azure_bluet-back.png)
+
+### blue_orchid
+
+`mods/living_flowers/assets/models/blue_orchid.bbmodel`: 16 cubes, texture 32×32.
+
+![blue_orchid, front](models/living_flowers-blue_orchid-front.png) ![blue_orchid, back](models/living_flowers-blue_orchid-back.png)
+
+### cactus_flower
+
+`mods/living_flowers/assets/models/cactus_flower.bbmodel`: 16 cubes, texture 32×32.
+
+![cactus_flower, front](models/living_flowers-cactus_flower-front.png) ![cactus_flower, back](models/living_flowers-cactus_flower-back.png)
+
+### cornflower
+
+`mods/living_flowers/assets/models/cornflower.bbmodel`: 16 cubes, texture 32×32.
+
+![cornflower, front](models/living_flowers-cornflower-front.png) ![cornflower, back](models/living_flowers-cornflower-back.png)
+
+### dandelion
+
+`mods/living_flowers/assets/models/dandelion.bbmodel`: 13 cubes, texture 32×32.
+
+![dandelion, front](models/living_flowers-dandelion-front.png) ![dandelion, back](models/living_flowers-dandelion-back.png)
+
+### eyeblossom
+
+`mods/living_flowers/assets/models/eyeblossom.bbmodel`: 16 cubes, texture 32×32.
+
+![eyeblossom, front](models/living_flowers-eyeblossom-front.png) ![eyeblossom, back](models/living_flowers-eyeblossom-back.png)
+
+### lilac
+
+`mods/living_flowers/assets/models/lilac.bbmodel`: 16 cubes, texture 32×32.
+
+![lilac, front](models/living_flowers-lilac-front.png) ![lilac, back](models/living_flowers-lilac-back.png)
+
+### lily_of_the_valley
+
+`mods/living_flowers/assets/models/lily_of_the_valley.bbmodel`: 15 cubes, texture 32×32.
+
+![lily_of_the_valley, front](models/living_flowers-lily_of_the_valley-front.png) ![lily_of_the_valley, back](models/living_flowers-lily_of_the_valley-back.png)
+
+### oxeye_daisy
+
+`mods/living_flowers/assets/models/oxeye_daisy.bbmodel`: 16 cubes, texture 32×32.
+
+![oxeye_daisy, front](models/living_flowers-oxeye_daisy-front.png) ![oxeye_daisy, back](models/living_flowers-oxeye_daisy-back.png)
+
+### peony
+
+`mods/living_flowers/assets/models/peony.bbmodel`: 14 cubes, texture 32×32.
+
+![peony, front](models/living_flowers-peony-front.png) ![peony, back](models/living_flowers-peony-back.png)
+
+### pink_petals
+
+`mods/living_flowers/assets/models/pink_petals.bbmodel`: 16 cubes, texture 32×32.
+
+![pink_petals, front](models/living_flowers-pink_petals-front.png) ![pink_petals, back](models/living_flowers-pink_petals-back.png)
+
+### pitcher_plant
+
+`mods/living_flowers/assets/models/pitcher_plant.bbmodel`: 14 cubes, texture 32×32.
+
+![pitcher_plant, front](models/living_flowers-pitcher_plant-front.png) ![pitcher_plant, back](models/living_flowers-pitcher_plant-back.png)
+
+### poppy
+
+`mods/living_flowers/assets/models/poppy.bbmodel`: 12 cubes, texture 32×32.
+
+![poppy, front](models/living_flowers-poppy-front.png) ![poppy, back](models/living_flowers-poppy-back.png)
+
+### rose_bush
+
+`mods/living_flowers/assets/models/rose_bush.bbmodel`: 21 cubes, texture 32×32.
+
+![rose_bush, front](models/living_flowers-rose_bush-front.png) ![rose_bush, back](models/living_flowers-rose_bush-back.png)
+
+### sunflower
+
+`mods/living_flowers/assets/models/sunflower.bbmodel`: 17 cubes, texture 32×32.
+
+![sunflower, front](models/living_flowers-sunflower-front.png) ![sunflower, back](models/living_flowers-sunflower-back.png)
+
+### torchflower
+
+`mods/living_flowers/assets/models/torchflower.bbmodel`: 15 cubes, texture 32×32.
+
+![torchflower, front](models/living_flowers-torchflower-front.png) ![torchflower, back](models/living_flowers-torchflower-back.png)
+
+### tulip
+
+`mods/living_flowers/assets/models/tulip.bbmodel`: 15 cubes, texture 32×32.
+
+![tulip, front](models/living_flowers-tulip-front.png) ![tulip, back](models/living_flowers-tulip-back.png)
+
+### wildflowers
+
+`mods/living_flowers/assets/models/wildflowers.bbmodel`: 16 cubes, texture 32×32.
+
+![wildflowers, front](models/living_flowers-wildflowers-front.png) ![wildflowers, back](models/living_flowers-wildflowers-back.png)
+
+### wither_rose
+
+`mods/living_flowers/assets/models/wither_rose.bbmodel`: 16 cubes, texture 32×32.
+
+![wither_rose, front](models/living_flowers-wither_rose-front.png) ![wither_rose, back](models/living_flowers-wither_rose-back.png)
+
 ## seagulls
 
 ### seagull

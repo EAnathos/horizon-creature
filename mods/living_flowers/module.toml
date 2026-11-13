@@ -1,0 +1,6 @@
+# Living Flowers's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
+id = "living_flowers"
+name = "Living Flowers"
+status = "planned"
+# Its items in the series' creative tab, in order (none until implementation starts).
+creative = []
