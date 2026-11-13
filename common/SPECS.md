@@ -183,6 +183,32 @@ A book about the series' creatures, given to every player.
 - Each mod registers its species and the facts a player can learn about them (`creature::bestiary::register`); the
   library draws the book. A page opens when a player first meets a wild one, and each fact when they find it out.
 
+### 7.1 Tabs, planned ✅
+
+The book gets **tabs**, as ribbons on its edge ✅: **Creatures** (the bestiary above) and **Items**. The book opens on the
+tab last read.
+
+- **Creatures**: the series' creatures, then, below a line, the vanilla ones when the Vanilla Bestiary is installed
+  (mods/vanilla_bestiary/SPECS.md).
+- **Items** (§7.2).
+
+### 7.2 The Items tab, planned ✅
+
+What each item of the series is for, so a player knows how to make it and what to do with it.
+
+- **One page per item** of the series (spawn eggs left out): on the right page the items, as icons; on the left
+  the one picked: the item, large, with its name; **how to get it**: its recipe on a 3 × 3 grid of item icons
+  (crafting, smithing or smelting, the station drawn beside it), or what drops it (a creature's icon: "Dropped by a
+  cyclops"), or what gives it (the dung beetle's ball, the sporelin's stew); and **its uses**, a few lines each with an
+  item or creature icon ("Hold it: the farm animals within 12 blocks follow you").
+- **Every item shown from the start** ✅ (unlike the creatures): the tab is a reference to plan a craft, so a player can
+  look up the shepherd's crook before meeting a cyclops. Only the items of installed mods are listed.
+- Each mod registers its items' pages (`creature::bestiary::register_item`): the item, how it is got, its uses as
+  language keys with icons. The recipe is read from the game's recipes (`native_recipes`, to check that a trait mod
+  reaches it at our pin), else given by the mod and checked against its recipe file by `cargo creature check`.
+- Users: the library (the glass jar, the guide), Vulture (feather, meat, saddle use), Butterflies (dust, confetti),
+  Cyclops (eye, club, shepherd's crook), and the planned Dung Beetles (dung ball).
+
 ## 8. Out of scope for v1
 
 - Multiplayer (LAN, dedicated server): v2, for the whole series. Server logic is kept apart from rendering.
@@ -190,6 +216,8 @@ A book about the series' creatures, given to every player.
 - Compatibility with mods outside the series.
 
 ## 9. Open questions
+
+- ~~Q12: The Items tab's pages: found little by little, or all shown?~~ All shown from the start (§7.2).
 
 - ~~Q8: Filled jars: one item per creature mod, or one `creature:glass_jar` holding anything?~~ One jar for every
   creature (§4.1).

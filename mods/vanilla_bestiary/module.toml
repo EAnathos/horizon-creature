@@ -1,0 +1,6 @@
+# Vanilla Bestiary's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
+id = "vanilla_bestiary"
+name = "Vanilla Bestiary"
+status = "planned"
+# It adds no item.
+creative = []

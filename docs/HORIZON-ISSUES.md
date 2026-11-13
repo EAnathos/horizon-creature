@@ -103,6 +103,9 @@ move it, the cyclops's blows break blocks even with `mobGriefing` off, `mods/cyc
 - **Carrying a creature in the talons** moves it every tick with `Host::teleport_mob` (`talons.rs`). Not filed: once
   seats are in a release ([arismoko/horizon#2539](https://github.com/arismoko/horizon/pull/2539), several
   `passenger_attachments`), try mounting the caught mob with `Host::mount` on a seat below the vulture.
+- **A vanilla mob's model in a screen's scene** (`Host::draw_scene` draws blocks and mod block entities only): the
+  Vanilla Bestiary's pages show a spawn egg in place of the creature until it can (mods/vanilla_bestiary/SPECS.md §1).
+  Check the fork first (vanilla's `InventoryScreen.renderEntityInInventory` does it for the player).
 - **Suspected, unconfirmed:** an entity's attachment not readable on its first tick after loading (our "untamed one
   load in four"; we now read again next tick). Needs a repro before filing.
 - **Suspected, unconfirmed:** `/summon` with `horizon:attachments` NBT doesn't set the attachments (maybe our format).
