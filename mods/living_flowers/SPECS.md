@@ -3,8 +3,8 @@
 A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): flowers that are not quite
 flowers. They stand among the others in a meadow until you come close, then pull up their roots and go for you.
 Befriended with a flower of their kind, one follows you and guards you, and in a flower pot it becomes a living
-decoration that sways and looks at you. **Every vanilla flower** has its living kind ✅, each with its own look and its
-own attack.
+decoration that sways and looks at you. **Every small and tall vanilla flower** has its living kind ✅, each with its
+own look and its own attack; the other flowering blocks (pink petals, wildflowers, cactus flower...) have none.
 
 **Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)).
 
@@ -39,8 +39,7 @@ Next: the code once Horizon's launcher builds the pinned revision again
   creature guide's pages (§7), **taming and ownership** (§6.2, moved from the vulture with the Sporelins and the
   Seagulls), and the **display block** of the glass jar (§4.1: a placed block that draws a creature) for the pots ✅.
 - It copies the wandering trader (goals only, its own attack and target goals, as the cyclops), with a box the size of
-  its kind's model ✅: about 0.4 × 0.85 blocks for a small flower, 0.6 × 1.5 for a tall one, 0.45 × 0.25 for a
-  flowerbed.
+  its kind's model ✅: about 0.4 × 0.85 blocks for a small flower, 0.6 × 1.5 for a tall one.
 
 ## 2. The living flower ✅
 
@@ -50,7 +49,7 @@ Next: the code once Horizon's launcher builds the pinned revision again
 - **Aggressive** ✅: a player who comes within **4 blocks** (6 if sprinting; a sneaking one can pass at 2) wakes it: it
   pulls up its roots with a rustle, opens its petals wide and goes for them, waddling fast on its roots. It gives up
   past 16 blocks, walks back and roots again where it stands. Awake day and night ✅.
-- 10 health (tall ones 20, flowerbeds 8). **Drops** ✅: its flower.
+- 10 health (tall ones 20). **Drops** ✅: its flower.
 - Monsters leave it alone (library §3.4); it doesn't attack animals or villagers.
 
 ### 2.1 The kinds
@@ -78,9 +77,6 @@ one) ✅:
 | **Lilac** ✅ | forests, flower forests | shakes its blossom: a perfume cloud (3 blocks, every 4 s), 2 damage and Nausea 4 s |
 | **Peony** ✅ | forests, flower forests | slams its heavy bloom: 4 damage and a big push |
 | **Rose bush** ✅ | forests, flower forests | thorns: 4 damage, and a player who hits it takes 1 back |
-| **Pink petals** ✅ | cherry groves | a flowerbed on short roots that scuttles fast and nips ankles (2 damage), scattering petals |
-| **Wildflowers** ✅ | birch forests, meadows | as the pink petals |
-| **Cactus flower** ✅ | deserts and badlands, on cacti | a little cactus wearing its flower: shoots spines from 6 blocks (2 damage), hurts who touches it |
 
 ## 3. Befriending ✅
 
@@ -123,5 +119,5 @@ One page for all the kinds (§1): the biomes met in, the kinds met, and the fact
 - ~~Q5: The pots?~~ Decorative, sneak + right-click to get it back out (§4).
 - ~~Q6: Its drops?~~ Its flower (§2).
 - ~~Q7: The cornflower's attack?~~ It lashes with its stem (§2.1).
-- ~~Q8: Which flowers?~~ Every vanilla flower (§2.1).
+- ~~Q8: Which flowers?~~ Every small and tall vanilla flower (§2.1).
 - ~~Q9: The new kinds' attacks and where they spawn?~~ As in the table (§2.1).
