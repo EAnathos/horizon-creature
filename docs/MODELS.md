@@ -32,6 +32,14 @@ The `.bbmodel` files are the sources: edit them in Blockbench (their texture is 
 
 ![cyclops, front](models/cyclops-cyclops-front.png) ![cyclops, back](models/cyclops-cyclops-back.png)
 
+## dung_beetles
+
+### dung_beetle
+
+`mods/dung_beetles/assets/models/dung_beetle.bbmodel`: 30 cubes, texture 32×32.
+
+![dung_beetle, front](models/dung_beetles-dung_beetle-front.png) ![dung_beetle, back](models/dung_beetles-dung_beetle-back.png)
+
 ## fireflies
 
 ### firefly

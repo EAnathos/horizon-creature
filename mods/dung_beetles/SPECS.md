@@ -10,10 +10,17 @@ grass. Simple, like Worms ✅.
 
 ## 0. Status
 
-Planned: a spec only, no model or code yet.
+Planned: the spec and the model, no code yet.
 
-Next: the model (`assets/models/dung_beetle.bbmodel`, the beetle and its ball), then the code once Horizon's launcher
-builds the pinned revision again (docs/HORIZON-ISSUES.md, #15764). The library's side comes with it: the small
+- **The model** (`assets/models/dung_beetle.bbmodel`, pictures in docs/MODELS.md), after a photo of a dung beetle at
+  work: a domed, matte black-brown beetle (the wing cases and the pronotum rounded from stacked cubes, faint straw
+  specks, reddish hairs underneath), standing high and head down (the body tilted 12°), a flat semicircular head shield
+  and short antennae. Six thin two-part legs: the front ones short and planted under the head, the middle ones long and
+  swept back, the hind ones reaching back onto the ball. The ball behind it, about as big as the beetle (7 texels,
+  three crossed cubes, `ball`), and a small one for while it shapes it (`ball_small`); the game shows one ball or none
+  (`draw_shown`) and poses it all.
+
+Next: the code once Horizon's launcher builds the pinned revision again (docs/HORIZON-ISSUES.md, #15764). The library's side comes with it: the small
 crawlers and the chickens' pecking (common/SPECS.md §3.6, §3.7), and the pasture rule (§4.2).
 
 ## 1. Technical context
@@ -32,8 +39,8 @@ crawlers and the chickens' pecking (common/SPECS.md §3.6, §3.7), and the pastu
 
 ## 2. The dung beetle ✅
 
-- A small beetle, a bit bigger than a worm (~5 × 4 pixels): a black, faintly green-sheened shell, a toothed shovel of a
-  head, strong spiny hind legs. Ambient and harmless, 1 health, **no drop** ✅.
+- A small beetle, about 5 texels wide and 10 long: a domed, matte black-brown shell, a flat semicircular head shield,
+  long thin legs, the hind ones the longest. Ambient and harmless, 1 health, **no drop** ✅.
 - **Spawning** ✅: savannas, savanna plateaus, plains, sunflower plains, meadows and the edges of deserts (on grass,
   coarse dirt or sand next to grass), 1 to 3 together, by day and at night. Wild ones despawn far from players.
 - **Follows the herds** ✅: it is drawn to grazing animals (cows, sheep, horses, donkeys, goats, camels, llamas) within
