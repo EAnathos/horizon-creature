@@ -40,6 +40,14 @@ The `.bbmodel` files are the sources: edit them in Blockbench (their texture is 
 
 ![dung_beetle, front](models/dung_beetles-dung_beetle-front.png) ![dung_beetle, back](models/dung_beetles-dung_beetle-back.png)
 
+## fairies
+
+### fairy
+
+`mods/fairies/assets/models/fairy.bbmodel`: 38 cubes, texture 64×64.
+
+![fairy, front](models/fairies-fairy-front.png) ![fairy, back](models/fairies-fairy-back.png)
+
 ## fireflies
 
 ### firefly

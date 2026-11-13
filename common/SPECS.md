@@ -128,7 +128,7 @@ Golem** (planned, its magma glob, mods/magma_golem/SPECS.md §2).
 ## 4. Glass jar and territories ✅
 
 Catching small creatures and settling them in a place they won't leave. Users: **Butterflies**, **Worms**, **Fireflies**
-✅, and **Dung Beetles** once built (it then joins the recipe's condition and the tab injection). The jar is the library's ✅ and is **active only if one of them is installed** ✅ (hidden otherwise, §3.3).
+✅, and **Dung Beetles** and **Fairies** once built (it then joins the recipe's condition and the tab injection). The jar is the library's ✅ and is **active only if one of them is installed** ✅ (hidden otherwise, §3.3).
 
 ### 4.1 The jar
 

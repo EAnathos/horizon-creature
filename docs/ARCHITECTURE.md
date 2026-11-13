@@ -20,6 +20,7 @@ on it.
 | Storm Spirits | `mods/storm_spirits/` | `storm_spirits` | planned | [mods/storm_spirits/SPECS.md](../mods/storm_spirits/SPECS.md) |
 | Jellyfish | `mods/jellyfish/` | `jellyfish` | planned | [mods/jellyfish/SPECS.md](../mods/jellyfish/SPECS.md) |
 | Magma Golem | `mods/magma_golem/` | `magma_golem` | planned | [mods/magma_golem/SPECS.md](../mods/magma_golem/SPECS.md) |
+| Fairies | `mods/fairies/` | `fairies` | planned | [mods/fairies/SPECS.md](../mods/fairies/SPECS.md) |
 | Seagulls | `mods/seagulls/` | `seagulls` | planned | [mods/seagulls/SPECS.md](../mods/seagulls/SPECS.md) |
 | Vanilla Bestiary | `mods/vanilla_bestiary/` | `vanilla_bestiary` | planned | [mods/vanilla_bestiary/SPECS.md](../mods/vanilla_bestiary/SPECS.md) |
 
