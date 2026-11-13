@@ -1,69 +1,46 @@
-# Horizon Creature: creature mods for Minecraft Horizon
+# Horizon Creature
 
-A series of creature mods for [Minecraft Horizon](https://playhorizon.dev), the Rust reimplementation of Minecraft Java
-26.3. Each mod is independent and requires one shared library, **Horizon Creature**. All their items share one creative
-tab, "Horizon Creature". The game text is in English and French.
+Creature mods for [Minecraft Horizon](https://playhorizon.dev), the Rust reimplementation of Minecraft Java 26.3: a
+vulture to tame and fly, butterflies and moths, fireflies, earthworms for your garden, and a one-eyed giant shepherd.
+Install the ones you like: each works alone, with one shared library. The game text is in English and French.
 
-| Mod | What it adds | Status |
+| | Mod | What it adds |
 |---|---|---|
-| [Horizon Creature](common/README.md) (`creature`) | The library: shared systems (glass jar, colours and patterns, flight of small fliers, bestiary…), the creature guide book and the creative tab. **Required by every mod.** | prototype |
-| [Vulture](mods/vulture/README.md) (`vulture`) | A vulture you tame, ride and fly, with chests and talons | prototype (rideable, flies) |
-| [Butterflies](mods/butterflies/README.md) (`butterflies`) | Butterflies by day and moths by night, in many colours, caught in a glass jar and settled in your garden | in progress |
-| [Worms](mods/worms/README.md) (`worms`) | Earthworms you carry in a jar to your garden, where they help crops grow | in progress |
-| [Cyclops](mods/cyclops/README.md) (`cyclops`) | A one-eyed giant shepherd at cave mouths, with its flock, and its eye | in progress |
-| [Fireflies](mods/fireflies/README.md) (`fireflies`) | Fireflies that light up the night, kept in a glass jar as a soft light | in progress |
+| ![](docs/models/vulture-vulture-front.png) | [Vulture](mods/vulture/README.md) | A desert vulture you tame with raw chicken, saddle and fly like a plane, with chests and talons |
+| ![](docs/models/butterflies-butterfly-front.png) | [Butterflies](mods/butterflies/README.md) | Butterflies by day and moths by night, in many colours and patterns; their dust makes confetti |
+| ![](docs/models/fireflies-firefly-front.png) | [Fireflies](mods/fireflies/README.md) | Fireflies that light up the night, kept in a jar as a soft lantern |
+| ![](docs/models/worms-worm-front.png) | [Worms](mods/worms/README.md) | Earthworms you settle in your garden, where they help crops grow |
+| ![](docs/models/cyclops-cyclops-front.png) | [Cyclops](mods/cyclops/README.md) | A one-eyed giant shepherd at cave mouths, with its flock, its club and its boulders |
 
-> Single player only for now; multiplayer comes later for the whole series.
+Every mod needs **[Horizon Creature](common/README.md)**, the library: it adds the glass jar, the creature guide and
+the "Horizon Creature" creative tab, where all the series' items are.
 
-## Documentation
+## Install
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): the modules, their dependencies and responsibilities, what goes in the
-  library, the creative tab, building, adding a mod.
-- [docs/CONVENTIONS.md](docs/CONVENTIONS.md): ids, translations, specs, code and assets conventions.
-- [docs/MODELS.md](docs/MODELS.md): pictures of every mod's 3D models (`cargo creature preview` makes them).
-- [docs/HORIZON-ISSUES.md](docs/HORIZON-ISSUES.md): the Horizon issues we raised or follow, their status and the
-  workaround each one left in our code.
-- One `SPECS.md` per module (the library's: [common/SPECS.md](common/SPECS.md)), with its progress in §0.
+1. Get the [Horizon launcher](https://playhorizon.dev).
+2. In the launcher's **Mods** page, install **Horizon Creature**, then the creature mods you want.
+3. Press **Play**. These are native mods: the launcher builds the game with them the first time (a few minutes).
 
-## Install and test
+Horizon Creature is not listed in the launcher yet. Until then, the mods can be built from this repository
+([CONTRIBUTING.md](CONTRIBUTING.md)).
 
-You need the [Horizon launcher](https://playhorizon.dev) with a test instance (here `creature-dev`), Rust (with
-`cargo horizon-mod`, from Horizon's sources); ffmpeg to remake the sounds.
+## In the game
 
-```sh
-cargo install --locked --git https://github.com/horizon-rust/horizon cargo-horizon-mod
-cargo creature install                          # the library and every mod that has something to build
-cargo creature install vulture --instance my-instance   # a mod, with the mods it requires
-```
+- **The creature guide**: every player gets one the first time they join a world. Right-click it to open the
+  **bestiary**: each creature you come across gets a page, turning in 3D, with the biomes you met it in, how rare it
+  is and what you found out about it (what it eats, what catches it...).
+- **The glass jar** (3 glass in a U and an oak slab, makes 2; only with Butterflies, Fireflies or Worms installed):
+  right-click a butterfly, a moth, a firefly or a worm to catch it, right-click a block with the filled jar to release
+  it. Released on a flower (or, for a worm, in a garden), it stays there. Sneak + right-click places the filled jar as
+  a small glass jar holding the creature; fireflies make it glow.
+- Monsters leave the series' creatures alone.
+- Each mod's page tells you how to find and use its creatures.
 
-It writes the shared creative tab, builds the content half (`.hmod`) and the native half (`.hnmod`) of the library and
-of each mod, installs them in the instance and runs its native build (a minute or two, longer the first time). Then, in
-the launcher, pick the instance and press **Play** (restart the launcher if it was open during the build). The native
-mods are pinned to one Horizon revision, because they read internal game fields.
-
-The tools (`tools/`, Rust, `cargo creature <command>`):
-
-| Command | What it does |
-|---|---|
-| `cargo creature list` | The library and the mods, with their status |
-| `cargo creature tab` | Writes the series' creative tab from the modules' `module.toml` |
-| `cargo creature model <mod> [model]` | Converts a mod's Blockbench model into Rust (`native/api/src/model.rs`) |
-| `cargo creature sounds <mod> [folder]` | Makes a mod's `.ogg` files from freesound downloads (vulture) |
-| `cargo creature pack <module>` | Packages a module's native half into `target/<id>.hnmod` |
-| `cargo creature build [mod...]` | Builds the library and the mods into `target/dist/`, without installing |
-| `cargo creature check` | Checks the repository's consistency (also run by CI) |
-| `cargo creature install [--instance <name>] [mod...]` | Builds and installs the library and the mods, then runs the native build |
-
-## Repository
-
-| Path | Contents |
-|---|---|
-| `common/` | The library (content, native, spec) |
-| `mods/<mod>/` | One folder per mod: `content/`, `native/`, `assets/models/`, `SPECS.md`, `README.md`, `module.toml` |
-| `tools/` | The build tools |
-| `docs/` | Series-wide documentation |
-| `.github/workflows/ci.yml` | CI: format, lint, tests, `cargo creature check`, build with the packages as an artifact |
+Single player only for now; multiplayer comes later for the whole series.
 
 ## Licence
 
-[MIT](LICENSE).
+[MIT](LICENSE). The sounds come from [freesound.org](https://freesound.org), under
+[CC0](https://creativecommons.org/publicdomain/zero/1.0/).
+
+Want to help, or build the mods yourself? See [CONTRIBUTING.md](CONTRIBUTING.md).

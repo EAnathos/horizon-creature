@@ -1,4 +1,4 @@
-# Cyclops: specification (v0.1, draft)
+# Cyclops: specification
 
 A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): the **cyclops**, a one-eyed
 giant of the mountains that hurls boulders, and whose eye is a rare crafting material ✅.
@@ -7,33 +7,27 @@ giant of the mountains that hurls boulders, and whose eye is a rare crafting mat
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 
-## 0. Progress (as of 2026-11-09)
+## 0. Status
 
-- Folder and spec created.
-- **Model** (2026-11-12): `assets/models/cyclops.bbmodel`, 31 cubes, texture 128×128 (docs/MODELS.md): 4 blocks
-  tall, blue skin, one big amber eye under a heavy brow, tusks, a hide loincloth, a knotted wooden club in its right
-  hand (group `club`, child of `arm_right`). Groups for posing: `leg_*`, `body`, `head`, `arm_*`, `club`.
-- **The cyclops in game** (2026-11-12, tested): `cyclops:cyclops` (a copy of the wandering trader, box 1.8 × 4, 80
-  health), its spawn egg, the cyclops eye (dropped when a player kills it, with 1 to 3 leather), English and French
-  names, a bestiary page (the Flock fact). Hostile (2026-11-12): it goes for a player it sees within 16 blocks, and
-  for whoever hurts it or one of its sheep: it walks up and brings its club down from over its head (12 damage, a strong push), and lets go 32 blocks away. Heavy
-  steps and a grumble (a ravager's sounds, lower, until it has its own). **Spawning**: rarely, at a cave mouth (open
-  ground at the foot of a covered passage into a hillside) 24 to 64 blocks from a player, never within 160 blocks of
-  another cyclops, with a **flock of 3 to 5 sheep** (tagged `cyclops.flock`) that follow it (tested: it appeared at a
-  cave mouth with 5 sheep; its sheep walked after it; hitting one made it attack).
-- **Shepherd's crook and club** (2026-11-12, tested): `cyclops:shepherds_crook` (a cyclops eye, 4 sticks and wool):
-  while a player holds it, in either hand, the farm animals within 12 blocks follow them (sheep, cows, mooshrooms,
-  pigs, goats, chickens), a cyclops's sheep too. `cyclops:club`: a heavy wooden weapon (8 damage, slow, extra
-  knockback, 250 uses), crafted from 4 logs and a stick, and dropped worn by a cyclops a player kills (1 in 3). Neither can
-  be enchanted (no `enchantable`; tested at a table). The eye has its own icon, and drops only when a player kills the
-  cyclops (the loot's condition fixed to 26.3's form).
-- **Boulder, weak eye, smaller head** (2026-11-12, tested): at 7 to 24 blocks it lifts a boulder over its head and
-  hurls it on an arc (`cyclops:boulder`, 10 damage, a push; it shatters on a hit, the ground or a wall, breaks no
-  blocks). An arrow or trident in its eye deals double damage and dazes it 2 s (stars, its head lolling, a ravager's
-  stunned cry). Head shrunk, torso 3 px taller (still 4 blocks); bestiary view scaled to fit. Spawn biomes chosen:
-  mountain pastures, windswept heights, cherry groves and stony shores. Club and crook refused at the anvil with an
-  enchanted book or item.
-- Not yet: its own sounds.
+Done and tested in game (single player).
+
+- **The cyclops** (`cyclops:cyclops`, spawn egg): a copy of the wandering trader, 4 blocks tall (box 1.8 × 4), 80
+  health, blue, one big eye, tusks, a hide loincloth and a wooden club (`assets/models/cyclops.bbmodel`).
+- **Hostile** (§2): it goes for a player it sees within 16 blocks, and for whoever hurts it or one of its sheep. In
+  reach, it raises its club over its head and brings it down (12 damage, a strong push); out of reach (7 to 24
+  blocks), it lifts a **boulder** over its head and hurls it on an arc (`cyclops:boulder`, 10 damage, a push; it
+  shatters on a hit, the ground or a wall, and breaks no blocks). It lets go 32 blocks away.
+- **Its eye is its weak spot**: an arrow or a trident in it deals double damage and dazes it for 2 s.
+- **Spawning**: rarely, at a cave mouth 24 to 64 blocks from a player, never within 160 blocks of another cyclops,
+  with a **flock of 3 to 5 sheep** that follow it. Biomes: meadows, cherry groves, groves, snowy slopes, stony peaks,
+  the windswept biomes, savanna plateaus and stony shores.
+- **Drops**: its eye when a player kills it, sometimes its worn club (1 in 3), 1 to 3 leather.
+- **Shepherd's crook** (§3): a cyclops eye, 4 sticks and wool; while a player holds it, the farm animals within 12
+  blocks follow them. **Club**: a heavy wooden weapon (8 damage, slow, extra knockback, 250 uses), from 4 logs and a
+  stick. Neither can be enchanted, at a table or an anvil.
+- **Bestiary page**: the biomes met in, "Flock".
+
+Left: its own sounds (a ravager's, lower, until then; picked from freesound, not made yet); balance as players report.
 
 ## 1. Technical context
 

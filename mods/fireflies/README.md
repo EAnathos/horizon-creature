@@ -1,17 +1,17 @@
 # Fireflies
 
-A mod of the [Horizon Creature](../../README.md) series: fireflies that light up summer nights, caught in a glass jar
-to settle them in your garden or to make a glowing jar.
+![](../../docs/models/fireflies-firefly-front.png)
 
-**Requires** Horizon Creature (`creature`), the series' library.
+A mod of the [Horizon Creature](../../README.md) series: fireflies that light up the night. **Requires** Horizon
+Creature, the series' library.
 
-> **Status:** in progress. What works and what is left: [SPECS.md, §0](SPECS.md).
+## Finding them
 
-## What works
+At night, near swamps, rivers, plains, meadows and forests, fireflies drift low and slowly in small groups, their
+lanterns pulsing yellow-green. By day they rest on the ground. In creative: the spawn egg (creative tab "Horizon
+Creature").
 
-- The firefly: `/summon fireflies:firefly`, its spawn egg (creative tab "Horizon Creature"), or in the wild at night
-  near swamps, rivers, plains, meadows and forests. It drifts low and slowly, its lantern pulsing yellow-green, and
-  rests on the ground by day.
-- Catch it with the **glass jar**, release it on a flower to settle it there, or place the filled jar (sneak +
-  right-click) as a small glowing lantern.
-- Model: [docs/MODELS.md](../../docs/MODELS.md).
+## Jars
+
+Catch one with a **glass jar** (right-click it). Release it on a flower and it stays there, lighting up your garden at
+night; or place the filled jar (sneak + right-click) as a small glowing lantern.

@@ -1,6 +1,6 @@
 id = "vulture"
 name = "Vulture"
-version = "0.0.1"
+version = "0.1.0"
 description = "A vulture you can spawn, ride and fly (prototype). Needs Horizon Creature."
 authors = ["EAnathos"]
 api = "0.2"

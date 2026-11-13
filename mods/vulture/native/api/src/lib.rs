@@ -43,7 +43,7 @@ const WIDTH: f64 = 1.2;
 const HEIGHT: f64 = 0.6;
 const EYE_HEIGHT: f64 = 0.55;
 
-/// Its page in the bestiary (common/SPECS.md §9), and what a player can find out about it (SPECS §5, §8).
+/// Its page in the bestiary (common/SPECS.md §7), and what a player can find out about it (SPECS §5, §8).
 static BESTIARY: creature::bestiary::Species = creature::bestiary::Species {
     id: KIND,
     // Where it spawns (`content/data/vulture/neoforge/biome_modifier/`: `#is_badlands`, desert, `#is_savanna`).

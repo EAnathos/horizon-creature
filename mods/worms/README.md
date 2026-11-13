@@ -1,17 +1,17 @@
 # Worms
 
-A mod of the [Horizon Creature](../../README.md) series: small earthworms you find on the dirt, carry in a glass jar and settle in your garden, where they stay and
-slowly make crops grow faster.
+![](../../docs/models/worms-worm-front.png)
 
-**Requires** Horizon Creature (`creature`), the series' library.
+A mod of the [Horizon Creature](../../README.md) series: earthworms you settle in your garden, where they help crops
+grow. **Requires** Horizon Creature, the series' library.
 
-> **Status:** in progress. What works and what is left: [SPECS.md, §0](SPECS.md).
+## Finding them
 
-## What works
+Worms crawl on the grass of plains, meadows, forests and taigas, and many more come up while it rains. In creative: the
+spawn egg (creative tab "Horizon Creature").
 
-- The worm: `/summon worms:worm`, its spawn egg (creative tab "Horizon Creature"), or in the wild on the grass of
-  plains, meadows, forests and taigas. It crawls slowly, wiggling.
-- Catch it with the **glass jar** and release it on farmland (or a crop on it) of a garden of at least 10 connected
-  farmland blocks: it stays there and makes the crops grow faster (one stage every 20 seconds, up to 3 worms a
-  garden).
-- Model: [docs/MODELS.md](../../docs/MODELS.md).
+## Gardens
+
+Catch a worm with a **glass jar** (right-click it) and release it on farmland, or on a crop, in a garden of at least
+10 connected farmland blocks. It stays there, and every 20 seconds it makes one of the garden's crops grow a stage
+(green sparkles show which). Up to 3 worms help a garden.

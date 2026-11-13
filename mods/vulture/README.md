@@ -1,57 +1,49 @@
 # Vulture
 
-A mod of the [Horizon Creature](../../README.md) series: a vulture you spawn, ride and fly. Planned: taming with thrown
-raw chicken, flight steered by your look (banking into turns like a plane), a harness, two chests, talons, breeding and
-stats ([SPECS.md](SPECS.md)).
+![](../../docs/models/vulture-vulture-front.png)
 
-**Requires** Horizon Creature (`creature`), the series' library.
+A mod of the [Horizon Creature](../../README.md) series: a desert vulture you tame with raw chicken, saddle and fly like
+a plane, with two chests and talons. **Requires** Horizon Creature, the series' library.
 
-> **Status:** prototype. What works and what is left: [SPECS.md, §0](SPECS.md#0-progress-as-of-2026-11-09).
-> Single player only for now.
+## Finding one
 
-## What works
+Vultures live in deserts, badlands and savannas, where they soar in circles high up and land on the highest ground
+around. In creative: the spawn egg (creative tab "Horizon Creature") or `/summon vulture:vulture`.
 
-Tried in game: the vulture, its spawn egg, mounting and the ridden flight. Built but not tried in game yet: the rest.
+They are neutral: hit one and it dives at you from the air, with the vultures nearby. They drop feathers and meat (raw,
+or cooked when they burn). A vulture feather crafts arrows, the brush and the book and quill like a feather.
 
-- The tawny vulture, `vulture:vulture`: `/summon vulture:vulture`, the **spawn egg** (creative tab "Horizon Creature"),
-  or in the wild in deserts, badlands and savannas, where it soars in circles and lands again.
-- **Taming**: throw it raw chicken (Q). It walks to the meat and eats it: 1 chance in 4 to tame it (hearts).
-- **Its owner's right-click**: a plain **saddle** puts it on (drawn as a seat and a breast strap), a **chest** adds
-  one (two at most), raw meat heals it, rotten flesh makes it want a mate; otherwise mount it (saddled) or tell it to
-  sit or follow. **Sneak + right-click**: its screen (saddle, sit / follow, chests and their 15 slots each).
-- **Fly**, like a plane: it always flies forward and goes where you look.
+## Taming
 
-  | Key | Effect |
-  |---|---|
-  | Look left / right | Bank and turn in an arc |
-  | Space (held) | Climb; takes off from the ground |
-  | Sneak (held) | Descend |
-  | W | Flap, up to cruising speed |
-  | (nothing) | Glide, slowly losing height |
-  | S | Brake |
-  | R | Talons: catch the small creature below, let it go |
-  | Sneak on the ground | Get off |
+Throw raw chicken near it (Q): it walks to the meat and eats it, and one time in four it is yours (hearts). A tamed
+vulture follows you in the air and lands near you, and defends you. Each vulture has its own health and speed.
 
-- A tamed vulture follows its owner in the air, defends them, and two in love have a baby that grows up in 20 minutes.
-  Each vulture has its own health and speed.
-- Neutral: hit it and it dives at you, with the vultures nearby.
-- Drops feathers and meat (raw and cooked vulture).
-- Its own model and texture, animated, and its own sounds (hisses, hurt, death, wing flaps, take-off, eating).
+Its owner's right-click:
 
-## Files
+- a **saddle** puts it on; then right-click to ride it;
+- a **chest** adds one (two at most, saddle needed);
+- raw meat heals it, or makes a baby grow faster;
+- rotten flesh makes two grown vultures want a baby, which takes after both parents;
+- anything else: sit or follow.
 
-| Path | Contents |
+**Sneak + right-click** opens its screen: the saddle, sit / follow, and the chests' slots.
+
+## Flying
+
+It always flies forward and goes where you look, banking into its turns.
+
+| Key | Effect |
 |---|---|
-| `content/` | The content half (`vulture.hmod`): entity, egg, textures, sounds, translations |
-| `native/` | The native half (`vulture.hnmod`): `api/` (crate `mod-vulture`) and two mixin injections (`mount_hud.rs`, `ride_keys.rs`) |
-| `assets/models/vulture.bbmodel` | The Blockbench model, source of `native/api/src/model.rs` (`cargo creature model vulture`) |
-| `assets/models/baby.bbmodel` | The baby's model, source of `native/api/src/model_baby.rs` (`cargo creature model vulture baby`) |
-| `module.toml` | Its entry for the series' tools and its creative tab items |
+| Look left / right | Bank and turn |
+| Space (held) | Climb; takes off from the ground |
+| Sneak (held) | Descend |
+| W | Flap, up to cruising speed |
+| (nothing) | Glide, slowly losing height |
+| S | Brake |
+| R | Talons: catch the small creature below, let it go |
+| Sneak on the ground | Get off |
 
-Build and install with the library: `cargo creature install vulture` (see the [root README](../../README.md)).
+## Credits
 
-## Sounds
-
-Made from [CC0](https://creativecommons.org/publicdomain/zero/1.0/) sounds from [freesound.org](https://freesound.org)
-(hissing geese, wings, a vulture imitation), edited by `cargo creature sounds vulture`; the list is in
-`tools/src/sounds.rs`.
+Its sounds are made from [CC0](https://creativecommons.org/publicdomain/zero/1.0/) recordings from
+[freesound.org](https://freesound.org) (hissing geese, wings, a vulture imitation).

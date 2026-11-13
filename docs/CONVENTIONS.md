@@ -26,8 +26,8 @@ Rules shared by every module of the Horizon Creature series ([ARCHITECTURE.md](A
 - One `SPECS.md` per module, the source of truth for it; series-wide rules live in `docs/`. A mod's spec does not
   describe a library system: it links to `common/SPECS.md` and gives only its parameters (numbers, items, species).
 - Markers: ✅ decided, ❓ proposal to confirm. Numbers are starting values, balanced in game.
-- §0 is the progress: what is done (and tested in game), then what is left, in order. Dates are absolute
-  (`2026-11-08`).
+- §0 is the status: what the module does today (tested in game unless said), then what is left. It describes the
+  current state, not its history: no dated log (the history is git's, and a release's notes).
 - The last section lists the open questions, struck through once answered with the answer.
 
 ## Code

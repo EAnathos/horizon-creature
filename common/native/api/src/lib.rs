@@ -6,14 +6,14 @@
 //!
 //! - `model`: draws a Blockbench model converted by `cargo creature model` (SPECS §3.1).
 //! - `sounds`: a mod mob's own sounds, since Horizon prefixes mob sounds with `minecraft:` (SPECS §3.2).
-//! - `colours`: colours and patterns, rolled per biome, saved, drawn as two tinted layers (SPECS §7).
+//! - `colours`: colours and patterns, rolled per biome, saved, drawn as two tinted layers (SPECS §5).
 //! - `hand`: the item in hand, for items the server's hooks use (the jar, the guide, throwables).
-//! - `jar`: the glass jar, catching a small creature and releasing it, its look kept (SPECS §6.1).
-//! - `mob`: a creature's own size and silence, its template's being a vanilla mob's (SPECS §3.2, §8.8).
-//! - `territory`: where a released creature settles and stays (SPECS §6.2).
-//! - `flutter`: how small fliers move (butterflies, moths, fireflies): short flights, landing, resting (SPECS §8).
-//! - `guide`: the creature guide book, given at a player's first login (SPECS §9).
-//! - `bestiary`: the book's pages, what each player met and found out (SPECS §9).
+//! - `jar`: the glass jar, catching a small creature and releasing it, its look kept (SPECS §4.1).
+//! - `mob`: a creature's own size and silence, its template's being a vanilla mob's (SPECS §3.2, §6.8).
+//! - `territory`: where a released creature settles and stays (SPECS §4.2).
+//! - `flutter`: how small fliers move (butterflies, moths, fireflies): short flights, landing, resting (SPECS §3.5).
+//! - `guide`: the creature guide book, given at a player's first login (SPECS §7).
+//! - `bestiary`: the book's pages, what each player met and found out (SPECS §7).
 pub mod bestiary;
 pub mod colours;
 pub mod flutter;

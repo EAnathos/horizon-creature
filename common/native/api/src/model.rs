@@ -81,7 +81,7 @@ pub fn draw_shown(
 }
 
 /// `draw_shown` with every cube grown by `inflate` texels on each side: a layer drawn over the model (a pattern, common
-/// SPECS §7) is grown a little so it shows over the faces below instead of fighting them, as vanilla's
+/// SPECS §5) is grown a little so it shows over the faces below instead of fighting them, as vanilla's
 /// `CubeDeformation` for the tropical fish's pattern.
 #[allow(clippy::too_many_arguments)]
 pub fn draw_layer(

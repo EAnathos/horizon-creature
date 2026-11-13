@@ -1,4 +1,4 @@
-//! Territories (SPECS §6.2): a creature released from a jar settles in an area it won't leave.
+//! Territories (SPECS §4.2): a creature released from a jar settles in an area it won't leave.
 //!
 //! Two rules (`Rule`). The **garden** (Worms): released on farmland (or a crop on it), the farmland connected to it (4
 //! ways, the same level or one up or down) is its area, which must count at least `GARDEN_MIN` blocks, or it won't

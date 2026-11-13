@@ -1,5 +1,5 @@
 //! What every creature of the series needs from its mob, since each is a copy of a vanilla mob (the wandering trader):
-//! its own size, silence (SPECS §3.2, §8.8), monsters leaving it alone (§3.4), and for small wild ones, despawning far from
+//! its own size, silence (SPECS §3.2, §6.8), monsters leaving it alone (§3.4), and for small wild ones, despawning far from
 //! players.
 use std::collections::BTreeSet;
 use std::sync::{Arc, Mutex};

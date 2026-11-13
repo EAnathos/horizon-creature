@@ -8,12 +8,12 @@ on it.
 
 | Module | Folder | Mod id (namespace) | Status | Spec |
 |---|---|---|---|---|
-| **Horizon Creature** (library) | `common/` | `creature` | prototype | [common/SPECS.md](../common/SPECS.md) |
-| Vulture | `mods/vulture/` | `vulture` | prototype | [mods/vulture/SPECS.md](../mods/vulture/SPECS.md) |
-| Butterflies | `mods/butterflies/` | `butterflies` | in progress | [mods/butterflies/SPECS.md](../mods/butterflies/SPECS.md) |
-| Worms | `mods/worms/` | `worms` | in progress | [mods/worms/SPECS.md](../mods/worms/SPECS.md) |
-| Cyclops | `mods/cyclops/` | `cyclops` | in progress | [mods/cyclops/SPECS.md](../mods/cyclops/SPECS.md) |
-| Fireflies | `mods/fireflies/` | `fireflies` | in progress | [mods/fireflies/SPECS.md](../mods/fireflies/SPECS.md) |
+| **Horizon Creature** (library) | `common/` | `creature` | playable | [common/SPECS.md](../common/SPECS.md) |
+| Vulture | `mods/vulture/` | `vulture` | playable | [mods/vulture/SPECS.md](../mods/vulture/SPECS.md) |
+| Butterflies | `mods/butterflies/` | `butterflies` | playable | [mods/butterflies/SPECS.md](../mods/butterflies/SPECS.md) |
+| Worms | `mods/worms/` | `worms` | playable | [mods/worms/SPECS.md](../mods/worms/SPECS.md) |
+| Cyclops | `mods/cyclops/` | `cyclops` | playable | [mods/cyclops/SPECS.md](../mods/cyclops/SPECS.md) |
+| Fireflies | `mods/fireflies/` | `fireflies` | playable | [mods/fireflies/SPECS.md](../mods/fireflies/SPECS.md) |
 
 `cargo creature list` prints the same table from the modules' `module.toml`.
 
@@ -43,7 +43,7 @@ on it.
   mod's item has one file per combination (`neoforge:conditions` with `mod_loaded`, `not`).
 - A *system* needed by two mods is never a reason for one to require the other: it belongs in the library (§3). Only
   *content* (an item used in a recipe) justifies a mod-to-mod requirement.
-- **Optional** features that switch on with a mod are the library's: e.g. the glass jar (common/SPECS.md §6) is only
+- **Optional** features that switch on with a mod are the library's: e.g. the glass jar (common/SPECS.md §4) is only
   craftable, and only shown, when Butterflies, Worms or Fireflies is on, through a conditional recipe
   (`neoforge:conditions` / `mod_loaded`, which Horizon supports).
 
@@ -71,7 +71,7 @@ day a second mod needs it (the move is part of that second mod's work, not a cop
 | The series' creative tab | The list of its items for that tab (`module.toml`) |
 | Shared translations (`creature` lang files) | Its own translations |
 
-The full list of shared systems, done and planned, is in [common/SPECS.md](../common/SPECS.md) §3 to §9.
+The full list of shared systems, done and planned, is in [common/SPECS.md](../common/SPECS.md) §3 to §7.
 
 **API shape.** A mod uses the library by calling it from its own hooks (`creature::model::draw(...)`), or by
 registering its species with it at start (`creature::jar::register(...)`, `creature::bestiary::register(...)`): the mod's `hooks()` runs after

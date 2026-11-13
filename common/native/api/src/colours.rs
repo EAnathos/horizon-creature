@@ -1,4 +1,4 @@
-//! Colours and patterns (SPECS §7): one species, many looks, as vanilla's tropical fish.
+//! Colours and patterns (SPECS §5): one species, many looks, as vanilla's tropical fish.
 //!
 //! A mod describes its creature's looks in a `Scheme`: the colours, the patterns (each a texture laid over the base
 //! one), and per biome how likely each is (`Variety`). The first time the library sees one of its creatures

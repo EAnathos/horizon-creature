@@ -2,7 +2,7 @@
 # Built and installed by `cargo creature install cyclops`.
 [mod]
 id = "cyclops"
-version = "0.0.1"
+version = "0.1.0"
 
 # Reads internal `Mob` fields: pinned, as the whole series (docs/CONVENTIONS.md).
 [compatibility]

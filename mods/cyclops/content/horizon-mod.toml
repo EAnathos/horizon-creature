@@ -1,6 +1,6 @@
 id = "cyclops"
 name = "Cyclops"
-version = "0.0.1"
+version = "0.1.0"
 description = "A one-eyed giant shepherd at the mouths of caves (in progress). Needs Horizon Creature."
 authors = ["EAnathos"]
 api = "0.2"

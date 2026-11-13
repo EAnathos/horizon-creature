@@ -1,4 +1,4 @@
-# Fireflies: specification (v0.1, draft)
+# Fireflies: specification
 
 A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): **fireflies** that light up
 the night, that you catch in the glass jar and settle in your garden, or keep in a jar as a soft light ✅. Small in
@@ -8,19 +8,21 @@ scope, like Butterflies ✅.
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 
-## 0. Progress (as of 2026-11-09)
+## 0. Status
 
-- Folder and spec created.
-- **In game** (2026-11-12, built, partly tested): `fireflies:firefly` and its spawn egg; model
-  `assets/models/firefly.bbmodel` (a small beetle: dark wing cases with a pale edge, a pink-orange shield with a dark
-  spot, short antennae, flight wings under the wing cases, a yellow-green lantern), drawn at half size. It flies with
-  the library's `flutter` (the butterflies' flight, shared): at night, slow (0.05 block a tick), low (0.5 to 2 blocks),
-  long drifts, short rests on the ground by day. Its lantern pulses on its own rhythm (lit about a second out of three):
-  a lit texture whose lantern is full-bright (`emissive`) and a soft yellow-green visual light around up to 8 lit
-  fireflies (`visuals`, lighting nothing in the world). Caught in the glass jar (its own jar icon), released on a flower
-  it settles (flower patch), a jar of fireflies on display gives light 7 (`creature:lit_jar`). Spawns in swamps,
-  mangroves, rivers, plains, meadows, forests, birch and flower forests, 3 to 6 together. Bestiary page (Catch,
-  Settles). Seen in game flying at night with their lanterns; the glow and the visual light still to check by eye.
+Done and tested in game (single player).
+
+- **The firefly** (`fireflies:firefly`, spawn egg): a small beetle drawn at half size from
+  `assets/models/firefly.bbmodel`. It flies with the library's small fliers (common/SPECS.md §3.5): at night, slow,
+  low, long drifts; by day it rests on the ground.
+- **Its lantern** pulses on its own rhythm (lit about a second out of three): a full-bright texture (`emissive`) and a
+  soft yellow-green light around up to 8 lit fireflies (`visuals`, lighting nothing in the world).
+- **Spawning**: swamps, mangroves, rivers, plains, meadows, forests, birch and flower forests, 3 to 6 together.
+- **Glass jar** (common/SPECS.md §4): caught and released; released on a flower it settles there; a jar of fireflies on
+  display gives light 7.
+- **Bestiary page**: the biomes met in, "Catch", "Settles".
+
+Left: a faint wing sound (picked from freesound, not made yet).
 
 ## 1. Technical context
 
@@ -56,6 +58,6 @@ scope, like Butterflies ✅.
 
 ## 5. Open questions
 
-- ~~Q1: Settled fireflies?~~ The flower patch rule, as butterflies (2026-11-12).
+- ~~Q1: Settled fireflies?~~ The flower patch rule, as butterflies.
 - ~~Q2: The jar's light?~~ Light 7, steady.
 - ~~Q3: Light while flying?~~ No world light: a full-bright lantern and Horizon's visual light (seen, lights nothing).

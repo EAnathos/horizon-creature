@@ -1,4 +1,4 @@
-//! The creature guide book (SPECS §9): `creature:guide`, given once to every player, the first time they join a world.
+//! The creature guide book (SPECS §7): `creature:guide`, given once to every player, the first time they join a world.
 //!
 //! "Given" is remembered in the player's persistent data (NeoForge's `Entity.getPersistentData()`, Horizon's
 //! `Host::player_persistent_data`), saved with the player. A full inventory leaves it unmarked: the book comes at the

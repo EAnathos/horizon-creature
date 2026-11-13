@@ -5,10 +5,11 @@ library, **Horizon Creature** (`common/`, mod id `creature`), and independent cr
 depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and moths), `worms`, `fireflies`,
 `cyclops`.
 
+- **Players**: `README.md` and each module's `README.md`. **Developers**: `CONTRIBUTING.md`.
 - **Architecture**: `docs/ARCHITECTURE.md` (modules, dependencies, what goes in the library, the single creative tab,
   adding a mod). **Conventions**: `docs/CONVENTIONS.md`. **Horizon issues** we raised or follow, and our workarounds:
-  `docs/HORIZON-ISSUES.md` (keep it up to date; mod-API PRs go to arismoko/horizon, issues stay on horizon-rust).
-- **Specs**: one `SPECS.md` per module, source of truth for it (✅ decided, ❓ to confirm; §0 tracks progress). A mod's
+  `docs/HORIZON-ISSUES.md` (keep it up to date; mod-API PRs and new modding issues go to arismoko/horizon, game bugs to horizon-rust).
+- **Specs**: one `SPECS.md` per module, source of truth for it (✅ decided, ❓ to confirm; §0 is its current status, not a log). A mod's
   spec links to `common/SPECS.md` for shared systems instead of describing them.
 - **Rule of two**: a system used (or specified) by two or more mods goes in the library; species content stays in mods.
   Never duplicate a system between mods. No mod requires another: optional content between mods goes through
@@ -42,8 +43,9 @@ depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and 
 - Tools are Rust (`tools/`, commands `list`, `tab`, `model`, `sounds`, `pack`, `build`, `check`, `install`; alias in
   `.cargo/config.toml`).
 - Before committing: rustfmt (tools and native code, `rustfmt.toml`), Clippy `-D warnings` on the tools,
-  `cargo creature check`; CI (`.github/workflows/ci.yml`) runs them and `cargo creature build`. CI can't compile the
-  native crates: run `cargo creature install` after native changes.
+  `cargo creature check`; CI (`.github/workflows/ci.yml`) runs them, Clippy on the native crates against the pinned
+  Horizon source (`cargo creature native-check <horizon-source>`) and `cargo creature build`. Injections compile only
+  in the launcher's build: run `cargo creature install` after changing one.
 - No em dash in docs or text.
 - The launcher binary is `~/Téléchargements/horizon-launcher.AppImage` (override with `HORIZON_LAUNCHER`).
 
@@ -70,15 +72,15 @@ depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and 
 
 ## Horizon workarounds
 
-Each one is marked in the code with its issue; drop it when moving to a Horizon revision that fixes it:
-#13971 (`cargo creature install` reads the build log), #13972 (clicks in the trait hook, `Host::mount`), #13973
-(harness not in `Mob.extra.saddled`), #13974 (the vulture's screen opens next tick), #13975 (hitbox height 0.6 for the
-seat), #6276 (the vulture's size by a cloned `MobType`); on arismoko/horizon: #2738 (muted mobs, own sounds), #2739 (sneak
-through `rider.sprint`, `ride_keys.rs`), #2740 (render state in statics), #2741 (mount hearts, `mount_hud.rs`). Full tracker: `docs/HORIZON-ISSUES.md`.
+Each one is marked in the code with its issue and listed, with its limits and when to drop it, in
+`docs/HORIZON-ISSUES.md` (keep it up to date).
 
 ## Models
 
 - Blockbench 5.2.2 (Flatpak `net.blockbench.Blockbench`) + jasonjgardner MCP plugin v1.10.1, `blockbench` server in
   `.mcp.json` (Blockbench must be open). `.bbmodel` files in `mods/<mod>/assets/models/`; `cargo creature model <mod>`
   turns `<mod>.bbmodel` into the mod's `native/api/src/model.rs`; `cargo creature preview` redraws every model's
-  pictures for `docs/MODELS.md` (run it after changing a model).
+  pictures for `docs/MODELS.md` (run it after changing a model; `cargo creature check` fails when either is stale).
+  The `.bbmodel` files and the PNG icons are the sources: no script generates them.
+- Sounds: `cargo creature sounds <mod>` cuts a mod's `.ogg` files from freesound downloads as its
+  `assets/sounds.toml` says.

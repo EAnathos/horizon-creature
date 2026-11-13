@@ -1,6 +1,6 @@
 id = "worms"
 name = "Worms"
-version = "0.0.1"
+version = "0.1.0"
 description = "Earthworms that make your garden grow (in progress). Needs Horizon Creature."
 authors = ["EAnathos"]
 api = "0.2"

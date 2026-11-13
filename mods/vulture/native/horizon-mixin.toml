@@ -2,7 +2,7 @@
 # Built and installed by `cargo creature install vulture`.
 [mod]
 id = "vulture"
-version = "0.0.1"
+version = "0.1.0"
 
 # Reads internal `Mob` fields and injects into `Game` (mixins): pinned.
 [compatibility]

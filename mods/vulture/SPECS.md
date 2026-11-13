@@ -1,4 +1,4 @@
-# Vulture: specification (v0.2)
+# Vulture: specification
 
 A mod of the **Horizon Creature** series for **Minecraft Horizon** (a Rust reimplementation of Minecraft Java 26.3).
 It adds a wild vulture that you tame by throwing raw chicken at it, ride, fit with chests, that catches creatures in its
@@ -9,123 +9,31 @@ library shares are described there; this spec gives the vulture's own rules and 
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 
-## 0. Progress (as of 2026-11-09)
+## 0. Status
 
-### Done
+Done and tested in game (single player). What waits for v2 is in §9.
 
-- **Phase 0 succeeded** (§1.2): entity `vulture:vulture` (a copy of the wandering trader with its goals replaced), drawn
-  by the mod, ridden and flown. Tested in game, single player.
-- **Mounting**: right-click on the vulture (no cheats needed) or `/ride` (cheats). Holding sneak gets off (confirmed in
-  game).
-- **Ridden flight** (§6.2), tried in game 2026-11-09: turned by the look, Space climbs, sneak descends, getting off only
-  on the ground. The vulture takes no fall damage.
-- **Model and texture of the tawny vulture**: `mods/vulture/assets/models/vulture.bbmodel` (Blockbench), converted to
-  Rust by `cargo creature model vulture` and drawn by the library (`creature::model`). First version (17 cubes, 64×64)
-  replaced on 2026-11-09 by the lean model of §7.1 (32 cubes, 128×128); the first version was tested in game, the lean
-  one only in Blockbench so far.
-- **Mount hearts**: only the hearts it has, no empty ones.
-- **Sounds** (§7): the trader is muted; call (hiss, 3 variants + a rare call), hurt, death, wing flaps, takeoff and eat
-  (those two not played by the code yet), made from CC0 freesound sounds by `cargo creature sounds vulture` (sources
-  listed in `tools/src/sounds.rs`), played by the library (`creature::sounds`). English and French subtitles. Hurt and death: written, not tested in game yet.
-- **Spawn egg** `vulture:vulture_spawn_egg`, in the series' "Horizon Creature" creative tab (2026-11-08; the vulture's
-  own tab is gone).
-- **Moved into the Horizon Creature series** (2026-11-08): `mods/vulture/`, depends on the library; built with the
-  series' tools (`cargo creature install vulture`), tested in game.
+- **The vulture** `vulture:vulture` (a copy of the wandering trader with its own goals), its own 1.2 × 1.0 box, drawn by
+  the mod from `assets/models/vulture.bbmodel` (§7.1); a chick model for babies (`baby.bbmodel`). Red when hurt,
+  tipping over when dying. Its own sounds from CC0 freesound recordings (§7, `assets/sounds.toml`), English and French
+  subtitles.
+- **Wild** (§4): spawns in deserts, badlands and savannas; soars in circles and lands on high ground; walks about and
+  looks at players. Neutral: it fights back from the air (it hovers over its target's head, striking, then pulls
+  away), and nearby vultures join in. Drops feathers and meat (raw, or cooked when it burns); a vulture feather crafts
+  arrows, the brush and the book and quill in place of a feather.
+- **Stats** (§2): each rolls its max health and flight speed once.
+- **Taming** (§5): it walks to raw meat thrown on the ground and eats it; a raw chicken tames it one time in four.
+- **Tamed** (§6): sits or follows, flies to its owner and lands near them, defends them. Its owner fits it with a plain
+  **saddle** (drawn as a seat and a breast strap) and up to two **chests**; sneak + right-click opens its screen
+  (saddle, sit / follow, the chests' slots). Leads work, wild or tamed.
+- **Riding and flight** (§6.2): right-click to mount; it flies like a plane, steered by the look, Space climbs, sneak
+  descends, getting off only on the ground; only the hearts it has are shown. **Talons** (§6.4): R catches a small
+  creature below and carries it.
+- **Breeding** (§8): rotten flesh puts two tamed vultures in love; their baby averages their stats, grows from a chick
+  to a juvenile to an adult in 20 minutes, faster when fed raw meat. A chick doesn't follow its owner, a juvenile does.
+- **Bestiary page**: the biomes a wild one was met in, "Feed" (raw chicken) and "Breeding" (rotten flesh).
 
-- **Drops** (§4, 2026-11-09): `vulture:feather`, `vulture:raw_vulture` and `vulture:cooked_vulture` (mutton's food
-  values; furnace, smoker and campfire), the loot table (0–2 feathers, 1–2 meat, cooked when it burns, Looting), in the
-  creative tab. Built; not tested in game yet.
-- **Vulture feathers for feathers** (2026-11-12): arrows, the brush and the book and quill also craft with a vulture
-  feather (`recipe/*_from_vulture_feather.json`, copies of vanilla's; tested loaded). Not the firework star's feather
-  burst, a special recipe.
-- **Wild vulture, first part** (§4, 2026-11-09): it soars (takes off every ~30 s on average, climbs 18 to 26 blocks,
-  circles 30 to 60 s with a bank, spirals down and lands; left in the air, it glides down), walks about, looks at
-  players; neutral, it fights back (3 damage) and nearby vultures join in (vanilla's `HurtByTarget` and
-  `MeleeAttack`); spawns in deserts, badlands and savannas (weight 3, groups of 1 to 3, a NeoForge biome modifier).
-  The flight is shared with the ridden one (`flight.rs`). Built; not tested in game yet.
-- **Taming and the tamed vulture** (§5, §6, 2026-11-09): a hungry vulture walks to raw meat on the ground (16 blocks)
-  and eats it; a wild one eating a raw chicken is tamed 1 time in 4 (hearts, smoke otherwise), by the player. Tamed:
-  sits or follows (right-click), flies to its owner past 10 blocks and lands near them, teleports past 32, attacks
-  what hurts its owner and what they attack, never its owner; eats from the ground only when hurt (+4). Its owner's
-  right-click: harness on, a chest on (two at most), raw meat heals 4 when hurt, then mount (with a harness) or sit /
-  follow. **Harness** `vulture:harness` (recipe, texture); harness and chests drawn on the model when worn. State in
-  `Mob.extra`, saved in the `vulture:state` attachment (`state.rs`). Built; not tested in game yet.
-- **The vulture's screen and chests** (§6.1, §6.3, 2026-11-09): sneak + right-click by its owner opens it (a server
-  menu shown as a chest): harness (click to take it off, without chests), sit / follow, a button per chest (takes the
-  last one off, its contents given back), and 15 slots per chest, saved in the `vulture:chests` attachment. On death
-  it drops its harness, chests and their contents. Built; not tested in game yet.
-- **Talons** (§6.4, 2026-11-09): ridden in flight, R (`key.vulture.talons`) catches the nearest small mob (at most
-  1 × 1) or tamed animal up to 3 blocks below and carries it (−25 % cruising speed, half the climb); R again, the rider
-  getting off or its death lets go. Built; not tested in game yet.
-- **Stats, breeding and babies** (§2, §8, 2026-11-09): each vulture rolls its max health (16 to 30) and flight speed
-  (0.6 to 1.2 × base) once, saved. Rotten flesh from its owner puts a grown tamed vulture in love for 30 s; two in love
-  within 8 blocks meet and have a baby (tamed to the owner, each stat the average of both parents' and a roll), then
-  wait 5 minutes. A baby is drawn small, growing (a chick, then a juvenile, §8), can't wear a harness or be ridden, grows up in 20 minutes, a minute
-  faster per raw meat fed. Horizon ages it (a wandering trader's copy is an `AgeableMob`); its age is also saved with its
-  state.
-  Built; not tested in game yet.
-- **Hitbox, fighting in the air, animations** (§4, §7, 2026-11-09): its own 1.2 × 1.0 hitbox (a copy of its type with
-  its own size, in place of the trader's 0.6 × 1.95); it fights on the wing (`DiveAttack`: climbs above its target,
-  dives, hovers a block over its head striking for 3, pulls away after three strikes; in place of vanilla's ground melee); poses for pecking (eating), striking, sitting
-  (settled, legs folded) and carrying (legs down). Built; not tested in game yet.
-- **Landing on high points** (§4, 2026-11-09): after circling, the wild vulture picks the highest ground within 16
-  blocks (a peak, a tree top) and glides down onto it. Built; not tested in game yet.
-- **The baby's model** (§7, §8, 2026-11-09): a chick of its own (`assets/models/baby.bbmodel`, 64 × 64): a big
-  grey-pink head with a downy crown, a short neck, a round downy body, stubby wings, a dark beak; the same groups as the
-  grown vulture, so the same poses. Built; not tested in game yet.
-
-### To do (v1)
-
-- §6.2 Flight: Space / sneak for height and getting off only on the ground, written after the first flights (to try);
-  the numbers, bank and stall to tune.
-- §7.1 Lean model: written (2026-11-09); to check in game with its poses (folded, gliding, flapping, banking, diving).
-- §7.2 New spawn egg: drawn (2026-11-09); to check in game.
-- **After the first tests** (2026-11-09): the harness in the creative tab; red when hurt and tipping over when dying
-  (the library's `tint` and `death_tilt`), so the drops no longer seem to come early; wild vultures no longer land in
-  tree tops (leaves skipped), climb over what they bump into in flight, and give up a landing spot after 20 s. The
-  tab's button is the guide book.
-- **Saddle instead of the harness** (2026-11-13): right-click with a vanilla saddle; the screen's slot and the death
-  drop give a saddle back. The `vulture:harness` item, recipe, texture and names are removed (saved vultures keep
-  theirs: the state's flag is unchanged).
-- **Harness fixed, tested in game** (2026-11-09): right-clicks were changing a copy of the mob that the game refreshes
-  (lost), the owner check read an unset player id, a requested change was never saved, and the harness was hidden
-  under the folded wings. Now the server hook makes every change (`interaction.rs`), the injection only mounts (reading
-  a synced `vulture:rideable` attachment), and the harness shows a seat on the back and a breast strap. Tried in game:
-  taming with thrown chicken, harness on, mount, save and reload, mount again.
-- **Riding fixed, tested in game** (2026-11-09): mounting is done on the server (`Host::mount`, as `/ride`): mounted
-  from client-side code, its goals never saw the rider and the game moved it itself (fast on foot, no take-off). The
-  harness is no longer `Mob.extra.saddled`, which made Horizon drive it as a saddled mount. Slower flight (cruise 0.4,
-  dive 0.8 blocks per tick), and sneak brings it down at least 0.2 a tick so it lands. The screen opens on the
-  vulture's next tick (Horizon refuses a menu during the click). The talons key is on the mod's page in Options > Mods.
-  Tried in game: right-click mount, take-off with Space, the screen with sneak + right-click.
-- **Rider, chests, catch, lost taming** (2026-11-09, tested in game): the rider sits on the seat (hitbox height 0.6:
-  Horizon seats a rider at a mod mob's box top); the saddlebags hug the flanks under the wing roots and swing out from
-  under the folded wings on the ground; a catch is held 0.7 below, one tick ahead along the flight, so it stays in the
-  talons. A vulture's saved state is read again when it isn't reachable yet on its first tick (it was taken for a new,
-  wild vulture about one load in four, and saved so), and a saved owner is never overwritten by none.
-- **Breeding and speeds** (2026-11-09): rotten flesh worked (tested: two fed vultures had a baby) but showed nothing;
-  now hearts rise from a vulture in love, and one baby per pair (two were born). It walks to food at 0.55 of its pace
-  (it rushed); flight back up to cruise 0.55, dive 1.0 (0.4 felt too slow).
-- **Growing up and walking** (2026-11-10): a baby fed raw meat shows hearts (tested); it grows little by little, a chick
-  (its own model, 0.6 to 0.8 scale) for the first half of its growth, then a juvenile (the adult's model, 0.62 to full
-  size; tested). It walked twice as fast wild as ridden (the trader's walking speed, 0.5): its own
-  `minecraft:movement_speed` 0.3 in `vulture.json` puts strolling and the ridden walk together, ~0.08 to 0.1 block a
-  tick; it walks to food twice as fast (1.2 of it; 0.6 felt too slow). Ridden, it flies twice as fast (cruise and dive
-  ×2). All tested.
-- **Fights and talons** (2026-11-10, built, to test): attacking, it no longer lands and takes off over and over (its
-  dive aimed at the target's eyes): it dives at a spot a block over the target's head and hovers there on beating
-  wings, striking every second, and pulls away after three strikes. The talons reach further (4 down, 2.5 around) and
-  the legs thrust down on every try.
-- **Bestiary** (common/SPECS.md §9, 2026-11-10, tested): its page, the biomes a wild one was met in (only its spawn
-  biomes: badlands, desert, savanna; a tamed one following its owner elsewhere doesn't count), and two facts: raw
-  chicken "Feed" (once one ate a chicken the player threw), rotten flesh "Breeding" (once the player fed one).
-- **Leads and following** (2026-11-10, tested): a lead ties it, wild or tamed (Horizon refuses leads on the wandering
-  trader it copies, so the vulture ties them itself; Horizon's rope and pull then work), a click unties it and gives
-  the lead back; on a lead it neither follows its owner nor soars. A chick doesn't follow its owner, a juvenile does.
-- **v1 is written.** What is left is testing everything above in game, then tuning (flight numbers, taming odds,
-  speeds, the dive attack) and fixing what the tests find.
-
-What waits for v2 is listed apart, in §9.
+Left: tuning (flight numbers, taming odds, speeds, the dive attack) as players report.
 
 ---
 
@@ -133,11 +41,11 @@ What waits for v2 is listed apart, in §9.
 
 - **Format**: a Horizon native mod = a content mod (items, recipes, loot, textures, sounds, entity type in JSON)
   + Rust code built into Horizon (`horizon-mixin.toml`, `native_*` hooks). Tool: `cargo horizon-mod`.
-- **Toolchain**: Rust 1.99.1, pinned by the launcher and already installed.
-- **Target**: game 26.3, Horizon revision pinned at the start of development.
+- **Toolchain**: the Rust the Horizon launcher pins.
+- **Target**: game 26.3, on the series' pinned Horizon revision (docs/HORIZON-ISSUES.md).
 - **Mod id**: `vulture` (ids kept from before the series, so test worlds still load).
-- **Dependency** ✅: the library `creature` (`[dependencies] creature = "^0.1"` in `native/horizon-mixin.toml`). Entity `vulture:vulture`, items `vulture:harness`, `vulture:feather`, `vulture:raw_vulture`,
-  `vulture:cooked_vulture`.
+- **Dependency** ✅: the library `creature` (`[dependencies] creature = "^0.1"` in `native/horizon-mixin.toml`). Entity `vulture:vulture`, items `vulture:feather`, `vulture:raw_vulture`,
+  `vulture:cooked_vulture` (the saddle is vanilla's).
 - **Multiplayer** ✅: v1 = single player. LAN and the dedicated server come in v2 (for a LAN guest, their own client
   moves the mount, which needs its own work), but server logic is kept apart from rendering from the start.
 - **Languages** ✅: everything in the repository is in English; the game text is translated (`en_us`, `fr_fr`).
@@ -153,29 +61,17 @@ What waits for v2 is listed apart, in §9.
 | Right-click on the entity | ✅ | `native_interact_entity` |
 | Taming event | ✅ | `native_entity_tame` (vanilla only, to check) |
 | Nearby items on the ground | ✅ | API 42 (position, stack, pickup delay) |
-| Mod sounds | ✅ event played in game (`.ogg` files not listened to yet) | `assets/vulture/sounds.json` + `.ogg`, played by `Host::play_sound` (Horizon always prefixes mob sounds with `minecraft:`) |
+| Mod sounds | ✅ | `assets/vulture/sounds.json` + `.ogg`, played by `Host::play_sound` (Horizon always prefixes mob sounds with `minecraft:`) |
 | Inventory screen | ✅ | Mod menu types (1 to 256 slots) |
 | Natural spawning | ✅ | `add_spawns` by biome |
-| **Riding a mod entity and flying it** | ✅ phase 0 (2026-11-07) | `/ride` accepts any mob; Horizon copies the rider's keys into `Mob.rider` (forward, strafe, jump, sprint), which a goal reads to set the speed. Internal fields: Horizon revision pinned. Right-click → mount: a mixin injection that calls `start_riding` (`run_command` is refused during a player's turn). No cheats needed. |
-| Carrying an entity (talons) | ❓ | Probably by making a creature another's passenger, or by teleporting it every tick. To check. |
-
-### 1.2 Phase 0: technical prototype, before anything else
-
-1. Declare `vulture:vulture` (a copy of the wandering trader), spawn it with `/summon` and draw it with a cube.
-2. Mount a player on it and read their keys (WASD, Space, Ctrl) on the server.
-3. Make it fly by setting its speed directly.
-
-If step 2 or 3 is not possible, three options:
-- **A**: contribute to Horizon (open source) a mount-type base model (horse, donkey, happy ghast);
-- **B**: spawn a vanilla donkey, which can already be ridden, carry chests, vary its stats and breed, and draw it as a
-  vulture;
-- **C**: write the mount ourselves with player input and position hooks.
+| **Riding a mod entity and flying it** | ✅ | `/ride` accepts any mob; Horizon copies the rider's keys into `Mob.rider` (forward, strafe, jump, sprint), which a goal reads to set the speed. Internal fields: Horizon revision pinned. Right-click → mount: `Host::mount` from the server's `interact_entity` hook. No cheats needed. |
+| Carrying an entity (talons) | ✅ | Teleported under the vulture every tick (`talons.rs`). |
 
 ---
 
 ## 2. Variable stats ✅ (like horses)
 
-> Shared system: common/SPECS.md §8.4. The vulture's ranges and rules below.
+> The vulture's own system for now (a candidate for the library: common/SPECS.md §6). Its ranges and rules below.
 
 Each vulture rolls its stats when born or spawned:
 
@@ -219,7 +115,7 @@ Variant names are simple colour names ✅, so players need not know the species.
 
 ## 5. Taming ✅
 
-> Ownership, sit/follow and defending the owner are shared (common/SPECS.md §8.3); taming by thrown chicken is the
+> Ownership, sit/follow and defending the owner are shared (common/SPECS.md §6.3); taming by thrown chicken is the
 > vulture's own.
 
 1. The player **throws** a raw chicken (Q key) near a wild vulture. Handing it over does not work.
@@ -234,23 +130,23 @@ Variant names are simple colour names ✅, so players need not know the species.
 - Defends its owner and attacks what the owner hits, like the wolf.
 - Can be named with a name tag. No fall damage. Healing: raw meat (+4 HP).
 - **Controls** ✅:
-  - right-click = mount if it has a harness and you are its owner (only the owner rides it ✅), otherwise sit/follow;
+  - right-click = mount if it is saddled and you are its owner (only the owner rides it ✅), otherwise sit/follow;
   - sneak + right-click = the vulture's screen (which also has a sit/follow button);
   - right-click with rotten flesh = breeding mode (§8).
 
 ### 6.1 Saddle ✅
 
-- A plain **saddle** (vanilla's `minecraft:saddle`) ✅ (2026-11-13: the vulture harness item and its recipe are gone;
-  the gear is still drawn as a seat and a breast strap, and the code and saves still call it the harness).
+- A plain **saddle** (vanilla's `minecraft:saddle`) ✅, drawn as a seat and a breast strap (the code and the saves call
+  it the harness).
 - Needed to ride it **and** to carry chests ✅. Goes in a slot of the vulture's screen, and shows on the model.
 
 ### 6.2 Dynamic flight ✅
 
-> Riding and flight stay in the vulture until a second mod needs them (common/SPECS.md §8.1). The vulture's keys and numbers below. **No
+> Riding and flight stay in the vulture until a second mod needs them (common/SPECS.md §6.1). The vulture's keys and numbers below. **No
 > stamina** ✅: the vulture flies as long as the rider wants.
 
 Flown like a plane, not like a flying camera: the vulture always moves forward along its heading, the rider turns it
-by **looking** where it should go ✅ and sets its height with **Space and sneak** ✅ (tried in game, 2026-11-09).
+by **looking** where it should go ✅ and sets its height with **Space and sneak** ✅.
 
 | Rider | Vulture |
 |---|---|
@@ -279,16 +175,16 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
 
 ### 6.3 Chests ✅
 
-- Up to **2 chests**, one on each side, visible on the model. Added by right-clicking with a chest (harness required).
+- Up to **2 chests**, one on each side, visible on the model. Added by right-clicking with a chest (saddle required).
 - **15 slots per chest**, so 30 in all.
-- **Vulture screen**: harness slot, "remove left / right chest" buttons ✅ (the contents drop on the ground), a grid of 15
+- **Vulture screen**: saddle slot, "remove left / right chest" buttons ✅ (the contents drop on the ground), a grid of 15
   or 30 slots, sit/follow button.
-- On death it drops its chests, their contents and its harness.
+- On death it drops its chests, their contents and its saddle.
 
 ### 6.4 Talons ✅
 
 - In flight, ridden, with the talons key: catches the nearest creature below (up to 4 blocks down, 2.5 around ✅,
-  2026-11-10: 1.5 was too tight). The legs thrust down on every try, caught or missed ✅.
+  1.5 was too tight). The legs thrust down on every try, caught or missed ✅.
 - It can catch:
   - **small enough mobs** (hitbox ≤ 1 block wide and ≤ 1 block high ✅: chicken, rabbit, pig, sheep, fox, cat, wolf,
     babies…);
@@ -304,7 +200,7 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
 - The **model is drawn by code** (`native_mob_submit`) from cubes. Its source is a `.bbmodel` file (Blockbench),
   converted to Rust data by a script in the repository: we edit visually, the game gets cubes, pivots and UVs.
 - Animated parts: head, neck, body, 2 wings in three segments (arm, forearm, hand with its primaries), tail, 2 legs with
-  talons, harness, 2 chests.
+  talons, saddle, 2 chests.
 - Code animations: flap, glide (wings spread, still), banking turn, dive (wings swept back), walk, peck/eat, sit,
   attack, closed talons.
 - Sounds: call, wing flap, eat, hurt, death. CC0 sounds (freesound.org, licence checked; CC0 requires no credit, the
@@ -341,7 +237,7 @@ vulture.
 
 ## 8. Breeding ✅ (v1)
 
-> Shared system: common/SPECS.md §8.5. The vulture gives birth to a live baby (no egg) ✅.
+> Shared system: common/SPECS.md §6.5. The vulture gives birth to a live baby (no egg) ✅.
 
 - Two tamed vultures fed **rotten flesh** ✅ (scavengers…) go into breeding mode.
 - The baby is born tamed, with the same owner, and inherits stats (§2) (and its variant once there are variants, §3).
@@ -360,8 +256,5 @@ vulture.
 
 ## 10. Remaining open questions
 
-- ~~Q26: If phase 0 shows a mod entity cannot be ridden: A, B or C (§1.2)?~~ Moot: phase 0 succeeded without any of the
-  three options (2026-11-07).
-- ~~Extra stamina cost when carrying someone: +50 %?~~ Moot: no stamina any more (2026-11-09).
 - Q27: The flight's numbers (§6.2), the bank and turn limits, and what A / D do in the air.
 - Q28: What a passenger in its talons does to its flight (§6.4)?

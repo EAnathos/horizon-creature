@@ -1,4 +1,4 @@
-//! The glass jar (SPECS §6.1): catching a small creature and releasing it elsewhere.
+//! The glass jar (SPECS §4.1): catching a small creature and releasing it elsewhere.
 //!
 //! - A mod registers the creatures a jar can hold (`register`), with the icon of a jar holding one.
 //! - **Catch**: right-click a registered creature with an empty `creature:glass_jar` (the library's `interact_entity`,
@@ -9,7 +9,7 @@
 //!   look, and the jar is empty again. A jar whose creature's mod isn't installed any more stays full.
 //!
 //! In creative, as a bucket, the jar isn't used up: catching keeps the empty jar and releasing keeps the full one.
-//! Released on a flower, a creature whose kind settles in a flower patch settles there (`territory`, §6.2).
+//! Released on a flower, a creature whose kind settles in a flower patch settles there (`territory`, §4.2).
 //!
 //! **Display**: sneak + right-click with a filled jar places it as a small block (`creature:jar`, or `creature:lit_jar`
 //! giving light for a creature that glows), the creature drawn inside with its species' own drawing (its bestiary 3D
@@ -35,7 +35,7 @@ const DATA: &str = "creature";
 pub struct Catchable {
     pub kind: &'static str,
     pub model: &'static str,
-    /// Where it settles when released (`territory`, SPECS §6.2): on a flower (its patch) or on farmland (its garden).
+    /// Where it settles when released (`territory`, SPECS §4.2): on a flower (its patch) or on farmland (its garden).
     pub settles: Option<crate::territory::Rule>,
     /// A jar holding it, placed as a block, gives light (fireflies).
     pub glows: bool,
@@ -262,7 +262,7 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
     true
 }
 
-/// The jar placed as a block (SPECS §6.1, "display"): plain, or giving light for a creature that glows.
+/// The jar placed as a block (SPECS §4.1, "display"): plain, or giving light for a creature that glows.
 pub const BLOCK: &str = "creature:jar";
 pub const LIT_BLOCK: &str = "creature:lit_jar";
 

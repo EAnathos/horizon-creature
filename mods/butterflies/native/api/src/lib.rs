@@ -3,7 +3,7 @@
 //! So far (SPECS §0): the butterfly and the moth exist (spawn eggs), each a copy of the wandering trader (its
 //! behaviour is all goals, cleared here) with its own tiny size, drawn with its own model (`model_butterfly.rs`,
 //! `model_moth.rs`, from `assets/models/`). A butterfly gets a look the first time it is seen (the library's colours
-//! and patterns, common/SPECS.md §7): a base colour, a pattern and a pattern colour, more or less likely per biome
+//! and patterns, common/SPECS.md §5): a base colour, a pattern and a pattern colour, more or less likely per biome
 //! (`SCHEME`). The moth has one look, painted in its texture (SPECS §2.1). On the ground a butterfly opens and closes
 //! its wings slowly. They fly by day (butterflies) or by night (moths) and land on flowers (the library's `flutter`); released
 //! from a glass jar on a flower they settle around it (the library's territory). Butterfly dust drops from them.
@@ -185,7 +185,7 @@ pub static SCHEME: Scheme = Scheme {
     varieties: &VARIETIES,
 };
 
-/// Both are caught in the library's glass jar (common/SPECS.md §6.1), each with its own jar icon.
+/// Both are caught in the library's glass jar (common/SPECS.md §4.1), each with its own jar icon.
 static IN_JAR: [Catchable; 2] = [
     Catchable {
         kind: BUTTERFLY,
@@ -201,7 +201,7 @@ static IN_JAR: [Catchable; 2] = [
     },
 ];
 
-/// Their pages in the bestiary (common/SPECS.md §9): met wild (not settled) in the biomes they spawn in; caught in a jar.
+/// Their pages in the bestiary (common/SPECS.md §7): met wild (not settled) in the biomes they spawn in; caught in a jar.
 const JAR_FACTS: &[creature::bestiary::Fact] = &[
     creature::bestiary::Fact {
         id: creature::jar::JAR_FACT,

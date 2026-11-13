@@ -1,4 +1,4 @@
-# Worms: specification (v0.2, draft)
+# Worms: specification
 
 A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): small earthworms you find on
 the dirt, carry in a glass jar and settle in your garden, where they stay and slowly make crops grow faster. Simple,
@@ -8,18 +8,20 @@ like Butterflies ✅.
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 
-## 0. Progress (as of 2026-11-09)
+## 0. Status
 
-- Folder and spec created.
-- **In game** (2026-11-12, tested): `worms:worm` and its spawn egg; model `assets/models/worm.bbmodel` (six segments, a
-  lighter band, each segment a group: a wave runs along it as it crawls). It crawls slowly (0.015 block a tick) a few
-  blocks around where it first crawled, with pauses. Caught in the glass jar (its own jar icon); released on farmland
-  or a crop on it, in a garden of at least 10 connected farmland blocks (the library's garden rule), it settles: it
-  crawls only on that farmland (tested) and, every 20 s, makes one crop of its garden grow a stage (tested: 4 wheat
-  stages in about a minute with random ticks off); more than 3 worms in one garden count as 3. A garden shrunk below
-  10 frees it. Wild ones despawn far from players, settled ones never. Spawns in plains, meadows, forests and taigas,
-  1 or 2 together. Bestiary page (Catch, Garden). Green sparkles on the crop it helped. While it rains, worms come up on
-  grass and dirt near players (a chance every 5 s, up to 6 within 24 blocks).
+Done and tested in game (single player).
+
+- **The worm** (`worms:worm`, spawn egg): six segments (`assets/models/worm.bbmodel`), a wave running along it as it
+  crawls, slowly, a few blocks around where it first crawled, with pauses.
+- **Spawning**: plains, meadows, forests and taigas, 1 or 2 together; while it rains, more come up on grass and dirt
+  near players (a chance every 5 s, up to 6 within 24 blocks). Wild ones despawn far from players.
+- **Gardens** (§4): caught in the glass jar and released on farmland (or a crop on it) of at least 10 connected
+  farmland blocks, it settles and crawls only there; every 20 s it makes one crop of its garden grow a stage, with
+  green sparkles; more than 3 worms in one garden count as 3. A garden shrunk below 10 frees it.
+- **Bestiary page**: the biomes met in, "Catch", "Garden".
+
+Left: its own sounds (picked from freesound, not made yet).
 
 ## 1. Technical context
 

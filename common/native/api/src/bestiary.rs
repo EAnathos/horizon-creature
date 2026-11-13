@@ -1,4 +1,4 @@
-//! The bestiary, in the creature guide book (SPECS §9): what each player found out about the series' creatures.
+//! The bestiary, in the creature guide book (SPECS §7): what each player found out about the series' creatures.
 //!
 //! - Each mod registers its species and the facts a player can learn about them (`register`), from its `hooks()`.
 //! - A player **meets** a species when a wild creature of it comes within `MEET` blocks in one of the biomes it spawns

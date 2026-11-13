@@ -1,6 +1,6 @@
 # Cyclops's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
 id = "cyclops"
 name = "Cyclops"
-status = "in progress"
+status = "playable"
 # Its items in the series' creative tab, in order.
 creative = ["cyclops:cyclops_spawn_egg", "cyclops:cyclops_eye", "cyclops:club", "cyclops:shepherds_crook"]

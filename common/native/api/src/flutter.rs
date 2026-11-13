@@ -1,4 +1,4 @@
-//! Small fliers (SPECS §8): short erratic flights, landing (on flowers), resting; butterflies, moths and fireflies.
+//! Small fliers (SPECS §3.5): short erratic flights, landing (on flowers), resting; butterflies, moths and fireflies.
 //!
 //! A mod gives each of its creatures a `Kind` (out by day or at night, speed, height, how long it flies and rests,
 //! drawn to light, landing on flowers) and adds `Flutter::new(&KIND)` to its goals.
@@ -116,7 +116,7 @@ pub struct Flutter {
     check: i32,
     /// Where a wild one first fluttered: it wanders around it rather than drifting off for good.
     home: Option<[f64; 3]>,
-    /// A moth's light: the brightest light source near it, looked for every `CHECK_EVERY` ticks (SPECS §2.1).
+    /// A moth's light: the brightest light source near it, looked for every `CHECK_EVERY` ticks (mods/butterflies/SPECS.md §2.1).
     light: Option<[i32; 3]>,
 }
 

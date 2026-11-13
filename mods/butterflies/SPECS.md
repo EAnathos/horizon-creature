@@ -1,4 +1,4 @@
-# Butterflies: specification (v0.2, draft)
+# Butterflies: specification
 
 A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): butterflies that bring life to
 flowery places, that you catch in a glass jar and settle where you like. Deliberately small in scope ✅.
@@ -7,35 +7,28 @@ flowery places, that you catch in a glass jar and settle where you like. Deliber
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 
-## 0. Progress (as of 2026-11-09)
+## 0. Status
 
-- Folder and spec created.
-- **In game** (2026-11-11, tested): `butterflies:butterfly` and `butterflies:moth`, with spawn eggs (in the library's
-  tab), copies of the wandering trader with their goals cleared, a tiny box, 1 health, muted. A butterfly gets a look
-  the first time it is seen, from the library's colours and patterns (common/SPECS.md §7): 8 colours, 6 patterns
-  (plain, eye spots, wing tips, veins, dots, tails), weighted per biome as in §2; the look is saved and comes back
-  after a reload (tested). On the ground it opens and closes its wings slowly. The moth is drawn with its painted
-  texture. Right-click does nothing (no trading screen); both are caught and released with the library's glass jar,
-  the butterfly keeping its look (tested), each with its own jar icon. Their wings are thin slabs a little apart (flat
-  wings flickered). Their shadow is too big (Horizon gives a mod mob 0.5; docs/HORIZON-ISSUES.md, "To open").
-- **Flight, spawning, dust, bestiary** (2026-11-12, flight and settling tested): butterflies fly by day in fair
-  weather, moths by night; short erratic flights 1 to 3.5 blocks up around where they first fluttered, then they land
-  on a flower within 6 blocks (or the ground) for 5 to 30 seconds. A sprinting player within 4 blocks makes them fly
-  off, away from them. No fall damage (with 1 health, a drop off a ledge killed one). Released from a jar on a flower
-  they settle (the library's flower patch) and only fly over and land on its flowers. They spawn: butterflies in flower
-  forests, meadows, sunflower plains, cherry groves, plains, forests, birch forests and jungles; moths in forests,
-  birch and dark forests, taigas, plains and meadows (a biome modifier can't ask for night or flowers: they spawn
-  anywhere in those biomes and rest when it isn't their time). Butterfly dust drops from both (1, Looting adds up to
-  1). Bestiary pages: met wild (not settled) in those biomes; the fact "Catch" once one is caught in a jar.
-- **Light, despawning, jar on display** (2026-11-12, tested): at night a moth is drawn to the nearest bright light
-  within 10 blocks (a torch, a lantern, a campfire...) and flutters around it without landing. Wild butterflies and
-  moths despawn far from players (the library's `mob::despawn_far`: at once beyond 128 blocks, now and then beyond
-  32), never a settled or named one. A filled jar placed with sneak + right-click shows its butterfly or moth inside
-  (the library's jar block).
-- **Models** (2026-11-10): `assets/models/butterfly.bbmodel` and `moth.bbmodel` (pictures in docs/MODELS.md), one group
-  tree for both (body, head and antennae, a forewing and a hindwing per side, flat wings cut out by the texture's
-  alpha). The butterfly's texture is greyscale, for the library to tint (§2); the moth's is painted (§2.1). Not in
-  game yet.
+Done and tested in game (single player).
+
+- **Butterflies and moths** (`butterflies:butterfly`, `butterflies:moth`, spawn eggs): tiny wandering trader copies, 1
+  health, muted, drawn from `assets/models/butterfly.bbmodel` and `moth.bbmodel` (pictures in docs/MODELS.md). A
+  butterfly gets a look the first time it is seen, from the library's colours and patterns (common/SPECS.md §5): 8
+  colours, 6 patterns (plain, eye spots, wing tips, veins, dots, tails), weighted per biome (§2); the moth is painted
+  (§2.1).
+- **Flight** (the library's small fliers, common/SPECS.md §3.5): butterflies by day in fair weather, moths by night;
+  short erratic flights, landing on a flower or the ground; a sprinting player close by makes them fly off. At night a
+  moth flutters around the nearest bright light. Wild ones despawn far from players.
+- **Spawning**: butterflies in flower forests, meadows, sunflower plains, cherry groves, plains, forests, birch forests
+  and jungles; moths in forests, birch and dark forests, taigas, plains and meadows.
+- **Glass jar** (common/SPECS.md §4): caught and released keeping its look; released on a flower it settles there; a
+  filled jar placed as a block shows it inside.
+- **Butterfly dust** (§4): dropped by both; thrown, a shimmering cloud; with paper, 8 confetti, thrown as a burst of
+  colours.
+- **Bestiary pages**: the biomes met in, "Catch", "Settles", the butterfly's morphs.
+
+Left: their own sounds (picked from freesound, not made yet). Their shadow is too big (Horizon gives a mod mob 0.5;
+arismoko/horizon#3896).
 
 ## 1. Technical context
 
@@ -64,9 +57,9 @@ The butterflies' night counterpart ✅: a **moth** (`butterflies:moth`), flying 
 
 - Stouter and furrier than a butterfly ✅. At rest its forewings sweep back into a wide triangle over its body, with
   a gently curved, scalloped and fringed rear edge, and a narrow V between them at the back where the segmented
-  abdomen and the paler hindwings show; thin plain antennae angled forward ✅ (2026-11-10, its model is
+  abdomen and the paler hindwings show; thin plain antennae angled forward ✅ (its model is
   built in this rest shape; flight spreads the wings from it).
-- **One look** ✅ (2026-11-10): a speckled grey-brown, two faint cross lines and a fringe on the forewing, the
+- **One look** ✅: a speckled grey-brown, two faint cross lines and a fringe on the forewing, the
   hindwing paler, a fuzzy taupe body. Its colours are painted in its texture (`assets/models/moth.bbmodel`): it doesn't use the library's
   colours and patterns, which only the butterfly does.
 - **Spawning** ❓: at night, near light sources and flowers, 1–2 together; drawn to light: it flutters around lanterns,
@@ -93,9 +86,9 @@ The butterflies' night counterpart ✅: a **moth** (`butterflies:moth`), flying 
 
 - **Dropped when a butterfly is killed** ✅ (1 dust ✅; Looting adds 1 ✅).
 - **One dust item for every colour** ✅ (`butterflies:butterfly_dust`).
-- **Thrown** ✅ (2026-11-12): right-click throws a shimmering cloud of it ahead (pale dust, glints, a chime); one used
+- **Thrown** ✅: right-click throws a shimmering cloud of it ahead (pale dust, glints, a chime); one used
   up (not in creative).
-- **Confetti** ✅ (2026-11-12): `butterflies:confetti`, 8 from paper and butterfly dust (shapeless). Right-click throws a
+- **Confetti** ✅: `butterflies:confetti`, 8 from paper and butterfly dust (shapeless). Right-click throws a
   burst of bright colours a little ahead (a firework's twinkle); one used up (not in creative). Particles only.
 
 ## 5. Out of scope for v1

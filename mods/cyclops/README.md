@@ -1,14 +1,23 @@
 # Cyclops
 
-A mod of the [Horizon Creature](../../README.md) series: a one-eyed giant shepherd at cave mouths that hurls boulders,
-and drops its eye.
+![](../../docs/models/cyclops-cyclops-front.png)
 
-**Requires** Horizon Creature (`creature`), the series' library.
+A mod of the [Horizon Creature](../../README.md) series: a one-eyed giant shepherd, four blocks tall, who lives at the
+mouths of caves with his flock. **Requires** Horizon Creature, the series' library.
 
-> **Status:** in progress ([SPECS.md](SPECS.md) §0). A blue one-eyed giant shepherd that appears rarely at cave mouths
-> with a flock of sheep that follow it. Hostile: come near, hurt it or one of its sheep, and it brings its club down on you. Drops
-> its eye (for a shepherd's crook that herds farm animals) and sometimes its club. Spawn egg, bestiary page.
+## Meeting one
 
-- `content/`: the entity type, the spawn egg, the cyclops eye, its loot, English and French names.
-- `native/`: its goals (the club's blow, defending the flock), the flock following it, its spawning at cave mouths, its
-  drawing (`model.rs` from `assets/models/cyclops.bbmodel`, see [docs/MODELS.md](../../docs/MODELS.md#cyclops)).
+Rarely, at a cave mouth in the mountains, the meadows, the windswept hills or on a rocky shore, a cyclops watches over
+three to five sheep that follow him everywhere. In creative: the spawn egg (creative tab "Horizon Creature").
+
+He is hostile. Come near, hurt him or one of his sheep, and he walks up and brings his club down on you (it hurts, and
+throws you back). Keep your distance and he lifts a boulder over his head and hurls it at you. His eye is his weak
+spot: an arrow or a trident in it hurts twice as much and leaves him dazed for a moment.
+
+## What he leaves
+
+- **His eye**, when you kill him. With 4 sticks and wool it makes a **shepherd's crook**: while you hold it, the farm
+  animals around you (sheep, cows, pigs, goats, chickens) follow you. His sheep too.
+- Sometimes **his club**: a slow, heavy wooden weapon that hits hard and throws back. You can also make one from 4
+  logs and a stick.
+- Some leather.
