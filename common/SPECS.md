@@ -94,10 +94,22 @@ by night. A mod gives a `Kind` (day or night, speed, height, flight and rest len
 flowers) and calls `register` (size, muted, the flight goal), `tick_post` (territory, despawning far from players)
 and `gone`.
 
+### 3.6 Small crawlers (`creature::crawl`), planned ✅
+
+The slow crawl on the ground of worms and dung beetles: the worm's `Crawl` goal (`worms::Crawl` today), moved here when
+the Dung Beetles are built, with what a beetle adds (walking toward a target, backwards). Users: **Worms**, **Dung
+Beetles**.
+
+### 3.7 Chickens peck small creatures (`creature::prey`), planned ✅
+
+A chicken that sees a small creature within 6 blocks walks over and pecks it: the creature is eaten (no drop), wild or
+settled, so a player keeps chickens out of a garden or a pasture. A mod registers its kinds as prey. Users: **Worms**,
+**Dung Beetles** (mods/dung_beetles/SPECS.md §2). Not on creatures in a jar or on display.
+
 ## 4. Glass jar and territories ✅
 
 Catching small creatures and settling them in a place they won't leave. Users: **Butterflies**, **Worms**, **Fireflies**
-✅. The jar is the library's ✅ and is **active only if one of them is installed** ✅ (hidden otherwise, §3.3).
+✅, and **Dung Beetles** once built (it then joins the recipe's condition and the tab injection). The jar is the library's ✅ and is **active only if one of them is installed** ✅ (hidden otherwise, §3.3).
 
 ### 4.1 The jar
 
@@ -130,6 +142,7 @@ the block it was released on, by the mod's rule:
 |---|---|---|
 | **Garden** ✅ | Worms | The farmland connected to the release block (4 directions, same level ±1); **at least 10 blocks** ✅, otherwise the worm won't settle |
 | **Flower patch** ✅ | Butterflies, Fireflies ✅ | Released on a flower (its anchor): the flowers **within 8 blocks** of the anchor, plus 2 blocks around them and 4 blocks up. The 8-block cap keeps it to at most ~20 × 20 blocks, even in a meadow or a flower forest where every flower touches the next; in a sparse garden it is just the flower beds |
+| **Pasture** ✅ (planned) | Dung Beetles | Released with **at least 3 farm animals** (cows, sheep, horses, donkeys, goats, camels, llamas) **within 8 blocks**: 8 blocks around the release block; fewer than 3 animals left around and the creature is unsettled (mods/dung_beetles/SPECS.md §4) |
 
 - The creature remembers its anchor (saved on the entity); every few seconds ✅ it checks the area still holds (the
   garden is still ≥ 10 farmland, the flowers are still there). If not, it becomes unsettled (wanders, may despawn ✅).

@@ -1,0 +1,6 @@
+# Dung Beetles's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
+id = "dung_beetles"
+name = "Dung Beetles"
+status = "planned"
+# Its items in the series' creative tab, in order (none until implementation starts).
+creative = []

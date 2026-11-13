@@ -21,7 +21,7 @@ Done and tested in game (single player).
   green sparkles; more than 3 worms in one garden count as 3. A garden shrunk below 10 frees it.
 - **Bestiary page**: the biomes met in, "Catch", "Garden".
 
-Left: its own sounds (picked from freesound, not made yet).
+Left: its own sounds (picked from freesound, not made yet); chickens pecking worms (§2), planned with the Dung Beetles.
 
 ## 1. Technical context
 
@@ -38,6 +38,8 @@ Left: its own sounds (picked from freesound, not made yet).
 - **Found in nature, on the dirt** ✅: on dirt, grass, podzol, coarse dirt and rooted dirt ✅, in groups of 1–2, more after rain
   ✅ (while it rains, one chance in 3 every 5 s for each player, 4 to 16 blocks away, up to 6 worms within 24 blocks); wild ones despawn far from players ✅.
 - Pink-brown, segmented model, crawling animation; sounds to cut from freesound (§0).
+- **Chickens peck it** ✅ (planned, library §3.7): a chicken that sees one walks over and eats it, wild or settled, so a
+  garden is better without chickens. Its crawl moves to the library's small crawlers (library §3.6).
 
 ## 3. Jar and garden ✅
 

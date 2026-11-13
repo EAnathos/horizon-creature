@@ -14,6 +14,7 @@ on it.
 | Worms | `mods/worms/` | `worms` | playable | [mods/worms/SPECS.md](../mods/worms/SPECS.md) |
 | Cyclops | `mods/cyclops/` | `cyclops` | playable | [mods/cyclops/SPECS.md](../mods/cyclops/SPECS.md) |
 | Fireflies | `mods/fireflies/` | `fireflies` | playable | [mods/fireflies/SPECS.md](../mods/fireflies/SPECS.md) |
+| Dung Beetles | `mods/dung_beetles/` | `dung_beetles` | planned | [mods/dung_beetles/SPECS.md](../mods/dung_beetles/SPECS.md) |
 
 `cargo creature list` prints the same table from the modules' `module.toml`.
 
