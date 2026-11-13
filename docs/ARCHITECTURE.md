@@ -90,9 +90,9 @@ The whole series shares **one creative tab**, "Horizon Creature", owned by the l
 - Horizon does not let a content mod add items to another mod's tab, but a tab may name items of other mods, and the
   game leaves out those nobody registers. So the library's tab lists the items of **every** mod of the series; with only
   some mods installed, only their items show.
-- The file is **generated** by `cargo creature tab` (and by every `install`): the library's items first
-  (`common/module.toml`), then each mod's (`creative` in `mods/<mod>/module.toml`), mods in folder-name order. Never edit
-  it by hand.
+- The file is **generated** by `cargo creature tab` (and by every `install`): every spawn egg first, then the library's
+  items (`common/module.toml`), then each mod's other items (`creative` in `mods/<mod>/module.toml`); mods in alphabetical
+  (folder-name) order, each one's items in its own order. Never edit it by hand.
 - A mod therefore declares **no tab of its own**: its items reach the tab by being listed in its `module.toml`.
 - The tab's button shows `common/module.toml`'s `icon`: the creature guide book, `creature:guide`.
 - A new item in a mod changes the library's file: release the library with the mod (§6).

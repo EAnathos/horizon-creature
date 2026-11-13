@@ -35,11 +35,12 @@ It always flies forward and goes where you look, banking into its turns.
 | Key | Effect |
 |---|---|
 | Look left / right | Bank and turn |
+| A / D | Steer left / right |
 | Space (held) | Climb; takes off from the ground |
 | Sneak (held) | Descend |
 | W | Flap, up to cruising speed |
 | (nothing) | Glide, slowly losing height |
-| S | Brake |
+| S | Nothing in the air; on the ground, back up slowly |
 | R | Talons: catch the small creature below, let it go |
 | Sneak on the ground | Get off |
 

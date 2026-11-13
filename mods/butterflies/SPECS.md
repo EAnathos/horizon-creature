@@ -33,14 +33,14 @@ arismoko/horizon#3896).
 ## 1. Technical context
 
 - **Mod id**: `butterflies`. Entities `butterflies:butterfly`, `butterflies:moth` ✅; item `butterflies:butterfly_dust`
-  ✅. No jar item of its own: a caught butterfly or moth is in the library's `creature:glass_jar` ✅ (library §6.1).
-- Uses from the library: model drawing and sounds (§3.1, §3.2), **colours and patterns** (§7, the butterfly only), **glass jar and
-  territories** (§6, which this mod switches on), hitbox size (§8.8).
+  ✅. No jar item of its own: a caught butterfly or moth is in the library's `creature:glass_jar` ✅ (library §4.1).
+- Uses from the library: model drawing and sounds (§3.1, §3.2), **colours and patterns** (§5, the butterfly only), **glass jar and
+  territories** (§4, which this mod switches on), hitbox size (§3.4).
 - The butterfly and the moth copy the wandering trader (goals only) with a **tiny hitbox**.
 
 ## 2. The butterfly ✅
 
-- **One species** ✅ with **several colours and patterns** ✅ (library §7) :
+- **One species** ✅ with **several colours and patterns** ✅ (library §5):
   - base colours: white, lemon, orange, red, sky blue, violet, brown, black;
   - patterns: plain, eye spots, wing-tip bands, veins, dots, tails (swallowtail shape ✅);
   - biome weights: bright colours in flower forests and meadows, whites and lemons in plains, browns in forests, blues
@@ -62,25 +62,24 @@ The butterflies' night counterpart ✅: a **moth** (`butterflies:moth`), flying 
 - **One look** ✅: a speckled grey-brown, two faint cross lines and a fringe on the forewing, the
   hindwing paler, a fuzzy taupe body. Its colours are painted in its texture (`assets/models/moth.bbmodel`): it doesn't use the library's
   colours and patterns, which only the butterfly does.
-- **Spawning** ❓: at night, near light sources and flowers, 1–2 together; drawn to light: it flutters around lanterns,
-  torches and campfires within ~10 blocks ❓. At dawn it rests on a log, a wall or the underside of leaves (no flight)
-  and wild ones may despawn.
-- **Caught and settled like a butterfly** ✅ (library §6, rule "flower patch"), but a **settled moth only moves at night**
+- **Spawning** ✅: in forests, birch and dark forests, taigas, plains and meadows, at night; drawn to light ✅: it
+  flutters around the nearest bright light. By day it rests (no flight), and wild ones despawn far from players.
+- **Caught and settled like a butterfly** ✅ (library §4, rule "flower patch"), but a **settled moth only moves at night**
   ✅: by day it stays still on a block of its area.
-- Ambient and harmless, 1 HP, flees a sprinting player; drops butterfly dust like a butterfly ❓.
+- Ambient and harmless, 1 HP, flees a sprinting player; drops butterfly dust like a butterfly ✅.
 
 ## 3. Catching and settling ✅
 
-- **Caught with a glass jar** ✅ (library §6.1): right-click a butterfly with an empty jar.
-- **Released** from the jar on a block, it **won't leave a given area** around one or several blocks ✅. Proposal
-  (library §6.2, rule "flower patch"):
+- **Caught with a glass jar** ✅ (library §4.1): right-click a butterfly with an empty jar.
+- **Released** from the jar on a block, it **won't leave a given area** around one or several blocks ✅.
+  Rule "flower patch" (library §4.2):
   - released **on a flower**, that flower is its anchor: it roams over the **flowers within 8 blocks** of it, plus 2
     blocks around them and 4 blocks up. The cap keeps the area small (at most ~20 × 20 blocks) even in a meadow or a
     flower forest where flowers are everywhere; in a garden, the flower beds are its area;
   - released **anywhere else**, it doesn't stays (and then can dispawn).
   - if the anchor flower is broken, it moves its anchor to the nearest flower within 8 blocks, or flies off if there is
     none ✅.
-- A filled jar can also be **placed as a decorative jar** ✅ (library §6.1, "display").
+- A filled jar can also be **placed as a decorative jar** ✅ (library §4.1, "display").
 
 ## 4. Butterfly dust ✅
 
@@ -100,6 +99,6 @@ The butterflies' night counterpart ✅: a **moth** (`butterflies:moth`), flying 
 - ~~Q1: Species?~~ One species, several colours and patterns.
 - ~~Q2: Catching?~~ With a glass jar; released, it keeps to an area.
 - ~~Q3: Butterfly dust?~~ Dropped when a butterfly is killed; one item for all colours.
-- Q4: The settled area: flowers within 8 blocks of the anchor flower (§3)?
+- ~~Q4: The settled area?~~ The flowers within 8 blocks of the anchor flower (§3).
 - ~~Q5: Day only, or moths at night too?~~ Moths at night (§2.1); a settled moth only moves at night.
-- Q6: The moth's look, colours and attraction to light (§2.1).
+- ~~Q6: The moth's look, colours and attraction to light?~~ One look, painted in its texture; it flutters around bright lights (§2.1).

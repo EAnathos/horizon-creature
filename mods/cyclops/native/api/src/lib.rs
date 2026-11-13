@@ -11,6 +11,7 @@ mod crook;
 mod eye;
 mod model;
 mod model_boulder;
+mod smash;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Mutex;
@@ -177,6 +178,14 @@ impl Goal for Smash {
                     m.swing();
                     horizon_client::mobs::ai::do_hurt_target(m, who, cx);
                 }
+                // The club comes down in front of it, at its feet, whether or not it hits.
+                let (dx, dz) = (t.position.x - m.position.x, t.position.z - m.position.z);
+                let far = dx.hypot(dz).max(0.01);
+                let ahead = far.min(REACH * 0.75) / far;
+                smash::blow(
+                    m.id,
+                    [m.position.x + dx * ahead, m.position.y - 0.5, m.position.z + dz * ahead],
+                );
                 creature::sounds::queue(m.id, BLOW, 1.2, 0.7);
                 self.cooldown = EVERY;
             }
@@ -659,6 +668,7 @@ impl Hooks for Cyclops {
             voice(event.entity, at, &mut random);
             eye::tick(host, event.entity, at);
         }
+        smash::tick(host, event.dimension, event.entity);
         boulder::launch(host, event.dimension);
         creature::sounds::tick_post(host, event, &VOICE, creature::sounds::NEUTRAL);
     }
@@ -668,6 +678,7 @@ impl Hooks for Cyclops {
             CYCLOPS_AT.lock().unwrap().remove(&event.entity);
             RAISED.lock().unwrap().remove(&event.entity);
             LIFTED.lock().unwrap().remove(&event.entity);
+            smash::forget(event.entity);
             LAST_AT.lock().unwrap().remove(&event.entity);
             ANGERED.lock().unwrap().remove(&event.entity);
             eye::forget(event.entity);

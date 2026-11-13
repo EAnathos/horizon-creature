@@ -2,8 +2,9 @@
 //! (docs/ARCHITECTURE.md, "Creative inventory").
 //!
 //! A content mod can't add items to another mod's tab, but a tab may list items of other mods: the game leaves out
-//! those nobody registers. So the library owns the one tab and lists the items of every module, in order: the
-//! library's, then each mod's (`creative` in its `module.toml`), mods sorted by folder name. A mod that is not
+//! those nobody registers. So the library owns the one tab and lists the items of every module (`creative` in its
+//! `module.toml`), in order (common/SPECS.md §3.3): every spawn egg first, then the library's items, then each mod's
+//! other items; mods in alphabetical order (their folder names), each one's items in its own order. A mod that is not
 //! installed simply has its items left out.
 use std::path::PathBuf;
 
@@ -29,6 +30,8 @@ pub fn render() -> crate::Result<(PathBuf, String, usize)> {
             items.push(item);
         }
     }
+    // The spawn eggs first, keeping the order otherwise (a stable sort).
+    items.sort_by_key(|item| !item.ends_with("_spawn_egg"));
     let json = serde_json::json!({ "title": format!("itemGroup.{LIBRARY}"), "icon": icon, "items": items });
     let out = library
         .dir

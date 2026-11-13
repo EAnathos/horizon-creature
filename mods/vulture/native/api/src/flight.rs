@@ -41,19 +41,14 @@ pub struct Controls {
     pub pitch: f32,
     /// Wing beats up to the cruising speed (W).
     pub flap: bool,
-    /// Air brake (S).
+    /// Air brake (its own flight only: a rider's S does nothing in the air).
     pub brake: bool,
     /// A strong flap that climbs, and takes off from the ground (Space).
     pub boost: bool,
-    /// Carrying a creature in its talons (SPECS §6.4): a lower cruising speed and half the climb.
-    pub heavy: bool,
     /// Ridden (SPECS §6.2): twice its own cruising and diving speeds, to travel far.
     pub ridden: bool,
 }
 
-/// What a catch takes off its cruising speed and its climb.
-const HEAVY_CRUISE: f64 = 0.75;
-const HEAVY_CLIMB: f64 = 0.5;
 /// What a rider's flight multiplies its cruising and diving speeds by.
 const RIDDEN_SPEED: f64 = 2.0;
 
@@ -136,9 +131,9 @@ impl Flight {
         // Speed: gravity along the slope, then the wings.
         let (sin_pitch, cos_pitch) = f64::from(self.pitch).to_radians().sin_cos();
         self.speed += GRAVITY * sin_pitch;
-        // Its own speed (SPECS §2), then a catch's weight.
+        // Its own speed (SPECS §2); what it carries doesn't weigh on it (SPECS §6.4).
         let pace = crate::state::pace(m.id) * if c.ridden { RIDDEN_SPEED } else { 1.0 };
-        let cruise = CRUISE * pace * if c.heavy { HEAVY_CRUISE } else { 1.0 };
+        let cruise = CRUISE * pace;
         if c.flap && self.speed < cruise {
             self.speed += (cruise - self.speed) * FLAP;
         } else if c.brake {
@@ -160,10 +155,7 @@ impl Flight {
             m.velocity.y = m.velocity.y.min(-MIN_DESCENT);
         }
         if c.boost || blocked {
-            m.velocity.y = m
-                .velocity
-                .y
-                .max(if c.heavy { TAKE_OFF * HEAVY_CLIMB } else { TAKE_OFF });
+            m.velocity.y = m.velocity.y.max(TAKE_OFF);
         } else if !flapping {
             // Gliding sinks gently, less the faster it goes.
             m.velocity.y -= GLIDE_SINK * (1.0 - (self.speed / (CRUISE * pace)).min(1.0)) + GLIDE_SINK / 2.0;

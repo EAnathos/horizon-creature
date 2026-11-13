@@ -26,7 +26,7 @@ Done and tested in game (single player). What waits for v2 is in §9.
 - **Tamed** (§6): sits or follows, flies to its owner and lands near them, defends them. Its owner fits it with a plain
   **saddle** (drawn as a seat and a breast strap) and up to two **chests**; sneak + right-click opens its screen
   (saddle, sit / follow, the chests' slots). Leads work, wild or tamed.
-- **Riding and flight** (§6.2): right-click to mount; it flies like a plane, steered by the look, Space climbs, sneak
+- **Riding and flight** (§6.2): right-click to mount; it flies like a plane, steered by the look and A / D, Space climbs, sneak
   descends, getting off only on the ground; only the hearts it has are shown. **Talons** (§6.4): R catches a small
   creature below and carries it.
 - **Breeding** (§8): rotten flesh puts two tamed vultures in love; their baby averages their stats, grows from a chick
@@ -115,7 +115,7 @@ Variant names are simple colour names ✅, so players need not know the species.
 
 ## 5. Taming ✅
 
-> Ownership, sit/follow and defending the owner are shared (common/SPECS.md §6.3); taming by thrown chicken is the
+> Ownership, sit/follow and defending the owner are candidates for the library (common/SPECS.md §6.2); taming by thrown chicken is the
 > vulture's own.
 
 1. The player **throws** a raw chicken (Q key) near a wild vulture. Handing it over does not work.
@@ -150,10 +150,11 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
 
 | Rider | Vulture |
 |---|---|
-| Looks **right / left** | **Banks** to that side and **turns in an arc** ✅, like a plane: the further the look is from its heading, the steeper the bank (up to ~50° ❓) and the tighter the turn (up to ~5° a tick ❓); it levels out as its heading reaches the look |
+| Looks **right / left** | **Banks** to that side and **turns in an arc** ✅, like a plane: the further the look is from its heading, the steeper the bank (up to ~50°) and the tighter the turn (up to ~5° a tick); it levels out as its heading reaches the look |
+| A / D (Q / D on AZERTY) | Steers to that side ✅: its wanted heading is 45° from the look while held, so it banks and turns the same way |
 | W (Z on AZERTY) | Flaps: speeds up to its cruising speed (wing beats, flap sound) |
 | (nothing) | Glides: keeps its speed slowly falling off, sinks gently when level |
-| S | Air brake: slows down, sinks a little faster ❓ |
+| S | Nothing in the air ✅ |
 | Space (held) | Noses up and **climbs** with strong flaps ✅ (loses speed); on the ground, **takes off** |
 | Sneak (held) | Noses down and **descends** ✅ (gains speed, up to the dive speed); Ctrl does the same |
 | (neither) | Flies level |
@@ -161,16 +162,17 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
 | "Talons" key ✅ (R, rebindable in Controls) | Catch / release (§6.4) |
 
 - **Speed and pitch** trade like a glider's ✅: diving builds speed, climbing spends it. Too slow while climbing, it
-  stalls and noses down by itself ❓, so it can't hang in the air.
+  stalls and noses down by itself ✅, so it can't hang in the air.
 - The **body follows the flight**: pitched with the climb or dive, rolled with the bank, the wings spread wide in a
-  glide, beating when it flaps, swept back in a steep dive ❓.
+  glide, beating when it flaps, swept back in a steep dive ✅.
 - The pitch and the turn rate follow the look smoothly (no snapping), so the flight reads as momentum.
-- A and D (Q and D on AZERTY) do nothing in the air ❓; the look's pitch does nothing either (the camera is free).
-- On the ground: a slow walk (WASD), Space takes off, sneak gets off.
+- The look's pitch does nothing (the camera is free): height is Space and sneak.
+- On the ground: a slow walk (W, A, D), **S backs it up** at less than half that pace ✅ (like a big flier stepping
+  back), Space takes off, sneak gets off.
 - Horizon gets a rider off on sneak before any mod hears of it: the `ride-keys` injection (`ride_keys.rs`) keeps them
   on in the air.
 - ✅ Chests **do not weigh** on its flight. ✅ **No thermals.**
-- Starting numbers ❓ (blocks per tick): cruise 0.55 × its speed stat (× 2 ridden), dive up to 1.0 (× 2 ridden), slowest 0.18 before a stall,
+- Starting numbers ✅, to balance in game (blocks per tick): cruise 0.55 × its speed stat (× 2 ridden), dive up to 1.0 (× 2 ridden), slowest 0.18 before a stall,
   glide sink 0.04 when level, take-off climb 0.4, descent at least 0.2.
 
 ### 6.3 Chests ✅
@@ -189,7 +191,7 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
   - **small enough mobs** (hitbox ≤ 1 block wide and ≤ 1 block high ✅: chicken, rabbit, pig, sheep, fox, cat, wolf,
     babies…);
   - **allies** ✅: a player sneaking under the vulture (sneaking means consent), or a tamed animal.
-- Carrying someone **weighs it down** ❓: cruising speed −25 %, and it climbs at half the rate.
+- What it carries **does not weigh** on its flight ✅, like the chests (§6.3).
 - The key is a mod key, R by default, changed on the vulture's page in Options > Mods; a sneaking player under it can't be
   caught in single player (the only player is its rider), so allies are tamed animals for now.
 - It lets go on the key, when the vulture dies or when the rider gets off. The fall deals normal damage.
@@ -232,12 +234,12 @@ vulture.
 - In the style of the **latest vanilla spawn eggs** ✅ (since 1.21.5, each egg is drawn for its mob instead of two
   colours with spots): an egg shape with a dark outline and shading, painted with the mob's look.
 - The vulture's: a mottled brown egg with dark flight-feather streaks on its sides, a cream ruff collar around its top
-  third, and the bald grey-pink head with its hooked beak peeking from the top ❓. 16 × 16, readable at a glance next to
+  third, and the bald grey-pink head with its hooked beak peeking from the top ✅. 16 × 16, readable at a glance next to
   vanilla eggs.
 
 ## 8. Breeding ✅ (v1)
 
-> Shared system: common/SPECS.md §6.5. The vulture gives birth to a live baby (no egg) ✅.
+> A candidate for the library: common/SPECS.md §6.3. The vulture gives birth to a live baby (no egg) ✅.
 
 - Two tamed vultures fed **rotten flesh** ✅ (scavengers…) go into breeding mode.
 - The baby is born tamed, with the same owner, and inherits stats (§2) (and its variant once there are variants, §3).
@@ -256,5 +258,6 @@ vulture.
 
 ## 10. Remaining open questions
 
-- Q27: The flight's numbers (§6.2), the bank and turn limits, and what A / D do in the air.
-- Q28: What a passenger in its talons does to its flight (§6.4)?
+- ~~Q27: The flight's numbers, the bank and turn limits, and what A / D and S do in the air?~~ The numbers as built, to
+  balance in game; A / D steer, S does nothing in the air and backs up on the ground (§6.2).
+- ~~Q28: What a passenger in its talons does to its flight?~~ Nothing: no weight (§6.4).

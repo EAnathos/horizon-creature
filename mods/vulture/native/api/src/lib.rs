@@ -108,16 +108,20 @@ struct Vulture;
 /// Walking speed on the ground, ridden, in blocks per tick: as fast as it walks by itself (its
 /// `minecraft:movement_speed`, 0.3 in `vulture.json`, at `Stroll`'s 0.6).
 const WALK: f64 = 0.1;
+/// Backing up on the ground (S), a share of `WALK`.
+const BACK: f64 = 0.4;
 /// Its peck when it fights back (SPECS §4).
 const ATTACK_DAMAGE: f32 = 3.0;
 
 /// The pitch it takes, ridden, climbing (Space) and descending (sneak), in degrees.
 const CLIMB_PITCH: f32 = 35.0;
 const DESCEND_PITCH: f32 = 35.0;
+/// How far A or D, held in the air, sets its wanted heading to that side of the look, in degrees.
+const STEER: f32 = 45.0;
 
 /// Ridden flight (SPECS §6.2): the rider's look turns it and the keys steer `flight::Flight`. W flaps up to the
-/// cruising speed, S brakes, Space climbs with strong flaps (and takes off from the ground), sneak descends (getting off
-/// only on the ground, `ride_keys.rs`); on the ground it walks.
+/// cruising speed, A / D steer to a side, Space climbs with strong flaps (and takes off from the ground), sneak
+/// descends (getting off only on the ground, `ride_keys.rs`); on the ground it walks, and S backs it up slowly.
 #[derive(Clone, Debug, Default)]
 struct Fly {
     flight: Flight,
@@ -146,13 +150,14 @@ impl Goal for Fly {
             return;
         };
         if m.on_ground && !r.jumping {
-            // On the ground: a slow walk where the rider looks.
+            // On the ground: a slow walk where the rider looks, backing up slower still.
             self.flight.land(m);
             m.yaw = r.yaw;
             m.body_yaw = r.yaw;
             m.head_yaw = r.yaw;
             let (s, c) = f64::from(r.yaw).to_radians().sin_cos();
             let (fwd, strafe) = (f64::from(r.forward), f64::from(r.strafe));
+            let fwd = if fwd < 0.0 { fwd * BACK } else { fwd };
             m.velocity.x = (strafe * c - fwd * s) * WALK;
             m.velocity.z = (fwd * c + strafe * s) * WALK;
             return;
@@ -165,13 +170,13 @@ impl Goal for Fly {
         } else {
             0.0
         };
+        // A (a positive strafe) turns it left, towards a lower yaw; S does nothing in the air.
         let controls = Controls {
-            yaw: r.yaw,
+            yaw: r.yaw - r.strafe.clamp(-1.0, 1.0) * STEER,
             pitch,
             flap: r.forward > 0.0,
-            brake: r.forward < 0.0,
+            brake: false,
             boost: r.jumping,
-            heavy: talons::carrying(m.id),
             ridden: true,
         };
         self.flight.tick(m, &controls);

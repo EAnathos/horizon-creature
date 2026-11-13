@@ -162,7 +162,6 @@ impl Goal for Soar {
                     flap: true,
                     brake: false,
                     boost: self.ticks < 10,
-                    heavy: false,
                     ridden: false,
                 }
             }
@@ -180,7 +179,6 @@ impl Goal for Soar {
                     flap: below > 1.0 || self.flight.speed < CRUISE * 0.6,
                     brake: false,
                     boost: false,
-                    heavy: false,
                     ridden: false,
                 }
             }
@@ -202,7 +200,6 @@ impl Goal for Soar {
                         flap: path > 2.0,
                         brake,
                         boost: false,
-                        heavy: false,
                         ridden: false,
                     }
                 }
@@ -212,7 +209,6 @@ impl Goal for Soar {
                     flap: false,
                     brake: self.flight.speed > CRUISE,
                     boost: false,
-                    heavy: false,
                     ridden: false,
                 },
             },
@@ -307,7 +303,6 @@ impl Goal for DiveAttack {
                 flap: true,
                 brake: false,
                 boost: false,
-                heavy: false,
                 ridden: false,
             }
         } else if flat > DIVE_FROM {
@@ -319,7 +314,6 @@ impl Goal for DiveAttack {
                 flap: true,
                 brake: false,
                 boost: m.on_ground,
-                heavy: false,
                 ridden: false,
             }
         } else {
@@ -332,7 +326,6 @@ impl Goal for DiveAttack {
                 flap: false,
                 brake: false,
                 boost: m.on_ground,
-                heavy: false,
                 ridden: false,
             }
         };

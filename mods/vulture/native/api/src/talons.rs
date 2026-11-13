@@ -5,8 +5,7 @@
 //!   (`take_press`), which picks the creature: a small mob (at most 1 × 1 block: chicken, rabbit, pig, sheep, fox, cat,
 //!   wolf, babies...) or a tamed animal, at most 4 blocks below and 2.5 around, the nearest, never itself. The legs
 //!   thrust down on every try, caught or missed (`state::grabbed`, drawn by `pose`).
-//! - While it carries one, the server tick hook (`carry`) keeps the creature under its talons; its flight is heavier
-//!   (`flight::Controls::heavy`).
+//! - While it carries one, the server tick hook (`carry`) keeps the creature under its talons.
 //! - It lets go on the key, when its rider gets off (`Fly::stop`) or when it dies.
 use std::collections::BTreeMap;
 use std::sync::Mutex;

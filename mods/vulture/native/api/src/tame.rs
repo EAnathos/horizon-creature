@@ -192,7 +192,6 @@ impl Goal for FollowOwner {
                 flap: false,
                 brake: true,
                 boost: false,
-                heavy: false,
                 ridden: false,
             }
         } else {
@@ -202,7 +201,6 @@ impl Goal for FollowOwner {
                 flap: true,
                 brake: false,
                 boost: m.on_ground,
-                heavy: false,
                 ridden: false,
             }
         };

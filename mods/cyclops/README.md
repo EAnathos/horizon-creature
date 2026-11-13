@@ -11,8 +11,9 @@ Rarely, at a cave mouth in the mountains, the meadows, the windswept hills or on
 three to five sheep that follow him everywhere. In creative: the spawn egg (creative tab "Horizon Creature").
 
 He is hostile. Come near, hurt him or one of his sheep, and he walks up and brings his club down on you (it hurts, and
-throws you back). Keep your distance and he lifts a boulder over his head and hurls it at you. His eye is his weak
-spot: an arrow or a trident in it hurts twice as much and leaves him dazed for a moment.
+throws you back). Keep your distance and he lifts a boulder over his head and hurls it at you. Wherever the club or the
+boulder lands, the blocks around it break (chests and other containers are spared). His eye is his weak spot: an arrow
+or a trident in it hurts twice as much and leaves him dazed for a moment.
 
 ## What he leaves
 

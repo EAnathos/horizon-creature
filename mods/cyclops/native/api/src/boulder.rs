@@ -2,7 +2,7 @@
 //! (`cyclops:boulder`, a copy of the wandering trader that can't be hurt), launched on an arc toward where the target
 //! stood and flown by its goal (`Flight`, its own gravity), tumbling as it goes. It hits the first time it comes within
 //! reach of its target (`DAMAGE`, a push) and shatters there, on the ground, against a wall, or after `LIFE` ticks:
-//! stone dust and a crash, and it is gone. It breaks no blocks.
+//! stone dust and a crash, and it is gone. It tears up the blocks around where it lands (`smash`).
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Mutex;
 
@@ -10,7 +10,7 @@ use horizon_client::mobs::Who;
 use horizon_client::mobs::goals;
 use horizon_client::mod_api::{Compound, Cx, Goal, Host, Mob, MobSubmitEvent, ParticleOptions, ParticleType, Tag};
 
-use crate::model_boulder;
+use crate::{model_boulder, smash};
 
 pub const BOULDER: &str = "cyclops:boulder";
 const TEXTURE: &str = "cyclops:entity/cyclops/boulder";
@@ -75,6 +75,7 @@ pub fn tick(host: &mut dyn Host, dimension: &str, entity: u32) {
             .map(|(id, _)| id);
         let dust = ParticleOptions::simple(ParticleType::Block);
         host.send_particles(&dust, stone, [at[0], at[1] + 0.4, at[2]], [0.4, 0.3, 0.4], 0.1, 40);
+        smash::tear(host, dimension, at, smash::BOULDER_RADIUS);
         host.play_sound("minecraft:block.stone.break", at, creature::sounds::HOSTILE, 1.5, 0.6);
         host.play_sound(
             "minecraft:entity.generic.explode",
