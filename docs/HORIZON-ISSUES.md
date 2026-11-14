@@ -98,6 +98,13 @@ tab ([arismoko#3275](https://github.com/arismoko/horizon/issues/3275), open; our
 `common/native/jar_tab.rs`), reading a game rule or the difficulty (`LevelRef::game_rule`, `difficulty`: at our pin,
 used by the cyclops).
 
+- **A mod mob's spawn egg never says "Disabled in Peaceful"**: Horizon decides it from the copied vanilla species
+  (`allowed_in_peaceful`), and a mod mob can only copy a zombie, a villager or a wandering trader, with no way to call
+  it a monster. A client hook can't read the difficulty either (`LevelRef` is None on the client, even in single
+  player). Ours: the cyclops's `tooltip` adds the line from a static its server tick keeps
+  (`mods/cyclops/native/api/src/lib.rs`, `PEACEFUL`), single player only. File with a repro: a `monster` flag in
+  `entity_type` JSON, or the client's difficulty for native mods.
+
 - **`Host::take_items` takes nothing from a non-plain stack** (an item from the creative tab may carry component data).
   Not filed: the fork's new API no longer has `take_items` (checked 2026-11-10 on `51d735c`); see how its inventory
   services take items when we migrate. We take items only when the player isn't in creative.

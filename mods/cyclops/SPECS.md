@@ -20,7 +20,7 @@ Done and tested in game (single player), except the blocks its blows break (buil
   a ball of radius 1 for the club, 2 for the boulder, sparing liquids, containers, placed jars and the blocks players
   can't break, and nothing at all with the `mob_griefing` game rule off. It lets go 32 blocks away.
 - **Its eye is its weak spot**: an arrow or a trident in it deals double damage and dazes it for 2 s.
-- **Spawning**: never on Peaceful (those there go, as vanilla's monsters); rarely, at a cave mouth 24 to 64 blocks from a player, never within 160 blocks of another cyclops,
+- **Spawning**: never on Peaceful (those there go, as vanilla's monsters, and its egg says "Disabled in Peaceful"); rarely, at a cave mouth 24 to 64 blocks from a player, never within 160 blocks of another cyclops,
   with a **flock of 3 to 5 sheep** that follow it. Biomes: meadows, cherry groves, groves, snowy slopes, stony peaks,
   the windswept biomes, savanna plateaus and stony shores.
 - **Drops**: its eye when a player kills it, sometimes its worn club (1 in 3), 1 to 3 leather.

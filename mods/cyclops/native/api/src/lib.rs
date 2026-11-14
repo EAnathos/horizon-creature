@@ -15,6 +15,7 @@ mod smash;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
 
 use creature::bestiary::{Fact, Species};
@@ -23,7 +24,7 @@ use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, NearestTarge
 use horizon_client::mod_api::{
     AnvilUpdateEvent, BlockEntityDraw, Compound, Cx, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent,
     LevelTickPostEvent, LivingDeathEvent, LivingIncomingDamageEvent, Mob, MobSubmitEvent, NativeHeightmap,
-    NativeMobRender, RandomSource, RegisterGoalsEvent,
+    NativeMobRender, RandomSource, RegisterGoalsEvent, Text, TooltipEvent,
 };
 
 pub const CYCLOPS: &str = "cyclops:cyclops";
@@ -68,7 +69,7 @@ static BESTIARY: Species = Species {
         item: "minecraft:white_wool",
         key: "bestiary.cyclops.flock",
     }],
-    icon: "cyclops:cyclops_spawn_egg",
+    icon: EGG,
     scheme: None,
     rarity: creature::bestiary::Rarity::Rare,
     draw: book_view,
@@ -410,6 +411,12 @@ fn spawn(host: &mut dyn Host, dimension: &str) {
     }
 }
 
+const EGG: &str = "cyclops:cyclops_spawn_egg";
+/// Vanilla's red (`§c`), packed as tooltip lines take it (`rgba(255, 85, 85, 255)`).
+const PEACEFUL_RED: u32 = 0xFF55_55FF;
+/// Whether the world is on Peaceful, for the egg's tooltip (from the server's tick).
+static PEACEFUL: AtomicBool = AtomicBool::new(false);
+
 /// Whether the world is on Peaceful: no cyclops appears, and those there go, as vanilla's monsters.
 fn peaceful(host: &dyn Host, dimension: &str) -> bool {
     host.level(dimension).and_then(|l| l.difficulty(host)) == Some("peaceful")
@@ -629,6 +636,18 @@ impl Hooks for Cyclops {
         ai.targets.add(3, NearestTarget::player(true));
     }
 
+    /// Its spawn egg says "Disabled in Peaceful" in red there, as a vanilla monster's (Horizon only knows vanilla's
+    /// monsters; the cyclops copies the wandering trader). The client can't read the difficulty: the server's tick
+    /// keeps it in `PEACEFUL` (single player; arismoko/horizon#2740).
+    fn tooltip(&self, _: &dyn Host, event: &mut TooltipEvent<'_>) {
+        if &*event.stack.item == EGG && PEACEFUL.load(Ordering::Relaxed) {
+            let at = event.lines.len().min(1);
+            event
+                .lines
+                .insert(at, (Text::translate("item.spawn_egg.peaceful", &[]), PEACEFUL_RED));
+        }
+    }
+
     /// The club and the crook take no enchantment at an anvil either (the table offers none: no `enchantable`): no
     /// result with an enchanted book or an enchanted item on the right. Repairing and renaming still work.
     fn anvil_update(&self, _: &mut dyn Host, event: &mut AnvilUpdateEvent<'_>) -> Flow {
@@ -668,6 +687,7 @@ impl Hooks for Cyclops {
     }
 
     fn level_tick_post(&self, host: &mut dyn Host, event: &mut LevelTickPostEvent<'_>) {
+        PEACEFUL.store(peaceful(host, event.dimension), Ordering::Relaxed);
         if event.dimension == "minecraft:overworld" {
             spawn(host, event.dimension);
         }
