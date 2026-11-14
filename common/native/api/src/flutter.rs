@@ -14,6 +14,12 @@
 //! - Settled (released from a jar on a flower, the library's territory), it only flies over the flowers of its patch
 //!   and lands on them.
 //!
+//! **Spawning** (`spawns`): small fliers come out near players, as vanilla's ambient bats do, rather than through
+//! Horizon's natural spawning alone, whose creature cap the farm animals fill (it adds creatures only every 400
+//! ticks): every `SPAWN_EVERY` ticks, for each player and each kind registered, one chance in its `chance` while fewer
+//! than its `cap` are within `SPAWN_NEAR` blocks, a group comes out `SPAWN_MIN` to `SPAWN_MAX` blocks away, over the
+//! ground, in one of its biomes, at its hours. Wild ones far from players despawn (`tick_post`), so they come and go.
+//!
 //! The drawing needs to know which are flying (`flying`), which their render state doesn't say: a static map, single
 //! player only (as the vulture's; arismoko/horizon#2740).
 use std::collections::BTreeMap;
@@ -103,6 +109,125 @@ fn brightest_light(cx: &Cx, at: [f64; 3]) -> Option<[i32; 3]> {
 const ON_FLOWER: f64 = 0.4;
 
 static FLYING: Mutex<BTreeMap<u32, bool>> = Mutex::new(BTreeMap::new());
+
+/// Where small fliers come out (`spawns`): a kind, its flight (for its hours), its biomes, its groups, how many at most
+/// near a player, and one chance in how many each try.
+pub struct Spawning {
+    pub kind: &'static str,
+    pub flight: &'static Kind,
+    pub biomes: &'static [&'static str],
+    pub group: (u32, u32),
+    pub cap: usize,
+    pub chance: u64,
+}
+
+/// How often a try is made (ticks), how near a player the cap counts (blocks), and how far from them a group comes out.
+const SPAWN_EVERY: u32 = 200;
+const SPAWN_NEAR: f64 = 48.0;
+const SPAWN_MIN: f64 = 16.0;
+const SPAWN_MAX: f64 = 40.0;
+/// A group spreads this far around its spot (blocks), this high over the ground.
+const GROUP_SPREAD: f64 = 3.0;
+const GROUP_HEIGHT: (f64, f64) = (0.5, 2.5);
+
+static SPAWNING: Mutex<Vec<&'static Spawning>> = Mutex::new(Vec::new());
+static SPAWN_TICKS: Mutex<u32> = Mutex::new(0);
+/// Each flier's kind (from `register`) and where it is (from `tick_post`), for the caps.
+static KINDS: Mutex<BTreeMap<u32, String>> = Mutex::new(BTreeMap::new());
+static AT: Mutex<BTreeMap<u32, [f64; 3]>> = Mutex::new(BTreeMap::new());
+
+/// From a mod's `hooks()`: its kind comes out near players.
+pub fn spawns(spawning: &'static Spawning) {
+    let mut all = SPAWNING.lock().unwrap();
+    if !all.iter().any(|s| s.kind == spawning.kind) {
+        all.push(spawning);
+    }
+}
+
+/// Whether a kind out at `hours` is about now (from a hook: the server's day time and rain).
+fn about(host: &dyn Host, hours: Hours) -> bool {
+    let day = host.day_time().rem_euclid(24_000) < 12_500;
+    let raining = host.weather().0 > 0.2;
+    match hours {
+        Hours::Day => day && !raining,
+        Hours::Night => !day,
+        Hours::Always => !raining,
+    }
+}
+
+/// From the library's `level_tick_post`, in the overworld: groups of small fliers come out near players.
+pub fn spawn(host: &mut dyn Host, dimension: &str) {
+    if dimension != "minecraft:overworld" {
+        return;
+    }
+    {
+        let mut t = SPAWN_TICKS.lock().unwrap();
+        *t += 1;
+        if *t < SPAWN_EVERY {
+            return;
+        }
+        *t = 0;
+    }
+    let spawning: Vec<&'static Spawning> = SPAWNING.lock().unwrap().clone();
+    let mut random = crate::colours::Random::new(SPAWN_EVERY);
+    let mut float = || (random.next() % 10_000) as f64 / 10_000.0;
+    for player in host.server_players().into_iter().filter(|p| p.dimension == dimension) {
+        let p = player.position;
+        for s in &spawning {
+            if !random_chance(&mut float, s.chance) || !about(host, s.flight.hours) {
+                continue;
+            }
+            let near = {
+                let kinds = KINDS.lock().unwrap();
+                AT.lock()
+                    .unwrap()
+                    .iter()
+                    .filter(|(id, at)| {
+                        kinds.get(id).is_some_and(|k| k == s.kind) && (at[0] - p[0]).hypot(at[2] - p[2]) < SPAWN_NEAR
+                    })
+                    .count()
+            };
+            if near >= s.cap {
+                continue;
+            }
+            let angle = float() * std::f64::consts::TAU;
+            let distance = SPAWN_MIN + float() * (SPAWN_MAX - SPAWN_MIN);
+            let (x, z) = (p[0] + angle.cos() * distance, p[2] + angle.sin() * distance);
+            let Some(ground) = surface(host, [x.floor() as i32, p[1] as i32, z.floor() as i32]) else {
+                continue;
+            };
+            if !host
+                .biome([x.floor() as i32, ground, z.floor() as i32])
+                .is_some_and(|b| s.biomes.contains(&b.as_str()))
+            {
+                continue;
+            }
+            let count = s.group.0 + (float() * f64::from(s.group.1 - s.group.0 + 1)) as u32;
+            for _ in 0..count.min(s.group.1) {
+                let at = [
+                    x + (float() * 2.0 - 1.0) * GROUP_SPREAD,
+                    f64::from(ground) + GROUP_HEIGHT.0 + float() * (GROUP_HEIGHT.1 - GROUP_HEIGHT.0),
+                    z + (float() * 2.0 - 1.0) * GROUP_SPREAD,
+                ];
+                host.summon(dimension, s.kind, at, horizon_client::mod_api::Compound::new());
+            }
+        }
+    }
+}
+
+/// One chance in `n`, from `float` (0 to 1).
+fn random_chance(float: &mut impl FnMut() -> f64, n: u64) -> bool {
+    float() * (n as f64) < 1.0
+}
+
+/// The first open block over the ground at `at`'s column, from 16 blocks above `at` down to 16 below (not over water).
+fn surface(host: &dyn Host, at: [i32; 3]) -> Option<i32> {
+    let open = |name: &str| name == "minecraft:air" || name == "minecraft:cave_air";
+    (at[1] - 16..=at[1] + 16).rev().find(|&y| {
+        let below = host.block([at[0], y - 1, at[2]]);
+        open(&host.block([at[0], y, at[2]])) && !open(&below) && below != "minecraft:water"
+    })
+}
 
 /// Whether it is flying, for the drawing.
 pub fn flying(id: u32) -> bool {
@@ -387,6 +512,7 @@ impl Goal for Flutter {
 /// its template's goals replaced by this flight.
 pub fn register(mob: &mut Mob, size: (f64, f64, f64), kind: &'static Kind) {
     crate::mob::ours(mob, size.0, size.1, size.2);
+    KINDS.lock().unwrap().insert(mob.id, mob.kind.id.to_string());
     mob.ai.goals.add(1, Flutter::new(kind));
 }
 
@@ -395,6 +521,9 @@ pub fn register(mob: &mut Mob, size: (f64, f64, f64), kind: &'static Kind) {
 pub fn tick_post(host: &mut dyn Host, dimension: &str, entity: u32) {
     crate::sounds::play_queued(host, entity, crate::sounds::NEUTRAL);
     territory::tick(host, entity);
+    if let Some(at) = host.entity(entity).and_then(|e| host.entity_position(e)) {
+        AT.lock().unwrap().insert(entity, at);
+    }
     // A settled or befriended one stays.
     let kept = territory::settled(entity) || crate::friend::of(entity).is_some();
     if crate::mob::despawn_far(host, dimension, entity, kept) {
@@ -407,4 +536,6 @@ pub fn gone(entity: u32) {
     crate::colours::forget(entity);
     territory::forget(entity);
     forget(entity);
+    KINDS.lock().unwrap().remove(&entity);
+    AT.lock().unwrap().remove(&entity);
 }

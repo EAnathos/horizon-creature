@@ -13,14 +13,12 @@
 //! - `territory`: where a released creature settles and stays (SPECS §4.2).
 //! - `flutter`: how small fliers move (butterflies, moths, fireflies): short flights, landing, resting (SPECS §3.5).
 //! - `friend`: a creature befriended by a player, following them or staying (SPECS §6.2).
-//! - `grow`: crops helped to grow, by a worm or fairy dust (SPECS §3.10).
 //! - `guide`: the creature guide book, given at a player's first login (SPECS §7).
 //! - `bestiary`: the book's pages, what each player met and found out (SPECS §7).
 pub mod bestiary;
 pub mod colours;
 pub mod flutter;
 pub mod friend;
-pub mod grow;
 mod guide;
 pub mod hand;
 pub mod jar;
@@ -34,8 +32,9 @@ use horizon_client::mod_api::BlockPos;
 use horizon_client::mod_api::{
     BlockEntityEvent, BlockEntitySubmitEvent, BlockEntityUpdateTagEvent, Compound, DestroyBlockEvent,
     EntityTickPostEvent, ExplosionDetonateEvent, Flow, Hooks, Host, InteractEntityEvent, InteractionKeyEvent,
-    LevelHost, LivingChangeTargetEvent, LivingDeathEvent, NetFromServerEvent, PistonMoveEvent, PlayerLoggedInEvent,
-    ScreenMouseButtonPressedPreEvent, ScreenMouseScrolledPreEvent, ScreenRenderPostEvent, UseItemEvent, UseItemOnEvent,
+    LevelHost, LevelTickPostEvent, LivingChangeTargetEvent, LivingDeathEvent, NetFromServerEvent, PistonMoveEvent,
+    PlayerLoggedInEvent, ScreenMouseButtonPressedPreEvent, ScreenMouseScrolledPreEvent, ScreenRenderPostEvent,
+    UseItemEvent, UseItemOnEvent,
 };
 
 pub fn hooks() -> Box<dyn Hooks> {
@@ -104,6 +103,11 @@ impl Hooks for Creature {
 
     fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
         bestiary::tick(host, event.dimension, event.entity, event.kind);
+    }
+
+    /// Small fliers come out near players.
+    fn level_tick_post(&self, host: &mut dyn Host, event: &mut LevelTickPostEvent<'_>) {
+        flutter::spawn(host, event.dimension);
     }
 
     /// Right-click with the guide: the bestiary opens.

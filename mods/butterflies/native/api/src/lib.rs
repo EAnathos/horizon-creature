@@ -194,14 +194,12 @@ static IN_JAR: [Catchable; 2] = [
         model: "butterflies:butterfly_jar",
         settles: Some(creature::territory::Rule::FlowerPatch),
         glows: false,
-        shy: false,
     },
     Catchable {
         kind: MOTH,
         model: "butterflies:moth_jar",
         settles: Some(creature::territory::Rule::FlowerPatch),
         glows: false,
-        shy: false,
     },
 ];
 
@@ -300,7 +298,30 @@ const MOTH_BIOMES: &[&str] = &[
     "minecraft:meadow",
 ];
 
+/// They come out near players (the library's spawning: SPECS §2), by day for butterflies, at night for moths.
+static SPAWNING: [creature::flutter::Spawning; 2] = [
+    creature::flutter::Spawning {
+        kind: BUTTERFLY,
+        flight: &BUTTERFLY_FLIGHT,
+        biomes: BUTTERFLY_BIOMES,
+        group: (1, 3),
+        cap: 6,
+        chance: 3,
+    },
+    creature::flutter::Spawning {
+        kind: MOTH,
+        flight: &MOTH_FLIGHT,
+        biomes: MOTH_BIOMES,
+        group: (1, 3),
+        cap: 5,
+        chance: 3,
+    },
+];
+
 pub fn hooks() -> Box<dyn Hooks> {
+    for s in &SPAWNING {
+        creature::flutter::spawns(s);
+    }
     creature::hand::server_used(throw::DUST);
     creature::hand::server_used(throw::CONFETTI);
     for c in &IN_JAR {

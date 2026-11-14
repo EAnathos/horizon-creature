@@ -10,28 +10,30 @@ in sparkles, and lightens your step: a gentle speed boost.
 
 ## 0. Status
 
-Built and tested in game (single player): spawning aside (data written, not yet met in the wild), see below.
+Built and tested in game (single player).
 
 - **The fairy** (`fairies:fairy`, spawn egg): a copy of the wandering trader, box 0.4 × 0.8, 4 health, drawn
   full-bright with its own model (`assets/models/fairy.bbmodel`), its wings beating, its arms swaying, its hem
   turning, a soft violet light around it (seen only, lighting nothing), wider around one following its friend.
 - **Wild** (§2): it flits between flowers with the library's small fliers' flight, day and night, resting in the rain.
-  **Shy**: a player within 4 blocks who isn't sneaking, or running within 8, scares it off. Spawning: flower forests,
-  meadows, cherry groves and birch forests, 2 to 4 together. Killed, it vanishes in sparkles and drops nothing.
-- **Befriending** (§3): a sneaking player holding glow berries (or sweet berries) within 4 blocks draws it before their
-  face; it nibbles one every 5 s (taken from their hand, not in creative) and befriends them one time in 3 (6 for
-  sweet berries): hearts, a chime, a line on the action bar. Saved on the fairy (the library's `friend`).
+  **Shy**: a player within 4 blocks who isn't sneaking (and holds no berries), or running within 8, scares it off.
+  Spawning: flower forests, meadows, cherry groves and birch forests, 2 to 4 together, rarely, near players (the
+  library's small fliers' spawning). Killed, it vanishes in sparkles and drops nothing.
+- **Befriending** (§3): a player holding glow berries (or sweet berries) within 6 blocks draws it before their face;
+  right-clicked with one, it eats it at once (one used up, not in creative) and befriends them one time in 3 (6 for
+  sweet berries): hearts, a chime, a line on the action bar; otherwise a puff of smoke. Saved on the fairy (the
+  library's `friend`).
 - **Befriended**: it circles its friend's head, leaving faint sparkles; right-click makes it stay where it is or
   follow again. Its friend has **Speed I** while it follows within 8 blocks. Once a day it leaves a pinch of fairy dust
   at their feet. It comes to them at once past 24 blocks, never despawns, and their blows can't hurt it.
-- **Glass jar** (§5): a wild one only by a sneaking player, a befriended one only by its friend, and it is still
-  befriended once let out; released on a flower it settles there; on display, a jar that glows.
-- **Fairy dust** (§6): as bone meal on a crop (2 to 5 stages) or a sapling (ready to grow), with sparkles.
-- **Bestiary page**: the biomes met in, "Friend", "Dust", "Shy", "Catch".
+- **Glass jar** (§5): caught as the other creatures (a befriended one only by its friend), still befriended once let
+  out, its name kept; released on a flower it settles there; on display, a jar that glows (light 7, as fireflies).
+- **Fairy dust** (§6): its brewing recipe is written (awkward potion + fairy dust = Swiftness, `data/fairies/recipe/brewing/`);
+  Horizon brews it from the fork's newer revisions, not at our pin (docs/HORIZON-ISSUES.md).
+- **Bestiary page**: the biomes met in, "Friend", "Catch".
 
-Left: its own sounds (a chime and wing flutter from freesound; vanilla's amethyst chime until then); fairy dust in a
-**Potion of Swiftness** (Horizon reads brewing recipes from vanilla's data only, docs/HORIZON-ISSUES.md); the fairy
-lamp's brighter light (the series' lit jar gives 7, not 10); its name kept in the jar; a fairy met in the wild.
+Left: its own sounds (picked from freesound, not made yet; vanilla's amethyst chime until then); the Swiftness potion,
+with the next Horizon pin.
 
 ## 1. Technical context
 
@@ -59,9 +61,9 @@ lamp's brighter light (the series' lit jar gives 7, not 10); its name kept in th
 
 ## 3. Befriending ✅
 
-- **With glow berries**: a sneaking player holding glow berries within 4 blocks draws a wild fairy, which lands on
-  their hand (hovers before them) and nibbles one every 5 s; one chance in 3 it befriends them (hearts, a chime). Sweet berries
-  work too, one chance in 6.
+- **With glow berries**: a player holding glow berries within 6 blocks draws a wild fairy, which hovers before them;
+  right-clicked with one, it eats it at once; one chance in 3 it befriends them (hearts, a chime). Sweet berries work
+  too, one chance in 6.
 - **Befriended** (the library's friends, common/SPECS.md §6.2): it follows its friend, **circling their head** and leaving a
   faint trail of sparkles; right-click to make it stay or follow. Named with a name tag. It never despawns. It flies
   to its friend if they get more than 24 blocks away.
@@ -73,23 +75,22 @@ lamp's brighter light (the series' lit jar gives 7, not 10); its name kept in th
 
 ## 4. Bestiary page ✅
 
-The biomes met in, and the facts: "Friend" (befriended one), "Dust" (got fairy dust from one), "Shy" (one
-fled from you), "Jar" (caught one in a glass jar).
+The biomes met in, and the facts: "Friend" (befriended one), "Jar" (caught one in a glass jar).
 
 ## 5. Glass jar ✅
 
 - **Caught in the glass jar** (library §4.1), the same one as butterflies, worms and fireflies: right-click a fairy
-  with an empty jar. A wild one is only caught when it is close (a sneaking player); a befriended one only by its
-  friend, and it stays befriended in the jar and once let out. Its name is kept.
+  with an empty jar, as the other creatures; a befriended one only by its friend, and it stays befriended in the jar
+  and once let out. Its name is kept (shown under the jar's).
 - **Released**: a wild fairy let out on a flower patch settles there (the butterflies' territory, library §4.2); a
   befriended one follows its friend again.
-- **A fairy lamp**: placed as a decorative jar (library §4.1, "display"), the fairy flutters inside and glows: light 10,
-  brighter than a jar of fireflies.
+- **A fairy lamp**: placed as a decorative jar (library §4.1, "display"), the fairy flutters inside and glows: light 7, as a
+  jar of fireflies.
 
 ## 6. Items ✅
 
 - **Fairy dust** (`fairies:fairy_dust`): a glittering pinch. Brewed instead of sugar for a **Potion of Swiftness**
-  (awkward potion + fairy dust), and thrown on a sapling or a crop (right-click) as bone meal, with sparkles.
+  (awkward potion + fairy dust). It doesn't make crops grow.
 
 ## 7. Out of scope for v1
 

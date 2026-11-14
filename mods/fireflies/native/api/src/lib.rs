@@ -47,7 +47,6 @@ static IN_JAR: Catchable = Catchable {
     model: "fireflies:firefly_jar",
     settles: Some(creature::territory::Rule::FlowerPatch),
     glows: true,
-    shy: false,
 };
 
 /// Its page in the bestiary: met wild in the biomes it spawns in; caught in a jar, settling on a flower.
@@ -119,7 +118,18 @@ const LIGHT_RGB: u32 = 0xD6FF6E;
 const LIGHT_RADIUS: f32 = 3.0;
 const LIGHT_INTENSITY: f32 = 0.8;
 
+/// They come out near players at night, in small groups (the library's spawning: SPECS §2).
+static SPAWNING: creature::flutter::Spawning = creature::flutter::Spawning {
+    kind: FIREFLY,
+    flight: &FLIGHT,
+    biomes: BESTIARY.biomes,
+    group: (3, 6),
+    cap: 12,
+    chance: 3,
+};
+
 pub fn hooks() -> Box<dyn Hooks> {
+    creature::flutter::spawns(&SPAWNING);
     creature::jar::register(&IN_JAR);
     creature::bestiary::register(&BESTIARY);
     Box::new(Fireflies)

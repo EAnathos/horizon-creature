@@ -2,11 +2,11 @@
 //!
 //! A fairy is a copy of the wandering trader (its behaviour is all goals) with a small box, flying with the library's
 //! `flutter` (out day and night, resting in the rain, landing on flowers) under its own `Fairy` goal (`companion.rs`):
-//! shy of players who come near without sneaking, drawn by a sneaking player holding glow berries (or sweet berries),
-//! which it nibbles and may befriend them for (the library's `friend`); befriended, it circles its friend's head, or
-//! stays where it is told (right-click). Its friend has Speed I while it follows within reach, gets a pinch of fairy
-//! dust once a day, and a soft violet light goes with it. Caught in the library's glass jar (a sneaking player, or its
-//! friend), it stays befriended; on display, a fairy lamp. Drawn full-bright, its wings beating.
+//! shy of players who come near without sneaking, drawn by a player holding glow berries (or sweet berries); fed one
+//! (right-click), it may befriend them (the library's `friend`); befriended, it circles its friend's head, or stays
+//! where it is told (right-click). Its friend has Speed I while it follows within reach, gets a pinch of fairy dust
+//! once a day, and a soft violet light goes with it. Caught in the library's glass jar (only by its friend, once
+//! befriended), it stays befriended; on display, a fairy lamp. Drawn full-bright, its wings beating.
 mod companion;
 mod model_fairy;
 
@@ -21,7 +21,7 @@ use horizon_client::mod_api::{
     AttachmentCodec, AttachmentError, AttachmentType, BlockEntityDraw, Compound, EmissiveEvent, EntityTickPostEvent,
     Flow, Holder, Hooks, Host, InteractEntityEvent, LivingDeathEvent, LivingIncomingDamageEvent, MobSubmitEvent,
     NativeColoredLight, NativeEffect, NativeMobRender, ParticleOptions, ParticleType, RegisterGoalsEvent, Tag, Text,
-    UseItemOnEvent, VisualsEvent,
+    VisualsEvent,
 };
 
 pub const FAIRY: &str = "fairies:fairy";
@@ -50,13 +50,10 @@ static IN_JAR: Catchable = Catchable {
     model: "fairies:fairy_jar",
     settles: Some(creature::territory::Rule::FlowerPatch),
     glows: true,
-    shy: true,
 };
 
 /// The bestiary's facts (SPECS §4).
 const FRIEND_FACT: &str = "friend";
-const DUST_FACT: &str = "dust";
-const SHY_FACT: &str = "shy";
 
 static BESTIARY: Species = Species {
     id: FAIRY,
@@ -72,16 +69,6 @@ static BESTIARY: Species = Species {
             id: FRIEND_FACT,
             item: "minecraft:glow_berries",
             key: "bestiary.fairies.friend",
-        },
-        Fact {
-            id: DUST_FACT,
-            item: DUST,
-            key: "bestiary.fairies.dust",
-        },
-        Fact {
-            id: SHY_FACT,
-            item: "minecraft:leather_boots",
-            key: "bestiary.fairies.shy",
         },
         Fact {
             id: creature::jar::JAR_FACT,
@@ -146,8 +133,18 @@ static DUST_DAY: AttachmentType<i64> = AttachmentType {
     sync: false,
 };
 
+/// They come out near players, rarely, in little groups (the library's spawning: SPECS §2).
+static SPAWNING: creature::flutter::Spawning = creature::flutter::Spawning {
+    kind: FAIRY,
+    flight: &FLIGHT,
+    biomes: BESTIARY.biomes,
+    group: (2, 4),
+    cap: 4,
+    chance: 12,
+};
+
 pub fn hooks() -> Box<dyn Hooks> {
-    creature::hand::server_used(DUST);
+    creature::flutter::spawns(&SPAWNING);
     creature::jar::register(&IN_JAR);
     creature::bestiary::register(&BESTIARY);
     Box::new(Fairies)
@@ -193,36 +190,33 @@ fn chime(host: &mut dyn Host, at: [f64; 3], pitch: f32) {
     );
 }
 
-/// A sneaking player held out berries and it nibbled one (`companion::take_nibbles`): one is taken from their hand
-/// (not in creative); it befriends them when the goal's roll said so.
-fn nibbled(host: &mut dyn Host, fairy: u32, at: [f64; 3], nibble: companion::Nibble) {
-    let uuid = creature::friend::uuid(nibble.player);
-    let Some(player) = host.server_players().into_iter().find(|p| p.uuid == uuid) else {
+/// A wild fairy fed a berry from a player's hand (SPECS §3): one is used up (not in creative), and one time in 3 (6 for
+/// a sweet berry) it befriends them: hearts, a chime, a line on their action bar; otherwise a puff of smoke.
+fn fed(host: &mut dyn Host, fairy: u32, stack: &horizon_client::items::ItemStack, player: u128) {
+    let Some(at) = host.entity(fairy).and_then(|e| host.entity_position(e)) else {
         return;
     };
-    let item = if nibble.glow {
-        "minecraft:glow_berries"
-    } else {
-        "minecraft:sweet_berries"
-    };
-    if player.game_mode != 1 {
-        // Captured: the command's answer reaches no one (`run_command_as` would show it in their chat).
-        host.run_command_captured(&format!("clear {} {item} 1", player.name));
-    }
+    let glow = &*stack.item == companion::GLOW_BERRIES;
+    creature::hand::use_one(host, stack);
     host.play_sound("minecraft:entity.generic.eat", at, creature::sounds::NEUTRAL, 0.4, 1.8);
+    let chance = if glow { GLOW_BERRY_CHANCE } else { SWEET_BERRY_CHANCE };
     let eye = [at[0], at[1] + 0.5, at[2]];
-    if !nibble.befriends {
+    if !creature::colours::Random::new(fairy).next().is_multiple_of(chance) {
         let smoke = ParticleOptions::simple(ParticleType::Smoke);
         host.send_particles(&smoke, None, eye, [0.2, 0.2, 0.2], 0.01, 5);
         return;
     }
-    creature::friend::befriend(host, fairy, uuid);
+    creature::friend::befriend(host, fairy, player);
     let hearts = ParticleOptions::simple(ParticleType::Heart);
     host.send_particles(&hearts, None, eye, [0.3, 0.3, 0.3], 0.02, 6);
     chime(host, at, 1.4);
-    host.action_bar(uuid, Text::translate("fairies.befriended", &[]));
-    creature::bestiary::learn(host, uuid, FAIRY, FRIEND_FACT);
+    host.action_bar(player, Text::translate("fairies.befriended", &[]));
+    creature::bestiary::learn(host, player, FAIRY, FRIEND_FACT);
 }
+
+/// One chance in this many that a glow berry befriends; a sweet berry is half as good (SPECS §3).
+const GLOW_BERRY_CHANCE: u64 = 3;
+const SWEET_BERRY_CHANCE: u64 = 6;
 
 /// What a befriended fairy does for its friend now and then: Speed I near them, a pinch of dust once a day.
 fn befriended(host: &mut dyn Host, dimension: &str, fairy: u32, at: [f64; 3], friend: Friend, ticks: u32) {
@@ -265,48 +259,9 @@ fn befriended(host: &mut dyn Host, dimension: &str, fairy: u32, at: [f64; 3], fr
     host.summon(dimension, "minecraft:item", player.position, nbt);
     sparkles(host, player.position, 8);
     chime(host, at, 1.8);
-    creature::bestiary::learn(host, player.uuid, FAIRY, DUST_FACT);
-}
-
-/// Fairy dust on a crop or a sapling (SPECS §6), as bone meal: a crop grows 2 to 5 stages, a sapling is ready to grow
-/// into a tree; one pinch is used (not in creative). Whether it acted.
-fn dust_on(host: &mut dyn Host, stack: &horizon_client::items::ItemStack, pos: [i32; 3]) -> bool {
-    let block = host.block(pos);
-    let grew = if creature::grow::growing(host, pos).is_some() {
-        let stages = 2
-            + (creature::colours::Random::new(pos[0] as u32 ^ pos[2] as u32 ^ host.day_time() as u32).next() % 4)
-                as u32;
-        creature::grow::grow(host, pos, stages)
-    } else if block.ends_with("_sapling") && host.block_property(pos, "stage").as_deref() == Some("0") {
-        host.set_block_property(pos, "stage", "1")
-    } else {
-        false
-    };
-    if grew {
-        sparkles(
-            host,
-            [
-                f64::from(pos[0]) + 0.5,
-                f64::from(pos[1]) + 0.5,
-                f64::from(pos[2]) + 0.5,
-            ],
-            6,
-        );
-        creature::hand::use_one(host, stack);
-    }
-    grew
 }
 
 impl Hooks for Fairies {
-    /// Fairy dust used on a block: as bone meal on a crop or a sapling.
-    fn use_item_on(&self, host: &mut dyn Host, event: &mut UseItemOnEvent<'_>) -> Flow {
-        if &*event.stack.item == DUST && dust_on(host, event.stack, event.pos) {
-            Flow::Cancel
-        } else {
-            Flow::Continue
-        }
-    }
-
     fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
         if event.mob.kind.id == FAIRY {
             creature::flutter::register(event.mob, SIZE, &FLIGHT);
@@ -314,8 +269,9 @@ impl Hooks for Fairies {
         }
     }
 
-    /// Right-click by its friend: it stays where it is, or follows again. A name tag names it as vanilla's would; the
-    /// jar is the library's (its hook runs first). Never a trading screen, which its template would open.
+    /// Right-click: with berries, a wild one eats one (`fed`); by its friend, it stays where it is, or follows again. A
+    /// name tag names it as vanilla's would; the jar is the library's (its hook runs first). Never a trading screen,
+    /// which its template would open.
     fn interact_entity(&self, host: &mut dyn Host, event: &mut InteractEntityEvent<'_>) -> Flow {
         if event.kind != FAIRY {
             return Flow::Continue;
@@ -326,6 +282,15 @@ impl Hooks for Fairies {
         let (Some(player), Ok(id)) = (host.acting_player(), u32::try_from(event.entity)) else {
             return Flow::Cancel;
         };
+        let berries = event
+            .stack
+            .filter(|s| [companion::GLOW_BERRIES, companion::SWEET_BERRIES].contains(&&*s.item));
+        if let Some(stack) = berries
+            && creature::friend::of(id).is_none()
+        {
+            fed(host, id, stack, player.uuid);
+            return Flow::Cancel;
+        }
         if let Some(friend) = creature::friend::of(id).filter(|f| f.is(player.uuid)) {
             let staying = !friend.staying;
             creature::friend::set_staying(id, staying);
@@ -367,12 +332,6 @@ impl Hooks for Fairies {
             *t = t.wrapping_add(1);
             *t
         };
-        for nibble in companion::take_nibbles(fairy) {
-            nibbled(host, fairy, at, nibble);
-        }
-        for player in companion::take_fled(fairy) {
-            creature::bestiary::learn(host, creature::friend::uuid(player), FAIRY, SHY_FACT);
-        }
         let friend = creature::friend::of(fairy);
         if let Some(f) = friend {
             befriended(host, event.dimension, fairy, at, f, ticks);

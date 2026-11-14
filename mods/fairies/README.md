@@ -8,13 +8,14 @@ soft violet. **Requires** Horizon Creature, the series' library.
 ## Finding them
 
 In flower forests, meadows, cherry groves and birch forests, little groups of fairies flit from flower to flower, day
-and night (they rest in the rain). They are shy: walk up to one and it flies off. Sneak, and they let you come near.
+and night (they rest in the rain); they are rare. They are shy: walk up to one and it flies off. Sneak, or hold out
+berries, and they let you come near.
 In creative: the spawn egg (creative tab "Horizon Creature").
 
 ## Befriending one
 
-Sneak near a fairy holding **glow berries**: it comes to hover before your face and nibbles one now and then. Sooner or
-later (one berry in three), hearts: it is your friend. Sweet berries work too, less often.
+Hold out **glow berries**: a fairy nearby comes to hover before your face. Right-click it to give it one: one berry in
+three, hearts, it is your friend. Sweet berries work too, less often.
 
 Your fairy circles your head in sparkles and:
 
@@ -27,10 +28,11 @@ Right-click it to make it **stay** where it is, again to have it **follow** you.
 
 ## Fairy dust
 
-Use it on a crop or a sapling as bone meal, with a sparkle.
+Your fairy's gift. It will brew a **Potion of Swiftness** (awkward potion + fairy dust) with the next Horizon update the
+series moves to.
 
 ## Jars
 
-Catch a fairy with a **glass jar**: a wild one only while sneaking, yours whenever you like. It is still your friend
-when you let it out. Release one on a flower and it stays there; place the filled jar (sneak + right-click) and it
+Catch a fairy with a **glass jar**, as the other creatures (yours only by you). It is still your friend when you let it
+out, and keeps its name (shown on the jar). Release one on a flower and it stays there; place the filled jar (sneak + right-click) and it
 glows.

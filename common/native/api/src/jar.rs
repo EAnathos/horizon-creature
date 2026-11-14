@@ -8,8 +8,8 @@
 //! - **Release**: right-click a block with a filled jar (`use_item_on`): the creature comes out on that face, with its
 //!   look, and the jar is empty again. A jar whose creature's mod isn't installed any more stays full.
 //!
-//! A shy creature (fairies) is only caught by a sneaking player, and a befriended one (`friend`) only by its friend; the
-//! jar keeps its friend, and it is still theirs once released.
+//! A befriended creature (`friend`) is only caught by its friend; the jar keeps its friend, and it is still theirs once
+//! released. A named creature keeps its name (shown under the jar's), from the catch to the release.
 //!
 //! In creative, as a bucket, the jar isn't used up: catching keeps the empty jar and releasing keeps the full one.
 //! Released on a flower, a creature whose kind settles in a flower patch settles there (`territory`, §4.2).
@@ -40,10 +40,8 @@ pub struct Catchable {
     pub model: &'static str,
     /// Where it settles when released (`territory`, SPECS §4.2): on a flower (its patch) or on farmland (its garden).
     pub settles: Option<crate::territory::Rule>,
-    /// A jar holding it, placed as a block, gives light (fireflies).
+    /// A jar holding it, placed as a block, gives light (fireflies, fairies).
     pub glows: bool,
-    /// Only a sneaking player can come close enough to catch it (fairies).
-    pub shy: bool,
 }
 
 static CATCHABLE: Mutex<Vec<&'static Catchable>> = Mutex::new(Vec::new());
@@ -60,16 +58,17 @@ fn catchable(kind: &str) -> Option<&'static Catchable> {
     CATCHABLE.lock().unwrap().iter().copied().find(|c| c.kind == kind)
 }
 
-/// What a jar holds: its creature's kind, look and friend.
+/// What a jar holds: its creature's kind, look, friend and name.
 struct Held {
     kind: String,
     look: Option<Compound>,
     friend: Option<[i32; 4]>,
+    name: Option<String>,
 }
 
-/// What a filled jar holds, from its item data (`kind`, `look`, `friend`) or a placed jar's block entity (`Kind`,
-/// `Look`, `Friend`).
-fn read(data: &Compound, [kind, look, friend]: [&str; 3]) -> Option<Held> {
+/// What a filled jar holds, from its item data (`kind`, `look`, `friend`, `name`) or a placed jar's block entity
+/// (`Kind`, `Look`, `Friend`, `Name`).
+fn read(data: &Compound, [kind, look, friend, name]: [&str; 4]) -> Option<Held> {
     let kind = match data.get(&kind.into()) {
         Some(Tag::String(s)) => s.to_string_lossy(),
         _ => return None,
@@ -82,7 +81,16 @@ fn read(data: &Compound, [kind, look, friend]: [&str; 3]) -> Option<Held> {
         Some(Tag::IntArray(a)) if a.len() == 4 => Some([a[0], a[1], a[2], a[3]]),
         _ => None,
     };
-    Some(Held { kind, look, friend })
+    let name = match data.get(&name.into()) {
+        Some(Tag::String(s)) => Some(s.to_string_lossy()),
+        _ => None,
+    };
+    Some(Held {
+        kind,
+        look,
+        friend,
+        name,
+    })
 }
 
 /// What a filled jar holds.
@@ -90,7 +98,7 @@ fn held(stack: &ItemStack) -> Option<Held> {
     let Some(Tag::Compound(data)) = stack.custom_data()?.get(&DATA.into()) else {
         return None;
     };
-    read(data, ["kind", "look", "friend"])
+    read(data, ["kind", "look", "friend", "name"])
 }
 
 /// SNBT for a string.
@@ -98,8 +106,14 @@ fn quoted(s: &str) -> String {
     format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
 }
 
-/// A filled jar holding `kind` with `look`, the friend of `friend`.
-fn filled(host: &dyn Host, c: &Catchable, look: Option<&Compound>, friend: Option<[i32; 4]>) -> Option<ItemStack> {
+/// A filled jar holding `kind` with `look`, the friend of `friend`, named `name`.
+fn filled(
+    host: &dyn Host,
+    c: &Catchable,
+    look: Option<&Compound>,
+    friend: Option<[i32; 4]>,
+    name: Option<&str>,
+) -> Option<ItemStack> {
     let look_fields = look.map(|l| {
         let text = |key: &str| match l.get(&key.into()) {
             Some(Tag::String(s)) => s.to_string_lossy(),
@@ -122,9 +136,10 @@ fn filled(host: &dyn Host, c: &Catchable, look: Option<&Compound>, friend: Optio
     let friend_data = friend
         .map(|f| format!(",friend:[I;{},{},{},{}]", f[0], f[1], f[2], f[3]))
         .unwrap_or_default();
+    let name_data = name.map(|n| format!(",name:{}", quoted(n))).unwrap_or_default();
     let entity_key = format!("entity.{}", c.kind.replacen(':', ".", 1));
     let snbt = format!(
-        "{{id:{item},count:1,components:{{\"minecraft:custom_data\":{{{DATA}:{{kind:{kind}{look_data}{friend_data}}}}},\
+        "{{id:{item},count:1,components:{{\"minecraft:custom_data\":{{{DATA}:{{kind:{kind}{look_data}{friend_data}{name_data}}}}},\
          \"minecraft:item_model\":{model},\"minecraft:max_stack_size\":1,\
          \"minecraft:item_name\":{{translate:\"item.creature.glass_jar.filled\",with:[{{translate:{name}}}]}},\
          \"minecraft:lore\":[{lore}]}}}}",
@@ -133,20 +148,26 @@ fn filled(host: &dyn Host, c: &Catchable, look: Option<&Compound>, friend: Optio
         look_data = look,
         model = quoted(c.model),
         name = quoted(&entity_key),
-        lore = lore(c.kind, look_fields, friend.is_some()),
+        lore = lore(c.kind, look_fields, friend.is_some(), name),
     );
     host.item_from_snbt(&snbt)
 }
 
 /// The filled jar's lines under its name: what it holds (its colour, its pattern and the pattern's colour, in the
 /// mod's words: `look.<mod>.colour.<id>`, `look.<mod>.pattern.<id>`), then the series' name in blue, as the creative
-/// tab names an item it lists (a filled jar is in no tab, so the game shows no tab line for it). A befriended creature's
-/// jar says so.
-fn lore(kind: &str, look: Option<[String; 3]>, befriended: bool) -> String {
+/// tab names an item it lists (a filled jar is in no tab, so the game shows no tab line for it). A named creature's jar
+/// says its name first, a befriended creature's jar says so.
+fn lore(kind: &str, look: Option<[String; 3]>, befriended: bool, name: Option<&str>) -> String {
     let namespace = kind.split(':').next().unwrap_or(kind);
     let colour = |id: &str| format!("{{translate:{}}}", quoted(&format!("look.{namespace}.colour.{id}")));
     let pattern = |id: &str| format!("{{translate:{}}}", quoted(&format!("look.{namespace}.pattern.{id}")));
     let mut lines = Vec::new();
+    if let Some(name) = name {
+        lines.push(format!(
+            "{{translate:\"item.creature.glass_jar.name\",with:[{{text:{}}}],color:\"white\",italic:false}}",
+            quoted(name)
+        ));
+    }
     if let Some([base, pat, pat_colour]) = look {
         let line = if pat == "plain" || pat.is_empty() {
             format!(
@@ -170,6 +191,15 @@ fn lore(kind: &str, look: Option<[String; 3]>, befriended: bool) -> String {
     lines.join(",")
 }
 
+/// The name a name tag gave creature `id`, if any.
+fn custom_name(host: &mut dyn Host, id: u32) -> Option<String> {
+    let entity = host.entity(id)?;
+    let named = host
+        .entity_nbt(entity)
+        .is_some_and(|nbt| matches!(nbt.get(&"CustomName".into()), Some(t) if !matches!(t, Tag::End)));
+    named.then(|| host.entity_name(entity)).flatten()
+}
+
 /// From the library's `interact_entity`: an empty jar catches a registered creature.
 pub fn catch(host: &mut dyn Host, event: &InteractEntityEvent<'_>) -> bool {
     let Some(stack) = event.stack.filter(|s| &*s.item == ITEM && held(s).is_none()) else {
@@ -181,15 +211,14 @@ pub fn catch(host: &mut dyn Host, event: &InteractEntityEvent<'_>) -> bool {
     let (Some(player), Ok(id)) = (host.acting_player(), u32::try_from(event.entity)) else {
         return false;
     };
-    // A befriended one only comes to its friend; a shy wild one only lets a sneaking player near.
+    // A befriended one only comes to its friend.
     let friend = crate::friend::of(id);
-    match friend {
-        Some(f) if !f.is(player.uuid) => return false,
-        None if c.shy && !player.sneaking => return false,
-        _ => {}
+    if friend.is_some_and(|f| !f.is(player.uuid)) {
+        return false;
     }
     let look = colours::saved(host, id);
-    let Some(jar) = filled(host, c, look.as_ref(), friend.map(|f| f.uuid)) else {
+    let name = custom_name(host, id);
+    let Some(jar) = filled(host, c, look.as_ref(), friend.map(|f| f.uuid), name.as_deref()) else {
         return false;
     };
     if !host.remove_mob(&player.dimension, id) {
@@ -236,7 +265,13 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
     if &*event.stack.item != ITEM {
         return false;
     }
-    let Some(Held { kind, look, friend }) = held(event.stack) else {
+    let Some(Held {
+        kind,
+        look,
+        friend,
+        name,
+    }) = held(event.stack)
+    else {
         return false;
     };
     let Some(player) = host.acting_player() else {
@@ -249,7 +284,7 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
     let c = catchable(&kind).expect("checked above");
     // Sneaking: the jar is placed as a block, the creature inside (`display`).
     if player.sneaking {
-        place(host, event, &player, c, look.as_ref(), friend);
+        place(host, event, &player, c, look.as_ref(), friend, name.as_deref());
         return true;
     }
     // On a flower (which a click hits itself, a flower being no full block) it comes out in the flower, and settles
@@ -277,7 +312,12 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
         f64::from(block[1]),
         f64::from(block[2]) + 0.5,
     ];
-    let Some(id) = host.summon(&player.dimension, &kind, at, Compound::new()) else {
+    // Its name back, as a name tag gave it.
+    let mut nbt = Compound::new();
+    if let Some(n) = &name {
+        nbt.insert("CustomName".into(), Tag::String(n.as_str().into()));
+    }
+    let Some(id) = host.summon(&player.dimension, &kind, at, nbt) else {
         return true;
     };
     if let Some(look) = &look {
@@ -353,6 +393,7 @@ fn place(
     c: &Catchable,
     look: Option<&Compound>,
     friend: Option<[i32; 4]>,
+    name: Option<&str>,
 ) {
     let at = [
         event.pos[0] + event.face[0],
@@ -378,6 +419,9 @@ fn place(
         if let Some(f) = friend {
             e.nbt.insert("Friend".into(), Tag::IntArray(f.to_vec()));
         }
+        if let Some(n) = name {
+            e.nbt.insert("Name".into(), Tag::String(n.into()));
+        }
     });
     host.block_entity_sync(at);
     if player.game_mode != 1
@@ -390,7 +434,7 @@ fn place(
 
 /// What a placed jar holds: from its block entity's data.
 fn held_in(nbt: &Compound) -> Option<Held> {
-    read(nbt, ["Kind", "Look", "Friend"])
+    read(nbt, ["Kind", "Look", "Friend", "Name"])
 }
 
 /// From the library's `block_entity`: a placed jar has a block entity, to hold its creature.
@@ -417,11 +461,17 @@ pub fn broken(host: &mut dyn Host, pos: [i32; 3]) {
     let Some(entity) = host.mod_block_entity(pos) else {
         return;
     };
-    let Some(Held { kind, look, friend }) = held_in(&entity.nbt) else {
+    let Some(Held {
+        kind,
+        look,
+        friend,
+        name,
+    }) = held_in(&entity.nbt)
+    else {
         return;
     };
     let item = match catchable(&kind) {
-        Some(c) => filled(host, c, look.as_ref(), friend),
+        Some(c) => filled(host, c, look.as_ref(), friend, name.as_deref()),
         None => Some(ItemStack::new(ITEM, 1)),
     };
     if let Some(item) = item {

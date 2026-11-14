@@ -20,7 +20,8 @@ Done and tested in game (single player).
   short erratic flights, landing on a flower or the ground; a sprinting player close by makes them fly off. At night a
   moth flutters around the nearest bright light. Wild ones despawn far from players.
 - **Spawning**: butterflies in flower forests, meadows, sunflower plains, cherry groves, plains, forests, birch forests
-  and jungles; moths in forests, birch and dark forests, taigas, plains and meadows.
+  and jungles; moths in forests, birch and dark forests, taigas, plains and meadows. They come out near players,
+  butterflies by day, moths at night (the library's small fliers' spawning, common/SPECS.md §3.5).
 - **Glass jar** (common/SPECS.md §4): caught and released keeping its look; released on a flower it settles there; a
   filled jar placed as a block shows it inside.
 - **Butterfly dust** (§4): dropped by both; thrown, a shimmering cloud; with paper, 8 confetti, a party popper: right-click pops it

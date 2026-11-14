@@ -12,8 +12,8 @@ Everything below works and was tested in game, single player, unless said otherw
 - **The library itself**: a content half (`creature.hmod`) and a native half (`creature.hnmod`, crate `mod-creature`)
   that every mod reaches as the `creature` crate (`[dependencies] creature = "^0.1"`).
 - **Model drawing** (§3.1), **mob sounds** (§3.2), **the creative tab** (§3.3), **monsters sparing our creatures**
-  (§3.4), **the small fliers' flight** (§3.5, by day, at night or at any hour), **crops helped to grow** (§3.10) and
-  **friends** (§6.2, the Fairies').
+  (§3.4), **the small fliers' flight and spawning** (§3.5, by day, at night or at any hour) and **friends** (§6.2, the
+  Fairies').
 - **Glass jar and territories** (§4): catching, releasing, settling on a flower patch or in a garden, the jar on
   display (spared by blasts and pistons). The jar left out of the creative tab when no jar mod is installed is built
   but not yet checked in game.
@@ -96,6 +96,13 @@ by day, by night or at any hour but in the rain. A mod gives a `Kind` (its `Hour
 flowers, an optional take-off sound played at each take-off) and calls `register` (size, muted, the flight goal), `tick_post` (territory, despawning far from players)
 and `gone`; `steer` flies one toward a point (a fairy following its friend).
 
+**Spawning** ✅ (`spawns`): Horizon's natural spawning adds creatures only every 400 ticks, under a cap the farm animals
+fill, so small fliers would only appear with new chunks and be gone once their players left. A mod registers a
+`Spawning` (kind, biomes, group size, cap near a player, chance); every 10 s, for each player, one chance in its
+`chance` while fewer than its `cap` are within 48 blocks, a group comes out 16 to 40 blocks away over the ground, in one
+of its biomes, at its hours. Wild ones far from players despawn, so they come and go as bats do. Users: Butterflies
+(butterflies, moths), Fireflies, Fairies.
+
 ### 3.6 Small crawlers (`creature::crawl`), planned ✅
 
 The slow crawl on the ground of worms and dung beetles: the worm's `Crawl` goal (`worms::Crawl` today), moved here when
@@ -117,11 +124,6 @@ A mod's own feather works as a feather: the item tag `creature:feathers` lists v
 `required: false` entries, so a missing mod's is left out), and the guide's recipe (§7) takes any of it ✅. Planned:
 the recipes for arrows, the brush and the book and quill move here from the Vulture (its `vulture:feather`) when the
 **Seagulls** come (mods/seagulls/SPECS.md §5).
-
-### 3.10 Crops helped to grow (`creature::grow`) ✅
-
-A crop grown some stages (to its last at most), with bone meal's green sparkles. Users: **Worms** (a settled worm, a
-stage now and then) and **Fairies** (fairy dust, as bone meal).
 
 ### 3.9 Lobbed projectiles (`creature::lob`), planned ✅
 
@@ -157,9 +159,9 @@ Catching small creatures and settling them in a place they won't leave. Users: *
   nothing and stays full.
 - **Display** ✅: sneak + right-click places the filled jar as a small block (a creature visibly inside, glowing faintly
   for a firefly or a fairy), broken back into the item. Decorative.
-- **Shy and befriended creatures** ✅: a shy kind (`Catchable.shy`: fairies) is only caught by a sneaking player; a
-  befriended one (§6.2) only by its friend, and the jar keeps its friend ("Befriended" under its name): let out, it is
-  still theirs.
+- **Befriended and named creatures** ✅: a befriended one (§6.2) is only caught by its friend, and the jar keeps its
+  friend ("Befriended" under its name): let out, it is still theirs. A named one keeps its name ("Name: ..." under the
+  jar's), restored when released.
 
 ### 4.2 Territories ✅
 
