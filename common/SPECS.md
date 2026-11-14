@@ -109,14 +109,20 @@ The slow crawl on the ground of worms and dung beetles: the worm's `Crawl` goal 
 the Dung Beetles are built, with what a beetle adds (walking toward a target, backwards). Users: **Worms**, **Dung
 Beetles**.
 
-### 3.7 Vanilla hunters eat small creatures (`creature::prey`), planned ✅
+### 3.7 Hunters eat small creatures (`creature::prey`), planned ✅
 
-A vanilla animal that sees one of its prey within its range goes over and eats it: the creature is gone (no drop),
-wild or settled. A mod registers its kinds as prey of a hunter. Not on creatures in a jar, on display or in a bucket.
+A hunter that sees one of its prey within its range goes over and eats it: the creature is gone (no drop), wild or
+settled. A mod registers its kinds as prey of a hunter, a vanilla mob or **another mod's** (by its entity id): a hunter
+whose mod is not installed is skipped, so neither mod requires the other. Not on creatures in a jar, on display or in a
+bucket.
 
 - **Chickens** peck small creatures within 6 blocks, so a player keeps chickens out of a garden or a pasture. Users:
   **Worms**, **Dung Beetles** (mods/dung_beetles/SPECS.md §2).
 - **Sea turtles** swim to jellyfish within 8 blocks and eat them. User: **Jellyfish** (mods/jellyfish/SPECS.md §3).
+- **Dolphins** chase flying fish within 12 blocks and eat them; the fish flee by gliding. User: **Flying Fish**
+  (mods/flying_fish/SPECS.md §3).
+- **Seagulls** (a mod's hunter) swoop on gliding flying fish within 16 blocks and snatch them in the air, when both
+  mods are installed. Users: **Flying Fish** and **Seagulls** (mods/flying_fish/SPECS.md §3).
 
 ### 3.8 Feathers (`creature:feathers`) ✅
 
@@ -132,6 +138,15 @@ an arc) and the projectile (damage, a push, what happens where it lands: blocks 
 containers, placed jars and unbreakable blocks, or none, or a burst of fire). A mod gives its projectile entity and
 these values. Users: **Cyclops** (its boulder, `cyclops:boulder`, whose goal and projectile move here) and **Magma
 Golem** (planned, its magma glob, mods/magma_golem/SPECS.md §2).
+
+### 3.10 Water creatures (`creature::aquatic`), planned ✅
+
+The life in water of jellyfish and flying fish, which copy the land-living wandering trader: breathing in water and not
+in air (Horizon's `native_living_breathe`), no gravity in water, **beached** out of it (it can't swim, flops now and
+then, dries out after the mod's delay and dies, dropping as usual), and **the bucket**: a water bucket used on one
+catches it as vanilla's fish, into the mod's bucket item, keeping its kind and name, and lets it out where the bucket is
+emptied; a caught one never despawns. A mod gives its kinds, its bucket item and its drying delay. Users: **Jellyfish**
+(mods/jellyfish/SPECS.md §3, §5) and **Flying Fish** (mods/flying_fish/SPECS.md §3, §5).
 
 ## 4. Glass jar and territories ✅
 

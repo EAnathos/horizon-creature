@@ -22,6 +22,7 @@ on it.
 | Magma Golem | `mods/magma_golem/` | `magma_golem` | planned | [mods/magma_golem/SPECS.md](../mods/magma_golem/SPECS.md) |
 | Fairies | `mods/fairies/` | `fairies` | playable | [mods/fairies/SPECS.md](../mods/fairies/SPECS.md) |
 | Seagulls | `mods/seagulls/` | `seagulls` | planned | [mods/seagulls/SPECS.md](../mods/seagulls/SPECS.md) |
+| Flying Fish | `mods/flying_fish/` | `flying_fish` | planned | [mods/flying_fish/SPECS.md](../mods/flying_fish/SPECS.md) |
 | Vanilla Bestiary | `mods/vanilla_bestiary/` | `vanilla_bestiary` | planned | [mods/vanilla_bestiary/SPECS.md](../mods/vanilla_bestiary/SPECS.md) |
 
 `cargo creature list` prints the same table from the modules' `module.toml`.

@@ -56,6 +56,14 @@ The `.bbmodel` files are the sources: edit them in Blockbench (their texture is 
 
 ![firefly, front](models/fireflies-firefly-front.png) ![firefly, back](models/fireflies-firefly-back.png)
 
+## flying_fish
+
+### flying_fish
+
+`mods/flying_fish/assets/models/flying_fish.bbmodel`: 17 cubes, texture 64×64.
+
+![flying_fish, front](models/flying_fish-flying_fish-front.png) ![flying_fish, back](models/flying_fish-flying_fish-back.png)
+
 ## jellyfish
 
 ### jellyfish

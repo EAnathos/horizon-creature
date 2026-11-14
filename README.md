@@ -21,6 +21,7 @@ pastures back into grass; [Sporelins](mods/sporelins/README.md), shy mushroom sp
 you;
 [Storm Spirits](mods/storm_spirits/README.md), spirits of living lightning born in storms, whose sparks call lightning;
 [Jellyfish](mods/jellyfish/README.md), stinging jellyfish drifting in blooms, some glowing in the deep;
+[Flying Fish](mods/flying_fish/README.md), shoals that burst out of warm seas and glide over the waves;
 [Magma Golem](mods/magma_golem/README.md), a six-block giant of living magma asleep in the Nether, a mini-boss to
 cool with snow;
 [Vanilla Bestiary](mods/vanilla_bestiary/README.md), Minecraft's own creatures in the creature guide.

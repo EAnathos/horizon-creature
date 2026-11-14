@@ -44,6 +44,9 @@ move to the library (common/SPECS.md §6.1, §6.2).
   and bread above all) and flies off with it. Hit it and it drops the food. It also steals food lying on the ground,
   and a fish a fishing player just caught. A sneaking player, or food in the off hand, is left alone.
 - **Follows boats** ✅: it follows a player in a boat at sea for a while, hovering behind them, waiting for a fish.
+- **Hunts flying fish** ✅, when the Flying Fish mod is installed (no requirement either way): over the sea it swoops on a
+  gliding flying fish within 16 blocks and snatches it in the air (the library's prey, common/SPECS.md §3.7;
+  mods/flying_fish/SPECS.md §3).
 - **Drops** ✅: 0 to 2 seagull feathers and 1 raw seagull (cooked when it burns), §5.
 
 ## 3. Befriending ✅
@@ -55,7 +58,8 @@ move to the library (common/SPECS.md §6.1, §6.2).
 - **It fishes for its friend** ✅: only while its friend is **fishing** (their bobber in the water) and it is following
   them (not told to stay), about **once a minute** it flies out over the water and **plunge-dives** like a real gull: a
   steep dive with its wings folded back, a splash, a moment under, then it climbs out with a fish in its beak and
-  **drops it at its friend's feet** (a raw cod, rarely a salmon, more rarely a tropical fish). It never misses.
+  **drops it at its friend's feet** (a raw cod, rarely a salmon, more rarely a tropical fish; in the flying
+  fish's oceans, sometimes a raw flying fish when the Flying Fish are installed). It never misses.
 - **Circles over a lucky spot** ✅: when its friend is in a boat or fishing, it flies ahead and **circles over a spot
   of water** within 16 blocks, calling: fishing there (the bobber within 4 blocks under it) is luckier, as one level
   of Luck of the Sea. It moves to a new spot every few minutes.
