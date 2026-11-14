@@ -278,6 +278,16 @@ fn befriended(host: &mut dyn Host, dimension: &str, fairy: u32, at: [f64; 3], fr
 }
 
 impl Hooks for Fairies {
+    /// Its row in Options > Mods, which switches it off and on at once (`creature::list_mod`).
+    fn mods(&self, _: &mut dyn Host, event: &mut horizon_client::mod_api::ModsEvent<'_>) {
+        creature::list_mod(
+            event,
+            "fairies",
+            concat!("Fairies ", env!("CARGO_PKG_VERSION")),
+            "Shy glowing fairies that befriend you and lighten your step. Needs Horizon Creature.",
+        );
+    }
+
     fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
         if event.mob.kind.id == FAIRY {
             creature::flutter::register(event.mob, SIZE, &FLIGHT);

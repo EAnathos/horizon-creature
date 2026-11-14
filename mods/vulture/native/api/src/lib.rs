@@ -443,7 +443,7 @@ impl Hooks for Vulture {
     fn mods(&self, _: &mut dyn Host, event: &mut ModsEvent<'_>) {
         event.mods.push(NativeMod {
             id: "vulture".into(),
-            title: "Vulture".into(),
+            title: concat!("Vulture ", env!("CARGO_PKG_VERSION")).into(),
             description: "A vulture you tame, ride and fly (Horizon Creature).".into(),
             keys: vec![[
                 "talons".into(),

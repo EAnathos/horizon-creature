@@ -50,8 +50,9 @@ arismoko/horizon#3896).
     and violets in jungles ✅.
 - Wings beat in short erratic flights; it lands on flowers and folds its wings.
 - **Ambient** and harmless: 1 HP ✅, no attack. Flees a sprinting player ✅.
-- **Spawning** ✅: daytime, fair weather, near flowers, 1–3 together; at night they rest on leaves and flowers (no flight),
-  and wild ones may despawn; settled ones never ✅.
+- **Spawning** ✅: daytime, fair weather, near flowers, 1–3 together, a group on every try (each 10 s) while fewer than
+  18 are within 48 blocks of a player (three times the first numbers, one chance in 3 and 6, which were too few); at
+  night they rest on leaves and flowers (no flight), and wild ones may despawn; settled ones never ✅.
 - Sound: a faint flutter ✅.
 
 ## 2.1 The moth ✅ (night)

@@ -298,15 +298,16 @@ const MOTH_BIOMES: &[&str] = &[
     "minecraft:meadow",
 ];
 
-/// They come out near players (the library's spawning: SPECS §2), by day for butterflies, at night for moths.
+/// They come out near players (the library's spawning: SPECS §2), by day for butterflies, at night for moths; butterflies
+/// on every try (each 10 s), up to 18 near a player.
 static SPAWNING: [creature::flutter::Spawning; 2] = [
     creature::flutter::Spawning {
         kind: BUTTERFLY,
         flight: &BUTTERFLY_FLIGHT,
         biomes: BUTTERFLY_BIOMES,
         group: (1, 3),
-        cap: 6,
-        chance: 3,
+        cap: 18,
+        chance: 1,
     },
     creature::flutter::Spawning {
         kind: MOTH,
@@ -385,6 +386,16 @@ fn pose(name: &str, mob: &NativeMobRender<'_>, butterfly: bool) -> [f32; 3] {
 }
 
 impl Hooks for Butterflies {
+    /// Its row in Options > Mods, which switches it off and on at once (`creature::list_mod`).
+    fn mods(&self, _: &mut dyn Host, event: &mut horizon_client::mod_api::ModsEvent<'_>) {
+        creature::list_mod(
+            event,
+            "butterflies",
+            concat!("Butterflies ", env!("CARGO_PKG_VERSION")),
+            "Butterflies and moths. Needs Horizon Creature.",
+        );
+    }
+
     /// Right-click with butterfly dust or confetti: thrown (`throw.rs`).
     fn use_item(&self, host: &mut dyn Host, event: &mut UseItemEvent<'_>) -> Flow {
         if throw::thrown(host, event.stack) {

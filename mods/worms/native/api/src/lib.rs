@@ -354,6 +354,16 @@ pub fn hooks() -> Box<dyn Hooks> {
 struct Worms;
 
 impl Hooks for Worms {
+    /// Its row in Options > Mods, which switches it off and on at once (`creature::list_mod`).
+    fn mods(&self, _: &mut dyn Host, event: &mut horizon_client::mod_api::ModsEvent<'_>) {
+        creature::list_mod(
+            event,
+            "worms",
+            concat!("Worms ", env!("CARGO_PKG_VERSION")),
+            "Earthworms that make your garden grow. Needs Horizon Creature.",
+        );
+    }
+
     fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
         if event.mob.kind.id != WORM {
             return;

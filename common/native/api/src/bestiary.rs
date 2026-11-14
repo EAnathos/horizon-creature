@@ -251,7 +251,7 @@ pub fn tick(host: &mut dyn Host, dimension: &str, entity: u32, kind: &str) {
     let Some(species) = species(kind) else {
         return;
     };
-    if !(species.wild)(entity) {
+    if !(species.wild)(entity) || !crate::on(host, kind) {
         return;
     }
     let Some(at) = host.entity(entity).and_then(|e| host.entity_position(e)) else {
@@ -410,6 +410,7 @@ pub fn perform(host: &mut dyn Host, event: &PerformCommandEvent<'_>) -> bool {
         }
         (Some("unlock"), Some("all")) => {
             let all: Vec<&'static Species> = SPECIES.lock().unwrap().clone();
+            let all: Vec<&'static Species> = all.into_iter().filter(|s| crate::on(host, s.id)).collect();
             for s in &all {
                 unlock(host, player, s);
             }
@@ -554,6 +555,8 @@ pub fn received(host: &mut dyn Host, channel: &str, data: &[u8]) {
                 morphs: list(parts.next().unwrap_or("")),
             })
         })
+        // A mod switched off in Options > Mods has its pages hidden (kept in the save, back when it is on again).
+        .filter(|e| crate::on(host, &e.species))
         .collect();
     {
         let mut book = BOOK.lock().unwrap();
@@ -1209,7 +1212,7 @@ fn draw_creatures(host: &dyn Host, batch: &mut horizon_client::mod_api::HudBatch
 fn draw_items(host: &dyn Host, batch: &mut horizon_client::mod_api::HudBatch, book: &mut Book, x: f32, y: f32) {
     let rx = x + PAGE + MARGIN;
     host.text(batch, &tr("bestiary.creature.items"), [rx, y + MARGIN], INK, false);
-    let pages = items::pages();
+    let pages = items::pages(host);
     let count = format!("{}: {}", tr("bestiary.creature.items_count"), pages.len());
     host.text(batch, &count, [rx, y + MARGIN + 12.0], FADED, false);
     for (k, row, col) in item_grid(pages.len()) {
@@ -1263,7 +1266,7 @@ pub fn clicked(host: &dyn Host, event: &ScreenMouseButtonPressedPreEvent<'_>) ->
         }
     }
     if book.tab == Tab::Items {
-        for (k, row, col) in item_grid(items::pages().len()) {
+        for (k, row, col) in item_grid(items::pages(host).len()) {
             if let Some([cx, cy]) = cell(x, y, row, col, book.item_scroll)
                 && inside(mouse, [cx, cy, CELL, CELL])
             {
@@ -1318,7 +1321,7 @@ pub fn scrolled(host: &dyn Host, screen: &horizon_client::mod_api::NativeScreenV
     let mut book = BOOK.lock().unwrap();
     if mx >= x + PAGE && mx < x + WIDTH && my >= y && my < y + HEIGHT {
         if book.tab == Tab::Items {
-            let last = items::pages().len().div_ceil(PER_ROW).saturating_sub(GRID_ROWS);
+            let last = items::pages(host).len().div_ceil(PER_ROW).saturating_sub(GRID_ROWS);
             step(&mut book.item_scroll, scroll, last);
         } else {
             let last = grid_rows(&book.entries).saturating_sub(GRID_ROWS);

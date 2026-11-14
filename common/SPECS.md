@@ -38,6 +38,12 @@ stay in the vulture until a second mod needs them, except friends (§6.2), share
   e.g. the glass jar (§4). The same goes for optional content between mods: a recipe that uses another mod's item when
   it is installed and a vanilla item otherwise is two conditional recipes, never a requirement.
 - A system moved here keeps working for the mod it came from, in the same commit.
+- **Each mod has its row in Options > Mods** ✅ (`creature::list_mod`, from its `mods` hook): without it Horizon lists
+  only the mod's content half, which a world must be left to switch (it adds items and creatures), and whose switch
+  leaves the mod's code running. The row stands for both halves: switched off, the mod's hooks stop at once, and the
+  library hides its pages (`creature::on`: a species' or an item's mod, Minecraft's creatures the Vanilla Bestiary's;
+  they come back, as saved, when it is on again); its content follows on the next start. The library itself has no
+  such row: every mod needs it.
 
 ## 2. Technical context
 

@@ -153,6 +153,16 @@ fn pose(name: &str, mob: &NativeMobRender<'_>, flying: bool) -> [f32; 3] {
 }
 
 impl Hooks for Fireflies {
+    /// Its row in Options > Mods, which switches it off and on at once (`creature::list_mod`).
+    fn mods(&self, _: &mut dyn Host, event: &mut horizon_client::mod_api::ModsEvent<'_>) {
+        creature::list_mod(
+            event,
+            "fireflies",
+            concat!("Fireflies ", env!("CARGO_PKG_VERSION")),
+            "Fireflies that light up the night. Needs Horizon Creature.",
+        );
+    }
+
     fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
         if event.mob.kind.id == FIREFLY {
             creature::flutter::register(event.mob, SIZE, &FLIGHT);

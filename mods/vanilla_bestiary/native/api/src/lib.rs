@@ -198,6 +198,16 @@ fn products_by(kind: &str, how: impl Fn(&How) -> bool) -> Vec<String> {
 struct VanillaBestiary;
 
 impl Hooks for VanillaBestiary {
+    /// Its row in Options > Mods, which switches it off and on at once (`creature::list_mod`).
+    fn mods(&self, _: &mut dyn Host, event: &mut horizon_client::mod_api::ModsEvent<'_>) {
+        creature::list_mod(
+            event,
+            "vanilla_bestiary",
+            concat!("Vanilla Bestiary ", env!("CARGO_PKG_VERSION")),
+            "Minecraft's own creatures in the creature guide's bestiary. Needs Horizon Creature.",
+        );
+    }
+
     /// A spawn egg in hand: the creature it hatches won't be wild.
     fn use_item_on(&self, _: &mut dyn Host, event: &mut UseItemOnEvent<'_>) -> Flow {
         *HATCHING.lock().unwrap() = hatched_by(&event.stack.item);

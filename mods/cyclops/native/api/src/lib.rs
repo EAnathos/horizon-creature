@@ -636,6 +636,16 @@ fn pose(name: &str, mob: &NativeMobRender<'_>, now: &Moment) -> [f32; 3] {
 }
 
 impl Hooks for Cyclops {
+    /// Its row in Options > Mods, which switches it off and on at once (`creature::list_mod`).
+    fn mods(&self, _: &mut dyn Host, event: &mut horizon_client::mod_api::ModsEvent<'_>) {
+        creature::list_mod(
+            event,
+            "cyclops",
+            concat!("Cyclops ", env!("CARGO_PKG_VERSION")),
+            "A one-eyed giant shepherd at the mouths of caves. Needs Horizon Creature.",
+        );
+    }
+
     fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
         if event.mob.kind.id == boulder::BOULDER {
             let (w, h, e) = boulder::SIZE;

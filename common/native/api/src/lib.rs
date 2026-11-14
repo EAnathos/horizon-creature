@@ -73,6 +73,33 @@ static JAR_PAGE: items::ItemPage = items::ItemPage {
     ],
 };
 
+/// From a mod's `mods` hook: its row in Options > Mods, for its native half. Horizon lists a content half alone (its
+/// items and creatures) when the native one has no row, and switching that row leaves the mod's code running; this row
+/// stands for both: switched off, the mod's hooks stop at once (and the library hides its pages, `on`), its content
+/// follows on the next start.
+pub fn list_mod(event: &mut horizon_client::mod_api::ModsEvent<'_>, id: &str, title: &str, description: &str) {
+    event.mods.push(horizon_client::mod_api::NativeMod {
+        id: id.into(),
+        title: title.into(),
+        description: description.into(),
+        keys: Vec::new(),
+    });
+}
+
+/// The mod a species or an item (`butterflies:moth`) belongs to: its namespace, Minecraft's own creatures the Vanilla
+/// Bestiary's.
+pub fn owner(id: &str) -> &str {
+    match id.split_once(':').map_or(id, |(ns, _)| ns) {
+        "minecraft" => "vanilla_bestiary",
+        ns => ns,
+    }
+}
+
+/// Whether the mod `id` belongs to is on: one switched off in Options > Mods has its pages hidden and meets nothing.
+pub fn on(host: &dyn Host, id: &str) -> bool {
+    host.on(owner(id))
+}
+
 pub fn hooks() -> Box<dyn Hooks> {
     hand::server_used(jar::ITEM);
     hand::server_used(guide::ITEM);
