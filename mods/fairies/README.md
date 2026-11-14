@@ -31,13 +31,13 @@ Right-click it to make it **stay** where it is, again to have it **follow** you.
 Your fairy's gift. It will brew a **Potion of Swiftness** (awkward potion + fairy dust) with the next Horizon update the
 series moves to.
 
-## Credits
-
-Its sounds are made from [CC0](https://creativecommons.org/publicdomain/zero/1.0/) recordings from
-[freesound.org](https://freesound.org) (butterfly wings, fairy chimes, a giggle, sparkling stars).
-
 ## Jars
 
 Catch a fairy with a **glass jar**, as the other creatures (yours only by you). It is still your friend when you let it
 out, and keeps its name (shown on the jar). Release one on a flower and it stays there; place the filled jar (sneak + right-click) and it
 glows.
+
+## Credits
+
+Its sounds are made from [CC0](https://creativecommons.org/publicdomain/zero/1.0/) recordings from
+[freesound.org](https://freesound.org) (butterfly wings, fairy chimes, a giggle, sparkling stars).
