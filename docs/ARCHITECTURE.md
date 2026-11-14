@@ -24,6 +24,7 @@ on it.
 | Seagulls | `mods/seagulls/` | `seagulls` | planned | [mods/seagulls/SPECS.md](../mods/seagulls/SPECS.md) |
 | Flying Fish | `mods/flying_fish/` | `flying_fish` | planned | [mods/flying_fish/SPECS.md](../mods/flying_fish/SPECS.md) |
 | Phasmids | `mods/phasmids/` | `phasmids` | planned | [mods/phasmids/SPECS.md](../mods/phasmids/SPECS.md) |
+| Scorpions | `mods/scorpions/` | `scorpions` | planned | [mods/scorpions/SPECS.md](../mods/scorpions/SPECS.md) |
 | Vanilla Bestiary | `mods/vanilla_bestiary/` | `vanilla_bestiary` | planned | [mods/vanilla_bestiary/SPECS.md](../mods/vanilla_bestiary/SPECS.md) |
 
 `cargo creature list` prints the same table from the modules' `module.toml`.

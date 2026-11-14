@@ -108,8 +108,8 @@ instead of over the ground (mods/phasmids/SPECS.md §3).
 
 The slow crawl on the ground of worms and dung beetles: the worm's `Crawl` goal (`worms::Crawl` today), moved here when
 the Dung Beetles are built, with what a beetle adds (walking toward a target, backwards). Users: **Worms**, **Dung
-Beetles**, and **Phasmids** (mods/phasmids/SPECS.md §3), which add **climbing**: crawling up the sides of logs and
-leaves and on their top, never coming down on its own.
+Beetles**, **Scorpions** (mods/scorpions/SPECS.md §3) and **Phasmids** (mods/phasmids/SPECS.md §3), which add
+**climbing**: crawling up the sides of logs and leaves and on their top, never coming down on its own.
 
 ### 3.7 Hunters eat small creatures (`creature::prey`), planned ✅
 
@@ -153,8 +153,9 @@ emptied; a caught one never despawns. A mod gives its kinds, its bucket item and
 ## 4. Glass jar and territories ✅
 
 Catching small creatures and settling them in a place they won't leave. Users: **Butterflies**, **Worms**, **Fireflies**
-✅, **Fairies** ✅, and **Dung Beetles** and **Phasmids** once built (they then join the recipe's condition and the tab
-injection). The jar is the library's ✅ and is **active only if one of them is installed** ✅ (hidden otherwise, §3.3).
+✅, **Fairies** ✅, and **Dung Beetles**, **Phasmids** and **Scorpions** once built (they then join the recipe's
+condition and the tab injection). The jar is the library's ✅ and is **active only if one of them is installed** ✅
+(hidden otherwise, §3.3).
 
 ### 4.1 The jar
 
@@ -191,6 +192,7 @@ the block it was released on, by the mod's rule:
 | **Garden** ✅ | Worms | The farmland connected to the release block (4 directions, same level ±1); **at least 10 blocks** ✅, otherwise the worm won't settle |
 | **Flower patch** ✅ | Butterflies, Fireflies ✅ | Released on a flower (its anchor): the flowers **within 8 blocks** of the anchor, plus 2 blocks around them and 4 blocks up. The 8-block cap keeps it to at most ~20 × 20 blocks, even in a meadow or a flower forest where every flower touches the next; in a sparse garden it is just the flower beds |
 | **Tree** ✅ (planned) | Phasmids | Released on leaves or a log: the leaves and logs connected to it within 8 blocks, plus a block around them; **at least 10 leaves** ✅, otherwise it won't settle (mods/phasmids/SPECS.md §5) |
+| **Sand** ✅ (planned) | Scorpions | Released on sand, red sand, sandstone or terracotta: those blocks connected to it within 8 blocks; **at least 10** ✅, otherwise it won't settle (mods/scorpions/SPECS.md §6) |
 | **Pasture** ✅ (planned) | Dung Beetles | Released with **at least 3 farm animals** (cows, sheep, horses, donkeys, goats, camels, llamas) **within 8 blocks**: 8 blocks around the release block; fewer than 3 animals left around and the creature is unsettled (mods/dung_beetles/SPECS.md §4) |
 
 - The creature remembers its anchor (saved on the entity); every few seconds ✅ it checks the area still holds (the

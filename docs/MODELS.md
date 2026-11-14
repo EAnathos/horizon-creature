@@ -198,6 +198,14 @@ The `.bbmodel` files are the sources: edit them in Blockbench (their texture is 
 
 ![stick_insect, front](models/phasmids-stick_insect-front.png) ![stick_insect, back](models/phasmids-stick_insect-back.png)
 
+## scorpions
+
+### scorpion
+
+`mods/scorpions/assets/models/scorpion.bbmodel`: 47 cubes, texture 64×64.
+
+![scorpion, front](models/scorpions-scorpion-front.png) ![scorpion, back](models/scorpions-scorpion-back.png)
+
 ## seagulls
 
 ### seagull
