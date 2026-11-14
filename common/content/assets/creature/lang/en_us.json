@@ -10,6 +10,7 @@
   "item.creature.glass_jar.filled": "Glass Jar of %s",
   "item.creature.glass_jar.look": "%s, %s (%s)",
   "item.creature.glass_jar.look_plain": "%s",
+  "item.creature.glass_jar.friend": "Befriended",
   "block.creature.jar": "Glass Jar",
   "block.creature.lit_jar": "Glass Jar",
   "bestiary.creature.rarity.common": "Common",

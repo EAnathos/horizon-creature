@@ -30,7 +30,7 @@ const SCALE: f32 = 0.5;
 
 /// How it flies (SPECS §2): at night, slow and low, long drifts and short rests; it doesn't seek flowers.
 static FLIGHT: creature::flutter::Kind = creature::flutter::Kind {
-    night: true,
+    hours: creature::flutter::Hours::Night,
     speed: 0.05,
     height: (0.5, 2.0),
     flight: (200, 600),
@@ -47,6 +47,7 @@ static IN_JAR: Catchable = Catchable {
     model: "fireflies:firefly_jar",
     settles: Some(creature::territory::Rule::FlowerPatch),
     glows: true,
+    shy: false,
 };
 
 /// Its page in the bestiary: met wild in the biomes it spawns in; caught in a jar, settling on a flower.

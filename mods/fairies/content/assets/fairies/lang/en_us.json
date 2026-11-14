@@ -1,0 +1,12 @@
+{
+  "entity.fairies.fairy": "Fairy",
+  "item.fairies.fairy_spawn_egg": "Fairy Spawn Egg",
+  "item.fairies.fairy_dust": "Fairy Dust",
+  "bestiary.fairies.friend": "Friend",
+  "bestiary.fairies.dust": "Dust",
+  "bestiary.fairies.shy": "Shy",
+  "bestiary.fairies.jar": "Catch",
+  "fairies.befriended": "The fairy is now your friend",
+  "fairies.stays": "Your fairy stays here",
+  "fairies.follows": "Your fairy follows you"
+}

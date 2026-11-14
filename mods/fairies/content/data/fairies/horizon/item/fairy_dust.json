@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:sugar",
+  "components": {
+    "minecraft:item_model": "fairies:fairy_dust",
+    "minecraft:item_name": {
+      "translate": "item.fairies.fairy_dust"
+    }
+  }
+}

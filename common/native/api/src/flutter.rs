@@ -1,9 +1,11 @@
-//! Small fliers (SPECS §3.5): short erratic flights, landing (on flowers), resting; butterflies, moths and fireflies.
+//! Small fliers (SPECS §3.5): short erratic flights, landing (on flowers), resting; butterflies, moths, fireflies and
+//! fairies.
 //!
 //! A mod gives each of its creatures a `Kind` (out by day or at night, speed, height, how long it flies and rests,
 //! drawn to light, landing on flowers) and adds `Flutter::new(&KIND)` to its goals.
 //!
-//! - It is about by day in fair weather (or at night, for a night kind); otherwise it rests where it is.
+//! - It is about by day in fair weather, at night, or at any hour but in the rain (its `Hours`); otherwise it rests
+//!   where it is.
 //! - Resting, it sits a while (on a flower if it found one and its kind lands on flowers), then flies off again.
 //! - Flying, it flutters towards a point a few blocks off, changing its mind often, a little up and down, staying
 //!   around where it first fluttered; after a while it looks for a flower near it and lands on it, or on the ground.
@@ -21,11 +23,22 @@ use crate::territory;
 use horizon_client::mobs::goals;
 use horizon_client::mod_api::{Cx, Goal, Host, Mob, RandomSource};
 
+/// When a kind of flier is about.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Hours {
+    /// By day in fair weather (butterflies).
+    Day,
+    /// At night (moths, fireflies).
+    Night,
+    /// Day and night, but not in the rain (fairies).
+    Always,
+}
+
 /// How a kind of flier behaves.
 #[derive(Debug)]
 pub struct Kind {
-    /// Out at night (moths, fireflies) rather than by day in fair weather (butterflies).
-    pub night: bool,
+    /// When it is about.
+    pub hours: Hours,
     /// Flying speed, blocks a tick (a butterfly 0.16).
     pub speed: f64,
     /// How high above the ground it flies, at least and at most.
@@ -141,10 +154,10 @@ impl Flutter {
     }
 
     fn awake(&self, cx: &Cx) -> bool {
-        if self.kind.night {
-            !cx.w.daylight
-        } else {
-            cx.w.daylight && !cx.w.raining
+        match self.kind.hours {
+            Hours::Day => cx.w.daylight && !cx.w.raining,
+            Hours::Night => !cx.w.daylight,
+            Hours::Always => !cx.w.raining,
         }
     }
 }
@@ -228,35 +241,40 @@ impl Flutter {
         self.perched = false;
     }
 
-    /// Steers towards `target` with a flutter; whether it is there.
     fn steer(&self, m: &mut Mob, target: [f64; 3], speed: f64) -> bool {
-        let d = [
-            target[0] - m.position.x,
-            target[1] - m.position.y,
-            target[2] - m.position.z,
-        ];
-        let len = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt();
-        if len < 0.3 {
-            return true;
-        }
-        let jitter = |m: &mut Mob| (f64::from(m.random.next_float()) * 2.0 - 1.0) * JITTER;
-        let (jx, jy, jz) = (jitter(m), jitter(m), jitter(m));
-        m.velocity.x = m.velocity.x * 0.85 + d[0] / len * STEER + jx;
-        m.velocity.y = m.velocity.y * 0.85 + d[1] / len * STEER + jy;
-        m.velocity.z = m.velocity.z * 0.85 + d[2] / len * STEER + jz;
-        let v = (m.velocity.x.powi(2) + m.velocity.y.powi(2) + m.velocity.z.powi(2)).sqrt();
-        if v > speed {
-            let k = speed / v;
-            m.velocity.x *= k;
-            m.velocity.y *= k;
-            m.velocity.z *= k;
-        }
-        let yaw = (-m.velocity.x).atan2(m.velocity.z).to_degrees() as f32;
-        m.yaw = yaw;
-        m.body_yaw = yaw;
-        m.head_yaw = yaw;
-        false
+        steer(m, target, speed)
     }
+}
+
+/// Steers a flier towards `target` with a flutter, at most `speed` blocks a tick, facing where it goes; whether it is
+/// there (also used by a mod's own flights: a fairy following its friend).
+pub fn steer(m: &mut Mob, target: [f64; 3], speed: f64) -> bool {
+    let d = [
+        target[0] - m.position.x,
+        target[1] - m.position.y,
+        target[2] - m.position.z,
+    ];
+    let len = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt();
+    if len < 0.3 {
+        return true;
+    }
+    let jitter = |m: &mut Mob| (f64::from(m.random.next_float()) * 2.0 - 1.0) * JITTER;
+    let (jx, jy, jz) = (jitter(m), jitter(m), jitter(m));
+    m.velocity.x = m.velocity.x * 0.85 + d[0] / len * STEER + jx;
+    m.velocity.y = m.velocity.y * 0.85 + d[1] / len * STEER + jy;
+    m.velocity.z = m.velocity.z * 0.85 + d[2] / len * STEER + jz;
+    let v = (m.velocity.x.powi(2) + m.velocity.y.powi(2) + m.velocity.z.powi(2)).sqrt();
+    if v > speed {
+        let k = speed / v;
+        m.velocity.x *= k;
+        m.velocity.y *= k;
+        m.velocity.z *= k;
+    }
+    let yaw = (-m.velocity.x).atan2(m.velocity.z).to_degrees() as f32;
+    m.yaw = yaw;
+    m.body_yaw = yaw;
+    m.head_yaw = yaw;
+    false
 }
 
 impl Goal for Flutter {
@@ -373,12 +391,13 @@ pub fn register(mob: &mut Mob, size: (f64, f64, f64), kind: &'static Kind) {
 }
 
 /// From the mod's `entity_tick_post`, for each of its fliers: its territory loaded and saved, and a wild one despawned
-/// far from players (a settled one stays).
+/// far from players (a settled or befriended one stays; the mod ticks `friend` first).
 pub fn tick_post(host: &mut dyn Host, dimension: &str, entity: u32) {
     crate::sounds::play_queued(host, entity, crate::sounds::NEUTRAL);
     territory::tick(host, entity);
-    let settled = territory::settled(entity);
-    if crate::mob::despawn_far(host, dimension, entity, settled) {
+    // A settled or befriended one stays.
+    let kept = territory::settled(entity) || crate::friend::of(entity).is_some();
+    if crate::mob::despawn_far(host, dimension, entity, kept) {
         gone(entity);
     }
 }

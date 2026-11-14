@@ -98,6 +98,14 @@ tab ([arismoko#3275](https://github.com/arismoko/horizon/issues/3275), open; our
 `common/native/jar_tab.rs`), reading a game rule or the difficulty (`LevelRef::game_rule`, `difficulty`: at our pin,
 used by the cyclops).
 
+- **A content mod can't add a brewing recipe**: Horizon reads brewing recipes only from vanilla's data
+  (`data/minecraft/recipe/brewing/`, and packs' overlays over it), and `cargo horizon-mod` refuses a mod's files outside
+  its own namespaces. Ours: fairy dust brews nothing yet (mods/fairies/SPECS.md §6, Swiftness planned). File with a
+  repro: brewing recipes from a mod's `data/<mod>/recipe/` (`"type": "minecraft:brewing"`), as the crafting loader
+  reads them.
+- **An item's `template` gives it the template's components, not its use**: an item on `minecraft:bone_meal` does
+  nothing on a crop. Ours: fairy dust's use is the mod's `use_item_on` (`mods/fairies/native/api/src/lib.rs`,
+  `dust_on`, with `creature::grow`). To check against Horizon's docs before filing: it may be by design.
 - **A mod mob's spawn egg never says "Disabled in Peaceful"**: Horizon decides it from the copied vanilla species
   (`allowed_in_peaceful`), and a mod mob can only copy a zombie, a villager or a wandering trader, with no way to call
   it a monster. A client hook can't read the difficulty either (`LevelRef` is None on the client, even in single

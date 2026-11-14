@@ -4,6 +4,7 @@
     "butterflies:butterfly_spawn_egg",
     "butterflies:moth_spawn_egg",
     "cyclops:cyclops_spawn_egg",
+    "fairies:fairy_spawn_egg",
     "fireflies:firefly_spawn_egg",
     "vulture:vulture_spawn_egg",
     "worms:worm_spawn_egg",
@@ -14,6 +15,7 @@
     "cyclops:cyclops_eye",
     "cyclops:club",
     "cyclops:shepherds_crook",
+    "fairies:fairy_dust",
     "vulture:feather",
     "vulture:raw_vulture",
     "vulture:cooked_vulture"

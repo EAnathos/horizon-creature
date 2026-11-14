@@ -3,7 +3,7 @@
 A series of native Rust mods for **Minecraft Horizon** (a Rust reimplementation of Minecraft Java 26.3): one mandatory
 library, **Horizon Creature** (`common/`, mod id `creature`), and independent creature mods in `mods/<mod>/` that all
 depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and moths), `worms`, `fireflies`,
-`cyclops`.
+`cyclops`, `fairies`.
 
 - **Players**: `README.md` and each module's `README.md`. **Developers**: `CONTRIBUTING.md`.
 - **Architecture**: `docs/ARCHITECTURE.md` (modules, dependencies, what goes in the library, the single creative tab,

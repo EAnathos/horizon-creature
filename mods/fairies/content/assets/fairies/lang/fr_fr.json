@@ -1,0 +1,12 @@
+{
+  "entity.fairies.fairy": "Fée",
+  "item.fairies.fairy_spawn_egg": "Œuf d'apparition de fée",
+  "item.fairies.fairy_dust": "Poussière de fée",
+  "bestiary.fairies.friend": "Amie",
+  "bestiary.fairies.dust": "Poussière",
+  "bestiary.fairies.shy": "Timide",
+  "bestiary.fairies.jar": "Capture",
+  "fairies.befriended": "La fée est maintenant votre amie",
+  "fairies.stays": "Votre fée reste ici",
+  "fairies.follows": "Votre fée vous suit"
+}

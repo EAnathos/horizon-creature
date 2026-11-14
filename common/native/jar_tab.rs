@@ -1,13 +1,13 @@
 // The glass jar left out of the creative tabs when no mod of the series uses it (common/SPECS.md §3.3): Horizon's tab
 // entries have no conditions and a tab lists every item the game has. This builds the tabs once (the body, through
-// the guard), then takes the jar out of them when no Butterflies, Worms or Fireflies item is among the mods' items.
+// the guard), then takes the jar out of them when no Butterflies, Worms, Fireflies or Fairies item is among the mods' items.
 fn creature_jar_tab(plan: &Plan<'_>, doc: &mut J) -> ::core::ops::ControlFlow<Result<()>> {
     use ::core::cell::Cell;
     use ::core::ops::ControlFlow;
     thread_local! {
         static INSIDE: Cell<bool> = const { Cell::new(false) };
     }
-    const USERS: [&str; 3] = ["butterflies:", "worms:", "fireflies:"];
+    const USERS: [&str; 4] = ["butterflies:", "worms:", "fireflies:", "fairies:"];
     let used = plan
         .items
         .iter()

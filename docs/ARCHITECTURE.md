@@ -20,7 +20,7 @@ on it.
 | Storm Spirits | `mods/storm_spirits/` | `storm_spirits` | planned | [mods/storm_spirits/SPECS.md](../mods/storm_spirits/SPECS.md) |
 | Jellyfish | `mods/jellyfish/` | `jellyfish` | planned | [mods/jellyfish/SPECS.md](../mods/jellyfish/SPECS.md) |
 | Magma Golem | `mods/magma_golem/` | `magma_golem` | planned | [mods/magma_golem/SPECS.md](../mods/magma_golem/SPECS.md) |
-| Fairies | `mods/fairies/` | `fairies` | planned | [mods/fairies/SPECS.md](../mods/fairies/SPECS.md) |
+| Fairies | `mods/fairies/` | `fairies` | playable | [mods/fairies/SPECS.md](../mods/fairies/SPECS.md) |
 | Seagulls | `mods/seagulls/` | `seagulls` | planned | [mods/seagulls/SPECS.md](../mods/seagulls/SPECS.md) |
 | Vanilla Bestiary | `mods/vanilla_bestiary/` | `vanilla_bestiary` | planned | [mods/vanilla_bestiary/SPECS.md](../mods/vanilla_bestiary/SPECS.md) |
 
@@ -75,7 +75,7 @@ day a second mod needs it (the move is part of that second mod's work, not a cop
 
 | In the library (`creature`) | In a mod |
 |---|---|
-| Generic systems, configured by data or by Rust parameters: glass jar and territories, the small fliers' flight, colours and patterns, model drawing, mob sounds, monsters sparing our creatures, the bestiary | The species: entity types, models, textures, sounds, items, recipes, loot, spawns, AI tuning, balance numbers |
+| Generic systems, configured by data or by Rust parameters: glass jar and territories, the small fliers' flight, friends, crops helped to grow, colours and patterns, model drawing, mob sounds, monsters sparing our creatures, the bestiary | The species: entity types, models, textures, sounds, items, recipes, loot, spawns, AI tuning, balance numbers |
 | Shared blocks and items (`creature:glass_jar`, `creature:guide`) | The mod's own blocks and items (`cyclops:club`) |
 | The series' creative tab | The list of its items for that tab (`module.toml`) |
 | Shared translations (`creature` lang files) | Its own translations |

@@ -17,8 +17,7 @@ use creature::territory::{self, Rule};
 use horizon_client::mobs::goals;
 use horizon_client::mod_api::{
     BlockEntityDraw, Compound, Cx, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent,
-    LevelTickPostEvent, LivingDeathEvent, Mob, MobSubmitEvent, ParticleOptions, ParticleType, RandomSource,
-    RegisterGoalsEvent,
+    LevelTickPostEvent, LivingDeathEvent, Mob, MobSubmitEvent, RandomSource, RegisterGoalsEvent,
 };
 
 pub const WORM: &str = "worms:worm";
@@ -34,6 +33,7 @@ static IN_JAR: Catchable = Catchable {
     model: "worms:worm_jar",
     settles: Some(Rule::Garden),
     glows: false,
+    shy: false,
 };
 
 static BESTIARY: Species = Species {
@@ -200,21 +200,6 @@ const MAX_WORMS: usize = 3;
 /// Ticks since each worm last helped a crop.
 static TICKS: Mutex<BTreeMap<u32, u32>> = Mutex::new(BTreeMap::new());
 
-/// The age a crop is grown at, by block (those with an `age`); others are left alone.
-fn grown_age(block: &str) -> Option<u32> {
-    match block {
-        "minecraft:wheat"
-        | "minecraft:carrots"
-        | "minecraft:potatoes"
-        | "minecraft:melon_stem"
-        | "minecraft:pumpkin_stem" => Some(7),
-        "minecraft:beetroots" | "minecraft:nether_wart" => Some(3),
-        "minecraft:torchflower_crop" => Some(1),
-        "minecraft:pitcher_crop" => Some(4),
-        _ => None,
-    }
-}
-
 /// From `entity_tick_post`: now and then, a settled worm makes one crop of its garden grow a stage.
 fn tend(host: &mut dyn Host, entity: u32) {
     if !territory::settled(entity) {
@@ -245,29 +230,16 @@ fn tend(host: &mut dyn Host, entity: u32) {
     if worms > MAX_WORMS && (random.next() % worms as u64) as usize >= MAX_WORMS {
         return;
     }
-    let crops: Vec<([i32; 3], u32, u32)> = garden
+    let crops: Vec<[i32; 3]> = garden
         .iter()
-        .filter_map(|f| {
-            let crop = [f[0], f[1] + 1, f[2]];
-            let grown = grown_age(&host.block(crop))?;
-            let age: u32 = host.block_property(crop, "age")?.parse().ok()?;
-            (age < grown).then_some((crop, age, grown))
-        })
+        .map(|f| [f[0], f[1] + 1, f[2]])
+        .filter(|crop| creature::grow::growing(host, *crop).is_some())
         .collect();
     if crops.is_empty() {
         return;
     }
-    let (crop, age, _) = crops[(random.next() % crops.len() as u64) as usize];
-    if host.set_block_property(crop, "age", &(age + 1).to_string()) {
-        // A few green sparkles on the crop it helped, as bone meal shows.
-        let at = [
-            f64::from(crop[0]) + 0.5,
-            f64::from(crop[1]) + 0.4,
-            f64::from(crop[2]) + 0.5,
-        ];
-        let sparkle = ParticleOptions::simple(ParticleType::HappyVillager);
-        host.send_particles(&sparkle, None, at, [0.3, 0.25, 0.3], 0.0, 6);
-    }
+    let crop = crops[(random.next() % crops.len() as u64) as usize];
+    creature::grow::grow(host, crop, 1);
 }
 
 /// After rain (SPECS §2): while it rains, worms come up on the grass and dirt near players, in the biomes they live in.

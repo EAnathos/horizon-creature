@@ -10,18 +10,28 @@ in sparkles, and lightens your step: a gentle speed boost.
 
 ## 0. Status
 
-Planned: the spec and the model, no code yet.
+Built and tested in game (single player): spawning aside (data written, not yet met in the wild), see below.
 
-- **The model** (`assets/models/fairy.bbmodel`, pictures in docs/MODELS.md): our own design, a slender little violet
-  fairy with a large head: big violet eyes, pink cheeks, dark violet shoulder-length hair with bangs and side locks, a
-  small white flower pinned on one side. A little fairy dress: a fitted violet bodice with puffed lilac sleeves, a
-  pale sash tied in a bow at the back, a layered skirt flaring out to a hem of lilac points, glinting with white
-  sparkles. Thin arms and legs, one arm raised, one leg bent back as she hovers. Four butterfly wings spread from one
-  point between her shoulder blades (a big upper pair, a smaller lower pair), pale lilac with a violet rim. Facing
-  +z like every model of the series. Its parts (`body`, `head`, `arm_*`, `leg_*`, `hem`, `hem_*`, `wings`,
-  `wing_upper_*`, `wing_lower_*`) are ready for the flutter of its wings and its hovering.
+- **The fairy** (`fairies:fairy`, spawn egg): a copy of the wandering trader, box 0.4 × 0.8, 4 health, drawn
+  full-bright with its own model (`assets/models/fairy.bbmodel`), its wings beating, its arms swaying, its hem
+  turning, a soft violet light around it (seen only, lighting nothing), wider around one following its friend.
+- **Wild** (§2): it flits between flowers with the library's small fliers' flight, day and night, resting in the rain.
+  **Shy**: a player within 4 blocks who isn't sneaking, or running within 8, scares it off. Spawning: flower forests,
+  meadows, cherry groves and birch forests, 2 to 4 together. Killed, it vanishes in sparkles and drops nothing.
+- **Befriending** (§3): a sneaking player holding glow berries (or sweet berries) within 4 blocks draws it before their
+  face; it nibbles one every 5 s (taken from their hand, not in creative) and befriends them one time in 3 (6 for
+  sweet berries): hearts, a chime, a line on the action bar. Saved on the fairy (the library's `friend`).
+- **Befriended**: it circles its friend's head, leaving faint sparkles; right-click makes it stay where it is or
+  follow again. Its friend has **Speed I** while it follows within 8 blocks. Once a day it leaves a pinch of fairy dust
+  at their feet. It comes to them at once past 24 blocks, never despawns, and their blows can't hurt it.
+- **Glass jar** (§5): a wild one only by a sneaking player, a befriended one only by its friend, and it is still
+  befriended once let out; released on a flower it settles there; on display, a jar that glows.
+- **Fairy dust** (§6): as bone meal on a crop (2 to 5 stages) or a sapling (ready to grow), with sparkles.
+- **Bestiary page**: the biomes met in, "Friend", "Dust", "Shy", "Catch".
 
-Next: the code once Horizon's launcher builds the pinned revision again (docs/HORIZON-ISSUES.md, #15764).
+Left: its own sounds (a chime and wing flutter from freesound; vanilla's amethyst chime until then); fairy dust in a
+**Potion of Swiftness** (Horizon reads brewing recipes from vanilla's data only, docs/HORIZON-ISSUES.md); the fairy
+lamp's brighter light (the series' lit jar gives 7, not 10); its name kept in the jar; a fairy met in the wild.
 
 ## 1. Technical context
 
@@ -49,10 +59,10 @@ Next: the code once Horizon's launcher builds the pinned revision again (docs/HO
 
 ## 3. Befriending ✅
 
-- **With glow berries**: a sneaking player holding glow berries within 3 blocks draws a wild fairy, which lands on
-  their hand (hovers before them) and nibbles one; one chance in 3 it befriends them (hearts, a chime). Sweet berries
+- **With glow berries**: a sneaking player holding glow berries within 4 blocks draws a wild fairy, which lands on
+  their hand (hovers before them) and nibbles one every 5 s; one chance in 3 it befriends them (hearts, a chime). Sweet berries
   work too, one chance in 6.
-- **Befriended** (the library's taming and ownership): it follows its friend, **circling their head** and leaving a
+- **Befriended** (the library's friends, common/SPECS.md §6.2): it follows its friend, **circling their head** and leaving a
   faint trail of sparkles; right-click to make it stay or follow. Named with a name tag. It never despawns. It flies
   to its friend if they get more than 24 blocks away.
 - **The speed boost** ✅: while it follows its friend within 8 blocks, the friend has **Speed I**, renewed every few

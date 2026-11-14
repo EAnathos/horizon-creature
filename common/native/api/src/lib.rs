@@ -12,11 +12,15 @@
 //! - `mob`: a creature's own size and silence, its template's being a vanilla mob's (SPECS §3.2, §6.8).
 //! - `territory`: where a released creature settles and stays (SPECS §4.2).
 //! - `flutter`: how small fliers move (butterflies, moths, fireflies): short flights, landing, resting (SPECS §3.5).
+//! - `friend`: a creature befriended by a player, following them or staying (SPECS §6.2).
+//! - `grow`: crops helped to grow, by a worm or fairy dust (SPECS §3.10).
 //! - `guide`: the creature guide book, given at a player's first login (SPECS §7).
 //! - `bestiary`: the book's pages, what each player met and found out (SPECS §7).
 pub mod bestiary;
 pub mod colours;
 pub mod flutter;
+pub mod friend;
+pub mod grow;
 mod guide;
 pub mod hand;
 pub mod jar;

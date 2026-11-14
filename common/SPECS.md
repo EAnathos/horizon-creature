@@ -12,7 +12,8 @@ Everything below works and was tested in game, single player, unless said otherw
 - **The library itself**: a content half (`creature.hmod`) and a native half (`creature.hnmod`, crate `mod-creature`)
   that every mod reaches as the `creature` crate (`[dependencies] creature = "^0.1"`).
 - **Model drawing** (§3.1), **mob sounds** (§3.2), **the creative tab** (§3.3), **monsters sparing our creatures**
-  (§3.4) and **the small fliers' flight** (§3.5).
+  (§3.4), **the small fliers' flight** (§3.5, by day, at night or at any hour), **crops helped to grow** (§3.10) and
+  **friends** (§6.2, the Fairies').
 - **Glass jar and territories** (§4): catching, releasing, settling on a flower patch or in a garden, the jar on
   display (spared by blasts and pistons). The jar left out of the creative tab when no jar mod is installed is built
   but not yet checked in game.
@@ -24,7 +25,7 @@ Everything below works and was tested in game, single player, unless said otherw
 - **Creature guide book and bestiary** (§7).
 
 Limits: single player only (the drawing reads render state from statics, arismoko/horizon#2740); the systems of §6
-stay in the vulture until a second mod needs them.
+stay in the vulture until a second mod needs them, except friends (§6.2), which the vulture moves onto next.
 
 ## 1. Role and rules ✅
 
@@ -90,10 +91,10 @@ stay in the vulture until a second mod needs them.
 
 ### 3.5 Small fliers (`creature::flutter`) ✅
 
-The flight of butterflies, moths and fireflies: short erratic flights and landing (on flowers), resting, out by day or
-by night. A mod gives a `Kind` (day or night, speed, height, flight and rest lengths, drawn to light, landing on
+The flight of butterflies, moths, fireflies and fairies: short erratic flights and landing (on flowers), resting, out
+by day, by night or at any hour but in the rain. A mod gives a `Kind` (its `Hours`, speed, height, flight and rest lengths, drawn to light, landing on
 flowers, an optional take-off sound played at each take-off) and calls `register` (size, muted, the flight goal), `tick_post` (territory, despawning far from players)
-and `gone`.
+and `gone`; `steer` flies one toward a point (a fairy following its friend).
 
 ### 3.6 Small crawlers (`creature::crawl`), planned ✅
 
@@ -117,6 +118,11 @@ A mod's own feather works as a feather: the item tag `creature:feathers` lists v
 the recipes for arrows, the brush and the book and quill move here from the Vulture (its `vulture:feather`) when the
 **Seagulls** come (mods/seagulls/SPECS.md §5).
 
+### 3.10 Crops helped to grow (`creature::grow`) ✅
+
+A crop grown some stages (to its last at most), with bone meal's green sparkles. Users: **Worms** (a settled worm, a
+stage now and then) and **Fairies** (fairy dust, as bone meal).
+
 ### 3.9 Lobbed projectiles (`creature::lob`), planned ✅
 
 A big mob lifts something over its head and hurls it on an arc at a target: the throw goal (range, wind-up, aim on
@@ -128,12 +134,12 @@ Golem** (planned, its magma glob, mods/magma_golem/SPECS.md §2).
 ## 4. Glass jar and territories ✅
 
 Catching small creatures and settling them in a place they won't leave. Users: **Butterflies**, **Worms**, **Fireflies**
-✅, and **Dung Beetles** and **Fairies** once built (it then joins the recipe's condition and the tab injection). The jar is the library's ✅ and is **active only if one of them is installed** ✅ (hidden otherwise, §3.3).
+✅, **Fairies** ✅, and **Dung Beetles** once built (it then joins the recipe's condition and the tab injection). The jar is the library's ✅ and is **active only if one of them is installed** ✅ (hidden otherwise, §3.3).
 
 ### 4.1 The jar
 
 - Item `creature:glass_jar`. Recipe ✅ conditional (`neoforge:conditions`, `mod_loaded` butterflies **or** worms **or**
-  fireflies): 3 glass in a U + 1 oak slab lid (gives 2 ✅).
+  fireflies **or** fairies): 3 glass in a U + 1 oak slab lid (gives 2 ✅).
 - **Catch** ✅: right-click a catchable creature with an empty jar → a **filled jar** holding it (its colours, pattern and
   name are kept).
 - **One jar for every creature** ✅: a filled jar is the same `creature:glass_jar`, carrying the creature it holds as
@@ -150,7 +156,10 @@ Catching small creatures and settling them in a place they won't leave. Users: *
   creature has a territory rule (§4.2) it **settles** there. A jar whose creature's mod is no longer installed releases
   nothing and stays full.
 - **Display** ✅: sneak + right-click places the filled jar as a small block (a creature visibly inside, glowing faintly
-  for firefly), broken back into the item. Decorative.
+  for a firefly or a fairy), broken back into the item. Decorative.
+- **Shy and befriended creatures** ✅: a shy kind (`Catchable.shy`: fairies) is only caught by a sneaking player; a
+  befriended one (§6.2) only by its friend, and the jar keeps its friend ("Befriended" under its name): let out, it is
+  still theirs.
 
 ### 4.2 Territories ✅
 
@@ -183,7 +192,7 @@ Each moves here when a second mod needs it. Until then it stays in the vulture.
 | # | System | Today |
 |---|---|---|
 | 6.1 | **Riding and flight**: mount by right-click, **dynamic ridden flight** (steered by the look, banking into arc turns like a plane, vulture/SPECS.md §6.2), dismount, mount hearts (`mount-hud` injection), a saddle | in the vulture; the flight itself (glide, soaring, landing, the wing poses) moves here with the Seagulls (planned, mods/seagulls/SPECS.md §1), riding stays |
-| 6.2 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | in the vulture; moves here with the Sporelins, the Seagulls and the Living Flowers (planned) |
+| 6.2 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | **friends** ✅ in the library (`creature::friend`: the friend's UUID and staying, saved on the creature as `creature:friend`, kept in the glass jar), used by the **Fairies**; the vulture keeps its own owner (in `vulture:state`) and moves onto it next, its saves read once into it; defending, healing food and riding come with the Sporelins, the Seagulls and the Living Flowers (planned) |
 | 6.3 | **Babies and growth**: smaller model, growth time, faster when fed | in the vulture |
 | 6.4 | **Ridden special attack**: a key that makes the mount attack (the vulture's talons) | in the vulture |
 

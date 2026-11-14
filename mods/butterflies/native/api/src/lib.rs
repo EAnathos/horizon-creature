@@ -163,7 +163,7 @@ static VARIETIES: [Variety; 5] = [
 /// How they fly (the library's `flutter`, SPECS §2, §2.1): a butterfly by day, landing on flowers; a moth at night,
 /// drawn to light.
 static BUTTERFLY_FLIGHT: creature::flutter::Kind = creature::flutter::Kind {
-    night: false,
+    hours: creature::flutter::Hours::Day,
     speed: 0.16,
     height: (1.0, 3.5),
     flight: (80, 240),
@@ -174,7 +174,7 @@ static BUTTERFLY_FLIGHT: creature::flutter::Kind = creature::flutter::Kind {
     takeoff: Some("butterflies:entity.butterfly.flutter"),
 };
 static MOTH_FLIGHT: creature::flutter::Kind = creature::flutter::Kind {
-    night: true,
+    hours: creature::flutter::Hours::Night,
     drawn_to_light: true,
     takeoff: Some("butterflies:entity.moth.flutter"),
     ..BUTTERFLY_FLIGHT
@@ -194,12 +194,14 @@ static IN_JAR: [Catchable; 2] = [
         model: "butterflies:butterfly_jar",
         settles: Some(creature::territory::Rule::FlowerPatch),
         glows: false,
+        shy: false,
     },
     Catchable {
         kind: MOTH,
         model: "butterflies:moth_jar",
         settles: Some(creature::territory::Rule::FlowerPatch),
         glows: false,
+        shy: false,
     },
 ];
 
