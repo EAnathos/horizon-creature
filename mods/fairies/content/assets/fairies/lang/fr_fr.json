@@ -6,5 +6,10 @@
   "bestiary.fairies.jar": "Capture",
   "fairies.befriended": "La fée est maintenant votre amie",
   "fairies.stays": "Votre fée reste ici",
-  "fairies.follows": "Votre fée vous suit"
+  "fairies.follows": "Votre fée vous suit",
+  "subtitles.entity.fairy.flutter": "Une fée voltige",
+  "subtitles.entity.fairy.ambient": "Une fée tinte",
+  "subtitles.entity.fairy.hurt": "Une fée est blessée",
+  "subtitles.entity.fairy.death": "Une fée disparaît",
+  "subtitles.entity.fairy.befriend": "Une fée scintille"
 }

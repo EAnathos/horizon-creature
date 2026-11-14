@@ -6,5 +6,10 @@
   "bestiary.fairies.jar": "Catch",
   "fairies.befriended": "The fairy is now your friend",
   "fairies.stays": "Your fairy stays here",
-  "fairies.follows": "Your fairy follows you"
+  "fairies.follows": "Your fairy follows you",
+  "subtitles.entity.fairy.flutter": "Fairy flutters",
+  "subtitles.entity.fairy.ambient": "Fairy chimes",
+  "subtitles.entity.fairy.hurt": "Fairy hurts",
+  "subtitles.entity.fairy.death": "Fairy vanishes",
+  "subtitles.entity.fairy.befriend": "Fairy sparkles"
 }

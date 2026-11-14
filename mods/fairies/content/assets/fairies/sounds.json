@@ -1,0 +1,37 @@
+{
+  "entity.fairy.flutter": {
+    "subtitle": "subtitles.entity.fairy.flutter",
+    "sounds": [
+      "fairies:fairies/flutter1",
+      "fairies:fairies/flutter2",
+      "fairies:fairies/flutter3"
+    ]
+  },
+  "entity.fairy.ambient": {
+    "subtitle": "subtitles.entity.fairy.ambient",
+    "sounds": [
+      "fairies:fairies/chime1",
+      "fairies:fairies/chime2",
+      "fairies:fairies/chime3",
+      "fairies:fairies/laugh"
+    ]
+  },
+  "entity.fairy.hurt": {
+    "subtitle": "subtitles.entity.fairy.hurt",
+    "sounds": [
+      "fairies:fairies/hurt"
+    ]
+  },
+  "entity.fairy.death": {
+    "subtitle": "subtitles.entity.fairy.death",
+    "sounds": [
+      "fairies:fairies/death"
+    ]
+  },
+  "entity.fairy.befriend": {
+    "subtitle": "subtitles.entity.fairy.befriend",
+    "sounds": [
+      "fairies:fairies/befriend"
+    ]
+  }
+}

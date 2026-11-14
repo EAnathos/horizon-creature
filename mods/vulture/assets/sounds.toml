@@ -26,7 +26,7 @@ name = "ambient2"
 source = "goose_b"
 start = 0.0
 length = 1.95
-pitch = 0.79
+pitch = 0.7258
 
 [[clip]]
 name = "ambient3"
@@ -64,7 +64,7 @@ name = "death"
 source = "goose_b"
 start = 0.0
 length = 2.4
-pitch = 0.65
+pitch = 0.5972
 fade = 0.9
 
 # Flaps: three clean beats of the big wings, with their whoosh.
@@ -73,6 +73,7 @@ name = "flap1"
 source = "wings"
 start = 1.0
 length = 0.5
+pitch = 0.4594
 fade = 0.12
 gain = -3.0
 
@@ -81,6 +82,7 @@ name = "flap2"
 source = "wings"
 start = 2.42
 length = 0.7
+pitch = 0.4594
 fade = 0.12
 gain = -3.0
 
@@ -89,6 +91,7 @@ name = "flap3"
 source = "wings"
 start = 3.7
 length = 0.5
+pitch = 0.4594
 fade = 0.12
 gain = -3.0
 
@@ -97,6 +100,7 @@ name = "takeoff"
 source = "takeoff"
 start = 0.0
 length = 0.93
+pitch = 0.9187
 fade = 0.3
 
 [[clip]]

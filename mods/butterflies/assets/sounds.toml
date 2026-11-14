@@ -15,7 +15,7 @@ name = "flutter1"
 source = "butterfly"
 start = 12.75
 length = 0.45
-pitch = 1.1
+pitch = 1.0106
 fade = 0.12
 gain = -8.0
 
@@ -24,7 +24,7 @@ name = "flutter2"
 source = "butterfly"
 start = 11.26
 length = 0.3
-pitch = 1.1
+pitch = 1.0106
 fade = 0.1
 gain = -8.0
 
@@ -33,7 +33,7 @@ name = "flutter3"
 source = "butterfly"
 start = 13.77
 length = 0.3
-pitch = 1.1
+pitch = 1.0106
 fade = 0.1
 gain = -8.0
 

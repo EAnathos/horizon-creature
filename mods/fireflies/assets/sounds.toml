@@ -12,7 +12,7 @@ name = "buzz1"
 source = "dragonfly"
 start = 0.4
 length = 0.5
-pitch = 1.5
+pitch = 1.3781
 fade = 0.15
 gain = -12.0
 
@@ -21,7 +21,7 @@ name = "buzz2"
 source = "dragonfly"
 start = 1.9
 length = 0.5
-pitch = 1.5
+pitch = 1.3781
 fade = 0.15
 gain = -12.0
 

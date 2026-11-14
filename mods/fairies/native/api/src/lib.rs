@@ -27,6 +27,17 @@ use horizon_client::mod_api::{
 pub const FAIRY: &str = "fairies:fairy";
 const TEXTURE: &str = "fairies:entity/fairy/fairy";
 const DUST: &str = "fairies:fairy_dust";
+
+/// Its own sounds (SPECS §1, `assets/sounds.toml`): wings at take-off, a chime or a tiny laugh now and then (one chance
+/// in `AMBIENT_CHANCE` a tick), hurt and death, the sparkle of a new friendship (and of a gift).
+const FLUTTER: &str = "fairies:entity.fairy.flutter";
+const AMBIENT: &str = "fairies:entity.fairy.ambient";
+const BEFRIEND: &str = "fairies:entity.fairy.befriend";
+const VOICE: creature::sounds::Voice = creature::sounds::Voice {
+    hurt: "fairies:entity.fairy.hurt",
+    death: "fairies:entity.fairy.death",
+};
+const AMBIENT_CHANCE: u64 = 500;
 /// Its box (blocks: width, height, eye height); its model is about three quarters of a block tall.
 const SIZE: (f64, f64, f64) = (0.4, 0.8, 0.6);
 
@@ -40,7 +51,7 @@ static FLIGHT: creature::flutter::Kind = creature::flutter::Kind {
     wander: 5.0,
     drawn_to_light: false,
     lands_on_flowers: true,
-    takeoff: None,
+    takeoff: Some(FLUTTER),
 };
 
 /// Caught in the library's glass jar, by a sneaking player or its friend; settling on a flower; a fairy lamp on display
@@ -180,16 +191,6 @@ fn sparkles(host: &mut dyn Host, at: [f64; 3], count: i32) {
     host.send_particles(&options, None, at, [0.25, 0.3, 0.25], 0.02, count);
 }
 
-fn chime(host: &mut dyn Host, at: [f64; 3], pitch: f32) {
-    host.play_sound(
-        "minecraft:block.amethyst_block.chime",
-        at,
-        creature::sounds::NEUTRAL,
-        1.0,
-        pitch,
-    );
-}
-
 /// A wild fairy fed a berry from a player's hand (SPECS §3): one is used up (not in creative), and one time in 3 (6 for
 /// a sweet berry) it befriends them: hearts, a chime, a line on their action bar; otherwise a puff of smoke.
 fn fed(host: &mut dyn Host, fairy: u32, stack: &horizon_client::items::ItemStack, player: u128) {
@@ -209,7 +210,7 @@ fn fed(host: &mut dyn Host, fairy: u32, stack: &horizon_client::items::ItemStack
     creature::friend::befriend(host, fairy, player);
     let hearts = ParticleOptions::simple(ParticleType::Heart);
     host.send_particles(&hearts, None, eye, [0.3, 0.3, 0.3], 0.02, 6);
-    chime(host, at, 1.4);
+    host.play_sound(BEFRIEND, at, creature::sounds::NEUTRAL, 1.0, 1.0);
     host.action_bar(player, Text::translate("fairies.befriended", &[]));
     creature::bestiary::learn(host, player, FAIRY, FRIEND_FACT);
 }
@@ -258,7 +259,7 @@ fn befriended(host: &mut dyn Host, dimension: &str, fairy: u32, at: [f64; 3], fr
     let nbt: Compound = [("Item".into(), Tag::Compound(item))].into();
     host.summon(dimension, "minecraft:item", player.position, nbt);
     sparkles(host, player.position, 8);
-    chime(host, at, 1.8);
+    host.play_sound(BEFRIEND, at, creature::sounds::NEUTRAL, 0.6, 1.3);
 }
 
 impl Hooks for Fairies {
@@ -323,9 +324,16 @@ impl Hooks for Fairies {
         let fairy = event.entity;
         creature::friend::tick(host, fairy);
         creature::flutter::tick_post(host, event.dimension, fairy);
+        creature::sounds::tick_post(host, event, &VOICE, creature::sounds::NEUTRAL);
         let Some(at) = host.entity(fairy).and_then(|e| host.entity_position(e)) else {
             return;
         };
+        if creature::colours::Random::new(fairy)
+            .next()
+            .is_multiple_of(AMBIENT_CHANCE)
+        {
+            host.play_sound(AMBIENT, at, creature::sounds::NEUTRAL, 0.7, 1.0);
+        }
         let ticks = {
             let mut all = TICKS.lock().unwrap();
             let t = all.entry(fairy).or_default();

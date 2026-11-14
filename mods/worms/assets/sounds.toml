@@ -15,7 +15,7 @@ name = "dig1"
 source = "shovel"
 start = 0.2
 length = 0.5
-pitch = 1.2
+pitch = 1.1025
 fade = 0.15
 gain = -10.0
 
@@ -24,7 +24,7 @@ name = "dig2"
 source = "digging"
 start = 1.0
 length = 0.6
-pitch = 1.2
+pitch = 1.1025
 fade = 0.15
 gain = -10.0
 
@@ -52,7 +52,7 @@ name = "death"
 source = "slime"
 start = 0.0
 length = 0.8
-pitch = 1.4
+pitch = 1.2862
 fade = 0.3
 gain = -4.0
 

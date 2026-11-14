@@ -89,6 +89,9 @@ fn make(out: &Path, path: &Path, clip: &Clip) -> crate::Result {
             .unwrap_or_default()
     )];
     filters.push("asetpts=PTS-STARTPTS".into());
+    // To 44.1 kHz first: `asetrate` reads the rate it is given as the stream's own, so a 48 kHz source would come out
+    // slower and lower than `pitch` says.
+    filters.push("aresample=44100".into());
     filters.push(format!("asetrate=44100*{},aresample=44100", clip.pitch));
     filters.push("highpass=f=60".into());
     filters.push("loudnorm=I=-16:TP=-1.5".into());
