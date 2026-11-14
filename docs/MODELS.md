@@ -184,6 +184,20 @@ The `.bbmodel` files are the sources: edit them in Blockbench (their texture is 
 
 ![magma_golem, front](models/magma_golem-magma_golem-front.png) ![magma_golem, back](models/magma_golem-magma_golem-back.png)
 
+## phasmids
+
+### leaf_insect
+
+`mods/phasmids/assets/models/leaf_insect.bbmodel`: 21 cubes, texture 64×64.
+
+![leaf_insect, front](models/phasmids-leaf_insect-front.png) ![leaf_insect, back](models/phasmids-leaf_insect-back.png)
+
+### stick_insect
+
+`mods/phasmids/assets/models/stick_insect.bbmodel`: 24 cubes, texture 64×64.
+
+![stick_insect, front](models/phasmids-stick_insect-front.png) ![stick_insect, back](models/phasmids-stick_insect-back.png)
+
 ## seagulls
 
 ### seagull
