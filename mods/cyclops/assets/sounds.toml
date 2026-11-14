@@ -7,7 +7,6 @@ out = "sounds/cyclops"
 monster = 797697  # randbsoundbites, Monster (already pitched low)
 snarl = 466830    # Breviceps, Dragon: snarl, roar + attack
 roars = 479380    # Breviceps, Dragon: several roars, growls and snarls
-step = 721601     # DasWaff, Giant step
 stomps = 622737   # RobHorror240, GiantStompFootsteps
 whoosh = 257015   # yutface, Swing Whoosh
 wood = 269717     # michorvath, Wood Impact
@@ -80,31 +79,13 @@ length = 1.2
 pitch = 0.9
 fade = 0.4
 
-# Heavy steps.
+# A heavy step (the recording loops the same two stomps: one is enough).
 [[clip]]
-name = "step1"
-source = "step"
-start = 0.0
-length = 0.8
-pitch = 0.9
-fade = 0.2
-gain = -4.0
-
-[[clip]]
-name = "step2"
+name = "step"
 source = "stomps"
 start = 2.48
 length = 0.7
 pitch = 0.9
-fade = 0.2
-gain = -4.0
-
-[[clip]]
-name = "step3"
-source = "stomps"
-start = 5.27
-length = 0.7
-pitch = 0.85
 fade = 0.2
 gain = -4.0
 

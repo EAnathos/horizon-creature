@@ -35,9 +35,7 @@
   "entity.cyclops.step": {
     "subtitle": "subtitles.entity.cyclops.step",
     "sounds": [
-      "cyclops:cyclops/step1",
-      "cyclops:cyclops/step2",
-      "cyclops:cyclops/step3"
+      "cyclops:cyclops/step"
     ]
   },
   "entity.cyclops.swing": {

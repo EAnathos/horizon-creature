@@ -8,11 +8,12 @@ mouths of caves with his flock. **Requires** Horizon Creature, the series' libra
 ## Meeting one
 
 Rarely, at a cave mouth in the mountains, the meadows, the windswept hills or on a rocky shore, a cyclops watches over
-three to five sheep that follow him everywhere. In creative: the spawn egg (creative tab "Horizon Creature").
+three to five sheep that follow him everywhere. Never on Peaceful. In creative: the spawn egg (creative tab "Horizon Creature").
 
 He is hostile. Come near, hurt him or one of his sheep, and he walks up and brings his club down on you (it hurts, and
-throws you back). Keep your distance and he lifts a boulder over his head and hurls it at you. Wherever the club or the
-boulder lands, the blocks around it break (chests and other containers are spared). His eye is his weak spot: an arrow
+throws you back). Keep your distance, or climb out of his club's reach, and he lifts a boulder over his head and hurls
+it at you. Wherever the club or the boulder lands, the blocks around it break (chests and other containers are spared;
+nothing breaks with the `mobGriefing` game rule off). His eye is his weak spot: an arrow
 or a trident in it hurts twice as much and leaves him dazed for a moment.
 
 ## What he leaves

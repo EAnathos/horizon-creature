@@ -1,10 +1,10 @@
 //! What its blows break (SPECS §2): the club and the boulder tear up the blocks around where they land, without
-//! drops. Left alone: blocks that Horizon's players can't break either (bedrock, obsidian, portals, command blocks...),
+//! drops, unless the `mob_griefing` game rule is off. Left alone: blocks that Horizon's players can't break either (bedrock, obsidian, portals, command blocks...),
 //! liquids, containers (their contents would be lost with no drops) and the library's placed jars (their creature).
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Mutex;
 
-use horizon_client::mod_api::{Host, ParticleOptions, ParticleType};
+use horizon_client::mod_api::{GameRuleValue, Host, ParticleOptions, ParticleType};
 
 /// How far from the club's blow it breaks (blocks, a ball) and from the boulder's burst.
 pub const CLUB_RADIUS: i32 = 1;
@@ -78,6 +78,10 @@ fn breakable(name: &str) -> bool {
 
 /// Breaks the blocks within `radius` of `at`, with a puff of dust where each one was.
 pub fn tear(host: &mut dyn Host, dimension: &str, at: [f64; 3], radius: i32) {
+    let griefing = host.level(dimension).and_then(|l| l.game_rule(host, "mob_griefing"));
+    if griefing == Some(GameRuleValue::Bool(false)) {
+        return;
+    }
     let centre = [at[0].floor() as i32, at[1].floor() as i32, at[2].floor() as i32];
     let mut blocks = Vec::new();
     for dx in -radius..=radius {

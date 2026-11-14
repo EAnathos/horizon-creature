@@ -95,8 +95,8 @@ file: mod keys on the Controls screen ([arismoko#1025](https://github.com/arismo
 projectile's real id in the damage hooks ([arismoko#912](https://github.com/arismoko/horizon/issues/912), done; ours
 reads 0 and falls back to the nearest arrow, `mods/cyclops/native/api/src/eye.rs`), removing an item from a creative
 tab ([arismoko#3275](https://github.com/arismoko/horizon/issues/3275), open; ours injects into `creative_tabs`,
-`common/native/jar_tab.rs`), reading a game rule (`LevelRef::game_rule` in Horizon's docs, not at our pin; until we
-move it, the cyclops's blows break blocks even with `mobGriefing` off, `mods/cyclops/native/api/src/smash.rs`).
+`common/native/jar_tab.rs`), reading a game rule or the difficulty (`LevelRef::game_rule`, `difficulty`: at our pin,
+used by the cyclops).
 
 - **`Host::take_items` takes nothing from a non-plain stack** (an item from the creative tab may carry component data).
   Not filed: the fork's new API no longer has `take_items` (checked 2026-11-10 on `51d735c`); see how its inventory

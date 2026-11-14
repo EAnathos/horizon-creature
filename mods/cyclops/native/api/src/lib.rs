@@ -102,9 +102,11 @@ const STEP_CHANCE: u64 = 14;
 const AMBIENT_CHANCE: u64 = 500;
 
 /// The club's blow (SPECS §2): it walks up to its target, raises the club over its head for `WINDUP` ticks, then
-/// brings it down; hit if the target is still within `REACH`. One blow every `EVERY` ticks. It lets go of a target
-/// out of `GIVE_UP` blocks, dead, or a creative player.
+/// brings it down; hit if the target is still within `REACH`, its feet less than `CLUB_HEIGHT` blocks above the
+/// cyclops's (and not more than `REACH` below). One blow every `EVERY` ticks. It lets go of a target out of `GIVE_UP`
+/// blocks, dead, or a creative player.
 const REACH: f64 = 4.0;
+const CLUB_HEIGHT: f64 = 6.0;
 const WINDUP: i32 = 14;
 const EVERY: i32 = 40;
 const CHASE_SPEED: f64 = 1.1;
@@ -173,12 +175,14 @@ impl Goal for Smash {
         let at = [t.position.x, t.eye_y, t.position.z];
         m.ai.look.set_look_at(at, 30.0, 30.0);
         let reach = (t.position.x - m.position.x).hypot(t.position.z - m.position.z);
+        let rise = t.position.y - m.position.y;
+        let club_height = (-REACH..CLUB_HEIGHT).contains(&rise);
         self.cooldown -= 1;
         if self.windup > 0 {
             // The club up: it stands, then strikes.
             self.windup -= 1;
             if self.windup == 0 {
-                if reach < REACH + 0.5 {
+                if reach < REACH + 0.5 && club_height {
                     m.swing();
                     horizon_client::mobs::ai::do_hurt_target(m, who, cx);
                 }
@@ -215,14 +219,16 @@ impl Goal for Smash {
             return;
         }
         self.throw_cooldown -= 1;
-        if (THROW_FROM..THROW_TO).contains(&reach) && self.throw_cooldown <= 0 && m.sees(cx.w, who) {
+        // A target out of the club's height (up a pillar, a cliff) gets a boulder at any distance.
+        let throwable = (THROW_FROM..THROW_TO).contains(&reach) || (!club_height && reach < THROW_TO);
+        if throwable && self.throw_cooldown <= 0 && m.sees(cx.w, who) {
             self.throwing = THROW_WINDUP;
             m.ai.nav.stop();
             LIFTED.lock().unwrap().insert(m.id, Instant::now());
             creature::sounds::queue(m.id, ROAR, 1.5, 1.0);
             return;
         }
-        if reach < REACH && self.cooldown <= 0 {
+        if reach < REACH && club_height && self.cooldown <= 0 {
             self.windup = WINDUP;
             m.ai.nav.stop();
             RAISED.lock().unwrap().insert(m.id, Instant::now());
@@ -355,6 +361,9 @@ const FLOCK_SIZE: (u64, u64) = (3, 5);
 static SPAWN_TICKS: Mutex<u32> = Mutex::new(0);
 
 fn spawn(host: &mut dyn Host, dimension: &str) {
+    if peaceful(host, dimension) {
+        return;
+    }
     {
         let mut t = SPAWN_TICKS.lock().unwrap();
         *t += 1;
@@ -399,6 +408,11 @@ fn spawn(host: &mut dyn Host, dimension: &str) {
             break;
         }
     }
+}
+
+/// Whether the world is on Peaceful: no cyclops appears, and those there go, as vanilla's monsters.
+fn peaceful(host: &dyn Host, dimension: &str) -> bool {
+    host.level(dimension).and_then(|l| l.difficulty(host)) == Some("peaceful")
 }
 
 const AIR: [&str; 2] = ["minecraft:air", "minecraft:cave_air"];
@@ -492,7 +506,9 @@ fn voice(entity: u32, at: [f64; 3], random: &mut creature::colours::Random) {
         .insert(entity, at)
         .is_some_and(|last| (at[0] - last[0]).hypot(at[2] - last[2]) > 0.04);
     if moved && random.next().is_multiple_of(STEP_CHANCE) {
-        creature::sounds::queue(entity, STEP, 1.0, 1.0);
+        // One recorded stomp, a little higher or lower each time.
+        let pitch = 0.9 + (random.next() % 100) as f32 / 100.0 * 0.2;
+        creature::sounds::queue(entity, STEP, 1.0, pitch);
     }
     if random.next().is_multiple_of(AMBIENT_CHANCE) {
         creature::sounds::queue(entity, AMBIENT, 1.2, 1.0);
@@ -661,6 +677,10 @@ impl Hooks for Cyclops {
     }
 
     fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
+        if (event.kind == CYCLOPS || event.kind == boulder::BOULDER) && peaceful(host, event.dimension) {
+            host.remove_mob(event.dimension, event.entity);
+            return;
+        }
         if event.kind == boulder::BOULDER {
             boulder::tick(host, event.dimension, event.entity);
             return;
