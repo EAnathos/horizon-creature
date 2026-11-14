@@ -154,7 +154,22 @@ static SPAWNING: creature::flutter::Spawning = creature::flutter::Spawning {
     chance: 12,
 };
 
+/// Its item in the guide's Items tab (common/SPECS.md §7.2).
+static DUST_PAGE: creature::items::ItemPage = creature::items::ItemPage {
+    item: "fairies:fairy_dust",
+    dropped_by: &[],
+    given_by: &[creature::items::Use {
+        icon: "fairies:fairy_spawn_egg",
+        key: "bestiary.fairies.item.fairy_dust.given",
+    }],
+    uses: &[creature::items::Use {
+        icon: "minecraft:potion",
+        key: "bestiary.fairies.item.fairy_dust.brew",
+    }],
+};
+
 pub fn hooks() -> Box<dyn Hooks> {
+    creature::bestiary::register_item(&DUST_PAGE);
     creature::flutter::spawns(&SPAWNING);
     creature::jar::register(&IN_JAR);
     creature::bestiary::register(&BESTIARY);

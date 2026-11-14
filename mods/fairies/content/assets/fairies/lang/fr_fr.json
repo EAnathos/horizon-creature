@@ -11,5 +11,7 @@
   "subtitles.entity.fairy.ambient": "Une fée tinte",
   "subtitles.entity.fairy.hurt": "Une fée est blessée",
   "subtitles.entity.fairy.death": "Une fée disparaît",
-  "subtitles.entity.fairy.befriend": "Une fée scintille"
+  "subtitles.entity.fairy.befriend": "Une fée scintille",
+  "bestiary.fairies.item.fairy_dust.given": "Une fée amie en laisse une pincée une fois par jour",
+  "bestiary.fairies.item.fairy_dust.brew": "Infusée dans une potion étrange : Rapidité"
 }

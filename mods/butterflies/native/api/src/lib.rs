@@ -318,7 +318,29 @@ static SPAWNING: [creature::flutter::Spawning; 2] = [
     },
 ];
 
+/// Its items in the guide's Items tab (common/SPECS.md §7.2).
+static DUST_PAGE: creature::items::ItemPage = creature::items::ItemPage {
+    item: "butterflies:butterfly_dust",
+    dropped_by: &["butterflies:butterfly", "butterflies:moth"],
+    given_by: &[],
+    uses: &[creature::items::Use {
+        icon: "butterflies:butterfly_dust",
+        key: "bestiary.butterflies.item.dust.throw",
+    }],
+};
+static CONFETTI_PAGE: creature::items::ItemPage = creature::items::ItemPage {
+    item: "butterflies:confetti",
+    dropped_by: &[],
+    given_by: &[],
+    uses: &[creature::items::Use {
+        icon: "butterflies:confetti",
+        key: "bestiary.butterflies.item.confetti.pop",
+    }],
+};
+
 pub fn hooks() -> Box<dyn Hooks> {
+    creature::bestiary::register_item(&DUST_PAGE);
+    creature::bestiary::register_item(&CONFETTI_PAGE);
     for s in &SPAWNING {
         creature::flutter::spawns(s);
     }

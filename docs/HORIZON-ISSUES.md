@@ -117,7 +117,11 @@ used by the cyclops).
   seats are in a release ([arismoko/horizon#2539](https://github.com/arismoko/horizon/pull/2539), several
   `passenger_attachments`), try mounting the caught mob with `Host::mount` on a seat below the vulture.
 - **A vanilla mob's model in a screen's scene** (`Host::draw_scene` draws blocks and mod block entities only): the
-  Vanilla Bestiary's pages show a spawn egg in place of the creature until it can (mods/vanilla_bestiary/SPECS.md §1).
+  Vanilla Bestiary's pages show a spawn egg, turning, in place of the creature until it can
+  (mods/vanilla_bestiary/SPECS.md §1, `creature::bestiary::draw_icon`).
+- **How a mob joined the level**: `entity_join_level` doesn't say (spawn egg, `/summon`, breeding, natural), and
+  `mob_spawned`'s `natural` has no entity id. The Vanilla Bestiary marks a creature hatched from a spawn egg by the egg
+  used just before it joins; one made by `/summon` still counts as wild. Not filed.
   Check the fork first (vanilla's `InventoryScreen.renderEntityInInventory` does it for the player).
 - **Suspected, unconfirmed:** an entity's attachment not readable on its first tick after loading (our "untamed one
   load in four"; we now read again next tick). Needs a repro before filing.

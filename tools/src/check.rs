@@ -29,6 +29,10 @@ pub fn run() -> crate::Result {
     if std::fs::read_to_string(&tab).ok().as_deref() != Some(&text) {
         errors.push(format!("{}: out of date, run `cargo creature tab`", rel(&tab)));
     }
+    let (table, text, _) = crate::recipes::render()?;
+    if std::fs::read_to_string(&table).ok().as_deref() != Some(&text) {
+        errors.push(format!("{}: out of date, run `cargo creature tab`", rel(&table)));
+    }
 
     let library = modules::library()?;
     let mods = modules::mods()?;

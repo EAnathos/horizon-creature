@@ -41,7 +41,8 @@ Rules shared by every module of the Horizon Creature series ([ARCHITECTURE.md](A
 - A mixin injection's helper file holds exactly one private function, named `<mod>_<injection id>` (helpers it
   needs go inside it); the launcher leaves the whole mod out otherwise, which `cargo creature install` reports.
 - Generated files say so in their first line and are never edited by hand: `model.rs` (from `.bbmodel`), the shared
-  creative tab.
+  creative tab, the library's `recipes.rs` (from the modules' recipes), the Vanilla Bestiary's `game_data.rs` (from
+  Minecraft's jar).
 - Before adding a system to a mod, check the library; before writing one that a second mod will need, put it in the
   library (ARCHITECTURE.md §3).
 

@@ -1,0 +1,8 @@
+id = "vanilla_bestiary"
+name = "Vanilla Bestiary"
+version = "0.1.0"
+description = "Minecraft's own creatures in the creature guide's bestiary. Needs Horizon Creature."
+authors = ["EAnathos"]
+api = "0.2"
+side = "both"
+capabilities = ["registries"]

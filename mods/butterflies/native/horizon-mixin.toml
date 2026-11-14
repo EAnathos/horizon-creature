@@ -13,4 +13,4 @@ path = "api"
 
 # The series' library, reached as the `creature` crate (common/SPECS.md).
 [dependencies]
-creature = "^0.1"
+creature = "^0.1.1"

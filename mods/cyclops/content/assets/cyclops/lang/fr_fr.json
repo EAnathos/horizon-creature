@@ -15,5 +15,7 @@
   "subtitles.entity.cyclops.swing": "Un gourdin fend l'air",
   "subtitles.entity.cyclops.hit": "Un gourdin frappe",
   "subtitles.entity.cyclops.throw": "Un rocher est lancé",
-  "subtitles.entity.boulder.shatter": "Un rocher éclate"
+  "subtitles.entity.boulder.shatter": "Un rocher éclate",
+  "bestiary.cyclops.item.club.use": "Une arme lourde : 8 dégâts, lente, un fort recul",
+  "bestiary.cyclops.item.shepherds_crook.use": "En main : les animaux de ferme à moins de 12 blocs vous suivent"
 }

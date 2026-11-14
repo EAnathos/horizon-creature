@@ -11,5 +11,7 @@
   "subtitles.entity.fairy.ambient": "Fairy chimes",
   "subtitles.entity.fairy.hurt": "Fairy hurts",
   "subtitles.entity.fairy.death": "Fairy vanishes",
-  "subtitles.entity.fairy.befriend": "Fairy sparkles"
+  "subtitles.entity.fairy.befriend": "Fairy sparkles",
+  "bestiary.fairies.item.fairy_dust.given": "A befriended fairy leaves a pinch once a day",
+  "bestiary.fairies.item.fairy_dust.brew": "Brewed into an awkward potion: Swiftness"
 }

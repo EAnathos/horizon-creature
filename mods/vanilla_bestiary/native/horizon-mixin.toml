@@ -1,0 +1,17 @@
+# Vanilla Bestiary: the native part (a trait mod, Horizon's docs/native-mods.md, "Trait mods").
+# Built and installed by `cargo creature install vanilla_bestiary`.
+[mod]
+id = "vanilla_bestiary"
+version = "0.1.0"
+
+# The whole series is pinned to the same revision (docs/CONVENTIONS.md).
+[compatibility]
+horizon_revision = "fdc87aecdbd116bf1e08adcd062fcbaea8c2e2ca"
+
+[api]
+path = "api"
+
+# The series' library, reached as the `creature` crate (common/SPECS.md): its bestiary's `draw_icon`, `players_near`
+# and `@` biomes came with 0.1.1.
+[dependencies]
+creature = "^0.1.1"

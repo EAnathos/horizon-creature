@@ -2,7 +2,7 @@
 //!
 //! ```sh
 //! cargo creature list                         # the library and the mods, with their status
-//! cargo creature tab                          # writes the series' single creative tab (library)
+//! cargo creature tab                          # writes the series' single creative tab and recipe table (library)
 //! cargo creature model <mod> [model]          # mods/<mod>/assets/models/<model>.bbmodel -> the mod's native/api/src/
 //! cargo creature preview                     # every mod's .bbmodel -> pictures in docs/models/ and docs/MODELS.md
 //! cargo creature sounds <mod> [folder]        # freesound downloads (default sounds-src/) -> the mod's sounds (vulture)
@@ -10,6 +10,7 @@
 //! cargo creature build [mod...]               # builds the library and the mods (default: all) into target/dist/
 //! cargo creature check                        # the repository's consistency (tab, manifests, pins, lang, JSON, docs)
 //! cargo creature native-check <horizon-src>   # compiles the native crates (clippy) against a Horizon source
+//! cargo creature vanilla [jar]               # Minecraft's own data -> the Vanilla Bestiary's game_data.rs
 //! cargo creature install [--instance <name>] [mod...]
 //!                                             # builds the library and the mods (default: all), installs them in the
 //!                                             # instance (default creature-dev), runs its native build
@@ -25,8 +26,10 @@ mod modules;
 mod native_check;
 mod pack;
 mod preview;
+mod recipes;
 mod sounds;
 mod tab;
+mod vanilla;
 
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -42,7 +45,7 @@ pub fn root() -> PathBuf {
 pub type Result<T = ()> = std::result::Result<T, String>;
 
 const USAGE: &str = "usage: cargo creature list | tab | model <mod> [model] | preview | sounds <mod> [folder] | pack <module> \
-                     | build [mod...] | check | native-check <horizon-source> \
+                     | build [mod...] | check | native-check <horizon-source> | vanilla [jar] \
                      | install [--instance <name>] [mod...]";
 
 fn list() -> Result {
@@ -96,6 +99,7 @@ fn main() -> ExitCode {
         Some("build") => build::run(&args[1..]),
         Some("check") => check::run(),
         Some("native-check") => arg(1).ok_or(USAGE.into()).and_then(native_check::run),
+        Some("vanilla") => vanilla::run(arg(1)),
         Some("install") => install(&args[1..]),
         _ => Err(USAGE.into()),
     };

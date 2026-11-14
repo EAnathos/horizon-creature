@@ -522,8 +522,37 @@ fn voice(entity: u32, at: [f64; 3], random: &mut creature::colours::Random) {
     }
 }
 
+/// Its items in the guide's Items tab (common/SPECS.md §7.2).
+static EYE_PAGE: creature::items::ItemPage = creature::items::ItemPage {
+    item: "cyclops:cyclops_eye",
+    dropped_by: &["cyclops:cyclops"],
+    given_by: &[],
+    uses: &[],
+};
+static CLUB_PAGE: creature::items::ItemPage = creature::items::ItemPage {
+    item: "cyclops:club",
+    dropped_by: &["cyclops:cyclops"],
+    given_by: &[],
+    uses: &[creature::items::Use {
+        icon: "cyclops:club",
+        key: "bestiary.cyclops.item.club.use",
+    }],
+};
+static CROOK_PAGE: creature::items::ItemPage = creature::items::ItemPage {
+    item: "cyclops:shepherds_crook",
+    dropped_by: &[],
+    given_by: &[],
+    uses: &[creature::items::Use {
+        icon: "minecraft:sheep_spawn_egg",
+        key: "bestiary.cyclops.item.shepherds_crook.use",
+    }],
+};
+
 pub fn hooks() -> Box<dyn Hooks> {
     creature::bestiary::register(&BESTIARY);
+    creature::bestiary::register_item(&EYE_PAGE);
+    creature::bestiary::register_item(&CLUB_PAGE);
+    creature::bestiary::register_item(&CROOK_PAGE);
     Box::new(Cyclops)
 }
 

@@ -14,7 +14,8 @@ pub fn run() -> crate::Result {
     let (out, text, count) = render()?;
     std::fs::write(&out, text).map_err(|e| format!("{}: {e}", out.display()))?;
     println!("{}: {count} items", out.display());
-    Ok(())
+    // The creature guide's Items tab draws the series' recipes, from every module too.
+    crate::recipes::run()
 }
 
 /// The tab file's path, its content and its number of items, without writing it.

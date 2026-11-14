@@ -51,10 +51,11 @@ for.
 | Command | What it does |
 |---|---|
 | `cargo creature list` | The library and the mods, with their status |
-| `cargo creature tab` | Writes the series' creative tab from the modules' `module.toml` |
+| `cargo creature tab` | Writes the series' creative tab from the modules' `module.toml`, and the library's recipe table (`recipes.rs`, for the guide's Items tab) from their recipe files |
 | `cargo creature model <mod> [model]` | Converts a Blockbench model into Rust (`native/api/src/model.rs`, or `model_<model>.rs`) |
 | `cargo creature preview` | Redraws every model's pictures for `docs/MODELS.md` |
 | `cargo creature sounds <mod> [folder]` | Cuts a mod's `.ogg` files from freesound downloads (default `sounds-src/`, any sample rate), as its `assets/sounds.toml` says |
+| `cargo creature vanilla [jar]` | Writes the Vanilla Bestiary's `game_data.rs` from Minecraft's jar (default: the launcher's 26.3): natural spawns, drops, breeding foods |
 | `cargo creature pack <module>` | Packages a module's native half into `target/<id>.hnmod` |
 | `cargo creature build [mod...]` | Builds the library and the mods into `target/dist/`, without installing |
 | `cargo creature check` | The repository's consistency: tab, manifests, pins, translations, JSON, generated files, sounds (events, files, subtitles), recipe book advancements, docs |

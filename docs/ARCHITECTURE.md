@@ -25,7 +25,7 @@ on it.
 | Flying Fish | `mods/flying_fish/` | `flying_fish` | planned | [mods/flying_fish/SPECS.md](../mods/flying_fish/SPECS.md) |
 | Phasmids | `mods/phasmids/` | `phasmids` | planned | [mods/phasmids/SPECS.md](../mods/phasmids/SPECS.md) |
 | Scorpions | `mods/scorpions/` | `scorpions` | planned | [mods/scorpions/SPECS.md](../mods/scorpions/SPECS.md) |
-| Vanilla Bestiary | `mods/vanilla_bestiary/` | `vanilla_bestiary` | planned | [mods/vanilla_bestiary/SPECS.md](../mods/vanilla_bestiary/SPECS.md) |
+| Vanilla Bestiary | `mods/vanilla_bestiary/` | `vanilla_bestiary` | in development | [mods/vanilla_bestiary/SPECS.md](../mods/vanilla_bestiary/SPECS.md) |
 
 `cargo creature list` prints the same table from the modules' `module.toml`.
 
@@ -135,8 +135,9 @@ tools/                  the Rust build tools (`cargo creature ...`), shared by e
 | Command | What it does |
 |---|---|
 | `cargo creature list` | The modules, their status and which halves they have |
-| `cargo creature tab` | Writes the shared creative tab |
+| `cargo creature tab` | Writes the shared creative tab, and the library's table of every module's recipes (`common/native/api/src/recipes.rs`, the guide's Items tab) |
 | `cargo creature model <mod> [model]` | `mods/<mod>/assets/models/<model>.bbmodel` → `native/api/src/model.rs` (`model_<model>.rs` for a model not named after the mod) |
+| `cargo creature vanilla [jar]` | Minecraft's own data (natural spawns, loot tables, food tags) from the game's jar (default: the launcher's) → the Vanilla Bestiary's `native/api/src/game_data.rs` |
 | `cargo creature sounds <mod> [folder]` | Makes the mod's `.ogg` files from freesound downloads (the vulture's only, for now) |
 | `cargo creature pack <module>` | A module's `native/` → `target/<id>.hnmod` |
 | `cargo creature build [mod...]` | Writes the tab and builds the library and the mods (default: all) into `target/dist/` (`.hmod`, checked `.hnmod`), without installing |

@@ -15,15 +15,18 @@
 //! - `friend`: a creature befriended by a player, following them or staying (SPECS §6.2).
 //! - `guide`: the creature guide book, given at a player's first login (SPECS §7).
 //! - `bestiary`: the book's pages, what each player met and found out (SPECS §7).
+//! - `items`: the book's Items tab, a page per item of the series, with the recipes of `recipes.rs` (SPECS §7.2).
 pub mod bestiary;
 pub mod colours;
 pub mod flutter;
 pub mod friend;
 mod guide;
 pub mod hand;
+pub mod items;
 pub mod jar;
 pub mod mob;
 pub mod model;
+mod recipes;
 pub mod sounds;
 pub mod territory;
 
@@ -31,15 +34,50 @@ use horizon_client::first_person::Hand;
 use horizon_client::mod_api::BlockPos;
 use horizon_client::mod_api::{
     BlockEntityEvent, BlockEntitySubmitEvent, BlockEntityUpdateTagEvent, Compound, DestroyBlockEvent,
-    EntityTickPostEvent, ExplosionDetonateEvent, Flow, Hooks, Host, InteractEntityEvent, InteractionKeyEvent,
-    LevelHost, LevelTickPostEvent, LivingChangeTargetEvent, LivingDeathEvent, NetFromServerEvent, PistonMoveEvent,
-    PlayerLoggedInEvent, ScreenMouseButtonPressedPreEvent, ScreenMouseScrolledPreEvent, ScreenRenderPostEvent,
-    UseItemEvent, UseItemOnEvent,
+    EntityLeaveLevelEvent, EntityTickPostEvent, ExplosionDetonateEvent, Flow, Hooks, Host, InteractEntityEvent,
+    InteractionKeyEvent, LevelHost, LevelTickPostEvent, LivingChangeTargetEvent, LivingDeathEvent, NetFromServerEvent,
+    PerformCommandEvent, PistonMoveEvent, PlayerLoggedInEvent, RegisterCommandsEvent, ScreenMouseButtonPressedPreEvent,
+    ScreenMouseScrolledPreEvent, ScreenRenderPostEvent, TabCompleteV2Event, UseItemEvent, UseItemOnEvent,
+};
+
+/// The library's items in the guide's Items tab (SPECS §7.2).
+static GUIDE_PAGE: items::ItemPage = items::ItemPage {
+    item: guide::ITEM,
+    dropped_by: &[],
+    given_by: &[items::Use {
+        icon: "minecraft:compass",
+        key: "bestiary.creature.item.guide.given",
+    }],
+    uses: &[items::Use {
+        icon: guide::ITEM,
+        key: "bestiary.creature.item.guide.use",
+    }],
+};
+static JAR_PAGE: items::ItemPage = items::ItemPage {
+    item: jar::ITEM,
+    dropped_by: &[],
+    given_by: &[],
+    uses: &[
+        items::Use {
+            icon: jar::ITEM,
+            key: "bestiary.creature.item.glass_jar.catch",
+        },
+        items::Use {
+            icon: "minecraft:poppy",
+            key: "bestiary.creature.item.glass_jar.release",
+        },
+        items::Use {
+            icon: "minecraft:oak_planks",
+            key: "bestiary.creature.item.glass_jar.place",
+        },
+    ],
 };
 
 pub fn hooks() -> Box<dyn Hooks> {
     hand::server_used(jar::ITEM);
     hand::server_used(guide::ITEM);
+    bestiary::register_item(&GUIDE_PAGE);
+    bestiary::register_item(&JAR_PAGE);
     Box::new(Creature)
 }
 
@@ -105,6 +143,10 @@ impl Hooks for Creature {
         bestiary::tick(host, event.dimension, event.entity, event.kind);
     }
 
+    fn entity_leave_level(&self, _: &mut dyn Host, event: &mut EntityLeaveLevelEvent<'_>) {
+        bestiary::forget(event.entity);
+    }
+
     /// Small fliers come out near players.
     fn level_tick_post(&self, host: &mut dyn Host, event: &mut LevelTickPostEvent<'_>) {
         flutter::spawn(host, event.dimension);
@@ -145,6 +187,23 @@ impl Hooks for Creature {
             return Flow::Cancel;
         }
         Flow::Continue
+    }
+
+    /// The operators' `/bestiary`, to check its pages.
+    fn register_commands(&self, _: &mut dyn Host, event: &mut RegisterCommandsEvent<'_>) {
+        bestiary::commands(event.commands);
+    }
+
+    fn perform_command(&self, host: &mut dyn Host, event: &mut PerformCommandEvent<'_>) -> Flow {
+        if bestiary::perform(host, event) {
+            Flow::Cancel
+        } else {
+            Flow::Continue
+        }
+    }
+
+    fn tab_complete_v2(&self, _: &mut dyn Host, event: &mut TabCompleteV2Event<'_>) {
+        bestiary::complete(event);
     }
 
     fn net_from_server(&self, host: &mut dyn Host, event: &mut NetFromServerEvent<'_>) {

@@ -25,8 +25,9 @@ you;
 [Phasmids](mods/phasmids/README.md), stick and leaf insects hiding in the trees, a game of spotting them;
 [Scorpions](mods/scorpions/README.md), real-size scorpions that rear up when you come close and sting when hit;
 [Magma Golem](mods/magma_golem/README.md), a six-block giant of living magma asleep in the Nether, a mini-boss to
-cool with snow;
-[Vanilla Bestiary](mods/vanilla_bestiary/README.md), Minecraft's own creatures in the creature guide.
+cool with snow.
+
+In development: [Vanilla Bestiary](mods/vanilla_bestiary/README.md), Minecraft's own creatures in the creature guide.
 
 Every mod needs **[Horizon Creature](common/README.md)**, the library: it adds the glass jar, the creature guide and
 the "Horizon Creature" creative tab, where all the series' items are.

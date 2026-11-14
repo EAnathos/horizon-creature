@@ -54,6 +54,11 @@ pub fn register(catchable: &'static Catchable) {
     }
 }
 
+/// Whether a mod uses the jar (one registered a catchable creature): the guide shows its page only then.
+pub fn used() -> bool {
+    !CATCHABLE.lock().unwrap().is_empty()
+}
+
 fn catchable(kind: &str) -> Option<&'static Catchable> {
     CATCHABLE.lock().unwrap().iter().copied().find(|c| c.kind == kind)
 }

@@ -13,5 +13,9 @@
   "message.vulture.not_tamed": "Ce vautour n'est pas apprivoisé : lance-lui du poulet cru",
   "message.vulture.not_yours": "Ce vautour appartient à quelqu'un d'autre",
   "bestiary.vulture.vulture.tame": "Nourriture",
-  "bestiary.vulture.vulture.breed": "Reproduction"
+  "bestiary.vulture.vulture.breed": "Reproduction",
+  "bestiary.vulture.item.feather.use": "Une plume pour les flèches, le pinceau et le livre et plume",
+  "bestiary.vulture.item.raw_vulture.use": "Nourriture, comme le poulet cru : peut donner faim",
+  "bestiary.vulture.item.cooked_vulture.burnt": "Lâchée par un vautour qui brûle",
+  "bestiary.vulture.item.cooked_vulture.use": "Nourriture, comme le poulet cuit"
 }

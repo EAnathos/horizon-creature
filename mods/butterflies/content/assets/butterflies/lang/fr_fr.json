@@ -22,5 +22,7 @@
   "bestiary.butterflies.flower": "S'installe",
   "item.butterflies.confetti": "Confettis",
   "subtitles.entity.butterfly.flutter": "Un papillon volette",
-  "subtitles.entity.moth.flutter": "Une phalène volette"
+  "subtitles.entity.moth.flutter": "Une phalène volette",
+  "bestiary.butterflies.item.dust.throw": "Clic droit : lancée, un nuage scintillant",
+  "bestiary.butterflies.item.confetti.pop": "Clic droit : une gerbe de confettis"
 }

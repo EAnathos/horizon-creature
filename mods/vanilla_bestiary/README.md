@@ -1,7 +1,9 @@
 # Vanilla Bestiary
 
-An add-on of the [Horizon Creature](../../README.md) series, **planned**: Minecraft's own creatures get pages in the
-creature guide's bestiary, found out in play like the series' creatures (where you met them, what they eat, what they
-give). **Requires** Horizon Creature, the series' library.
+An add-on of the [Horizon Creature](../../README.md) series, **in development**: Minecraft's own creatures get pages in
+the creature guide's bestiary, below the series' creatures, found out in play like them: where you met them, what
+breeds and tames them, what they give (milk, wool, eggs, a fish in a bucket), what they drop, and one thing they do (a
+creeper exploding, a zombie drowning). A wild one counts, not one from a spawn egg, bred or tamed. It adds no creature
+and no item. **Requires** Horizon Creature, the series' library.
 
-Not playable yet: the design is in [SPECS.md](SPECS.md).
+Its design is in [SPECS.md](SPECS.md).

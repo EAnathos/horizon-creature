@@ -13,5 +13,9 @@
   "message.vulture.not_tamed": "This vulture isn't tamed: throw it raw chicken",
   "message.vulture.not_yours": "This vulture belongs to someone else",
   "bestiary.vulture.vulture.tame": "Feed",
-  "bestiary.vulture.vulture.breed": "Breeding"
+  "bestiary.vulture.vulture.breed": "Breeding",
+  "bestiary.vulture.item.feather.use": "A feather in arrows, the brush and the book and quill",
+  "bestiary.vulture.item.raw_vulture.use": "Food, as raw chicken: it may make you hungry",
+  "bestiary.vulture.item.cooked_vulture.burnt": "Dropped by a vulture that burns",
+  "bestiary.vulture.item.cooked_vulture.use": "Food, as cooked chicken"
 }

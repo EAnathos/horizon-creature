@@ -15,5 +15,7 @@
   "subtitles.entity.cyclops.swing": "Club swings",
   "subtitles.entity.cyclops.hit": "Club strikes",
   "subtitles.entity.cyclops.throw": "Boulder thrown",
-  "subtitles.entity.boulder.shatter": "Boulder shatters"
+  "subtitles.entity.boulder.shatter": "Boulder shatters",
+  "bestiary.cyclops.item.club.use": "A heavy weapon: 8 damage, slow, a strong push",
+  "bestiary.cyclops.item.shepherds_crook.use": "Held: the farm animals within 12 blocks follow you"
 }

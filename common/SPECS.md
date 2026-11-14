@@ -233,37 +233,57 @@ A book about the series' creatures, given to every player.
   a species with looks, the morphs met. Nothing about a species not met yet, not even how many there are.
 - Each mod registers its species and the facts a player can learn about them (`creature::bestiary::register`); the
   library draws the book. A page opens when a player first meets a wild one, and each fact when they find it out.
+- **For Minecraft's own creatures** ✅ (the Vanilla Bestiary, mods/vanilla_bestiary/SPECS.md): a species with no model
+  of ours draws its icon, large and turning (`bestiary::draw_icon`); a species' biomes may be a whole dimension
+  (`@minecraft:the_nether`); a fact with no word is a drop, its item alone, on its own lines below the other facts under
+  the heading "Drops", and the facts wrap onto as many lines as they need; `bestiary::players_near` gives the players
+  who saw something happen. The right page lists the series' species, then, below a line, Minecraft's own
+  (`minecraft:` ids), and the wheel scrolls it when they don't fit.
+- **Operators' commands** ✅ (level 2), to check the pages: `/bestiary unlock <species>` (its id, or the part after the
+  colon when one species has it: `cow`) writes down everything about it for the player who runs it: every biome it
+  spawns in, every fact, every look its varieties can roll; `/bestiary unlock all` does it for every species;
+  `/bestiary reset` forgets everything. The chat completes the species' ids.
 
 - **Morphs**, planned ✅: today the morphs are the colours and patterns of the library's looks (§5). They become any look
   a species gives: a colour and pattern, or a **kind with a model of its own** (the Living Flowers' poppy, dandelion
   and cornflower, the Sporelins' red and brown caps), each shown at the bottom of the page by an icon (a swatch, or the
   kind's item) and drawn by the species when picked.
 
-### 7.1 Tabs, planned ✅
+### 7.1 Tabs ✅
 
-The book gets **tabs**, as ribbons on its edge ✅: **Creatures** (the bestiary above) and **Items**. The book opens on the
-tab last read.
+The book has **tabs**, as ribbons above its right page ✅ (the open one in the paper's colour): **Creatures** (the
+bestiary above) and **Items**. The book opens on the tab last read (while the game runs).
 
 - **Creatures**: the series' creatures, then, below a line, the vanilla ones when the Vanilla Bestiary is installed
   (mods/vanilla_bestiary/SPECS.md).
 - **Items** (§7.2).
+- **Scrolling** ✅: the wheel scrolls the list it is over, a row at a time, with a thin scrollbar when there is more than
+  shown: the right page's icons, a species' morph swatches, and the left page's details (a species' biomes, facts and
+  drops; an item's recipes and uses), so a long page (a butterfly met in many biomes) is read whole. A species with
+  looks has a shorter 3D view, for its details to have room above its swatches.
 
-### 7.2 The Items tab, planned ✅
+### 7.2 The Items tab ✅
 
 What each item of the series is for, so a player knows how to make it and what to do with it.
 
-- **One page per item** of the series (spawn eggs left out): on the right page the items, as icons; on the left
-  the one picked: the item, large, with its name; **how to get it**: its recipe on a 3 × 3 grid of item icons
-  (crafting, smithing or smelting, the station drawn beside it), or what drops it (a creature's icon: "Dropped by a
-  cyclops"), or what gives it (the dung beetle's ball, the sporelin's stew); and **its uses**, a few lines each with an
-  item or creature icon ("Hold it: the farm animals within 12 blocks follow you").
+- **One page per item** of the series (spawn eggs left out) ✅: on the right page the items, as icons; on the left
+  the one picked: the item turning in the 3D view, with its name; **how to get it**: its recipes on a 3 × 3 grid of
+  item icons (crafting, smelting, smoking, campfire cooking, brewing; the stations drawn beside it, one grid for the
+  same recipe in several stations, a slot that takes several items, a tag's, showing each in turn), what drops it (a
+  creature's icon: "Dropped by a cyclops"), or what gives it (a befriended fairy's dust); **its uses**, a few lines
+  each with an icon ("Held: the farm animals within 12 blocks follow you"); and what it is **used to make** (the
+  results of the recipes it goes into: a vulture feather makes arrows, the brush, the book and quill, the guide).
 - **Every item shown from the start** ✅ (unlike the creatures): the tab is a reference to plan a craft, so a player can
   look up the shepherd's crook before meeting a cyclops. Only the items of installed mods are listed.
-- Each mod registers its items' pages (`creature::bestiary::register_item`): the item, how it is got, its uses as
-  language keys with icons. The recipe is read from the game's recipes (`native_recipes`, to check that a trait mod
-  reaches it at our pin), else given by the mod and checked against its recipe file by `cargo creature check`.
-- Users: the library (the glass jar, the guide), Vulture (feather, meat, saddle use), Butterflies (dust, confetti),
-  Cyclops (eye, club, shepherd's crook), and the planned Dung Beetles (dung ball).
+- Each mod registers its items' pages (`creature::bestiary::register_item`, `creature::items::ItemPage`) ✅: the item,
+  the creatures that drop it, what else gives it and its uses, as language keys with icons. The glass jar's page shows
+  only with a mod that uses the jar.
+- **The recipes are the modules' own files** ✅: Horizon gives a trait mod only custom recipe types at our pin, so
+  `cargo creature tab` reads every module's `data/<id>/recipe/` into the library's `recipes.rs` (the series' tags
+  expanded, Minecraft's drawn by an item of theirs), and `cargo creature check` fails when it is out of date. A page
+  can't show a recipe the game doesn't have.
+- Users: the library (the glass jar, the guide), Vulture (feather, raw and cooked meat), Butterflies (dust, confetti),
+  Cyclops (eye, club, shepherd's crook), Fairies (fairy dust), and the planned Dung Beetles (dung ball).
 
 ## 8. Out of scope for v1
 
@@ -276,6 +296,8 @@ What each item of the series is for, so a player knows how to make it and what t
 Creative, a test world; `cargo creature install` first.
 
 - The creative tab "Horizon Creature": every installed mod's items, spawn eggs first; the glass jar only with a jar mod.
+- `/bestiary unlock all`: every installed species' page, full; `/bestiary reset` empties the book. The wheel scrolls a
+  long page (a butterfly's) and the icons; the Items tab lists every installed mod's items, each with its recipe.
 - A new world: the creature guide given once; its bestiary pages turn in 3D, list the biomes met, the facts and the
   rarity; a craft of the guide with a vulture feather.
 - Monsters (a zombie, a skeleton) ignore a butterfly, a worm, a vulture.
