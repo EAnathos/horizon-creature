@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_raw_vulture": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "vulture:raw_vulture"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipes": "vulture:cooked_vulture_from_campfire_cooking"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_raw_vulture"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "vulture:cooked_vulture_from_campfire_cooking"
+    ]
+  }
+}

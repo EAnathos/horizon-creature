@@ -20,5 +20,7 @@
   "item.butterflies.butterfly_dust": "Butterfly Dust",
   "bestiary.butterflies.jar": "Catch",
   "bestiary.butterflies.flower": "Settles",
-  "item.butterflies.confetti": "Confetti"
+  "item.butterflies.confetti": "Confetti",
+  "subtitles.entity.butterfly.flutter": "Butterfly flutters",
+  "subtitles.entity.moth.flutter": "Moth flutters"
 }

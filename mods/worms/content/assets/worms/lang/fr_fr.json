@@ -2,5 +2,8 @@
   "entity.worms.worm": "Ver de terre",
   "item.worms.worm_spawn_egg": "Œuf d'apparition de ver de terre",
   "bestiary.worms.jar": "Capture",
-  "bestiary.worms.garden": "Potager"
+  "bestiary.worms.garden": "Potager",
+  "subtitles.entity.worm.dig": "Un ver creuse",
+  "subtitles.entity.worm.hurt": "Un ver est blessé",
+  "subtitles.entity.worm.death": "Un ver meurt"
 }

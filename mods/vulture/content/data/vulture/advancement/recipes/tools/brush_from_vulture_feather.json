@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_feather": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "vulture:feather"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipes": "vulture:brush_from_vulture_feather"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_feather"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "vulture:brush_from_vulture_feather"
+    ]
+  }
+}

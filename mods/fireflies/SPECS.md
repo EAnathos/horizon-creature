@@ -22,7 +22,7 @@ Done and tested in game (single player).
   display gives light 7.
 - **Bestiary page**: the biomes met in, "Catch", "Settles".
 
-Left: a faint wing sound (picked from freesound, not made yet).
+- **Sounds**: a faint buzz when one takes off, from CC0 freesound recordings (`assets/sounds.toml`).
 
 ## 1. Technical context
 

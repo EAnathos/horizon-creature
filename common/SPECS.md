@@ -65,6 +65,7 @@ stay in the vulture until a second mod needs them.
   mutes its mob and the library plays the mod's own sounds with `Host::play_sound`.
 - `queue(mob, sound, volume, pitch)` from goals; `tick_post(host, event, voice, source)` from the mod's
   `entity_tick_post`: plays the queue, and the `Voice`'s hurt and death sounds by watching the mob's health.
+  `play_queued(host, mob, source)` plays only the queue (a mob without a `Voice`).
 - Users: every mob of the series.
 
 ### 3.3 Creative tab ✅
@@ -91,7 +92,7 @@ stay in the vulture until a second mod needs them.
 
 The flight of butterflies, moths and fireflies: short erratic flights and landing (on flowers), resting, out by day or
 by night. A mod gives a `Kind` (day or night, speed, height, flight and rest lengths, drawn to light, landing on
-flowers) and calls `register` (size, muted, the flight goal), `tick_post` (territory, despawning far from players)
+flowers, an optional take-off sound played at each take-off) and calls `register` (size, muted, the flight goal), `tick_post` (territory, despawning far from players)
 and `gone`.
 
 ### 3.6 Small crawlers (`creature::crawl`), planned ✅
@@ -109,13 +110,12 @@ wild or settled. A mod registers its kinds as prey of a hunter. Not on creatures
   **Worms**, **Dung Beetles** (mods/dung_beetles/SPECS.md §2).
 - **Sea turtles** swim to jellyfish within 8 blocks and eat them. User: **Jellyfish** (mods/jellyfish/SPECS.md §3).
 
-### 3.8 Feathers (`creature:feathers`), planned ✅
+### 3.8 Feathers (`creature:feathers`) ✅
 
-A mod's own feather works as a feather: the item tag `creature:feathers` (vanilla's feather and each mod's), and the
-library's recipes for arrows, the brush and the book and quill take any feather of it. Users: **Vulture** (its
-`vulture:feather`, whose three recipes move here) and **Seagulls** (planned, mods/seagulls/SPECS.md §5). To check
-when implementing: that Horizon merges a tag from several content mods (else the library's tag lists every mod's
-feather, the missing ones left out).
+A mod's own feather works as a feather: the item tag `creature:feathers` lists vanilla's feather and each mod's (as
+`required: false` entries, so a missing mod's is left out), and the guide's recipe (§7) takes any of it ✅. Planned:
+the recipes for arrows, the brush and the book and quill move here from the Vulture (its `vulture:feather`) when the
+**Seagulls** come (mods/seagulls/SPECS.md §5).
 
 ### 3.9 Lobbed projectiles (`creature::lob`), planned ✅
 

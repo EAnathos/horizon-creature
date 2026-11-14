@@ -1,0 +1,58 @@
+# The worms' sounds, made by `cargo creature sounds worms` from freesound downloads (all CC0, nothing to credit).
+# A downloaded file keeps the name freesound gives it: it is found by its number. Each clip: a slice of a source
+# (`start` and `length` in seconds of the output), resampled by `pitch`, faded out over `fade` seconds, `gain` in dB.
+out = "sounds/worms"
+
+[sources]
+shovel = 353907 # dr19, Shovel_dirt
+digging = 260130 # SpliceSound, Hand digging dirt, leaves crunch
+squelch = 207142 # ahill86, MudSquelch
+slime = 200279  # qubodup, Icky Worm Slime Monster
+
+# Crawling into the earth: soft, short dirt rustles.
+[[clip]]
+name = "dig1"
+source = "shovel"
+start = 0.2
+length = 0.5
+pitch = 1.2
+fade = 0.15
+gain = -10.0
+
+[[clip]]
+name = "dig2"
+source = "digging"
+start = 1.0
+length = 0.6
+pitch = 1.2
+fade = 0.15
+gain = -10.0
+
+# Hurt: a small wet squelch; death: a short slimy squirm, higher (it is small).
+[[clip]]
+name = "hurt1"
+source = "squelch"
+start = 1.05
+length = 0.25
+pitch = 1.3
+fade = 0.06
+gain = -4.0
+
+[[clip]]
+name = "hurt2"
+source = "squelch"
+start = 1.88
+length = 0.2
+pitch = 1.3
+fade = 0.06
+gain = -4.0
+
+[[clip]]
+name = "death"
+source = "slime"
+start = 0.0
+length = 0.8
+pitch = 1.4
+fade = 0.3
+gain = -4.0
+

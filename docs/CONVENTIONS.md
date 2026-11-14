@@ -70,7 +70,9 @@ cargo creature check                                                         # t
 
 - Models: Blockbench, "free" format, box UV, one root group, no rotated cubes (rotate groups). 64×64 textures unless a
   larger mob needs more.
-- Sounds: CC0 only (freesound.org, licence checked), sources listed in the tool that makes them.
+- Sounds: CC0 only (freesound.org, licence checked), sources listed in the module's `assets/sounds.toml`.
+- Recipes: each one has its recipe book advancement (`advancement/recipes/<tab>/<recipe>.json`, unlocked by having
+  one of its ingredients), or the recipe book never shows it. A feather in a recipe is `#creature:feathers`.
 
 ## Versions and commits
 

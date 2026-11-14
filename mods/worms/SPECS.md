@@ -21,7 +21,10 @@ Done and tested in game (single player).
   green sparkles; more than 3 worms in one garden count as 3. A garden shrunk below 10 frees it.
 - **Bestiary page**: the biomes met in, "Catch", "Garden".
 
-Left: its own sounds (picked from freesound, not made yet); chickens pecking worms (§2), planned with the Dung Beetles.
+- **Sounds**: its own, from CC0 freesound recordings (`assets/sounds.toml`): a soft digging now and then as it
+  crawls, hurt and death.
+
+Left: chickens pecking worms (§2), planned with the Dung Beetles.
 
 ## 1. Technical context
 

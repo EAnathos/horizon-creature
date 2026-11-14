@@ -1,5 +1,6 @@
-//! Thrown by hand (SPECS §4): right-click with butterfly dust throws a shimmering cloud of it ahead; with confetti, a
-//! burst of colours that drifts down. One is used up (not in creative). Particles only: neither does anything else.
+//! Thrown by hand (SPECS §4): right-click with butterfly dust throws a shimmering cloud of it ahead; confetti, a party
+//! popper: a pop at its mouth, then bits of coloured paper shot out in a cone ahead and up, falling back down. One is
+//! used up (not in creative). Particles only: neither does anything else.
 use horizon_client::items::ItemStack;
 use horizon_client::mod_api::{Host, ParticleOptions, ParticleType};
 
@@ -14,17 +15,23 @@ const DUST_COLOURS: [[f32; 3]; 5] = [
     [0.9, 0.75, 1.0],
     [1.0, 1.0, 0.9],
 ];
-/// The confetti's colours: bright.
-const CONFETTI_COLOURS: [[f32; 3]; 8] = [
-    [0.9, 0.25, 0.25],
-    [0.95, 0.6, 0.15],
-    [0.97, 0.85, 0.25],
-    [0.4, 0.75, 0.35],
-    [0.3, 0.6, 0.9],
-    [0.67, 0.4, 0.82],
-    [0.93, 0.47, 0.67],
-    [0.96, 0.95, 0.92],
+/// The confetti's bits: block particles of these bright blocks, which fly and fall under gravity as paper bits do.
+const CONFETTI_BLOCKS: [&str; 9] = [
+    "minecraft:red_concrete",
+    "minecraft:orange_concrete",
+    "minecraft:yellow_concrete",
+    "minecraft:lime_concrete",
+    "minecraft:light_blue_concrete",
+    "minecraft:blue_concrete",
+    "minecraft:magenta_concrete",
+    "minecraft:pink_concrete",
+    "minecraft:white_concrete",
 ];
+/// How many bits a popper shoots, how wide its cone is (the spread around the look, as a fraction of it) and how
+/// fast the bits leave (blocks per tick, between the two).
+const BITS: usize = 140;
+const CONE: f64 = 0.55;
+const SPEED: (f64, f64) = (0.5, 1.1);
 
 /// From the mod's `use_item`: whether `stack` was thrown.
 pub fn thrown(host: &mut dyn Host, stack: &ItemStack) -> bool {
@@ -51,15 +58,45 @@ pub fn thrown(host: &mut dyn Host, stack: &ItemStack) -> bool {
         host.send_particles(&glint, None, at(2.5), [0.6, 0.4, 0.6], 0.5, 12);
         host.play_sound("minecraft:block.amethyst_block.chime", at(1.5), PLAYERS, 0.8, 1.6);
     } else {
-        // A burst a little ahead, every colour, flung out and falling.
-        let burst = at(2.0);
-        for colour in CONFETTI_COLOURS {
-            host.send_particles(&dust(colour, 1.2), None, burst, [0.6, 0.5, 0.6], 0.15, 8);
-        }
-        host.play_sound("minecraft:entity.firework_rocket.twinkle", burst, PLAYERS, 0.7, 1.5);
+        popper(host, at(1.8), look);
     }
     creature::hand::use_one(host, stack);
     true
+}
+
+/// A party popper going off at `mouth`, aimed along `look`: a pop with a few sparks, then the bits, each sent on
+/// its own way (a zero-count particle moves along its `spread`) in a cone ahead and a little up, falling back down.
+fn popper(host: &mut dyn Host, mouth: [f64; 3], look: [f64; 3]) {
+    let sparks = ParticleOptions::simple(ParticleType::Firework);
+    host.send_particles(&sparks, None, mouth, [0.1, 0.1, 0.1], 0.05, 4);
+    host.play_sound("minecraft:entity.firework_rocket.blast", mouth, PLAYERS, 0.6, 1.8);
+    host.play_sound("minecraft:entity.firework_rocket.twinkle", mouth, PLAYERS, 0.5, 1.6);
+    let states: Vec<_> = CONFETTI_BLOCKS
+        .iter()
+        .filter_map(|name| {
+            host.block_states()
+                .iter()
+                .find(|(_, f)| &*f.name == *name)
+                .map(|(id, _)| id)
+        })
+        .collect();
+    if states.is_empty() {
+        return;
+    }
+    let mut random = creature::colours::Random::new(BITS as u32);
+    let mut unit = || (random.next() % 2001) as f64 / 1000.0 - 1.0;
+    let bit = ParticleOptions::simple(ParticleType::Block);
+    for i in 0..BITS {
+        let dir = [
+            look[0] + unit() * CONE,
+            look[1] + unit() * CONE + 0.35,
+            look[2] + unit() * CONE,
+        ];
+        let len = (dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2]).sqrt().max(1e-6);
+        let speed = SPEED.0 + (unit() + 1.0) / 2.0 * (SPEED.1 - SPEED.0);
+        let dir = [dir[0] / len, dir[1] / len, dir[2] / len];
+        host.send_particles(&bit, Some(states[i % states.len()]), mouth, dir, speed, 0);
+    }
 }
 
 /// A standing player's eye height.

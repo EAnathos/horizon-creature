@@ -171,10 +171,12 @@ static BUTTERFLY_FLIGHT: creature::flutter::Kind = creature::flutter::Kind {
     wander: 6.0,
     drawn_to_light: false,
     lands_on_flowers: true,
+    takeoff: Some("butterflies:entity.butterfly.flutter"),
 };
 static MOTH_FLIGHT: creature::flutter::Kind = creature::flutter::Kind {
     night: true,
     drawn_to_light: true,
+    takeoff: Some("butterflies:entity.moth.flutter"),
     ..BUTTERFLY_FLIGHT
 };
 
@@ -374,7 +376,7 @@ impl Hooks for Butterflies {
     }
 
     fn living_death(&self, _: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
-        if ours(event.kind) {
+        if ours(creature::mob::kind(event.kind)) {
             creature::flutter::gone(event.entity);
         }
         Flow::Continue

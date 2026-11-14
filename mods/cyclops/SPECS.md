@@ -11,7 +11,7 @@ giant of the mountains that hurls boulders, and whose eye is a rare crafting mat
 
 Done and tested in game (single player), except the blocks its blows break (built, not yet checked in game).
 
-- **The cyclops** (`cyclops:cyclops`, spawn egg): a copy of the wandering trader, 4 blocks tall (box 1.8 × 4), 80
+- **The cyclops** (`cyclops:cyclops`, spawn egg): a copy of the wandering trader, 4 blocks tall (box 1.8 × 4), 110
   health, blue, one big eye, tusks, a hide loincloth and a wooden club (`assets/models/cyclops.bbmodel`).
 - **Hostile** (§2): it goes for a player it sees within 16 blocks, and for whoever hurts it or one of its sheep. In
   reach, it raises its club over its head and brings it down (12 damage, a strong push); out of reach (7 to 24
@@ -29,7 +29,10 @@ Done and tested in game (single player), except the blocks its blows break (buil
   stick. Neither can be enchanted, at a table or an anvil.
 - **Bestiary page**: the biomes met in, "Flock".
 
-Left: its own sounds (a ravager's, lower, until then; picked from freesound, not made yet); its blows break blocks
+- **Sounds**: its own, from CC0 freesound recordings (`assets/sounds.toml`): grunts, heavy steps, hurt and death, a
+  roar as it lifts a boulder, the club's swing and thud, the throw, the boulder shattering, a dazed groan.
+
+Left: its blows break blocks
 even with the `mobGriefing` rule off (a mod can't read game rules at our Horizon pin, docs/HORIZON-ISSUES.md); balance
 as players report.
 
@@ -53,7 +56,7 @@ as players report.
   - **boulder throw**: at range (7 to 24 blocks), it lifts a boulder over its head and hurls it in an arc (10 damage,
     and it tears up the blocks around where it lands ✅).
 - **Its eye is its weak spot** ✅: an arrow or a trident in the eye deals double damage and dazes it for 2 s.
-- Health 80 ✅, knockback resistance 0.6 ✅.
+- Health 110 ✅, knockback resistance 0.6 ✅.
 - **Spawning** ✅: rare, alone, **at a cave mouth**, with a **flock of sheep that follow it** ✅. Biomes ✅: meadows, cherry
   groves, groves, snowy slopes, stony peaks, the windswept biomes, savanna plateaus and stony shores.
 

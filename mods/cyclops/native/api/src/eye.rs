@@ -62,11 +62,11 @@ pub fn tick(host: &mut dyn Host, entity: u32, at: [f64; 3]) {
     }
     if CRY.lock().unwrap().remove(&entity) {
         host.play_sound(
-            "minecraft:entity.ravager.stunned",
+            "cyclops:entity.cyclops.stunned",
             at,
             creature::sounds::HOSTILE,
             1.5,
-            0.7,
+            1.0,
         );
     }
     if dazed(entity).is_some() {

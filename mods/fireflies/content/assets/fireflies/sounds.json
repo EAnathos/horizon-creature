@@ -1,0 +1,9 @@
+{
+  "entity.firefly.buzz": {
+    "subtitle": "subtitles.entity.firefly.buzz",
+    "sounds": [
+      "fireflies:fireflies/buzz1",
+      "fireflies:fireflies/buzz2"
+    ]
+  }
+}

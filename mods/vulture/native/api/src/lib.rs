@@ -396,7 +396,7 @@ impl Hooks for Vulture {
     }
 
     fn living_death(&self, host: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
-        if event.kind == KIND {
+        if creature::mob::kind(event.kind) == KIND {
             screen::died(host, &state::dimension(event.entity), event.entity);
             talons::release(event.entity);
         }

@@ -76,7 +76,13 @@ pub fn tick(host: &mut dyn Host, dimension: &str, entity: u32) {
         let dust = ParticleOptions::simple(ParticleType::Block);
         host.send_particles(&dust, stone, [at[0], at[1] + 0.4, at[2]], [0.4, 0.3, 0.4], 0.1, 40);
         smash::tear(host, dimension, at, smash::BOULDER_RADIUS);
-        host.play_sound("minecraft:block.stone.break", at, creature::sounds::HOSTILE, 1.5, 0.6);
+        host.play_sound(
+            "cyclops:entity.boulder.shatter",
+            at,
+            creature::sounds::HOSTILE,
+            1.5,
+            1.0,
+        );
         host.play_sound(
             "minecraft:entity.generic.explode",
             at,

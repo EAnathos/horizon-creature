@@ -1,0 +1,17 @@
+{
+  "entity.butterfly.flutter": {
+    "subtitle": "subtitles.entity.butterfly.flutter",
+    "sounds": [
+      "butterflies:butterflies/flutter1",
+      "butterflies:butterflies/flutter2",
+      "butterflies:butterflies/flutter3"
+    ]
+  },
+  "entity.moth.flutter": {
+    "subtitle": "subtitles.entity.moth.flutter",
+    "sounds": [
+      "butterflies:butterflies/moth1",
+      "butterflies:butterflies/moth2"
+    ]
+  }
+}

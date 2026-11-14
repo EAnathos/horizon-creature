@@ -46,12 +46,8 @@ fn health(host: &mut dyn Host, id: u32) -> Option<f32> {
     })
 }
 
-/// Plays what the mob that just ticked queued, and its hurt or death sound, in `source`.
-pub fn tick_post(host: &mut dyn Host, event: &EntityTickPostEvent<'_>, voice: &Voice, source: usize) {
-    let id = event.entity;
-    let Some(at) = host.entity(id).and_then(|e| host.entity_position(e)) else {
-        return;
-    };
+/// What mob `id` queued, taken out of the queue.
+fn queued(id: u32) -> Vec<(&'static str, f32, f32)> {
     let mut play = Vec::new();
     if let Ok(mut q) = QUEUE.lock() {
         q.retain(|&(mob, sound, volume, pitch)| {
@@ -61,6 +57,26 @@ pub fn tick_post(host: &mut dyn Host, event: &EntityTickPostEvent<'_>, voice: &V
             mob != id
         });
     }
+    play
+}
+
+/// Plays what mob `id` queued, in `source`, without hearing its injuries (a creature with no voice: the small fliers).
+pub fn play_queued(host: &mut dyn Host, id: u32, source: usize) {
+    let Some(at) = host.entity(id).and_then(|e| host.entity_position(e)) else {
+        return;
+    };
+    for (sound, volume, pitch) in queued(id) {
+        host.play_sound(sound, at, source, volume, pitch);
+    }
+}
+
+/// Plays what the mob that just ticked queued, and its hurt or death sound, in `source`.
+pub fn tick_post(host: &mut dyn Host, event: &EntityTickPostEvent<'_>, voice: &Voice, source: usize) {
+    let id = event.entity;
+    let Some(at) = host.entity(id).and_then(|e| host.entity_position(e)) else {
+        return;
+    };
+    let mut play = queued(id);
     if let Some(now) = health(host, id) {
         let before = HEALTH.lock().ok().and_then(|mut h| {
             let h = h.get_or_insert_with(HashMap::new);

@@ -1,0 +1,27 @@
+# The fireflies' sounds, made by `cargo creature sounds fireflies` from freesound downloads (all CC0, nothing to credit).
+# A downloaded file keeps the name freesound gives it: it is found by its number. Each clip: a slice of a source
+# (`start` and `length` in seconds of the output), resampled by `pitch`, faded out over `fade` seconds, `gain` in dB.
+out = "sounds/fireflies"
+
+[sources]
+dragonfly = 447319 # antoineopeng, Dragonfly (flying around a lamp)
+
+# A beetle's faint buzz taking off: the dragonfly's wings, higher and quiet.
+[[clip]]
+name = "buzz1"
+source = "dragonfly"
+start = 0.4
+length = 0.5
+pitch = 1.5
+fade = 0.15
+gain = -12.0
+
+[[clip]]
+name = "buzz2"
+source = "dragonfly"
+start = 1.9
+length = 0.5
+pitch = 1.5
+fade = 0.15
+gain = -12.0
+

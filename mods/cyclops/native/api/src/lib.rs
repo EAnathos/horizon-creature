@@ -23,7 +23,7 @@ use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, NearestTarge
 use horizon_client::mod_api::{
     AnvilUpdateEvent, BlockEntityDraw, Compound, Cx, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent,
     LevelTickPostEvent, LivingDeathEvent, LivingIncomingDamageEvent, Mob, MobSubmitEvent, NativeHeightmap,
-    NativeMobRender, RegisterGoalsEvent,
+    NativeMobRender, RandomSource, RegisterGoalsEvent,
 };
 
 pub const CYCLOPS: &str = "cyclops:cyclops";
@@ -84,14 +84,18 @@ fn book_view(host: &dyn Host, draw: &mut BlockEntityDraw, _: Option<creature::co
 }
 const BOOK_SCALE: f32 = 0.22;
 
-/// Its sounds: a ravager's, lower (no sounds of its own yet).
+/// Its sounds (`assets/sounds.toml`, cut from CC0 freesound recordings).
 const VOICE: creature::sounds::Voice = creature::sounds::Voice {
-    hurt: "minecraft:entity.ravager.hurt",
-    death: "minecraft:entity.ravager.death",
+    hurt: "cyclops:entity.cyclops.hurt",
+    death: "cyclops:entity.cyclops.death",
 };
-const AMBIENT: &str = "minecraft:entity.ravager.ambient";
-const STEP: &str = "minecraft:entity.ravager.step";
-const BLOW: &str = "minecraft:entity.ravager.attack";
+const AMBIENT: &str = "cyclops:entity.cyclops.ambient";
+const STEP: &str = "cyclops:entity.cyclops.step";
+/// The club: its whoosh as it comes down, then the blow landing.
+const SWING: &str = "cyclops:entity.cyclops.swing";
+const HIT: &str = "cyclops:entity.cyclops.hit";
+/// Its roar as it lifts a boulder.
+const ROAR: &str = "cyclops:entity.cyclops.roar";
 /// One chance in this many, a tick it walks, of a step heard.
 const STEP_CHANCE: u64 = 14;
 /// One chance in this many, a tick, of its grumble.
@@ -114,7 +118,7 @@ const THROW_EVERY: i32 = 100;
 const THROW_HEIGHT: f64 = 4.05;
 /// Where it holds the boulder before the throw: between its raised hands (blocks from its feet).
 const HELD_HEIGHT: f32 = 4.4;
-const THROW: &str = "minecraft:entity.snowball.throw";
+const THROW: &str = "cyclops:entity.cyclops.throw";
 
 /// When each cyclops raised its club, or a boulder, last, for the drawing (single player; arismoko/horizon#2740).
 static RAISED: Mutex<BTreeMap<u32, Instant>> = Mutex::new(BTreeMap::new());
@@ -186,7 +190,8 @@ impl Goal for Smash {
                     m.id,
                     [m.position.x + dx * ahead, m.position.y - 0.5, m.position.z + dz * ahead],
                 );
-                creature::sounds::queue(m.id, BLOW, 1.2, 0.7);
+                creature::sounds::queue(m.id, SWING, 1.0, 1.0);
+                creature::sounds::queue(m.id, HIT, 1.3, 0.9 + m.random.next_float() * 0.2);
                 self.cooldown = EVERY;
             }
             return;
@@ -204,7 +209,7 @@ impl Goal for Smash {
                     target: who,
                 });
                 m.swing();
-                creature::sounds::queue(m.id, THROW, 1.2, 0.4);
+                creature::sounds::queue(m.id, THROW, 1.2, 1.0);
                 self.throw_cooldown = THROW_EVERY;
             }
             return;
@@ -214,6 +219,7 @@ impl Goal for Smash {
             self.throwing = THROW_WINDUP;
             m.ai.nav.stop();
             LIFTED.lock().unwrap().insert(m.id, Instant::now());
+            creature::sounds::queue(m.id, ROAR, 1.5, 1.0);
             return;
         }
         if reach < REACH && self.cooldown <= 0 {
@@ -486,10 +492,10 @@ fn voice(entity: u32, at: [f64; 3], random: &mut creature::colours::Random) {
         .insert(entity, at)
         .is_some_and(|last| (at[0] - last[0]).hypot(at[2] - last[2]) > 0.04);
     if moved && random.next().is_multiple_of(STEP_CHANCE) {
-        creature::sounds::queue(entity, STEP, 1.0, 0.6);
+        creature::sounds::queue(entity, STEP, 1.0, 1.0);
     }
     if random.next().is_multiple_of(AMBIENT_CHANCE) {
-        creature::sounds::queue(entity, AMBIENT, 1.2, 0.6);
+        creature::sounds::queue(entity, AMBIENT, 1.2, 1.0);
     }
 }
 
@@ -670,11 +676,12 @@ impl Hooks for Cyclops {
         }
         smash::tick(host, event.dimension, event.entity);
         boulder::launch(host, event.dimension);
-        creature::sounds::tick_post(host, event, &VOICE, creature::sounds::NEUTRAL);
+        creature::sounds::tick_post(host, event, &VOICE, creature::sounds::HOSTILE);
     }
 
     fn living_death(&self, _: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
-        if event.kind == CYCLOPS {
+        let kind = creature::mob::kind(event.kind);
+        if kind == CYCLOPS {
             CYCLOPS_AT.lock().unwrap().remove(&event.entity);
             RAISED.lock().unwrap().remove(&event.entity);
             LIFTED.lock().unwrap().remove(&event.entity);
@@ -682,9 +689,9 @@ impl Hooks for Cyclops {
             LAST_AT.lock().unwrap().remove(&event.entity);
             ANGERED.lock().unwrap().remove(&event.entity);
             eye::forget(event.entity);
-        } else if event.kind == boulder::BOULDER {
+        } else if kind == boulder::BOULDER {
             boulder::forget(event.entity);
-        } else if event.kind == "minecraft:sheep" {
+        } else if kind == "minecraft:sheep" {
             FLOCK.lock().unwrap().remove(&event.entity);
             SHEPHERD.lock().unwrap().remove(&event.entity);
         }

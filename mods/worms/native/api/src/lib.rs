@@ -90,6 +90,15 @@ fn wiggle(part: &str, phase: f32, amount: f32) -> [f32; 3] {
 const SPEED: f64 = 0.015;
 const CRAWL: (i32, i32) = (60, 200);
 const PAUSE: (i32, i32) = (40, 240);
+/// One pause in this many, it noses into the earth with a soft rustle.
+const DIG_CHANCE: u32 = 3;
+
+/// Its sounds (`assets/sounds.toml`): a dig now and then, hurt and death.
+const DIG: &str = "worms:entity.worm.dig";
+const VOICE: creature::sounds::Voice = creature::sounds::Voice {
+    hurt: "worms:entity.worm.hurt",
+    death: "worms:entity.worm.death",
+};
 const WANDER: f64 = 3.0;
 /// How often a settled worm checks its garden (ticks).
 const CHECK_EVERY: i32 = 100;
@@ -163,6 +172,9 @@ impl Goal for Crawl {
         let (dx, dz) = (target[0] - m.position.x, target[2] - m.position.z);
         let len = dx.hypot(dz);
         if len < 0.2 || self.ticks <= 0 {
+            if m.random.next_float() < 1.0 / DIG_CHANCE as f32 {
+                creature::sounds::queue(m.id, DIG, 0.4, 0.9 + m.random.next_float() * 0.2);
+            }
             self.pausing = true;
             self.ticks = between(m, PAUSE);
             self.target = None;
@@ -367,6 +379,7 @@ impl Hooks for Worms {
         if event.kind != WORM {
             return;
         }
+        creature::sounds::tick_post(host, event, &VOICE, creature::sounds::NEUTRAL);
         territory::tick(host, event.entity);
         tend(host, event.entity);
         if let Some(at) = host.entity(event.entity).and_then(|e| host.entity_position(e)) {
@@ -380,7 +393,7 @@ impl Hooks for Worms {
     }
 
     fn living_death(&self, _: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
-        if event.kind == WORM {
+        if creature::mob::kind(event.kind) == WORM {
             territory::forget(event.entity);
             TICKS.lock().unwrap().remove(&event.entity);
             WORMS_AT.lock().unwrap().remove(&event.entity);

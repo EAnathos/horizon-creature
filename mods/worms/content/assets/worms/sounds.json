@@ -1,0 +1,22 @@
+{
+  "entity.worm.dig": {
+    "subtitle": "subtitles.entity.worm.dig",
+    "sounds": [
+      "worms:worms/dig1",
+      "worms:worms/dig2"
+    ]
+  },
+  "entity.worm.hurt": {
+    "subtitle": "subtitles.entity.worm.hurt",
+    "sounds": [
+      "worms:worms/hurt1",
+      "worms:worms/hurt2"
+    ]
+  },
+  "entity.worm.death": {
+    "subtitle": "subtitles.entity.worm.death",
+    "sounds": [
+      "worms:worms/death"
+    ]
+  }
+}

@@ -1,0 +1,151 @@
+# The cyclops's sounds, made by `cargo creature sounds cyclops` from freesound downloads (all CC0, nothing to credit).
+# A downloaded file keeps the name freesound gives it: it is found by its number. Each clip: a slice of a source
+# (`start` and `length` in seconds of the output), resampled by `pitch`, faded out over `fade` seconds, `gain` in dB.
+out = "sounds/cyclops"
+
+[sources]
+monster = 797697  # randbsoundbites, Monster (already pitched low)
+snarl = 466830    # Breviceps, Dragon: snarl, roar + attack
+roars = 479380    # Breviceps, Dragon: several roars, growls and snarls
+step = 721601     # DasWaff, Giant step
+stomps = 622737   # RobHorror240, GiantStompFootsteps
+whoosh = 257015   # yutface, Swing Whoosh
+wood = 269717     # michorvath, Wood Impact
+rocks = 336023    # adamgryu, Rocks
+gravel = 567249   # iwanPlays, Bricks/Stones/Rocks/Gravel Falling
+
+# Its grumble: the monster's three growls, lower still (a giant).
+[[clip]]
+name = "ambient1"
+source = "monster"
+start = 0.32
+length = 0.75
+pitch = 0.8
+fade = 0.2
+
+[[clip]]
+name = "ambient2"
+source = "monster"
+start = 1.36
+length = 0.65
+pitch = 0.8
+fade = 0.2
+
+[[clip]]
+name = "ambient3"
+source = "monster"
+start = 2.6
+length = 0.7
+pitch = 0.8
+fade = 0.2
+
+# Hurt: snarls; death: the longest roar, low, fading out; its roar when it lifts a boulder; dazed: a short groan.
+[[clip]]
+name = "hurt1"
+source = "snarl"
+start = 0.0
+length = 0.5
+pitch = 0.8
+fade = 0.1
+
+[[clip]]
+name = "hurt2"
+source = "monster"
+start = 1.36
+length = 0.4
+pitch = 0.9
+fade = 0.1
+
+[[clip]]
+name = "death"
+source = "roars"
+start = 0.0
+length = 3.5
+pitch = 0.7
+fade = 1.0
+
+[[clip]]
+name = "roar"
+source = "roars"
+start = 3.92
+length = 2.0
+pitch = 0.75
+fade = 0.5
+
+[[clip]]
+name = "stunned"
+source = "roars"
+start = 8.16
+length = 1.2
+pitch = 0.9
+fade = 0.4
+
+# Heavy steps.
+[[clip]]
+name = "step1"
+source = "step"
+start = 0.0
+length = 0.8
+pitch = 0.9
+fade = 0.2
+gain = -4.0
+
+[[clip]]
+name = "step2"
+source = "stomps"
+start = 2.48
+length = 0.7
+pitch = 0.9
+fade = 0.2
+gain = -4.0
+
+[[clip]]
+name = "step3"
+source = "stomps"
+start = 5.27
+length = 0.7
+pitch = 0.85
+fade = 0.2
+gain = -4.0
+
+# The club: a low whoosh, then a heavy wooden hit; the boulder leaving its hands; the boulder shattering.
+[[clip]]
+name = "swing"
+source = "whoosh"
+start = 1.17
+length = 0.6
+pitch = 0.6
+fade = 0.15
+
+[[clip]]
+name = "hit"
+source = "wood"
+start = 0.3
+length = 0.6
+pitch = 0.6
+fade = 0.2
+
+[[clip]]
+name = "throw"
+source = "whoosh"
+start = 2.52
+length = 0.7
+pitch = 0.5
+fade = 0.2
+
+[[clip]]
+name = "shatter1"
+source = "rocks"
+start = 0.0
+length = 1.5
+pitch = 0.9
+fade = 0.5
+
+[[clip]]
+name = "shatter2"
+source = "gravel"
+start = 0.0
+length = 1.6
+pitch = 0.9
+fade = 0.5
+

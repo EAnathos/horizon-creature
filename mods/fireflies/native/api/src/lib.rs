@@ -38,6 +38,7 @@ static FLIGHT: creature::flutter::Kind = creature::flutter::Kind {
     wander: 4.0,
     drawn_to_light: false,
     lands_on_flowers: false,
+    takeoff: Some("fireflies:entity.firefly.buzz"),
 };
 
 /// Caught in the library's glass jar, settling on a flower, glowing in a jar on display (SPECS §3).
@@ -169,7 +170,7 @@ impl Hooks for Fireflies {
     }
 
     fn living_death(&self, _: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
-        if event.kind == FIREFLY {
+        if creature::mob::kind(event.kind) == FIREFLY {
             creature::flutter::gone(event.entity);
             FLYING_AT.lock().unwrap().remove(&event.entity);
         }

@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_butterfly_dust": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "butterflies:butterfly_dust"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipes": "butterflies:confetti"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_butterfly_dust"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "butterflies:confetti"
+    ]
+  }
+}

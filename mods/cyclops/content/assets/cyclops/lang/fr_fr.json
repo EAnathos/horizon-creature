@@ -5,5 +5,15 @@
   "bestiary.cyclops.flock": "Troupeau",
   "item.cyclops.club": "Gourdin de cyclope",
   "item.cyclops.shepherds_crook": "Houlette de berger",
-  "entity.cyclops.boulder": "Rocher"
+  "entity.cyclops.boulder": "Rocher",
+  "subtitles.entity.cyclops.ambient": "Un cyclope grogne",
+  "subtitles.entity.cyclops.hurt": "Un cyclope est blessé",
+  "subtitles.entity.cyclops.death": "Un cyclope meurt",
+  "subtitles.entity.cyclops.roar": "Un cyclope rugit",
+  "subtitles.entity.cyclops.stunned": "Un cyclope est sonné",
+  "subtitles.entity.cyclops.step": "Pas lourds",
+  "subtitles.entity.cyclops.swing": "Un gourdin fend l'air",
+  "subtitles.entity.cyclops.hit": "Un gourdin frappe",
+  "subtitles.entity.cyclops.throw": "Un rocher est lancé",
+  "subtitles.entity.boulder.shatter": "Un rocher éclate"
 }

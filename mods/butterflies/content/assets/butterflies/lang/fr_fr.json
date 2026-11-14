@@ -20,5 +20,7 @@
   "item.butterflies.butterfly_dust": "Poudre de papillon",
   "bestiary.butterflies.jar": "Capture",
   "bestiary.butterflies.flower": "S'installe",
-  "item.butterflies.confetti": "Confettis"
+  "item.butterflies.confetti": "Confettis",
+  "subtitles.entity.butterfly.flutter": "Un papillon volette",
+  "subtitles.entity.moth.flutter": "Une phalène volette"
 }

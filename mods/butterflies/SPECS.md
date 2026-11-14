@@ -23,11 +23,13 @@ Done and tested in game (single player).
   and jungles; moths in forests, birch and dark forests, taigas, plains and meadows.
 - **Glass jar** (common/SPECS.md §4): caught and released keeping its look; released on a flower it settles there; a
   filled jar placed as a block shows it inside.
-- **Butterfly dust** (§4): dropped by both; thrown, a shimmering cloud; with paper, 8 confetti, thrown as a burst of
-  colours.
+- **Butterfly dust** (§4): dropped by both; thrown, a shimmering cloud; with paper, 8 confetti, a party popper: right-click pops it
+  with a bang and a spark, and a cone of coloured bits flies out ahead and falls.
 - **Bestiary pages**: the biomes met in, "Catch", "Settles", the butterfly's morphs.
+- **Sounds**: a soft flutter when one takes off (a moth's is duller), from CC0 freesound recordings
+  (`assets/sounds.toml`).
 
-Left: their own sounds (picked from freesound, not made yet). Their shadow is too big (Horizon gives a mod mob 0.5;
+Left: their shadow is too big (Horizon gives a mod mob 0.5;
 arismoko/horizon#3896).
 
 ## 1. Technical context

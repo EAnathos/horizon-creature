@@ -2,5 +2,8 @@
   "entity.worms.worm": "Worm",
   "item.worms.worm_spawn_egg": "Worm Spawn Egg",
   "bestiary.worms.jar": "Catch",
-  "bestiary.worms.garden": "Garden"
+  "bestiary.worms.garden": "Garden",
+  "subtitles.entity.worm.dig": "Worm digs",
+  "subtitles.entity.worm.hurt": "Worm hurts",
+  "subtitles.entity.worm.death": "Worm dies"
 }

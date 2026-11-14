@@ -1,0 +1,68 @@
+{
+  "entity.cyclops.ambient": {
+    "subtitle": "subtitles.entity.cyclops.ambient",
+    "sounds": [
+      "cyclops:cyclops/ambient1",
+      "cyclops:cyclops/ambient2",
+      "cyclops:cyclops/ambient3"
+    ]
+  },
+  "entity.cyclops.hurt": {
+    "subtitle": "subtitles.entity.cyclops.hurt",
+    "sounds": [
+      "cyclops:cyclops/hurt1",
+      "cyclops:cyclops/hurt2"
+    ]
+  },
+  "entity.cyclops.death": {
+    "subtitle": "subtitles.entity.cyclops.death",
+    "sounds": [
+      "cyclops:cyclops/death"
+    ]
+  },
+  "entity.cyclops.roar": {
+    "subtitle": "subtitles.entity.cyclops.roar",
+    "sounds": [
+      "cyclops:cyclops/roar"
+    ]
+  },
+  "entity.cyclops.stunned": {
+    "subtitle": "subtitles.entity.cyclops.stunned",
+    "sounds": [
+      "cyclops:cyclops/stunned"
+    ]
+  },
+  "entity.cyclops.step": {
+    "subtitle": "subtitles.entity.cyclops.step",
+    "sounds": [
+      "cyclops:cyclops/step1",
+      "cyclops:cyclops/step2",
+      "cyclops:cyclops/step3"
+    ]
+  },
+  "entity.cyclops.swing": {
+    "subtitle": "subtitles.entity.cyclops.swing",
+    "sounds": [
+      "cyclops:cyclops/swing"
+    ]
+  },
+  "entity.cyclops.hit": {
+    "subtitle": "subtitles.entity.cyclops.hit",
+    "sounds": [
+      "cyclops:cyclops/hit"
+    ]
+  },
+  "entity.cyclops.throw": {
+    "subtitle": "subtitles.entity.cyclops.throw",
+    "sounds": [
+      "cyclops:cyclops/throw"
+    ]
+  },
+  "entity.boulder.shatter": {
+    "subtitle": "subtitles.entity.boulder.shatter",
+    "sounds": [
+      "cyclops:cyclops/shatter1",
+      "cyclops:cyclops/shatter2"
+    ]
+  }
+}

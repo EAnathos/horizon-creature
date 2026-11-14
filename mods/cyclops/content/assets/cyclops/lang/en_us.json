@@ -5,5 +5,15 @@
   "bestiary.cyclops.flock": "Flock",
   "item.cyclops.club": "Cyclops Club",
   "item.cyclops.shepherds_crook": "Shepherd's Crook",
-  "entity.cyclops.boulder": "Boulder"
+  "entity.cyclops.boulder": "Boulder",
+  "subtitles.entity.cyclops.ambient": "Cyclops grumbles",
+  "subtitles.entity.cyclops.hurt": "Cyclops hurts",
+  "subtitles.entity.cyclops.death": "Cyclops dies",
+  "subtitles.entity.cyclops.roar": "Cyclops roars",
+  "subtitles.entity.cyclops.stunned": "Cyclops is dazed",
+  "subtitles.entity.cyclops.step": "Heavy footsteps",
+  "subtitles.entity.cyclops.swing": "Club swings",
+  "subtitles.entity.cyclops.hit": "Club strikes",
+  "subtitles.entity.cyclops.throw": "Boulder thrown",
+  "subtitles.entity.boulder.shatter": "Boulder shatters"
 }

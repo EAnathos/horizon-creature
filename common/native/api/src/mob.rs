@@ -35,6 +35,16 @@ pub fn spared(entity: u32, target: u32) -> bool {
     spared.contains(&target) && !spared.contains(&entity)
 }
 
+/// A mob's type as a hook names it, Horizon's prefix taken off: `living_death` (and other events naming a mob through
+/// Horizon's `mob_kind`) always puts `minecraft:` before a mod mob's id, `minecraft:vulture:vulture` (workaround for
+/// arismoko/horizon#4357). Compare a hook's kind through this.
+pub fn kind(kind: &str) -> &str {
+    match kind.strip_prefix("minecraft:") {
+        Some(rest) if rest.contains(':') => rest,
+        _ => kind,
+    }
+}
+
 /// Gives `mob` its own box (blocks) in place of its template's: a mob's box comes from its type, so it gets a copy of
 /// its type with this size (workaround for horizon-rust/horizon#6276; an `entity_size` hook exists on the fork only).
 /// From the mod's `register_goals`.

@@ -225,10 +225,11 @@ pub fn forget(player: u128) {
 
 /// Its death: its harness, chests and their contents fall where it died.
 pub fn died(host: &mut dyn Host, dimension: &str, id: u32) {
-    let Some(at) = host.entity(id).and_then(|e| host.entity_position(e)) else {
+    let pos = host.entity(id).and_then(|e| host.entity_position(e));
+    let saved = state::saved(id);
+    let Some(at) = pos else {
         return;
     };
-    let saved = state::saved(id);
     let mut stacks: Vec<ItemStack> = CHESTS
         .get(host, Holder::Entity(id))
         .unwrap_or_default()

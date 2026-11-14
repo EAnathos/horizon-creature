@@ -39,7 +39,12 @@ pub struct Kind {
     pub drawn_to_light: bool,
     /// Lands on flowers (else on the ground).
     pub lands_on_flowers: bool,
+    /// The sound of its wings as it takes off (the mod's own event), or none.
+    pub takeoff: Option<&'static str>,
 }
+
+/// How loud the wings are at take-off.
+const TAKEOFF_VOLUME: f32 = 0.5;
 
 /// How quickly it turns towards its target, and its flutter.
 const STEER: f64 = 0.035;
@@ -214,6 +219,9 @@ impl Flutter {
     }
 
     fn take_off(&mut self, m: &mut Mob, cx: &Cx) {
+        if let Some(sound) = self.kind.takeoff {
+            crate::sounds::queue(m.id, sound, TAKEOFF_VOLUME, 0.9 + m.random.next_float() * 0.2);
+        }
         self.mode = Mode::Fly;
         self.ticks = between(m, self.kind.flight);
         self.target = Some(self.wander(m, cx));
@@ -367,6 +375,7 @@ pub fn register(mob: &mut Mob, size: (f64, f64, f64), kind: &'static Kind) {
 /// From the mod's `entity_tick_post`, for each of its fliers: its territory loaded and saved, and a wild one despawned
 /// far from players (a settled one stays).
 pub fn tick_post(host: &mut dyn Host, dimension: &str, entity: u32) {
+    crate::sounds::play_queued(host, entity, crate::sounds::NEUTRAL);
     territory::tick(host, entity);
     let settled = territory::settled(entity);
     if crate::mob::despawn_far(host, dimension, entity, settled) {
