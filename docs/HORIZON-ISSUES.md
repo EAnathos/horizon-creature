@@ -41,9 +41,8 @@ their merge commits aren't in its history, and its docs know none of their featu
 
 ## Open
 
-| Issue | What | Status (2026-11-13) | Our workaround (where) | Drop it when fixed |
+| Issue | What | Status (2026-11-14) | Our workaround (where) | Drop it when fixed |
 |---|---|---|---|---|
-| [#15764](https://github.com/horizon-rust/horizon/issues/15764) (not ours, we follow it) | Launcher 0.2.62+ writes `horizon_threads::GameAllocator` into the generated `native-game/src/main.rs`, which the pinned revision doesn't have: no native build of the series at all (2026-11-13, launcher 0.2.63) | open, claimed (fix: use `GameAllocator` only when the staged source defines it) | None possible in this repository (the file is the launcher's); CI is unaffected (it doesn't build native code) | Rebuild with the fixed launcher |
 | [#13971](https://github.com/horizon-rust/horizon/issues/13971) | A mod left out for an invalid injection helper still lets `native-build` exit 0 ("made for another Horizon version") | closed 2026-11-11 by a tracker cleanup ("not planned", reopen with a repro on the latest Nightly); not fixed | `cargo creature install` reads `build.log` and fails on "was left out" (`tools/src/install.rs`, `left_out`) | Keep as a safety net; simplify once the build fails itself |
 | [#13972](https://github.com/horizon-rust/horizon/issues/13972) | An injection into `native_interact_entity` sees the client's mob copies (changes lost, `start_riding` client-only); undocumented | closed 2026-11-11 by a tracker cleanup ("not planned", reopen with a repro on the latest Nightly); not fixed | Clicks in the `interact_entity` trait hook, mounting with `Host::mount` (`mods/vulture/native/api/src/interaction.rs`) | Nothing to drop: the trait hook is the right path |
 | [#13973](https://github.com/horizon-rust/horizon/issues/13973) | `Mob.extra.saddled` on a mod mob makes Horizon drive it as a steered mount | **fixed on the fork** (2026-11-09, [arismoko/horizon#2540](https://github.com/arismoko/horizon/pull/2540): only a horse or camel takes a saddled player rider's input); the issue stays open until reported back | The harness is kept in the vulture's state, never in `saddled`, which is forced to false (`mods/vulture/native/api/src/state.rs`) | Once fixed, `saddled` could hold the harness again (not needed) |
@@ -86,6 +85,7 @@ Horizon without a re-release (below, "Horizon versions and our releases").
 
 | Issue | What | Outcome |
 |---|---|---|
+| [#15764](https://github.com/horizon-rust/horizon/issues/15764) (not ours, we followed it) | Launcher 0.2.62 and 0.2.63 wrote `horizon_threads::GameAllocator` into the generated `native-game/src/main.rs`, which the pinned revision doesn't have: no native build of the series | Fixed in launcher 0.2.64 (closed 2026-11-13): the series builds again at its pin |
 | [#13976](https://github.com/horizon-rust/horizon/issues/13976) | "Mod entity types from wandering_trader can't be babies or age" | Not a bug, our mistake (2026-11-09): the trader is in both lists. Our own age counter was removed (it aged vultures twice). |
 
 ## To open (candidates)

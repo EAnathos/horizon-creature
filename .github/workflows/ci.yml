@@ -44,7 +44,7 @@ jobs:
         run: cargo creature check
 
   native:
-    name: Native code (Clippy against the pinned Horizon)
+    name: Native code (Clippy and tests against the pinned Horizon)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -65,7 +65,7 @@ jobs:
           workspaces: |
             tools
             target/native-check
-      - name: Clippy on the native crates
+      - name: Clippy and tests on the native crates
         run: cargo creature native-check "$RUNNER_TEMP/horizon"
 
   build:

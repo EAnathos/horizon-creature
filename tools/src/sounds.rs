@@ -79,8 +79,8 @@ fn find(folder: &Path, number: u32) -> crate::Result<PathBuf> {
         .ok_or_else(|| format!("freesound sound {number} is missing from {}", folder.display()))
 }
 
-fn make(out: &Path, path: &Path, clip: &Clip) -> crate::Result {
-    let name = &clip.name;
+/// The ffmpeg filters that make `clip`: its slice, its pitch, a low cut, normalized loudness, its gain and its fade.
+fn filters(clip: &Clip) -> Vec<String> {
     let mut filters = vec![format!(
         "atrim=start={}{}",
         clip.start,
@@ -105,6 +105,12 @@ fn make(out: &Path, path: &Path, clip: &Clip) -> crate::Result {
             clip.fade
         ));
     }
+    filters
+}
+
+fn make(out: &Path, path: &Path, clip: &Clip) -> crate::Result {
+    let name = &clip.name;
+    let filters = filters(clip);
     let target = out.join(format!("{name}.ogg"));
     let status = Command::new("ffmpeg")
         .args(["-hide_banner", "-loglevel", "error", "-y", "-i"])
@@ -147,4 +153,47 @@ fn check_sounds_json(assets: &Path, out: &Path) -> crate::Result {
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn clip(pitch: f64, length: Option<f64>) -> Clip {
+        Clip {
+            name: "test".into(),
+            source: "src".into(),
+            start: 0.5,
+            length,
+            pitch,
+            fade: 0.2,
+            gain: -6.0,
+        }
+    }
+
+    #[test]
+    fn resamples_before_pitching() {
+        // A 48 kHz source was read as 44.1 kHz by `asetrate`: the resampling must come first.
+        let f = filters(&clip(1.2, Some(1.0)));
+        let resample = f.iter().position(|x| x == "aresample=44100").unwrap();
+        let pitch = f.iter().position(|x| x.starts_with("asetrate=44100*1.2")).unwrap();
+        assert!(resample < pitch);
+    }
+
+    #[test]
+    fn takes_the_source_length_the_pitch_needs_and_fades_at_the_end() {
+        let f = filters(&clip(2.0, Some(1.0)));
+        assert_eq!(f[0], "atrim=start=0.5:duration=2");
+        assert!(f.contains(&"afade=t=out:st=0.8:d=0.2".to_owned()));
+        assert!(f.contains(&"volume=-6dB".to_owned()));
+        let whole = filters(&clip(1.0, None));
+        assert_eq!(whole[0], "atrim=start=0.5");
+        assert!(!whole.iter().any(|x| x.starts_with("afade")));
+    }
+
+    #[test]
+    fn refuses_an_unknown_clip_field() {
+        let text = "sources = { a = 1 }\n[[clip]]\nname = \"x\"\nsource = \"a\"\nstart = 0.0\nspeed = 2.0\n";
+        assert!(toml::from_str::<Recipe>(text).is_err());
+    }
 }

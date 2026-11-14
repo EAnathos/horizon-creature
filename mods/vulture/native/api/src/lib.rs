@@ -399,6 +399,7 @@ impl Hooks for Vulture {
         if creature::mob::kind(event.kind) == KIND {
             screen::died(host, &state::dimension(event.entity), event.entity);
             talons::release(event.entity);
+            creature::friend::forget(event.entity);
         }
         Flow::Continue
     }

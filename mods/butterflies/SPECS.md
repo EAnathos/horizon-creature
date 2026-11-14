@@ -97,7 +97,17 @@ The butterflies' night counterpart ✅: a **moth** (`butterflies:moth`), flying 
 
 - caterpillars and cocoons.
 
-## 6. Open questions
+## 6. Testing in game
+
+Creative, a flower forest by day and at night; `cargo creature install butterflies` first.
+
+- Butterflies by day, moths at night, appearing near you; their colours and patterns vary by biome; a sprinting player
+  scares them; a moth circles a torch.
+- Caught in a jar (its look kept), released on a flower: it stays on that patch.
+- Butterfly dust thrown: a cloud; with paper, 8 confetti; a confetti popper's burst.
+- The bestiary's morphs; the flutter sound at take-off.
+
+## 7. Open questions
 
 - ~~Q1: Species?~~ One species, several colours and patterns.
 - ~~Q2: Catching?~~ With a glass jar; released, it keeps to an area.

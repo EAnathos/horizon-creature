@@ -67,7 +67,18 @@ Left: balance as players report.
 
 - Taming or riding a cyclops, cyclops villages, a cyclops boss.
 
-## 5. Open questions
+## 5. Testing in game
+
+Survival with armour, a mountain or meadow with caves, Normal; `cargo creature install cyclops` first.
+
+- A spawn egg cyclops: it comes for you, raises its club and strikes (12, a push), breaks blocks around the blow; out
+  of reach, a boulder with a roar; climbed out of its club's height, only boulders.
+- An arrow in its eye: double damage and dazed. Killed: its eye, sometimes its club, leather.
+- `mobGriefing` off: nothing breaks. Peaceful: none spawn, those there go, its egg says "Disabled in Peaceful".
+- The crook (eye, sticks, wool) leads farm animals; club and crook take no enchantment.
+- Its sounds: steps, grunts, swing and thud, roar, throw, shatter, hurt, death, dazed.
+
+## 6. Open questions
 
 - ~~Q1: Neutral or hostile?~~ Hostile. Its size, health and attacks (§2) still to balance.
 - ~~Q2: Where it spawns and how rare it is?~~ At a cave mouth, rarely, far from other cyclops (§0).

@@ -1,4 +1,5 @@
-//! Friends (SPECS §6.2): a creature befriended by a player, who follows them or stays where it is told.
+//! Friends (SPECS §6.2): a creature befriended (or tamed) by a player, who follows them or stays (sits) where it is
+//! told. Users: the fairies, the vulture.
 //!
 //! The friend is saved on the entity (`creature:friend`: the player's UUID and whether it stays). The mod's goals read
 //! it through a static map (`of`), filled by `tick` from the mod's `entity_tick_post` (single player, as the territory;
@@ -87,6 +88,11 @@ pub fn befriend(host: &mut dyn Host, entity: u32, player: u128) {
     FRIENDS.lock().unwrap().insert(entity, Known { friend, dirty: !saved });
 }
 
+/// Whether `entity`'s save has been read (`tick`): until then, `of` says nothing about it.
+pub fn loaded(entity: u32) -> bool {
+    FRIENDS.lock().unwrap().contains_key(&entity)
+}
+
 /// Whose friend `entity` is, if it has one (from a goal or a hook).
 pub fn of(entity: u32) -> Option<Friend> {
     FRIENDS.lock().unwrap().get(&entity).and_then(|k| k.friend)
@@ -133,4 +139,31 @@ pub fn tick(host: &mut dyn Host, entity: u32) {
 /// From the mod's `living_death` (or when it is caught in a jar).
 pub fn forget(entity: u32) {
     FRIENDS.lock().unwrap().remove(&entity);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_uuid_goes_through_its_four_ints_and_back() {
+        let player: u128 = 0x40e3_27d0_b410_3010_829a_3199_8893_a5b7;
+        let four = ints(player);
+        assert_eq!(
+            four,
+            [
+                0x40e3_27d0_u32 as i32,
+                0xb410_3010_u32 as i32,
+                0x829a_3199_u32 as i32,
+                0x8893_a5b7_u32 as i32
+            ]
+        );
+        assert_eq!(uuid(four), player);
+        let friend = Friend {
+            uuid: four,
+            staying: false,
+        };
+        assert!(friend.is(player));
+        assert!(!friend.is(player + 1));
+    }
 }

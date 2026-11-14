@@ -19,9 +19,9 @@ use creature::friend::Friend;
 use creature::jar::Catchable;
 use horizon_client::mod_api::{
     AttachmentCodec, AttachmentError, AttachmentType, BlockEntityDraw, Compound, EmissiveEvent, EntityTickPostEvent,
-    Flow, Holder, Hooks, Host, InteractEntityEvent, LivingDeathEvent, LivingIncomingDamageEvent, MobSubmitEvent,
-    NativeColoredLight, NativeEffect, NativeMobRender, ParticleOptions, ParticleType, RegisterGoalsEvent, Tag, Text,
-    VisualsEvent,
+    Flow, Holder, Hooks, Host, InteractEntityEvent, LivingDeathEvent, LivingIncomingDamageEvent,
+    LivingIncomingDamageV2Event, MobSubmitEvent, NativeColoredLight, NativeEffect, NativeMobRender, ParticleOptions,
+    ParticleType, RegisterGoalsEvent, Tag, Text, VisualsEvent,
 };
 
 pub const FAIRY: &str = "fairies:fairy";
@@ -301,16 +301,28 @@ impl Hooks for Fairies {
         Flow::Cancel
     }
 
-    /// A befriended fairy can't be hurt by a player's blow (no accidents, SPECS §2; Horizon gives a player's hit no
-    /// attacker id, so it is any player's: its friend's in single player).
+    /// A befriended fairy can't be hurt by its friend's blow (no accidents, SPECS §2): the melee hook names the player
+    /// who strikes.
+    fn living_incoming_damage_v2(&self, host: &mut dyn Host, event: &mut LivingIncomingDamageV2Event<'_>) -> Flow {
+        if creature::mob::kind(event.kind) != FAIRY {
+            return Flow::Continue;
+        }
+        let friend = u32::try_from(event.entity).ok().and_then(creature::friend::of);
+        let by_friend = friend.is_some_and(|f| {
+            host.server_players()
+                .iter()
+                .any(|p| p.entity_id == event.causing && f.is(p.uuid))
+        });
+        if by_friend { Flow::Cancel } else { Flow::Continue }
+    }
+
+    /// Nor by an arrow or a trident from a player (Horizon gives a projectile's hit no shooter here: any player's, so
+    /// in single player its friend's).
     fn living_incoming_damage(&self, event: &mut LivingIncomingDamageEvent<'_>) -> Flow {
         let ours = creature::mob::kind(event.kind) == FAIRY;
-        let player_hit = matches!(
-            event.damage_type,
-            "minecraft:player_attack" | "minecraft:arrow" | "minecraft:trident"
-        );
+        let shot = matches!(event.damage_type, "minecraft:arrow" | "minecraft:trident");
         let befriended = u32::try_from(event.entity).is_ok_and(|id| creature::friend::of(id).is_some());
-        if ours && player_hit && befriended {
+        if ours && shot && befriended {
             Flow::Cancel
         } else {
             Flow::Continue

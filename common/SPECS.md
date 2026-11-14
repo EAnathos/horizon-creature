@@ -13,7 +13,7 @@ Everything below works and was tested in game, single player, unless said otherw
   that every mod reaches as the `creature` crate (`[dependencies] creature = "^0.1"`).
 - **Model drawing** (§3.1), **mob sounds** (§3.2), **the creative tab** (§3.3), **monsters sparing our creatures**
   (§3.4), **the small fliers' flight and spawning** (§3.5, by day, at night or at any hour) and **friends** (§6.2, the
-  Fairies').
+  Fairies' and the vulture's owner).
 - **Glass jar and territories** (§4): catching, releasing, settling on a flower patch or in a garden, the jar on
   display (spared by blasts and pistons). The jar left out of the creative tab when no jar mod is installed is built
   but not yet checked in game.
@@ -25,7 +25,7 @@ Everything below works and was tested in game, single player, unless said otherw
 - **Creature guide book and bestiary** (§7).
 
 Limits: single player only (the drawing reads render state from statics, arismoko/horizon#2740); the systems of §6
-stay in the vulture until a second mod needs them, except friends (§6.2), which the vulture moves onto next.
+stay in the vulture until a second mod needs them, except friends (§6.2), shared with the Fairies.
 
 ## 1. Role and rules ✅
 
@@ -194,7 +194,7 @@ Each moves here when a second mod needs it. Until then it stays in the vulture.
 | # | System | Today |
 |---|---|---|
 | 6.1 | **Riding and flight**: mount by right-click, **dynamic ridden flight** (steered by the look, banking into arc turns like a plane, vulture/SPECS.md §6.2), dismount, mount hearts (`mount-hud` injection), a saddle | in the vulture; the flight itself (glide, soaring, landing, the wing poses) moves here with the Seagulls (planned, mods/seagulls/SPECS.md §1), riding stays |
-| 6.2 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | **friends** ✅ in the library (`creature::friend`: the friend's UUID and staying, saved on the creature as `creature:friend`, kept in the glass jar), used by the **Fairies**; the vulture keeps its own owner (in `vulture:state`) and moves onto it next, its saves read once into it; defending, healing food and riding come with the Sporelins, the Seagulls and the Living Flowers (planned) |
+| 6.2 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | **friends** ✅ in the library (`creature::friend`: the friend's UUID and staying, saved on the creature as `creature:friend`, kept in the glass jar), used by the **Fairies** and the **Vulture** (its owner and sitting; a save from before, which held them in `vulture:state`, is moved over once, tested in game); defending, healing food and riding come with the Sporelins, the Seagulls and the Living Flowers (planned) |
 | 6.3 | **Babies and growth**: smaller model, growth time, faster when fed | in the vulture |
 | 6.4 | **Ridden special attack**: a key that makes the mount attack (the vulture's talons) | in the vulture |
 
@@ -250,7 +250,20 @@ What each item of the series is for, so a player knows how to make it and what t
 - A configuration file.
 - Compatibility with mods outside the series.
 
-## 9. Open questions
+## 9. Testing in game
+
+Creative, a test world; `cargo creature install` first.
+
+- The creative tab "Horizon Creature": every installed mod's items, spawn eggs first; the glass jar only with a jar mod.
+- A new world: the creature guide given once; its bestiary pages turn in 3D, list the biomes met, the facts and the
+  rarity; a craft of the guide with a vulture feather.
+- Monsters (a zombie, a skeleton) ignore a butterfly, a worm, a vulture.
+- The glass jar: catch, release on grass and on a flower (it settles), place it (sneak + right-click), break it (the
+  filled jar comes back); a named creature keeps its name; a TNT blast and a piston leave a placed jar alone.
+- The recipe book lists the series' recipes once one ingredient is held.
+- Small fliers come out near a player within a minute or two, in their biomes and hours.
+
+## 10. Open questions
 
 - ~~Q12: The Items tab's pages: found little by little, or all shown?~~ All shown from the start (§7.2).
 

@@ -114,3 +114,15 @@ pub fn despawn_far(host: &mut dyn Host, dimension: &str, entity: u32, keep: bool
         .is_some_and(|nbt| matches!(nbt.get(&"CustomName".into()), Some(t) if !matches!(t, Tag::End)));
     !named && host.remove_mob(dimension, entity)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_mod_mob_kind_loses_horizons_extra_prefix() {
+        assert_eq!(kind("minecraft:vulture:vulture"), "vulture:vulture");
+        assert_eq!(kind("vulture:vulture"), "vulture:vulture");
+        assert_eq!(kind("minecraft:sheep"), "minecraft:sheep");
+    }
+}

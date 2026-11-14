@@ -192,3 +192,36 @@ pub fn held(host: &dyn Host, draw: &mut horizon_client::mod_api::BlockEntityDraw
     creature::model::draw(host, draw, &model_boulder::BOULDER, TEXTURE, &|_| [0.0; 3]);
     draw.pop();
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Where a boulder thrown with `velocity` from `from` is after as many ticks as it takes to cover the ground to `to`.
+    fn landing(from: [f64; 3], to: [f64; 3], velocity: [f64; 3]) -> [f64; 3] {
+        let ticks = ((to[0] - from[0]).hypot(to[2] - from[2]) / SPEED).ceil().max(1.0) as i32;
+        let (mut at, mut v) = (from, velocity);
+        for _ in 0..ticks {
+            at = [at[0] + v[0], at[1] + v[1], at[2] + v[2]];
+            v[1] -= GRAVITY;
+        }
+        at
+    }
+
+    #[test]
+    fn a_boulder_lands_where_it_was_aimed() {
+        for to in [[10.0, 0.0, 0.0], [0.0, 3.0, -15.0], [7.0, -4.0, 7.0], [0.5, 1.0, 0.0]] {
+            let from = [0.0, 4.0, 0.0];
+            let at = landing(from, to, aim(from, to));
+            for k in 0..3 {
+                assert!((at[k] - to[k]).abs() < 1e-9, "aimed at {to:?}, landed at {at:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn it_flies_at_its_speed_along_the_ground() {
+        let v = aim([0.0, 0.0, 0.0], [20.0, 0.0, 0.0]);
+        assert!(v[0].hypot(v[2]) <= SPEED + 1e-9);
+    }
+}

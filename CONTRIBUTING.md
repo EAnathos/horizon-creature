@@ -54,18 +54,25 @@ for.
 | `cargo creature tab` | Writes the series' creative tab from the modules' `module.toml` |
 | `cargo creature model <mod> [model]` | Converts a Blockbench model into Rust (`native/api/src/model.rs`, or `model_<model>.rs`) |
 | `cargo creature preview` | Redraws every model's pictures for `docs/MODELS.md` |
-| `cargo creature sounds <mod> [folder]` | Cuts a mod's `.ogg` files from freesound downloads (default `sounds-src/`), as its `assets/sounds.toml` says |
+| `cargo creature sounds <mod> [folder]` | Cuts a mod's `.ogg` files from freesound downloads (default `sounds-src/`, any sample rate), as its `assets/sounds.toml` says |
 | `cargo creature pack <module>` | Packages a module's native half into `target/<id>.hnmod` |
 | `cargo creature build [mod...]` | Builds the library and the mods into `target/dist/`, without installing |
-| `cargo creature check` | The repository's consistency: tab, manifests, pins, translations, JSON, generated files, docs |
-| `cargo creature native-check <horizon-source>` | Clippy on every native crate against a Horizon source (a checkout at the pinned revision) |
+| `cargo creature check` | The repository's consistency: tab, manifests, pins, translations, JSON, generated files, sounds (events, files, subtitles), recipe book advancements, docs |
+| `cargo creature native-check <horizon-source>` | Clippy and the unit tests on every native crate against a Horizon source (a checkout at the pinned revision) |
 | `cargo creature install [--instance <name>] [mod...]` | Builds and installs, then runs the instance's native build |
 
 ## Before committing
 
-- `rustfmt` on the tools and the native code (`rustfmt.toml`), Clippy with `-D warnings` on the tools and the native
-  crates (`cargo creature native-check`), `cargo creature check`.
-- After a native change: `cargo creature install` and a test in game. The injections (`native/*.rs` beside `api/`)
+- `rustfmt` on the tools and the native code (`rustfmt.toml`), Clippy with `-D warnings` and the tests on the tools
+  (`cargo test`) and the native crates (`cargo creature native-check`), `cargo creature check`.
+- A new recipe comes with its recipe book advancement (`advancement/recipes/<tab>/<name>.json`, unlocked by one of its
+  ingredients and rewarding it), or the recipe book never shows it; `cargo creature check` says which lack one. A
+  feather in a recipe is `#creature:feathers`.
+- A new sound: its source in the mod's `assets/sounds.toml`, `cargo creature sounds <mod>`, its event in `sounds.json`
+  with a subtitle in both languages.
+- Pure logic (aiming, conversions, text built for the game) gets a unit test beside it (`#[cfg(test)]`).
+- After a native change: `cargo creature install` and a test in game, along the module's test list (its `SPECS.md`,
+  "Testing in game"). The injections (`native/*.rs` beside `api/`)
   compile only in the launcher's build, never in CI.
 - After a model change: `cargo creature model <mod> [model]` and `cargo creature preview`.
 - Everything in the repository is in English. The game text is translated: keep each module's

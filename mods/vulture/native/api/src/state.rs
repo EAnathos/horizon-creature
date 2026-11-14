@@ -3,7 +3,9 @@
 //! It lives on the mob, in `Mob.extra` (`tame`, `owner`, `sitting`, `variant2` = chests, `age`: negative for a
 //! baby, positive for a breeding pause, aged by Horizon as any `AgeableMob`'s), where the goals, the right-click
 //! (`interaction.rs`) and the drawing read it. A wandering trader saves none of those but the age, so it is also
-//! kept in a server attachment (`vulture:state`, saved with the entity), and the two meet here:
+//! kept in server attachments, saved with the entity: its owner and whether it sits in the library's
+//! `creature:friend` (`creature::friend`, common/SPECS.md §6.2), the rest in `vulture:state` (a save from before held
+//! the owner there too: it is moved over once). The mob and the saves meet here:
 //!
 //! - every tick, the `NoFall` goal hands the mob's state over (`from_mob`), and applies a state loaded from the save
 //!   once (`to_mob`);
@@ -91,11 +93,8 @@ static STATE: AttachmentType<Saved> = AttachmentType {
     default: Saved::default,
     codec: Some(AttachmentCodec {
         encode: |s| {
+            // The owner and sitting are the library's friend's (`save`).
             let mut data = Compound::new();
-            if let Some(owner) = s.owner {
-                data.insert("Owner".into(), Tag::IntArray(owner.to_vec()));
-            }
-            data.insert("Sitting".into(), Tag::Byte(i8::from(s.sitting)));
             data.insert("Harness".into(), Tag::Byte(i8::from(s.harness)));
             data.insert("Chests".into(), Tag::Byte(s.chests as i8));
             data.insert("Age".into(), Tag::Int(s.age));
@@ -103,6 +102,7 @@ static STATE: AttachmentType<Saved> = AttachmentType {
             data.insert("Pace".into(), Tag::Float(s.pace.to_bits()));
             Ok(data)
         },
+        // `Owner` and `Sitting`: only in a save from before the owner moved to `creature:friend` (`save` moves it).
         decode: |data: &Compound| {
             let owner = match data.get(&"Owner".into()) {
                 Some(Tag::IntArray(v)) => {
@@ -220,6 +220,9 @@ pub fn births(host: &mut dyn Host, dimension: &str) {
     let births = std::mem::take(&mut *BIRTHS.lock().unwrap());
     for birth in births {
         if let Some(id) = host.summon(dimension, "vulture:vulture", birth.at, Compound::new()) {
+            if let Some(owner) = birth.baby.owner {
+                creature::friend::befriend(host, id, creature::friend::uuid(owner));
+            }
             let _ = STATE.set(host, Holder::Entity(id), birth.baby);
         }
     }
@@ -541,8 +544,14 @@ pub fn dimension(id: u32) -> String {
         .unwrap_or_default()
 }
 
-/// From `entity_tick_post`: reads the save the first time, writes it when the state changed.
+/// From `entity_tick_post`: reads the saves the first time (moving an old save's owner to the friend), writes them
+/// when the state changed; the owner and sitting go to the library's friend.
 pub fn save(host: &mut dyn Host, dimension: &str, id: u32) {
+    creature::friend::tick(host, id);
+    if !creature::friend::loaded(id) {
+        // Not reachable yet (just loaded): read again next tick rather than take it for a new vulture.
+        return;
+    }
     let mut map = SHARED.lock().unwrap();
     let shared = map.entry(id).or_default();
     if shared.dimension != dimension {
@@ -550,28 +559,52 @@ pub fn save(host: &mut dyn Host, dimension: &str, id: u32) {
     }
     let holder = Holder::Entity(id);
     if !shared.read {
-        match STATE.get_existing(host, holder) {
-            Ok(Some(saved)) => {
-                shared.current = saved.clone();
-                shared.loaded = Some(saved);
-            }
-            Ok(None) => {}
-            // Not reachable yet (just loaded): read again next tick rather than take it for a new vulture.
+        let mut saved = match STATE.get_existing(host, holder) {
+            Ok(saved) => saved,
             Err(_) => return,
+        };
+        let mut friend = creature::friend::of(id);
+        // A save from before: its owner moves to the friend, and `vulture:state` is written again without it.
+        if friend.is_none()
+            && let Some(old) = saved.as_ref().and_then(|s| s.owner.map(|o| (o, s.sitting)))
+        {
+            creature::friend::befriend(host, id, creature::friend::uuid(old.0));
+            creature::friend::set_staying(id, old.1);
+            friend = creature::friend::of(id);
+            shared.dirty = true;
+        }
+        if let Some(f) = friend {
+            let s = saved.get_or_insert_with(Saved::default);
+            s.owner = Some(f.uuid);
+            s.sitting = f.staying;
+        }
+        if let Some(saved) = saved {
+            shared.current = saved.clone();
+            shared.loaded = Some(saved);
         }
         shared.read = true;
         return;
     }
-    if shared.dirty && shared.current.owner.is_none() {
-        // Never untame a vulture by saving over it: a saved owner wins, and is applied to the mob.
-        if let Ok(Some(saved)) = STATE.get_existing(host, holder)
-            && saved.owner.is_some()
-        {
+    let friend = creature::friend::of(id);
+    match (shared.current.owner, friend) {
+        // Tamed (or born tamed) since: the friend is saved.
+        (Some(owner), f) if f.is_none_or(|f| f.uuid != owner) => {
+            creature::friend::befriend(host, id, creature::friend::uuid(owner));
+            creature::friend::set_staying(id, shared.current.sitting);
+        }
+        (Some(_), Some(f)) if f.staying != shared.current.sitting => {
+            creature::friend::set_staying(id, shared.current.sitting);
+        }
+        // Never untamed by a state that lost its owner: the friend wins, and is applied to the mob.
+        (None, Some(f)) => {
+            let mut saved = shared.current.clone();
+            saved.owner = Some(f.uuid);
+            saved.sitting = f.staying;
             shared.current = saved.clone();
             shared.loaded = Some(saved);
-            shared.dirty = false;
             return;
         }
+        _ => {}
     }
     if shared.dirty && STATE.set(host, holder, shared.current.clone()).is_ok() {
         shared.dirty = false;

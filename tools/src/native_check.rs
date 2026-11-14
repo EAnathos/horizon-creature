@@ -1,7 +1,8 @@
 //! Compiles every module's native `api` crate without the Horizon launcher, for CI and quick local checks: a workspace in
 //! `target/native-check/` whose crates are ours (their `src/` in place), each depending on the Horizon source given
 //! (`horizon-client` by path, at the series' pinned revision), the mods on the library as the `creature` crate (as the
-//! launcher gives it) and on the mods they require. Then `cargo clippy` on it, warnings denied.
+//! launcher gives it) and on the mods they require. Then `cargo clippy` on it, warnings denied, and their unit tests
+//! (`cargo test`: pure logic, nothing that needs a running game).
 //!
 //! The injections (`native/*.rs` helpers) are not compiled here: they compile inside Horizon's own crates, in the
 //! launcher's build only.
@@ -44,7 +45,8 @@ pub fn run(horizon: &str) -> crate::Result {
         &ws,
         "cargo",
         &["clippy", "--workspace", "--all-targets", "--", "-D", "warnings"],
-    )
+    )?;
+    run_in(&ws, "cargo", &["test", "--workspace"])
 }
 
 /// `target/native-check/<id>/Cargo.toml`: the module's `api` crate, by its sources, against `client`.

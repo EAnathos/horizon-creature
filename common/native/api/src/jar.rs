@@ -510,3 +510,26 @@ pub fn draw_inside(host: &dyn Host, event: &mut horizon_client::mod_api::BlockEn
 
 /// The creature's size in a placed jar, against its size in the bestiary (about a block).
 const INSIDE: f32 = 0.4;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_name_is_quoted_safely_in_snbt() {
+        assert_eq!(quoted("Lili"), "\"Lili\"");
+        assert_eq!(quoted("Bob \"the\" fairy"), "\"Bob \\\"the\\\" fairy\"");
+        assert_eq!(quoted("back\\slash"), "\"back\\\\slash\"");
+    }
+
+    #[test]
+    fn a_named_befriended_jar_says_both_then_the_series() {
+        let lines = lore("fairies:fairy", None, true, Some("Lili"));
+        let name = lines.find("glass_jar.name").unwrap();
+        let friend = lines.find("glass_jar.friend").unwrap();
+        let series = lines.find("itemGroup.creature").unwrap();
+        assert!(name < friend && friend < series);
+        assert!(lines.contains("{text:\"Lili\"}"));
+        assert_eq!(lore("worms:worm", None, false, None).matches("translate").count(), 1);
+    }
+}

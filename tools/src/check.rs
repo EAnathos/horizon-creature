@@ -11,6 +11,10 @@
 //!   `docs/models/` and its entry in `docs/MODELS.md` (`cargo creature preview`).
 //! - The mods that use the glass jar are the same in its recipe's condition and in the creative tab injection
 //!   (`common/native/jar_tab.rs`).
+//! - Sounds: every sound a module's `sounds.json` names is an `.ogg` of it, and every `.ogg` is named there; every
+//!   subtitle is translated; when the module has an `assets/sounds.toml`, its clips are exactly its `.ogg` files.
+//! - Recipes: each crafting or cooking recipe has its recipe book advancement (`advancement/recipes/<tab>/<name>.json`,
+//!   rewarding it), or the recipe book never shows it. Brewing recipes have none, as vanilla's.
 //! - The Markdown docs use no em dash.
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -47,6 +51,8 @@ pub fn run() -> crate::Result {
     }
     for m in std::iter::once(&library).chain(&mods) {
         models(m, &mut errors);
+        sounds(m, &mut errors);
+        recipes(m, &mut errors);
     }
     jar_users(&root, &mut errors);
     let ids: Vec<String> = mods.iter().map(|m| m.id.clone()).collect();
@@ -238,6 +244,155 @@ fn jar_users(root: &Path, errors: &mut Vec<String>) {
     }
 }
 
+/// The module's sounds: `sounds.json` and the `.ogg` files agree, subtitles are translated, `sounds.toml`'s clips are
+/// the `.ogg` files.
+fn sounds(m: &Module, errors: &mut Vec<String>) {
+    let Some(content) = m.content() else {
+        return;
+    };
+    let assets = content.join(format!("assets/{}", m.id));
+    let json = assets.join("sounds.json");
+    let oggs = ogg_names(&assets.join("sounds"));
+    let toml_path = m.dir.join("assets/sounds.toml");
+    if !json.is_file() {
+        if !oggs.is_empty() || toml_path.is_file() {
+            errors.push(format!("{}: sound files but no sounds.json", rel(&assets)));
+        }
+        return;
+    }
+    let Ok(events) = read_json(&json) else {
+        return; // reported with the JSON files
+    };
+    let keys: BTreeSet<String> = read_json(&assets.join("lang/en_us.json"))
+        .ok()
+        .and_then(|v| Some(v.as_object()?.keys().cloned().collect()))
+        .unwrap_or_default();
+    let (named, subtitles) = sound_events(&events);
+    for name in &named {
+        match name.split_once(':') {
+            Some((ns, path)) if ns == m.id && oggs.contains(path) => {}
+            _ => errors.push(format!("{}: {name} has no .ogg in this module", rel(&json))),
+        }
+    }
+    for ogg in &oggs {
+        if !named.contains(&format!("{}:{ogg}", m.id)) {
+            errors.push(format!("{}: sounds/{ogg}.ogg is in no event", rel(&json)));
+        }
+    }
+    for key in subtitles.iter().filter(|k| !keys.contains(*k)) {
+        errors.push(format!("{}: subtitle {key} is not translated", rel(&json)));
+    }
+    if let Ok(table) = manifest(&toml_path) {
+        let out = table.get("out").and_then(|o| o.as_str()).unwrap_or_default();
+        let out = out.strip_prefix("sounds/").unwrap_or(out);
+        let clips: BTreeSet<String> = table
+            .get("clip")
+            .and_then(|c| c.as_array())
+            .into_iter()
+            .flatten()
+            .filter_map(|c| Some(format!("{out}/{}", c.get("name")?.as_str()?)))
+            .collect();
+        for missing in clips.symmetric_difference(&oggs) {
+            errors.push(format!(
+                "{}: {missing} is {} (run `cargo creature sounds {}`)",
+                rel(&toml_path),
+                if clips.contains(missing) {
+                    "a clip with no .ogg"
+                } else {
+                    "an .ogg with no clip"
+                },
+                m.id
+            ));
+        }
+    }
+}
+
+/// The `.ogg` files under `dir`, as a sound event names them: their path from `dir`, without the extension.
+fn ogg_names(dir: &Path) -> BTreeSet<String> {
+    let mut files = Vec::new();
+    walk(dir, &mut files);
+    files
+        .iter()
+        .filter(|f| f.extension().is_some_and(|e| e == "ogg"))
+        .filter_map(|f| {
+            Some(
+                f.strip_prefix(dir)
+                    .ok()?
+                    .with_extension("")
+                    .to_str()?
+                    .replace('\\', "/"),
+            )
+        })
+        .collect()
+}
+
+/// The sounds a `sounds.json` names (`ns:path`) and its subtitle keys.
+fn sound_events(events: &serde_json::Value) -> (BTreeSet<String>, BTreeSet<String>) {
+    let mut named = BTreeSet::new();
+    let mut subtitles = BTreeSet::new();
+    for event in events.as_object().into_iter().flat_map(|o| o.values()) {
+        if let Some(s) = event["subtitle"].as_str() {
+            subtitles.insert(s.to_owned());
+        }
+        for entry in event["sounds"].as_array().into_iter().flatten() {
+            if let Some(id) = entry.as_str().or_else(|| entry["name"].as_str()) {
+                named.insert(id.to_owned());
+            }
+        }
+    }
+    (named, subtitles)
+}
+
+/// The module's crafting and cooking recipes each have a recipe book advancement rewarding them.
+fn recipes(m: &Module, errors: &mut Vec<String>) {
+    let Some(content) = m.content() else {
+        return;
+    };
+    let Ok(namespaces) = std::fs::read_dir(content.join("data")) else {
+        return;
+    };
+    for ns in namespaces.flatten().map(|e| e.path()).filter(|p| p.is_dir()) {
+        let name = ns.file_name().and_then(|n| n.to_str()).unwrap_or_default().to_owned();
+        let Ok(files) = std::fs::read_dir(ns.join("recipe")) else {
+            continue;
+        };
+        let recipes: Vec<String> = files
+            .flatten()
+            .map(|e| e.path())
+            .filter(|p| p.extension().is_some_and(|e| e == "json"))
+            .filter_map(|p| Some(format!("{name}:{}", p.file_stem()?.to_str()?)))
+            .collect();
+        let mut advancements = Vec::new();
+        walk(&ns.join("advancement/recipes"), &mut advancements);
+        let rewarded: BTreeSet<String> = advancements
+            .iter()
+            .filter_map(|a| read_json(a).ok())
+            .flat_map(|v| rewarded_recipes(&v))
+            .collect();
+        for recipe in missing_advancements(&recipes, &rewarded) {
+            errors.push(format!(
+                "{}: recipe {recipe} has no recipe book advancement (advancement/recipes/<tab>/, docs/CONVENTIONS.md)",
+                rel(&ns)
+            ));
+        }
+    }
+}
+
+/// The recipes an advancement rewards.
+fn rewarded_recipes(advancement: &serde_json::Value) -> Vec<String> {
+    advancement["rewards"]["recipes"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|r| r.as_str().map(str::to_owned))
+        .collect()
+}
+
+/// The `recipes` no advancement rewards.
+fn missing_advancements<'a>(recipes: &'a [String], rewarded: &BTreeSet<String>) -> Vec<&'a String> {
+    recipes.iter().filter(|r| !rewarded.contains(*r)).collect()
+}
+
 fn collect_modids(v: &serde_json::Value, out: &mut BTreeSet<String>) {
     match v {
         serde_json::Value::Object(o) => {
@@ -301,4 +456,45 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
 
 fn rel(path: &Path) -> String {
     path.strip_prefix(crate::root()).unwrap_or(path).display().to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reads_the_sounds_and_subtitles_of_sound_events() {
+        let events = serde_json::json!({
+            "entity.fairy.hurt": { "subtitle": "subtitles.entity.fairy.hurt", "sounds": ["fairies:fairies/hurt"] },
+            "entity.fairy.ambient": { "sounds": [{ "name": "fairies:fairies/chime1", "volume": 0.5 }] }
+        });
+        let (named, subtitles) = sound_events(&events);
+        assert_eq!(
+            named.into_iter().collect::<Vec<_>>(),
+            ["fairies:fairies/chime1", "fairies:fairies/hurt"]
+        );
+        assert_eq!(
+            subtitles.into_iter().collect::<Vec<_>>(),
+            ["subtitles.entity.fairy.hurt"]
+        );
+    }
+
+    #[test]
+    fn finds_recipes_with_no_advancement() {
+        let advancement = serde_json::json!({ "rewards": { "recipes": ["cyclops:club"] } });
+        let rewarded: BTreeSet<String> = rewarded_recipes(&advancement).into_iter().collect();
+        let recipes = ["cyclops:club".to_owned(), "cyclops:shepherds_crook".to_owned()];
+        assert_eq!(missing_advancements(&recipes, &rewarded), [&recipes[1]]);
+    }
+
+    #[test]
+    fn collects_the_mods_a_condition_waits_for() {
+        let recipe = serde_json::json!({ "neoforge:conditions": [{ "type": "neoforge:or", "values": [
+            { "type": "neoforge:mod_loaded", "modid": "worms" },
+            { "type": "neoforge:mod_loaded", "modid": "fairies" }
+        ] }] });
+        let mut ids = BTreeSet::new();
+        collect_modids(&recipe, &mut ids);
+        assert_eq!(ids.into_iter().collect::<Vec<_>>(), ["fairies", "worms"]);
+    }
 }

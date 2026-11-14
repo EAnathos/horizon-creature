@@ -62,7 +62,16 @@ Left: chickens pecking worms (§2), planned with the Dung Beetles.
 
 - Giant worms ✅, taming, combat, riding, fishing bait and animal food ✅, breeding ✅.
 
-## 6. Open questions
+## 6. Testing in game
+
+Creative, a plains and some farmland; `cargo creature install worms` first.
+
+- In the rain, worms come up on the grass near you; they crawl and dig (sound).
+- Caught in a jar, released on 10 or more farmland blocks: it settles; crops there grow a stage now and then (green
+  sparkles); fewer than 10 farmland blocks: it leaves.
+- Hurt and death sounds.
+
+## 7. Open questions
 
 - ~~Q1: What a worm does?~~ Faster crop growth, a slow bonus.
 - ~~Q2: The garden?~~ At least 10 connected farmland.

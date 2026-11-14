@@ -57,7 +57,7 @@ Left: tuning (flight numbers, taming odds, speeds, the dive attack) as players r
 | New living entity type | ✅ tested in game | Only by copying a **zombie, villager or wandering trader**. `vulture:vulture` (wandering trader) works: `/summon`, egg, saving. |
 | Custom AI | ✅ | `register_goals`: we clear the base model's (wandering trader's) goals and add ours |
 | Custom model and texture | ✅ tested in game | `native_mob_submit`: we draw our cubes (`native_draw_cube`, pose stack, pivots) with `vulture:entity/...` textures |
-| Per-entity saved data | ✅ | Server attachments on `Holder::Entity(id)` (owner, stats, variant, chests…) |
+| Per-entity saved data | ✅ | Server attachments on `Holder::Entity(id)`: the owner and sitting in the library's `creature:friend`, the stats, harness, chests and age in `vulture:state` |
 | Right-click on the entity | ✅ | `native_interact_entity` |
 | Taming event | ✅ | `native_entity_tame` (vanilla only, to check) |
 | Nearby items on the ground | ✅ | API 42 (position, stack, pickup delay) |
@@ -115,8 +115,8 @@ Variant names are simple colour names ✅, so players need not know the species.
 
 ## 5. Taming ✅
 
-> Ownership, sit/follow and defending the owner are candidates for the library (common/SPECS.md §6.2); taming by thrown chicken is the
-> vulture's own.
+> Ownership and sit/follow are the library's friends (common/SPECS.md §6.2: its owner and sitting are saved as
+> `creature:friend`); defending the owner and taming by thrown chicken are the vulture's own.
 
 1. The player **throws** a raw chicken (Q key) near a wild vulture. Handing it over does not work.
 2. The vulture spots the item (~16 blocks), lands on it and eats it (animation + particles).
@@ -256,7 +256,18 @@ vulture.
 - Vulture armour.
 - User configuration.
 
-## 10. Remaining open questions
+## 10. Testing in game
+
+Creative, a desert; `cargo creature install vulture` first.
+
+- Wild: it soars and lands; hit it, it fights back from the air with others; it drops feathers and meat.
+- Raw chicken thrown near it: eaten, hearts one time in 4; tamed, it follows, sits on right-click.
+- A saddle, then ride: take off, steer with the look, bank, land, dismount; the talons (R) catch a small creature.
+- Two chests, the screen (sneak + right-click); killed, it drops its saddle, chests and their contents.
+- Rotten flesh to two tamed vultures: a baby, born tamed, which grows.
+- Its sounds: calls, wings, hurt, death.
+
+## 11. Remaining open questions
 
 - ~~Q27: The flight's numbers, the bank and turn limits, and what A / D and S do in the air?~~ The numbers as built, to
   balance in game; A / D steer, S brakes in the air and backs up on the ground (§6.2).

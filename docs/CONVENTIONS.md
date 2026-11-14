@@ -28,7 +28,8 @@ Rules shared by every module of the Horizon Creature series ([ARCHITECTURE.md](A
 - Markers: ✅ decided, ❓ proposal to confirm. Numbers are starting values, balanced in game.
 - §0 is the status: what the module does today (tested in game unless said), then what is left. It describes the
   current state, not its history: no dated log (the history is git's, and a release's notes).
-- The last section lists the open questions, struck through once answered with the answer.
+- A playable module's spec ends with "Testing in game" (what to try after a change, in which world), then the open
+  questions, struck through once answered with the answer.
 
 ## Code
 

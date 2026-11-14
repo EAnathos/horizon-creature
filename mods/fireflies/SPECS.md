@@ -57,7 +57,15 @@ Done and tested in game (single player).
 
 - Larvae, glowworms in caves, colours other than yellow-green.
 
-## 5. Open questions
+## 5. Testing in game
+
+Creative, a swamp or a plains at night; `cargo creature install fireflies` first.
+
+- At night, groups appear near you, their lanterns pulsing, a soft light around them; by day they rest.
+- Caught in a jar, released on a flower: it stays; the jar placed glows (light 7).
+- The buzz at take-off.
+
+## 6. Open questions
 
 - ~~Q1: Settled fireflies?~~ The flower patch rule, as butterflies.
 - ~~Q2: The jar's light?~~ Light 7, steady.

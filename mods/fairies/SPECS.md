@@ -25,7 +25,8 @@ Built and tested in game (single player).
   library's `friend`).
 - **Befriended**: it circles its friend's head, leaving faint sparkles; right-click makes it stay where it is or
   follow again. Its friend has **Speed I** while it follows within 8 blocks. Once a day it leaves a pinch of fairy dust
-  at their feet. It comes to them at once past 24 blocks, never despawns, and their blows can't hurt it.
+  at their feet. It comes to them at once past 24 blocks, never despawns, and its friend's blows can't hurt it (nor a
+  player's arrow or trident: Horizon doesn't say whose).
 - **Glass jar** (§5): caught as the other creatures (a befriended one only by its friend), still befriended once let
   out, its name kept; released on a flower it settles there; on display, a jar that glows (light 7, as fireflies).
 - **Fairy dust** (§6): its brewing recipe is written (awkward potion + fairy dust = Swiftness, `data/fairies/recipe/brewing/`);
@@ -98,7 +99,19 @@ The biomes met in, and the facts: "Friend" (befriended one), "Jar" (caught one i
 - Riding (too small), fairy rings and houses, other blessings (jump boost,
   night vision), fairies fighting for their friend, breeding.
 
-## 8. Open questions
+## 8. Testing in game
+
+Survival and creative, a flower forest or meadow; `cargo creature install fairies` first.
+
+- Wild ones appear near you now and then; walking up scares them off; sneaking, they stay.
+- Holding glow berries: one hovers before your face; right-click feeds it at once; one in 3 befriends (hearts, a
+  line on the action bar).
+- Befriended: it circles your head, Speed I, fairy dust at your feet once a day, back to you past 24 blocks, unhurt by
+  your sword; right-click: it stays, again: it follows; it survives a reload.
+- In a jar (no sneaking): "Befriended" and its name on the jar, still yours once released.
+- Its sounds: wings, chimes and laugh, hurt, vanishing, the sparkle on befriending.
+
+## 9. Open questions
 
 - ~~Q1: The name?~~ Fairies, `fairies` (§1).
 - ~~Q2: Their look?~~ One violet fairy: big eyes, violet hair, a little fairy dress, butterfly wings (§2).
