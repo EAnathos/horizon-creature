@@ -191,3 +191,16 @@ fn set_flapping(id: u32, flapping: bool) {
 pub fn flapping(id: u32) -> bool {
     FLAPPING.lock().unwrap().contains_key(&id)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn angles_wrap_to_a_half_turn_each_way() {
+        assert_eq!(wrap(190.0), -170.0);
+        assert_eq!(wrap(-190.0), 170.0);
+        assert_eq!(wrap(720.0 + 45.0), 45.0);
+        assert_eq!(wrap(-180.0), -180.0);
+    }
+}

@@ -247,3 +247,31 @@ pub fn check_garden(cx: &Cx, entity: u32) -> Vec<[i32; 3]> {
     }
     Vec::new()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_garden_is_the_connected_farmland_one_step_up_or_down() {
+        // A 4 by 3 field at y 0, a strip going up one step at x 4, and a lone block apart.
+        let field = |p: [i32; 3]| {
+            (p[1] == 0 && (0..4).contains(&p[0]) && (0..3).contains(&p[2]))
+                || (p[1] == 1 && p[0] == 4 && p[2] == 0)
+                || p == [10, 0, 10]
+        };
+        let garden = garden_from([0, 0, 0], field);
+        assert_eq!(garden.len(), 13);
+        assert!(garden.contains(&[4, 1, 0]));
+        assert!(!garden.contains(&[10, 0, 10]));
+    }
+
+    #[test]
+    fn a_flower_patch_reaches_around_and_above_its_flowers() {
+        let flowers = [[0, 64, 0]];
+        assert!(inside(&flowers, [AROUND, 64 + ABOVE, -AROUND]));
+        assert!(!inside(&flowers, [AROUND + 1, 64, 0]));
+        assert!(!inside(&flowers, [0, 64 + ABOVE + 1, 0]));
+        assert!(!inside(&flowers, [0, 62, 0]));
+    }
+}

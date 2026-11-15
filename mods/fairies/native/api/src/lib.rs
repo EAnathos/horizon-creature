@@ -108,6 +108,10 @@ const BOOK_SCALE: f32 = 1.2;
 const BOOST_REACH: f64 = 8.0;
 const BOOST_EVERY: u32 = 40;
 const BOOST_TICKS: i32 = 70;
+const _: () = assert!(
+    BOOST_TICKS > BOOST_EVERY as i32,
+    "the speed is renewed before it lapses"
+);
 /// Its night light (SPECS §3), seen only: violet, wider around a fairy following its friend.
 const LIGHTS: usize = 8;
 const LIGHT_RGB: u32 = 0xC9A2FF;
@@ -233,6 +237,10 @@ fn fed(host: &mut dyn Host, fairy: u32, stack: &horizon_client::items::ItemStack
 /// One chance in this many that a glow berry befriends; a sweet berry is half as good (SPECS §3).
 const GLOW_BERRY_CHANCE: u64 = 3;
 const SWEET_BERRY_CHANCE: u64 = 6;
+const _: () = assert!(
+    GLOW_BERRY_CHANCE < SWEET_BERRY_CHANCE,
+    "a glow berry befriends more often"
+);
 
 /// What a befriended fairy does for its friend now and then: Speed I near them, a pinch of dust once a day.
 fn befriended(host: &mut dyn Host, dimension: &str, fairy: u32, at: [f64; 3], friend: Friend, ticks: u32) {
@@ -467,5 +475,17 @@ impl Hooks for Fairies {
         );
         event.draw.pop();
         Flow::Cancel
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn they_spawn_where_their_bestiary_says_at_any_hour() {
+        assert_eq!(SPAWNING.biomes, BESTIARY.biomes);
+        assert_eq!(FLIGHT.hours, creature::flutter::Hours::Always);
+        assert!(SPAWNING.group.0 <= SPAWNING.group.1);
     }
 }

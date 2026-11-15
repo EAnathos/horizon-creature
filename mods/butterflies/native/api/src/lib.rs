@@ -474,3 +474,34 @@ impl Hooks for Butterflies {
         Flow::Cancel
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use creature::colours::{Random, from_key, key, roll};
+
+    #[test]
+    fn every_look_rolled_is_one_of_the_scheme_and_goes_through_its_key() {
+        let biomes = [
+            None,
+            Some("minecraft:plains"),
+            Some("minecraft:jungle"),
+            Some("minecraft:flower_forest"),
+        ];
+        let mut random = Random::new(7);
+        for biome in biomes {
+            for _ in 0..200 {
+                let look = roll(&SCHEME, biome, &mut random);
+                assert!(look.base < SCHEME.colours.len() && look.pattern_colour < SCHEME.colours.len());
+                assert!(look.pattern < SCHEME.patterns.len());
+                assert_eq!(from_key(&SCHEME, &key(&SCHEME, look)), Some(look));
+            }
+        }
+    }
+
+    #[test]
+    fn its_spawning_biomes_are_its_bestiary_s() {
+        assert_eq!(SPAWNING[0].biomes, BUTTERFLY_BIOMES);
+        assert_eq!(SPAWNING[1].biomes, MOTH_BIOMES);
+    }
+}

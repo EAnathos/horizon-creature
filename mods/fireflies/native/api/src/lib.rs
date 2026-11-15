@@ -242,3 +242,15 @@ impl Hooks for Fireflies {
         Flow::Cancel
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn they_spawn_where_their_bestiary_says_at_night() {
+        assert_eq!(SPAWNING.biomes, BESTIARY.biomes);
+        assert_eq!(FLIGHT.hours, creature::flutter::Hours::Night);
+        assert!(SPAWNING.group.0 <= SPAWNING.group.1);
+    }
+}

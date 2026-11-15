@@ -362,3 +362,28 @@ impl Hooks for VanillaBestiary {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_spawn_egg_hatches_its_creature() {
+        assert_eq!(hatched_by("minecraft:cow_spawn_egg").as_deref(), Some("minecraft:cow"));
+        assert_eq!(hatched_by("minecraft:stick"), None);
+        assert_eq!(hatched_by("minecraft:not_a_creature_spawn_egg"), None);
+    }
+
+    #[test]
+    fn every_creature_is_vanilla_once_with_its_products_named() {
+        let mut ids = std::collections::BTreeSet::new();
+        for c in CREATURES {
+            assert!(c.id.starts_with("minecraft:"), "{}", c.id);
+            assert!(ids.insert(c.id), "{} twice", c.id);
+            for p in c.products {
+                assert!(!p.fact.is_empty() && p.item.contains(':'), "{}: {}", c.id, p.item);
+            }
+        }
+        assert!(CREATURES.len() >= 80);
+    }
+}

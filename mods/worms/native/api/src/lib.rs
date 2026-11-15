@@ -433,3 +433,16 @@ impl Hooks for Worms {
         Flow::Cancel
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn crops_grow_to_their_last_age_and_other_blocks_not_at_all() {
+        assert_eq!(grown_age("minecraft:wheat"), Some(7));
+        assert_eq!(grown_age("minecraft:beetroots"), Some(3));
+        assert_eq!(grown_age("minecraft:torchflower_crop"), Some(1));
+        assert_eq!(grown_age("minecraft:grass_block"), None);
+    }
+}

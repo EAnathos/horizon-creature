@@ -610,3 +610,44 @@ pub fn save(host: &mut dyn Host, dimension: &str, id: u32) {
         shared.dirty = false;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn an_old_save_s_owner_is_read_and_a_new_save_keeps_it_out() {
+        let codec = STATE.codec.as_ref().unwrap();
+        let mut old = Compound::new();
+        old.insert("Owner".into(), Tag::IntArray(vec![1, 2, 3, 4]));
+        old.insert("Sitting".into(), Tag::Byte(1));
+        old.insert("Chests".into(), Tag::Byte(5));
+        let saved = (codec.decode)(&old).unwrap();
+        assert_eq!(saved.owner, Some([1, 2, 3, 4]));
+        assert!(saved.sitting);
+        assert_eq!(saved.chests, 2, "at most two chests");
+        // The owner now lives in the library's friend: `vulture:state` no longer writes it.
+        let written = (codec.encode)(&saved).unwrap();
+        assert!(!written.contains_key(&"Owner".into()));
+        assert!(!written.contains_key(&"Sitting".into()));
+        let again = (codec.decode)(&written).unwrap();
+        assert_eq!(again.chests, 2);
+        assert_eq!(again.owner, None);
+    }
+
+    #[test]
+    fn a_baby_grows_from_chick_to_juvenile_to_grown() {
+        assert!(chick(BABY_AGE));
+        assert!(!chick(BABY_AGE / 4), "three quarters grown: a juvenile");
+        assert_eq!(growth(0), 1.0);
+        assert_eq!(growth(BREED_PAUSE), 1.0, "a breeding pause is grown up");
+        assert!((growth(BABY_AGE / 2) - 0.5).abs() < 1e-6);
+    }
+
+    #[test]
+    fn a_stat_rolls_within_its_range() {
+        assert_eq!(stat(HEALTH, 0.0), HEALTH.0);
+        assert_eq!(stat(HEALTH, 1.0), HEALTH.1);
+        assert_eq!(stat(PACE, 0.5), (PACE.0 + PACE.1) / 2.0);
+    }
+}
