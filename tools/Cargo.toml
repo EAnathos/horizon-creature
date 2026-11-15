@@ -14,7 +14,7 @@ serde_json = "1"
 zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
 # zip's deflate through flate2's pure-Rust backend (miniz_oxide): no C library to build.
 flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
-toml = { version = "0.9", default-features = false, features = ["parse", "serde"] }
+toml = { version = "1.2", default-features = false, features = ["parse", "serde"] }
 serde = { version = "1.0.229", features = ["derive"] }
 # Decodes the models' embedded textures and writes their pictures (`cargo creature preview`).
 png = "0.18"
