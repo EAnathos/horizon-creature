@@ -1,0 +1,23 @@
+# Dependabot: weekly pull requests for the CI's actions and the tools' Rust dependencies (CONTRIBUTING.md).
+#
+# The native crates (`common/native/api`, `mods/*/native/api`) are left out on purpose: their only dependency is
+# Horizon itself, pinned to one revision for the whole series (docs/CONVENTIONS.md) and moved by hand, all modules and
+# the CI's HORIZON_REV at once.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: cargo
+    directory: /tools
+    schedule:
+      interval: weekly
+    groups:
+      # Minor and patch updates in one pull request; a major one gets its own.
+      tools:
+        update-types: [minor, patch]

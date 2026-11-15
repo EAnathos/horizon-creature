@@ -23,6 +23,7 @@ How the repository is organised, how to build and test the mods, and the rules a
 | `tools/` | The build tools, `cargo creature <command>` |
 | `docs/` | Series-wide documentation |
 | `.github/workflows/ci.yml` | CI (below) |
+| `.github/dependabot.yml` | Dependabot (below) |
 
 Generated files are committed and checked by `cargo creature check`: the creative tab
 (`common/content/data/creature/horizon/creative_tab/creature.json`), each model's Rust (`native/api/src/model*.rs`) and
@@ -83,6 +84,10 @@ for.
 
 CI (`.github/workflows/ci.yml`) runs all of this on every push and pull request, then builds every module and keeps the
 files as an artifact.
+
+Dependabot (`.github/dependabot.yml`) opens weekly pull requests for the CI's actions (all in one) and the tools' Rust
+dependencies (minor and patch updates in one, each major one apart); CI checks them like any other. The native crates
+are left out: Horizon, their only dependency, is pinned for the whole series and moved by hand.
 
 ## Rules of the series
 
