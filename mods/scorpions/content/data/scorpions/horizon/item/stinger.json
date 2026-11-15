@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:prismarine_shard",
+  "components": {
+    "minecraft:item_model": "scorpions:stinger",
+    "minecraft:item_name": {
+      "translate": "item.scorpions.stinger"
+    }
+  }
+}

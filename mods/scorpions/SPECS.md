@@ -10,7 +10,9 @@ tail arched over its back; leave it be and it backs away. Hit it and it fights b
 
 ## 0. Status
 
-Planned: the spec and the model, no code yet.
+In development: the spec, the model, and the code (native and content). It builds and loads; it is not yet tested in
+game, and its **textures and sounds are not drawn/cut yet** (the mod shows missing textures and is silent until they
+are added).
 
 - **The model** (`assets/models/scorpion.bbmodel`, pictures in docs/MODELS.md): a carapace with a pair of eyes on top
   and small ones on its front corners, three broad body segments, eight thin legs bent at the knee, two big claws
@@ -20,8 +22,17 @@ Planned: the spec and the model, no code yet.
   its back, which the pose raises higher in the defensive posture or lowers when it walks. A texture per kind (§2):
   desert (pale straw, dark amber stinger), badlands (red-brown), cave (charcoal, its segments' edges glowing cyan, as
   real scorpions glow under ultraviolet light).
+- **The code**: one entity, the kinds as morphs (the library's colours, `SCHEME`), crawling on the ground (the
+  library's small crawlers), the defensive posture (`posture.rs`, backing away and the step-on sting), fighting back
+  (`fight.rs`, the vanilla "hurt by" target goal and a poisoned sting), the jar and the sand rule, the bestiary page,
+  and the content (entity, spawn egg, the venom sac, stinger and scorpion dagger with their recipes and the venom-sac
+  brewing, the loot table, the biome spawns, en/fr).
 
-Next: the code.
+Left to do: the **textures** (`assets/.../entity/scorpion/desert|badlands|cave|cave_glow` and the five item icons) and
+the **sounds** (`assets/sounds.toml` and the hiss, strike, hurt and death clips, cut by `cargo creature sounds`); then
+test in game and balance. To refine: the cave kind by depth rather than biome (§2), the pinch's lesser damage (both
+strikes deal the entity's attack damage for now, the sting adds the poison), the dagger's poison-on-hit, and stinging
+the player who tries to catch a reared scorpion (§6).
 
 ## 1. Technical context
 

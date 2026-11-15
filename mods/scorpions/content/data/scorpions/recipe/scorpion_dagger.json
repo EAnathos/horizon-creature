@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "V": "scorpions:stinger",
+    "S": "minecraft:stick"
+  },
+  "pattern": [
+    "V",
+    "S"
+  ],
+  "result": {
+    "id": "scorpions:scorpion_dagger"
+  }
+}

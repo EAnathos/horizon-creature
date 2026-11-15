@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "A": "minecraft:arrow",
+    "V": "scorpions:venom_sac"
+  },
+  "pattern": [
+    "AAA",
+    "AVA",
+    "AAA"
+  ],
+  "result": {
+    "id": "minecraft:tipped_arrow",
+    "count": 8,
+    "components": {
+      "minecraft:potion_contents": {
+        "potion": "minecraft:poison"
+      }
+    }
+  }
+}

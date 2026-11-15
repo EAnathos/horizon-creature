@@ -1,0 +1,16 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": [
+    "minecraft:desert",
+    "minecraft:badlands",
+    "minecraft:wooded_badlands",
+    "minecraft:eroded_badlands",
+    "minecraft:dripstone_caves"
+  ],
+  "spawners": {
+    "type": "scorpions:scorpion",
+    "weight": 6,
+    "minCount": 1,
+    "maxCount": 2
+  }
+}

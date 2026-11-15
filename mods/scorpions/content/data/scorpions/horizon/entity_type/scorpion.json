@@ -1,0 +1,8 @@
+{
+  "template": "minecraft:wandering_trader",
+  "attributes": {
+    "minecraft:max_health": 4.0,
+    "minecraft:movement_speed": 0.2,
+    "minecraft:attack_damage": 2.0
+  }
+}

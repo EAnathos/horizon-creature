@@ -1,6 +1,11 @@
 # Scorpions's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
 id = "scorpions"
 name = "Scorpions"
-status = "planned"
-# Its items in the series' creative tab, in order (none until implementation starts).
-creative = []
+status = "in development"
+# Its items in the series' creative tab, in order.
+creative = [
+  "scorpions:scorpion_spawn_egg",
+  "scorpions:venom_sac",
+  "scorpions:stinger",
+  "scorpions:scorpion_dagger",
+]

@@ -1,0 +1,8 @@
+id = "scorpions"
+name = "Scorpions"
+version = "0.1.0"
+description = "Real-size scorpions of deserts, badlands and caves (in progress). Needs Horizon Creature."
+authors = ["EAnathos"]
+api = "0.2"
+side = "both"
+capabilities = ["registries"]

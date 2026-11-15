@@ -6,6 +6,7 @@
     "cyclops:cyclops_spawn_egg",
     "fairies:fairy_spawn_egg",
     "fireflies:firefly_spawn_egg",
+    "scorpions:scorpion_spawn_egg",
     "vulture:vulture_spawn_egg",
     "worms:worm_spawn_egg",
     "creature:guide",
@@ -16,6 +17,9 @@
     "cyclops:club",
     "cyclops:shepherds_crook",
     "fairies:fairy_dust",
+    "scorpions:venom_sac",
+    "scorpions:stinger",
+    "scorpions:scorpion_dagger",
     "vulture:feather",
     "vulture:raw_vulture",
     "vulture:cooked_vulture"

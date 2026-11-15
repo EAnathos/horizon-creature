@@ -1,0 +1,12 @@
+{
+  "entity.scorpions.scorpion": "Scorpion",
+  "item.scorpions.scorpion_spawn_egg": "Oeuf d'apparition de scorpion",
+  "item.scorpions.venom_sac": "Poche a venin",
+  "item.scorpions.stinger": "Dard",
+  "item.scorpions.scorpion_dagger": "Dague de scorpion",
+  "bestiary.scorpions.posture": "Posture",
+  "bestiary.scorpions.stung": "Pique",
+  "bestiary.scorpions.glow": "Lueur",
+  "bestiary.scorpions.jar": "Capture",
+  "bestiary.scorpions.settled": "Installe"
+}

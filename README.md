@@ -23,11 +23,12 @@ you;
 [Jellyfish](mods/jellyfish/README.md), stinging jellyfish drifting in blooms, some glowing in the deep;
 [Flying Fish](mods/flying_fish/README.md), shoals that burst out of warm seas and glide over the waves;
 [Phasmids](mods/phasmids/README.md), stick and leaf insects hiding in the trees, a game of spotting them;
-[Scorpions](mods/scorpions/README.md), real-size scorpions that rear up when you come close and sting when hit;
 [Magma Golem](mods/magma_golem/README.md), a six-block giant of living magma asleep in the Nether, a mini-boss to
 cool with snow.
 
-In development: [Vanilla Bestiary](mods/vanilla_bestiary/README.md), Minecraft's own creatures in the creature guide.
+In development: [Vanilla Bestiary](mods/vanilla_bestiary/README.md), Minecraft's own creatures in the creature guide;
+[Scorpions](mods/scorpions/README.md), real-size scorpions that rear up when you come close and sting when hit (its code
+and content in place, its textures and sounds to come).
 
 Every mod needs **[Horizon Creature](common/README.md)**, the library: it adds the glass jar, the creature guide and
 the "Horizon Creature" creative tab, where all the series' items are.

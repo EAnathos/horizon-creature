@@ -1,0 +1,27 @@
+{
+  "template": "minecraft:wooden_sword",
+  "rarity": "uncommon",
+  "components": {
+    "minecraft:item_model": "scorpions:scorpion_dagger",
+    "minecraft:item_name": {
+      "translate": "item.scorpions.scorpion_dagger"
+    },
+    "minecraft:max_damage": 64,
+    "minecraft:attribute_modifiers": [
+      {
+        "type": "minecraft:attack_damage",
+        "id": "minecraft:base_attack_damage",
+        "amount": 2.0,
+        "operation": "add_value",
+        "slot": "mainhand"
+      },
+      {
+        "type": "minecraft:attack_speed",
+        "id": "minecraft:base_attack_speed",
+        "amount": -2.0,
+        "operation": "add_value",
+        "slot": "mainhand"
+      }
+    ]
+  }
+}

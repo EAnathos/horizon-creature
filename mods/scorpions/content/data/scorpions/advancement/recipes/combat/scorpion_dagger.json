@@ -1,0 +1,15 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_stinger": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [ { "items": "scorpions:stinger" } ] }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": { "recipes": "scorpions:scorpion_dagger" }
+    }
+  },
+  "requirements": [ [ "has_the_recipe", "has_stinger" ] ],
+  "rewards": { "recipes": [ "scorpions:scorpion_dagger" ] }
+}

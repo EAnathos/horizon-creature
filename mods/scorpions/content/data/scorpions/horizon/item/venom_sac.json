@@ -1,0 +1,11 @@
+{
+  "template": "minecraft:spider_eye",
+  "components": {
+    "minecraft:item_model": "scorpions:venom_sac",
+    "minecraft:item_name": {
+      "translate": "item.scorpions.venom_sac"
+    },
+    "!minecraft:food": {},
+    "!minecraft:consumable": {}
+  }
+}
