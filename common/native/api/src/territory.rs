@@ -1,11 +1,14 @@
 //! Territories (SPECS §4.2): a creature released from a jar settles in an area it won't leave.
 //!
-//! Two rules (`Rule`). The **garden** (Worms): released on farmland (or a crop on it), the farmland connected to it (4
+//! Three rules (`Rule`). The **garden** (Worms): released on farmland (or a crop on it), the farmland connected to it (4
 //! ways, the same level or one up or down) is its area, which must count at least `GARDEN_MIN` blocks, or it won't
 //! settle; if the garden shrinks below that, it is free again. The **flower patch** (Butterflies, Fireflies): released on
 //! a flower, that flower is its anchor; its area is
 //! the flowers within `PATCH` blocks of the anchor, plus `AROUND` blocks around them and `ABOVE` blocks up. If the anchor
-//! flower is broken, the anchor moves to the nearest flower within `PATCH` blocks, or the creature is free again.
+//! flower is broken, the anchor moves to the nearest flower within `PATCH` blocks, or the creature is free again. The
+//! **sand** (Scorpions): released on sand, red sand, sandstone or terracotta, the sand-like blocks connected to it
+//! within `SAND_RANGE` blocks are its area, at least `SAND_MIN` of them, or it won't settle; a patch grown too small
+//! frees it.
 //!
 //! The anchor is saved on the entity (`creature:territory`). The mod's goals read it through a static map (`anchor`),
 //! filled by `tick` from the mod's `entity_tick_post` (single player, as the colours; arismoko/horizon#2740), and tell a
@@ -17,10 +20,13 @@ use horizon_client::mod_api::{AttachmentCodec, AttachmentError, AttachmentType, 
 
 /// The flowers within this many blocks of the anchor make the area; it reaches this far around them and up.
 pub const PATCH: i32 = 8;
-/// A garden counts at least this many farmland blocks; it is looked for up to `GARDEN_MAX`.
+/// A garden counts at least this many farmland blocks; it is looked for up to `BLOCKS_MAX`.
 pub const GARDEN_MIN: usize = 10;
-const GARDEN_MAX: usize = 256;
+const BLOCKS_MAX: usize = 256;
 const FARMLAND: &str = "minecraft:farmland";
+/// A sand patch reaches this far from the anchor and counts at least this many blocks.
+pub const SAND_RANGE: i32 = 8;
+pub const SAND_MIN: usize = 10;
 
 /// Where a released creature settles.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -29,6 +35,8 @@ pub enum Rule {
     FlowerPatch,
     /// The farmland connected to the block it was released on, at least `GARDEN_MIN` blocks.
     Garden,
+    /// The sand-like blocks connected to the one it was released on, within `SAND_RANGE`, at least `SAND_MIN`.
+    Sand,
 }
 pub const AROUND: i32 = 2;
 pub const ABOVE: i32 = 4;
@@ -179,21 +187,22 @@ pub fn inside(flowers: &[[i32; 3]], p: [i32; 3]) -> bool {
     })
 }
 
-/// The farmland connected to `start` (4 ways, the same level or one up or down), at most `GARDEN_MAX` blocks;
-/// `farmland` says whether a block is.
-fn garden_from(start: [i32; 3], farmland: impl Fn([i32; 3]) -> bool) -> Vec<[i32; 3]> {
+/// The blocks connected to `start` (4 ways, the same level or one up or down), within `within` blocks of it when given,
+/// at most `BLOCKS_MAX`; `belongs` says whether a block is one.
+fn connected(start: [i32; 3], within: Option<i32>, belongs: impl Fn([i32; 3]) -> bool) -> Vec<[i32; 3]> {
     let mut seen = std::collections::BTreeSet::from([start]);
     let mut queue = std::collections::VecDeque::from([start]);
     let mut found = Vec::new();
     while let Some(p) = queue.pop_front() {
         found.push(p);
-        if found.len() >= GARDEN_MAX {
+        if found.len() >= BLOCKS_MAX {
             break;
         }
         for (dx, dz) in [(1, 0), (-1, 0), (0, 1), (0, -1)] {
             for dy in [0, 1, -1] {
                 let q = [p[0] + dx, p[1] + dy, p[2] + dz];
-                if !seen.contains(&q) && farmland(q) {
+                let near = within.is_none_or(|w| (q[0] - start[0]).abs() <= w && (q[2] - start[2]).abs() <= w);
+                if near && !seen.contains(&q) && belongs(q) {
                     seen.insert(q);
                     queue.push_back(q);
                     break;
@@ -202,6 +211,63 @@ fn garden_from(start: [i32; 3], farmland: impl Fn([i32; 3]) -> bool) -> Vec<[i32
         }
     }
     found
+}
+
+/// The farmland connected to `start`; `farmland` says whether a block is.
+fn garden_from(start: [i32; 3], farmland: impl Fn([i32; 3]) -> bool) -> Vec<[i32; 3]> {
+    connected(start, None, farmland)
+}
+
+/// Whether the block named `name` is sand-like (the sand rule's ground): sand, red sand, any sandstone or any
+/// terracotta.
+pub fn is_sand(name: &str) -> bool {
+    matches!(name, "minecraft:sand" | "minecraft:red_sand")
+        || name.ends_with("sandstone")
+        || name.ends_with("terracotta")
+}
+
+/// From the jar's release: the sand-like block a creature released on `clicked` (a sand-like block, or one just below)
+/// would settle on, if its patch is big enough.
+pub fn sand_at(host: &dyn Host, clicked: [i32; 3]) -> Option<[i32; 3]> {
+    let below = [clicked[0], clicked[1] - 1, clicked[2]];
+    let start = if is_sand(&host.block(clicked)) {
+        clicked
+    } else if is_sand(&host.block(below)) {
+        below
+    } else {
+        return None;
+    };
+    (connected(start, Some(SAND_RANGE), |p| is_sand(&host.block(p))).len() >= SAND_MIN).then_some(start)
+}
+
+/// From a hook: the sand-like blocks of creature `entity`'s patch (empty if it isn't settled).
+pub fn sand_of(host: &dyn Host, entity: u32) -> Vec<[i32; 3]> {
+    match anchor(entity) {
+        Some(a) => connected(a, Some(SAND_RANGE), |p| is_sand(&host.block(p))),
+        None => Vec::new(),
+    }
+}
+
+/// From a goal, every few seconds: the sand-like blocks of its patch; a patch grown too small (or its anchor no longer
+/// sand) lets it go free.
+pub fn check_sand(cx: &Cx, entity: u32) -> Vec<[i32; 3]> {
+    let Some(anchor) = anchor(entity) else {
+        return Vec::new();
+    };
+    let sand = |p: [i32; 3]| is_sand(block_name(cx, p));
+    let patch = if sand(anchor) {
+        connected(anchor, Some(SAND_RANGE), sand)
+    } else {
+        Vec::new()
+    };
+    if patch.len() >= SAND_MIN {
+        return patch;
+    }
+    if let Some(k) = ANCHORS.lock().unwrap().get_mut(&entity) {
+        k.anchor = None;
+        k.dirty = true;
+    }
+    Vec::new()
 }
 
 /// From the jar's release: the farmland a creature released on `clicked` (farmland, or a crop on farmland) would
@@ -264,6 +330,31 @@ mod tests {
         assert_eq!(garden.len(), 13);
         assert!(garden.contains(&[4, 1, 0]));
         assert!(!garden.contains(&[10, 0, 10]));
+    }
+
+    #[test]
+    fn sand_like_blocks_are_the_rule_s_ground_glazed_or_not() {
+        assert!(is_sand("minecraft:sand"));
+        assert!(is_sand("minecraft:red_sand"));
+        assert!(is_sand("minecraft:sandstone"));
+        assert!(is_sand("minecraft:smooth_red_sandstone"));
+        assert!(is_sand("minecraft:terracotta"));
+        assert!(is_sand("minecraft:orange_terracotta"));
+        assert!(!is_sand("minecraft:grass_block"));
+        assert!(!is_sand("minecraft:stone"));
+    }
+
+    #[test]
+    fn a_sand_patch_stays_within_range_of_its_anchor() {
+        // Sand everywhere on y 0: the patch is the blocks within SAND_RANGE of the anchor, not the whole desert.
+        let patch = connected([0, 0, 0], Some(SAND_RANGE), |p| p[1] == 0);
+        assert!(patch.len() >= SAND_MIN);
+        assert!(
+            patch
+                .iter()
+                .all(|p| (p[0]).abs() <= SAND_RANGE && (p[2]).abs() <= SAND_RANGE)
+        );
+        assert!(!patch.contains(&[SAND_RANGE + 1, 0, 0]));
     }
 
     #[test]

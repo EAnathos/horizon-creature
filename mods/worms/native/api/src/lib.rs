@@ -14,11 +14,9 @@ use std::sync::Mutex;
 use creature::bestiary::{Fact, Species};
 use creature::jar::Catchable;
 use creature::territory::{self, Rule};
-use horizon_client::mobs::goals;
 use horizon_client::mod_api::{
-    BlockEntityDraw, Compound, Cx, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent,
-    LevelTickPostEvent, LivingDeathEvent, Mob, MobSubmitEvent, ParticleOptions, ParticleType, RandomSource,
-    RegisterGoalsEvent,
+    BlockEntityDraw, Compound, EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, LevelTickPostEvent,
+    LivingDeathEvent, Mob, MobSubmitEvent, ParticleOptions, ParticleType, RegisterGoalsEvent,
 };
 
 pub const WORM: &str = "worms:worm";
@@ -103,93 +101,21 @@ const WANDER: f64 = 3.0;
 /// How often a settled worm checks its garden (ticks).
 const CHECK_EVERY: i32 = 100;
 
-/// Crawling about: a few blocks around where it first crawled, or over its garden's farmland when settled.
-#[derive(Clone, Debug, Default)]
-struct Crawl {
-    target: Option<[f64; 3]>,
-    ticks: i32,
-    pausing: bool,
-    home: Option<[f64; 3]>,
-    garden: Vec<[i32; 3]>,
-    check: i32,
-}
+/// Crawling about (the library's small crawlers): a few blocks around where it first crawled, or over its garden's
+/// farmland when settled, digging into the earth now and then at a pause.
+const CRAWL_CFG: creature::crawl::Cfg = creature::crawl::Cfg {
+    speed: SPEED,
+    crawl: CRAWL,
+    pause: PAUSE,
+    wander: WANDER,
+    check_every: CHECK_EVERY,
+    settled_area: territory::check_garden,
+    on_pause: Some(dig),
+};
 
-fn between(m: &mut Mob, range: (i32, i32)) -> i32 {
-    range.0 + m.random.next_int_bound(range.1 - range.0).unwrap_or(0)
-}
-
-impl Crawl {
-    fn pick(&self, m: &mut Mob) -> [f64; 3] {
-        if !self.garden.is_empty() {
-            let f = self.garden[m.random.next_int_bound(self.garden.len() as i32).unwrap_or(0) as usize];
-            return [f64::from(f[0]) + 0.5, f64::from(f[1]) + 1.0, f64::from(f[2]) + 0.5];
-        }
-        let home = self.home.unwrap_or([m.position.x, m.position.y, m.position.z]);
-        let r = |m: &mut Mob| (f64::from(m.random.next_float()) * 2.0 - 1.0) * WANDER;
-        [home[0] + r(m), m.position.y, home[2] + r(m)]
-    }
-}
-
-impl Goal for Crawl {
-    fn flags(&self) -> u8 {
-        goals::MOVE | goals::LOOK | goals::JUMP
-    }
-    fn can_use(&mut self, _: &mut Mob, _: &mut Cx) -> bool {
-        true
-    }
-    fn every_tick(&self) -> bool {
-        true
-    }
-    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
-        m.fall_distance = 0.0;
-        if self.home.is_none() {
-            self.home = Some([m.position.x, m.position.y, m.position.z]);
-        }
-        self.check -= 1;
-        if self.check <= 0 {
-            self.check = CHECK_EVERY;
-            self.garden = territory::check_garden(cx, m.id);
-        }
-        self.ticks -= 1;
-        if self.pausing {
-            m.velocity.x = 0.0;
-            m.velocity.z = 0.0;
-            if self.ticks <= 0 {
-                self.pausing = false;
-                self.ticks = between(m, CRAWL);
-                self.target = Some(self.pick(m));
-            }
-            return;
-        }
-        let target = match self.target {
-            Some(t) => t,
-            None => {
-                let t = self.pick(m);
-                self.target = Some(t);
-                t
-            }
-        };
-        let (dx, dz) = (target[0] - m.position.x, target[2] - m.position.z);
-        let len = dx.hypot(dz);
-        if len < 0.2 || self.ticks <= 0 {
-            if m.random.next_float() < 1.0 / DIG_CHANCE as f32 {
-                creature::sounds::queue(m.id, DIG, 0.4, 0.9 + m.random.next_float() * 0.2);
-            }
-            self.pausing = true;
-            self.ticks = between(m, PAUSE);
-            self.target = None;
-            return;
-        }
-        m.velocity.x = dx / len * SPEED;
-        m.velocity.z = dz / len * SPEED;
-        let yaw = (-dx).atan2(dz).to_degrees() as f32;
-        m.yaw = yaw;
-        m.body_yaw = yaw;
-        m.head_yaw = yaw;
-    }
-    fn box_clone(&self) -> Box<dyn Goal> {
-        Box::new(self.clone())
-    }
+/// At a pause, one time in `DIG_CHANCE` it noses into the earth with a soft rustle.
+fn dig(m: &mut Mob) {
+    creature::crawl::rustle(m, DIG_CHANCE, DIG);
 }
 
 /// A settled worm makes a crop of its garden grow a stage this often (ticks); at most `MAX_WORMS` worms count in one
@@ -369,7 +295,7 @@ impl Hooks for Worms {
             return;
         }
         creature::mob::ours(event.mob, SIZE.0, SIZE.1, SIZE.2);
-        event.mob.ai.goals.add(1, Crawl::default());
+        event.mob.ai.goals.add(1, creature::crawl::Crawl::new(&CRAWL_CFG));
     }
 
     /// Right-click: nothing (no trading screen, which its template would open).

@@ -31,6 +31,8 @@ pub const JAR_FACT: &str = "jar";
 pub const FLOWER_FACT: &str = "flower";
 /// The bestiary fact a release in a garden teaches, when the creature settles there.
 pub const GARDEN_FACT: &str = "garden";
+/// The bestiary fact a release on a sandy patch teaches, when the creature settles there.
+pub const SAND_FACT: &str = "sand";
 /// The key of the jar's data in `minecraft:custom_data`.
 const DATA: &str = "creature";
 
@@ -296,12 +298,14 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
     // there if its kind does; elsewhere on the face clicked.
     use crate::territory::Rule;
     let on_flower = crate::territory::is_flower(host, &host.block(event.pos));
-    // On farmland (or a crop on it) of a big enough garden, it comes out on the farmland and settles in its garden.
-    let garden = match c.settles {
-        Some(Rule::Garden) => crate::territory::garden_at(host, event.pos),
+    // On farmland of a big enough garden, or a big enough sandy patch, it comes out on that ground and settles there,
+    // each rule teaching its own fact.
+    let settle = match c.settles {
+        Some(Rule::Garden) => crate::territory::garden_at(host, event.pos).map(|f| (f, GARDEN_FACT)),
+        Some(Rule::Sand) => crate::territory::sand_at(host, event.pos).map(|f| (f, SAND_FACT)),
         _ => None,
     };
-    let block = if let Some(f) = garden {
+    let block = if let Some((f, _)) = settle {
         [f[0], f[1] + 1, f[2]]
     } else if on_flower {
         event.pos
@@ -331,9 +335,9 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
     if let Some(f) = friend {
         crate::friend::befriend(host, id, crate::friend::uuid(f));
     }
-    if let Some(f) = garden {
+    if let Some((f, fact)) = settle {
         crate::territory::settle(host, id, f);
-        crate::bestiary::learn(host, player.uuid, c.kind, GARDEN_FACT);
+        crate::bestiary::learn(host, player.uuid, c.kind, fact);
     } else if on_flower && c.settles == Some(Rule::FlowerPatch) {
         crate::territory::settle(host, id, block);
         crate::bestiary::learn(host, player.uuid, c.kind, FLOWER_FACT);
