@@ -14,9 +14,12 @@ Everything below works and was tested in game, single player, unless said otherw
 - **Model drawing** (§3.1), **mob sounds** (§3.2), **the creative tab** (§3.3), **monsters sparing our creatures**
   (§3.4), **the small fliers' flight and spawning** (§3.5, by day, at night or at any hour) and **friends** (§6.2, the
   Fairies' and the vulture's owner).
+- **The small crawlers' crawl** (§3.6, `creature::crawl`): the worm's ground crawl, now a library goal the next ground
+  creatures share; Worms runs on it (tested in game, its behaviour unchanged).
 - **Glass jar and territories** (§4): catching, releasing, settling on a flower patch or in a garden, the jar on
   display (spared by blasts and pistons). The jar left out of the creative tab when no jar mod is installed is built
-  but not yet checked in game.
+  but not yet checked in game. The **sand** rule (§4.2, for Scorpions) is coded but not yet exercised in game, its mod
+  being unbuilt.
 - **Colours and patterns** (§5), used by the butterflies.
 - **Mob helpers** (`creature::mob`): `ours` (muted, own box, own goals, spared), `resize`, `Muted`, `despawn_far` (small
   wild creatures far from players, as vanilla's ambient mobs).
@@ -110,12 +113,15 @@ of its biomes, at its hours. Wild ones far from players despawn, so they come an
 (butterflies, moths), Fireflies, Fairies; planned: **Phasmids**, whose groups are placed **on the top of leaves**
 instead of over the ground (mods/phasmids/SPECS.md §3).
 
-### 3.6 Small crawlers (`creature::crawl`), planned ✅
+### 3.6 Small crawlers (`creature::crawl`) ✅
 
-The slow crawl on the ground of worms and dung beetles: the worm's `Crawl` goal (`worms::Crawl` today), moved here when
-the Dung Beetles are built, with what a beetle adds (walking toward a target, backwards). Users: **Worms**, **Dung
-Beetles**, **Scorpions** (mods/scorpions/SPECS.md §3) and **Phasmids** (mods/phasmids/SPECS.md §3), which add
-**climbing**: crawling up the sides of logs and leaves and on their top, never coming down on its own.
+The slow crawl on the ground of worms, scorpions and the other ground creatures: the worm's `Crawl` goal moved here as
+`creature::crawl::Crawl`, driven by a `Cfg` (speed, how long a crawl and a pause last, how far a wild one wanders, how
+its settled area is found, a pause hook for the worm's dig). A wild one crawls around where it first crawled; a settled
+one crawls only over its area (its mod's territory rule). Users: **Worms** (in place), **Dung Beetles**, **Scorpions**
+(mods/scorpions/SPECS.md §3) and **Phasmids** (mods/phasmids/SPECS.md §3). Still to add when their mods are built: a
+beetle's walking toward a target (backwards), and **climbing** for phasmids (up the sides of logs and leaves and on
+their top, never coming down on its own).
 
 ### 3.7 Hunters eat small creatures (`creature::prey`), planned ✅
 
@@ -198,7 +204,7 @@ the block it was released on, by the mod's rule:
 | **Garden** ✅ | Worms | The farmland connected to the release block (4 directions, same level ±1); **at least 10 blocks** ✅, otherwise the worm won't settle |
 | **Flower patch** ✅ | Butterflies, Fireflies ✅ | Released on a flower (its anchor): the flowers **within 8 blocks** of the anchor, plus 2 blocks around them and 4 blocks up. The 8-block cap keeps it to at most ~20 × 20 blocks, even in a meadow or a flower forest where every flower touches the next; in a sparse garden it is just the flower beds |
 | **Tree** ✅ (planned) | Phasmids | Released on leaves or a log: the leaves and logs connected to it within 8 blocks, plus a block around them; **at least 10 leaves** ✅, otherwise it won't settle (mods/phasmids/SPECS.md §5) |
-| **Sand** ✅ (planned) | Scorpions | Released on sand, red sand, sandstone or terracotta: those blocks connected to it within 8 blocks; **at least 10** ✅, otherwise it won't settle (mods/scorpions/SPECS.md §6) |
+| **Sand** ✅ (rule in place, its mod to come) | Scorpions | Released on sand, red sand, sandstone or terracotta: those blocks connected to it within 8 blocks; **at least 10** ✅, otherwise it won't settle (mods/scorpions/SPECS.md §6) |
 | **Pasture** ✅ (planned) | Dung Beetles | Released with **at least 3 farm animals** (cows, sheep, horses, donkeys, goats, camels, llamas) **within 8 blocks**: 8 blocks around the release block; fewer than 3 animals left around and the creature is unsettled (mods/dung_beetles/SPECS.md §4) |
 
 - The creature remembers its anchor (saved on the entity); every few seconds ✅ it checks the area still holds (the
