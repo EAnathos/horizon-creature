@@ -3,7 +3,8 @@
 A series of native Rust mods for **Minecraft Horizon** (a Rust reimplementation of Minecraft Java 26.3): one mandatory
 library, **Horizon Creature** (`common/`, mod id `creature`), and independent creature mods in `mods/<mod>/` that all
 depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and moths), `worms`, `fireflies`,
-`cyclops`, `fairies`.
+`cyclops`, `fairies`, and `vanilla_bestiary` (Minecraft's creatures in the guide, in development). The other folders of
+`mods/` are planned mods (a spec, a model).
 
 - **Players**: `README.md` and each module's `README.md`. **Developers**: `CONTRIBUTING.md`.
 - **Architecture**: `docs/ARCHITECTURE.md` (modules, dependencies, what goes in the library, the single creative tab,
@@ -14,7 +15,7 @@ depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and 
 - **Rule of two**: a system used (or specified) by two or more mods goes in the library; species content stays in mods.
   Never duplicate a system between mods. No mod requires another: optional content between mods goes through
   conditional recipes (`neoforge:conditions`, `mod_loaded`, `not`).
-  Library features tied to some mods (the glass jar: Butterflies, Worms or Fireflies) switch on through registration and
+  Library features tied to some mods (the glass jar: Butterflies, Worms, Fireflies or Fairies) switch on through registration and
   conditional recipes (`neoforge:conditions`, `mod_loaded`).
 - **Creative tab**: only the library has one, generated from each module's `module.toml` (`creative` list) by
   `cargo creature tab`. Mods declare no tab.
@@ -40,14 +41,15 @@ depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and 
   (`.hmod`) and `native/` (`.hnmod`), always with the library, installs them in the instance (default `creature-dev`) and
   runs its native build. The launcher's Play button ignores a bundle built from a folder: it must be installed as a
   `.hnmod`.
-- Tools are Rust (`tools/`, commands `list`, `tab`, `model`, `sounds`, `pack`, `build`, `check`, `install`; alias in
-  `.cargo/config.toml`).
+- Tools are Rust (`tools/`, commands `list`, `tab`, `model`, `preview`, `sounds`, `vanilla`, `pack`, `build`, `check`,
+  `native-check`, `install`; alias in `.cargo/config.toml`; the table in `CONTRIBUTING.md`).
 - Before committing: rustfmt (tools and native code, `rustfmt.toml`), Clippy `-D warnings` on the tools,
   `cargo creature check`; CI (`.github/workflows/ci.yml`) runs them, Clippy on the native crates against the pinned
   Horizon source (`cargo creature native-check <horizon-source>`) and `cargo creature build`. Injections compile only
   in the launcher's build: run `cargo creature install` after changing one.
 - No em dash in docs or text.
-- The launcher binary is `~/Téléchargements/horizon-launcher.AppImage` (override with `HORIZON_LAUNCHER`).
+- The tools find the launcher by `$HORIZON_LAUNCHER`, the `PATH` or an AppImage in the download folder, and its data by
+  `$HORIZON_LAUNCHER_DATA` or `~/.local/share/horizon-launcher` (`tools/src/launcher.rs`).
 
 ## Known API constraints
 

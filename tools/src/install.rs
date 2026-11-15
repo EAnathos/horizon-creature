@@ -3,7 +3,8 @@
 //! content part (`.hmod`) and its native part (`.hnmod`); then the instance's native build. Pressing Play on that
 //! instance then starts the game with them. A mod the launcher leaves out of that build fails the install.
 //!
-//! The launcher is `$HORIZON_LAUNCHER`, else `~/Téléchargements/horizon-launcher.AppImage`.
+//! The launcher and its data folder are found as `launcher.rs` says (`$HORIZON_LAUNCHER`, the `PATH`, the usual
+//! folders).
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -15,11 +16,7 @@ pub const DEFAULT_INSTANCE: &str = "creature-dev";
 
 pub fn run(instance: &str, names: &[String]) -> crate::Result {
     let root = crate::root();
-    let home = PathBuf::from(std::env::var("HOME").map_err(|_| "HOME is not set")?);
-    let launcher = std::env::var("HORIZON_LAUNCHER")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| home.join("Téléchargements/horizon-launcher.AppImage"));
-    let launcher = launcher.to_string_lossy().into_owned();
+    let launcher = crate::launcher::binary()?;
     let (id, game) = find_instance(&launcher, instance)?;
 
     for m in &crate::build::chosen(names)? {
@@ -38,7 +35,7 @@ pub fn run(instance: &str, names: &[String]) -> crate::Result {
             "dev",
         ],
     )?;
-    left_out(&home.join(".local/share/horizon-launcher/native/build.log"))
+    left_out(&crate::launcher::data_dir()?.join("native/build.log"))
 }
 
 /// The launcher still succeeds when it leaves a mod out of the build (an injection it refuses, a helper file with two

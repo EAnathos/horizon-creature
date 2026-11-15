@@ -21,6 +21,7 @@
 mod build;
 mod check;
 mod install;
+mod launcher;
 mod model;
 mod modules;
 mod native_check;
@@ -49,7 +50,11 @@ const USAGE: &str = "usage: cargo creature list | tab | model <mod> [model] | pr
                      | install [--instance <name>] [mod...]";
 
 fn list() -> Result {
-    for m in std::iter::once(modules::library()?).chain(modules::mods()?) {
+    let all: Vec<_> = std::iter::once(modules::library()?).chain(modules::mods()?).collect();
+    // Columns as wide as their longest entry.
+    let width = |f: fn(&modules::Module) -> &str| all.iter().map(|m| f(m).chars().count()).max().unwrap_or(0);
+    let (id_w, name_w, status_w) = (width(|m| &m.id), width(|m| &m.name), width(|m| &m.status));
+    for m in &all {
         let parts: Vec<&str> = [("content", m.content().is_some()), ("native", m.native().is_some())]
             .into_iter()
             .filter_map(|(name, has)| has.then_some(name))
@@ -64,7 +69,10 @@ fn list() -> Result {
         } else {
             format!(", requires {}", m.requires.join(", "))
         };
-        println!("{:<12} {:<18} {:<10} {parts}{requires}", m.id, m.name, m.status);
+        println!(
+            "{:<id_w$}  {:<name_w$}  {:<status_w$}  {parts}{requires}",
+            m.id, m.name, m.status
+        );
     }
     Ok(())
 }

@@ -31,14 +31,19 @@ the models' pictures (`docs/models/`, `docs/MODELS.md`). Never edit them by hand
 
 ## Build and test
 
-You need the [Horizon launcher](https://playhorizon.dev) with a test instance (here `creature-dev`, pinned to the
-series' Horizon Nightly), Rust, `cargo horizon-mod` (from Horizon's sources) and ffmpeg to remake the sounds.
+You need the [Horizon launcher](https://playhorizon.dev), Rust, `cargo horizon-mod` (from Horizon's sources, at the
+series' pin) and ffmpeg to remake the sounds. In the launcher, make a test instance and set it to the series' Nightly
+(the one whose commit is CI's `HORIZON_REV`), here named `creature-dev`; any name works with `--instance`.
 
 ```sh
-cargo install --locked --git https://github.com/horizon-rust/horizon cargo-horizon-mod
+cargo install --locked --git https://github.com/horizon-rust/horizon --rev <HORIZON_REV> cargo-horizon-mod
 cargo creature install                                   # the library and every mod, in creature-dev
 cargo creature install vulture --instance my-instance    # one mod (with the library and what it requires)
 ```
+
+The tools find the launcher by `$HORIZON_LAUNCHER`, else `horizon-launcher` on the `PATH`, else a
+`horizon-launcher*.AppImage` in your download folder, `~/Downloads`, `~/Applications`, `~/.local/bin` or `~/bin`; its
+data by `$HORIZON_LAUNCHER_DATA`, else `$XDG_DATA_HOME/horizon-launcher` or `~/.local/share/horizon-launcher`.
 
 `install` writes the creative tab, builds each module's content (`.hmod`) and native (`.hnmod`) halves, installs them
 in the instance and runs its native build (a minute or two, longer the first time). Then pick the instance in the

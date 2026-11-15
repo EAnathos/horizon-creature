@@ -18,10 +18,7 @@ const OUT: &str = "mods/vanilla_bestiary/native/api/src/game_data.rs";
 
 /// The jar the launcher prepared, when none is given.
 fn default_jar() -> crate::Result<PathBuf> {
-    let home = std::env::var("HOME").map_err(|_| "HOME is not set: give the jar's path")?;
-    Ok(PathBuf::from(home).join(format!(
-        ".local/share/horizon-launcher/minecraft/versions/{VERSION}/{VERSION}.jar"
-    )))
+    Ok(crate::launcher::data_dir()?.join(format!("minecraft/versions/{VERSION}/{VERSION}.jar")))
 }
 
 pub fn run(jar: Option<&str>) -> crate::Result {
