@@ -59,7 +59,10 @@ pub fn module(m: &Module) -> crate::Result<Built> {
         let made = content.join("target");
         let hmod = crate::root().join(format!("target/{}.hmod", m.id));
         let from = made.join(format!("horizon-mod/{}.hmod", m.id));
-        std::fs::copy(&from, &hmod).map_err(|e| format!("{}: {e}", from.display()))?;
+        if let Some(parent) = hmod.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
+        }
+        std::fs::copy(&from, &hmod).map_err(|e| format!("{}: {e}", hmod.display()))?;
         std::fs::remove_dir_all(&made).map_err(|e| format!("{}: {e}", made.display()))?;
         built.hmod = Some(hmod);
     }
