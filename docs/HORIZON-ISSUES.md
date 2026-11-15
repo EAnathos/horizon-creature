@@ -152,22 +152,33 @@ Moving the pin (all modules at once, docs/ARCHITECTURE.md §6):
    and look for the issue numbers or the fork's PR titles; update the tables above.
 3. Set the commit in every `horizon-mixin.toml`, `api/Cargo.toml` and CI's `HORIZON_REV`; `cargo creature check`;
    `cargo creature install`; drop the workarounds the new commit fixes; test in game.
-4. Release: bump the modules' versions and publish a GitHub release with the `.hmod` and `.hnmod` files (Horizon's
-   `docs/mods.md`, "Publish your mod").
+4. Release: bump the modules' versions and submit each module's files as a new version of its registry project
+   (https://playhorizon.dev/mods/submit; the registry no longer reads GitHub releases).
 
 ## Coming with the new mod system
 
-Announced 2026-11-09 for the fork (arismoko/horizon). Not in the official build, and whether it comes upstream is not
-decided (above, "The fork and the official build"): what follows is what we would migrate to if it does, not a plan.
+**Going upstream** (the Modding Team, 2026-11-15): the fork's mod API replaces today's, as one pull request to
+horizon-rust/horizon (prepared as arismoko/horizon#4498, not opened yet: the fork is being brought up to date with
+main first). Until it is merged and a Nightly carries it, players' launchers only build today's layout, so we stay on
+it. What changes for the series once it lands:
 
-- **Prebuilt game:** the launcher compiles only the mod (~1 s) and links it against a prebuilt game, no game rebuild.
-- **`Hooks` split into `ServerHost` / `ClientHost`** (~260 hooks): our `&mut dyn Host` hooks and helpers get split by
-  side; a client call in server code no longer compiles.
-- **Parts** (`ItemPart`, `BlockPart`, `EntityPart` coming): behaviour attached to an item, block or entity, like
-  overriding `Item` in Java. Fits the vulture's saddle, the glass jar.
-- **`[[inject]]` in `horizon-mod.toml`** replaces `[[injection]]` in `horizon-mixin.toml`: `access = "api"` (host and
-  copied parameters, native and wasm, no rebuild) or `access = "internals"` (the real `Game`, native only; a pinned
-  fingerprint refuses a changed target). Our two remaining injections (`mount_hud.rs`, `ride_keys.rs`) move there.
-- **Mods extending mods:** plain Rust dependencies between mods already work (our `creature` crate); coming: a library
-  declaring its own hooks, Part kinds, services, registries, and injection points into other mods. The library could
-  then publish events (a creature tamed, a creature caught in a jar) that mods listen to.
+- **One `.hmod` per module**, one manifest (`horizon-mod.toml`): the content and the native part together, in a flat
+  package (`assets/`, `data/`, `Cargo.toml`, `src/lib.rs` at the root). `.hnmod`, `horizon-mixin.toml` and
+  `horizon-native.json` are gone. Our `content/` and `native/api/` halves merge; `cargo creature pack/build/install`
+  and `check` follow.
+- **Pins in `[native]`**: `game`, `horizon` (exact commit) and `mixins` (the horizon-mixins commit). The native part
+  builds on the player's computer against that exact game build; reading internal fields stays allowed there.
+- **Engine code** in `[[native.mixin]]` (and `[[native.loop]]`, `[[native.bridge]]`, `[[native.module]]`), injections in
+  top-level `[[inject]]`: the library's creative tab injection (`common/native/jar_tab.rs`) moves there.
+- **Dependencies between mods** in `[dependencies]` (`creature = "^0.1"`), as any other; the library can publish its
+  own hooks and functions for the creature mods (events such as a creature tamed or caught in a jar).
+- **Prebuilt game** (the launcher compiles only the mod) and **`Hooks` split into server and client hosts**: our
+  `&mut dyn Host` hooks and helpers get split by side.
+- **Parts** (`ItemPart`, `BlockPart`, `EntityPart`): behaviour attached to an item, block or entity, like overriding
+  `Item` in Java. Fits the vulture's saddle, the glass jar.
+- **Listing**: each module is one registry project, one file per version, submitted through
+  https://playhorizon.dev/mods/submit (the registry no longer reads GitHub releases); one repository for the whole
+  series is fine, as the `source` link.
+
+Most of our content halves (entity types, items, recipes, loot, spawns, assets) is plain mod API and moves as is; the
+native parts need the host split and the new manifest. Gaps found while porting go to arismoko/horizon as issues.
