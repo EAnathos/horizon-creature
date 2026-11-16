@@ -15,6 +15,7 @@
 //!
 //! Its poison is applied from the mod's `entity_tick_post` (the goals queue a sting, `STINGS`, since a goal can reach a
 //! mob but not a player's effects; `Host::add_effect` needs a player, as the colours' single-player statics).
+mod dagger;
 mod fight;
 mod model_scorpion;
 mod posture;
@@ -29,7 +30,7 @@ use creature::territory::{self, Rule};
 use horizon_client::mobs::goals::{Float, HurtByTarget};
 use horizon_client::mod_api::{
     BlockEntityDraw, EmissiveEvent, EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, LivingDeathEvent,
-    MobSubmitEvent, NativeEffect, ParticleOptions, ParticleType, RegisterGoalsEvent, Tag,
+    MobSubmitEvent, NativeEffect, ParticleOptions, ParticleType, RegisterGoalsEvent, Tag, TooltipEvent, UseItemEvent,
 };
 
 pub const SCORPION: &str = "scorpions:scorpion";
@@ -266,7 +267,12 @@ fn apply_stings(host: &mut dyn Host) {
     }
 }
 
-fn poison_effect(id: &str, duration: i32) -> NativeEffect {
+/// A mob poisoned by the dagger: `VENOM_TICKS` of venom from now (`venom_tick`).
+pub(crate) fn envenom(entity: u32) {
+    VENOM.lock().unwrap().insert(entity, VENOM_TICKS);
+}
+
+pub(crate) fn poison_effect(id: &str, duration: i32) -> NativeEffect {
     NativeEffect {
         id: id.into(),
         amplifier: 0,
@@ -277,12 +283,14 @@ fn poison_effect(id: &str, duration: i32) -> NativeEffect {
 }
 
 /// The pinned API has no mob-effect setter. Keep a short poison timer for dagger-hit mobs, inflict Poison's periodic
-/// one-health damage without killing them, and show the familiar green motes. Vanilla Potion effects remain used for
+/// one-health damage without killing them (with the hurt flash and sound), and show Poison's swirls. Vanilla Potion effects remain used for
 /// player victims through `Host::add_effect` where that hook is available.
 fn venom_tick(host: &mut dyn Host, event: &EntityTickPostEvent<'_>) {
     let (remaining, damage) = {
         let mut venom = VENOM.lock().unwrap();
-        let Some(left) = venom.get_mut(&event.entity) else { return };
+        let Some(left) = venom.get_mut(&event.entity) else {
+            return;
+        };
         *left = left.saturating_sub(1);
         let remaining = *left;
         let damage = remaining > 0 && remaining % VENOM_INTERVAL == 0;
@@ -297,24 +305,26 @@ fn venom_tick(host: &mut dyn Host, event: &EntityTickPostEvent<'_>) {
         && let Some(nbt) = host.entity_nbt(entity)
         && let Some(Tag::Float(bits)) = nbt.get(&"Health".into())
     {
-        let health = f32::from_bits(*bits);
-        if health > 1.0 {
-            host.set_mob_health(event.dimension, event.entity, (health - 1.0).max(1.0));
+        // As Poison: one health, with the hurt flash and sound (magic damage), never below one.
+        if f32::from_bits(*bits) > 1.0 {
+            host.hurt_entity(event.dimension, event.entity, 1.0, "minecraft:magic", None);
         }
     }
 
-    if remaining > 0 && remaining % 4 == 0
+    if remaining > 0
+        && remaining % 4 == 0
         && let Some(entity) = host.entity(event.entity)
         && let (Some(at), Some(level)) = (host.entity_position(entity), host.entity_level(entity))
     {
-        let mut motes = ParticleOptions::simple(ParticleType::Dust);
-        motes.color = [0.25, 0.8, 0.15, 1.0];
-        motes.scale = 0.7;
-        level.send_particles(host, &motes, None, at, [0.25, 0.35, 0.25], 0.0, 1);
+        // Vanilla's poison swirls, in Poison's colour.
+        let mut swirl = ParticleOptions::simple(ParticleType::EntityEffect);
+        swirl.color = [0.53, 0.64, 0.39, 1.0];
+        level.send_particles(host, &swirl, None, [at[0], at[1] + 0.5, at[2]], [0.3, 0.4, 0.3], 0.0, 2);
     }
 }
 
 pub fn hooks() -> Box<dyn Hooks> {
+    creature::hand::server_used(dagger::DAGGER);
     creature::jar::register(&IN_JAR);
     creature::bestiary::register(&BESTIARY);
     Box::new(Scorpions)
@@ -325,12 +335,19 @@ struct Scorpions;
 impl Hooks for Scorpions {
     /// A dagger hit starts three seconds of venom on a mob. The native damage hook is reached only for successful,
     /// non-invulnerable player melee hits and includes the weapon snapshot.
-    fn living_incoming_damage_v2(&self, _: &mut dyn Host, event: &mut horizon_client::mod_api::LivingIncomingDamageV2Event<'_>) -> Flow {
+    fn living_incoming_damage_v2(
+        &self,
+        host: &mut dyn Host,
+        event: &mut horizon_client::mod_api::LivingIncomingDamageV2Event<'_>,
+    ) -> Flow {
         if event.damage_type == "minecraft:player_attack"
-            && event.weapon.as_ref().is_some_and(|weapon| weapon.item.as_ref() == "scorpions:scorpion_dagger")
+            && event
+                .weapon
+                .as_ref()
+                .is_some_and(|weapon| weapon.item.as_ref() == dagger::DAGGER)
             && let Ok(entity) = u32::try_from(event.entity)
         {
-            VENOM.lock().unwrap().insert(entity, VENOM_TICKS);
+            dagger::poison(host, entity);
         }
         Flow::Continue
     }
@@ -344,7 +361,25 @@ impl Hooks for Scorpions {
         );
     }
 
+    /// Right-click with the dagger: thrown (`dagger.rs`).
+    fn use_item(&self, host: &mut dyn Host, event: &mut UseItemEvent<'_>) -> Flow {
+        if dagger::throw(host, event.stack) {
+            Flow::Cancel
+        } else {
+            Flow::Continue
+        }
+    }
+
+    /// The dagger's Poisonous line.
+    fn tooltip(&self, _: &dyn Host, event: &mut TooltipEvent<'_>) {
+        dagger::tooltip(event);
+    }
+
     fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
+        if event.mob.kind.id == dagger::THROWN {
+            creature::projectile::register(event.mob, dagger::SIZE);
+            return;
+        }
         if event.mob.kind.id != SCORPION {
             return;
         }
@@ -359,7 +394,7 @@ impl Hooks for Scorpions {
 
     /// Right-click: nothing (no trading screen, which its template would open).
     fn interact_entity(&self, _: &mut dyn Host, event: &mut InteractEntityEvent<'_>) -> Flow {
-        if event.kind == SCORPION {
+        if event.kind == SCORPION || event.kind == dagger::THROWN {
             Flow::Cancel
         } else {
             Flow::Continue
@@ -368,6 +403,10 @@ impl Hooks for Scorpions {
 
     fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
         venom_tick(host, event);
+        if event.kind == dagger::THROWN {
+            dagger::tick(host, event.dimension, event.entity);
+            return;
+        }
         if event.kind != SCORPION {
             return;
         }
@@ -382,8 +421,10 @@ impl Hooks for Scorpions {
 
     fn living_death(&self, _: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
         VENOM.lock().unwrap().remove(&event.entity);
-        if creature::mob::kind(event.kind) == SCORPION {
-            forget(event.entity);
+        match creature::mob::kind(event.kind) {
+            SCORPION => forget(event.entity),
+            dagger::THROWN => dagger::forget(event.entity),
+            _ => {}
         }
         Flow::Continue
     }
@@ -395,6 +436,10 @@ impl Hooks for Scorpions {
 
     fn mob_submit(&self, host: &dyn Host, event: &mut MobSubmitEvent<'_>) -> Flow {
         let mob = event.mob;
+        if mob.kind == dagger::THROWN {
+            dagger::submit(host, event);
+            return Flow::Cancel;
+        }
         if mob.kind != SCORPION {
             return Flow::Continue;
         }

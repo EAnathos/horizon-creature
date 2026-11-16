@@ -3,7 +3,7 @@
 use std::sync::Mutex;
 
 use horizon_client::items::ItemStack;
-use horizon_client::mod_api::Host;
+use horizon_client::mod_api::{Compound, Host, Tag};
 
 /// The items the server's hooks use (`server_used`).
 static SERVER_USED: Mutex<Vec<&'static str>> = Mutex::new(Vec::new());
@@ -65,3 +65,15 @@ pub fn slot_of(host: &mut dyn Host, stack: &ItemStack) -> Option<i32> {
 
 /// A count no stack has, to tell the selected slot (`slot_of`).
 const MARK: u32 = 1000;
+
+/// Drops `stack` as an item on the ground at `at`, with its components (a jar's creature, a dagger's wear).
+pub fn drop_stack(host: &mut dyn Host, dimension: &str, at: [f64; 3], stack: &ItemStack) {
+    let mut item = Compound::new();
+    item.insert("id".into(), Tag::String((&*stack.item).into()));
+    item.insert("count".into(), Tag::Int(stack.count as i32));
+    if let Some(components) = horizon_client::item_data::encode_components(stack) {
+        item.insert("components".into(), components);
+    }
+    let nbt: Compound = [("Item".into(), Tag::Compound(item))].into();
+    host.summon(dimension, "minecraft:item", at, nbt);
+}

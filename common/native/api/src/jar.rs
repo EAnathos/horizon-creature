@@ -250,20 +250,9 @@ pub fn catch(host: &mut dyn Host, event: &InteractEntityEvent<'_>) -> bool {
         s.count -= 1;
     }
     if let Some(rest) = host.give_stack(player.uuid, jar) {
-        drop_stack(host, &player.dimension, player.position, &rest);
+        crate::hand::drop_stack(host, &player.dimension, player.position, &rest);
     }
     true
-}
-
-fn drop_stack(host: &mut dyn Host, dimension: &str, at: [f64; 3], stack: &ItemStack) {
-    let mut item = Compound::new();
-    item.insert("id".into(), Tag::String((&*stack.item).into()));
-    item.insert("count".into(), Tag::Int(stack.count as i32));
-    if let Some(components) = horizon_client::item_data::encode_components(stack) {
-        item.insert("components".into(), components);
-    }
-    let nbt: Compound = [("Item".into(), Tag::Compound(item))].into();
-    host.summon(dimension, "minecraft:item", at, nbt);
 }
 
 /// From the library's `use_item_on`: a filled jar releases its creature on the face clicked. Whether the click was the
@@ -489,7 +478,7 @@ pub fn broken(host: &mut dyn Host, pos: [i32; 3]) {
             f64::from(pos[1]) + 0.3,
             f64::from(pos[2]) + 0.5,
         ];
-        drop_stack(host, &player.dimension, at, &item);
+        crate::hand::drop_stack(host, &player.dimension, at, &item);
     }
 }
 

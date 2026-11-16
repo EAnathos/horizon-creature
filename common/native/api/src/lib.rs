@@ -14,6 +14,7 @@
 //! - `flutter`: how small fliers move (butterflies, moths, fireflies): short flights, landing, resting (SPECS §3.5).
 //! - `crawl`: how small crawlers move (worms, scorpions): a slow crawl on the ground, wandering or over a patch (SPECS §3.6).
 //! - `friend`: a creature befriended by a player, following them or staying (SPECS §6.2).
+//! - `projectile`: thrown things (the cyclops's boulder, the scorpion dagger), flown and ended (SPECS §3.9).
 //! - `guide`: the creature guide book, given at a player's first login (SPECS §7).
 //! - `bestiary`: the book's pages, what each player met and found out (SPECS §7).
 //! - `items`: the book's Items tab, a page per item of the series, with the recipes of `recipes.rs` (SPECS §7.2).
@@ -28,6 +29,7 @@ pub mod items;
 pub mod jar;
 pub mod mob;
 pub mod model;
+pub mod projectile;
 mod recipes;
 pub mod sounds;
 pub mod territory;

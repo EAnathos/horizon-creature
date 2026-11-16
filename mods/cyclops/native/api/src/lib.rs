@@ -191,11 +191,9 @@ impl Hooks for Cyclops {
 
     fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
         if event.mob.kind.id == boulder::BOULDER {
-            let (w, h, e) = boulder::SIZE;
-            creature::mob::ours(event.mob, w, h, e);
+            creature::projectile::register(event.mob, boulder::SIZE);
             event.mob.attrs.attack_damage = boulder::DAMAGE;
             event.mob.attrs.attack_knockback = boulder::KNOCKBACK;
-            event.mob.ai.goals.add(1, boulder::Flight::default());
             return;
         }
         if event.mob.kind.id != CYCLOPS {

@@ -13,5 +13,6 @@
   "subtitles.entity.scorpion.hiss": "Scorpion hisses",
   "subtitles.entity.scorpion.strike": "Scorpion strikes",
   "subtitles.entity.scorpion.hurt": "Scorpion hurts",
-  "subtitles.entity.scorpion.death": "Scorpion dies"
+  "subtitles.entity.scorpion.death": "Scorpion dies",
+  "entity.scorpions.thrown_dagger": "Thrown Scorpion Dagger"
 }

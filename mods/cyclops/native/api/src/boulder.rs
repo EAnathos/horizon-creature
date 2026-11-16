@@ -1,14 +1,13 @@
-//! The boulder (SPECS §2): what a cyclops throws at a target out of its club's reach. A mob of its own
-//! (`cyclops:boulder`, a copy of the wandering trader that can't be hurt), launched on an arc toward where the target
-//! stood and flown by its goal (`Flight`, its own gravity), tumbling as it goes. It hits the first time it comes within
+//! The boulder (SPECS §2): what a cyclops throws at a target out of its club's reach. A projectile of the library's
+//! (`creature::projectile`: `cyclops:boulder`, a copy of the wandering trader that can't be hurt), launched on an arc
+//! toward where the target stood, tumbling as it goes. It hits the first time it comes within
 //! reach of its target (`DAMAGE`, a push) and shatters there, on the ground, against a wall, or after `LIFE` ticks:
 //! stone dust and a crash, and it is gone. It tears up the blocks around where it lands (`smash`).
-use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Mutex;
 
+use creature::projectile::{self, Launch};
 use horizon_client::mobs::Who;
-use horizon_client::mobs::goals;
-use horizon_client::mod_api::{Compound, Cx, Goal, Host, Mob, MobSubmitEvent, ParticleOptions, ParticleType, Tag};
+use horizon_client::mod_api::{Host, MobSubmitEvent, ParticleOptions, ParticleType};
 
 use crate::{model_boulder, smash};
 
@@ -35,36 +34,30 @@ pub struct Throw {
 
 /// Throws to make, from the cyclopes' ticks (`launch`).
 pub static THROWS: Mutex<Vec<Throw>> = Mutex::new(Vec::new());
-/// Each new boulder's velocity and target, read by its goal on its first tick.
-static FLIGHTS: Mutex<BTreeMap<u32, ([f64; 3], Who)>> = Mutex::new(BTreeMap::new());
-/// Boulders to shatter at their next tick (the goal has no host).
-static SHATTERED: Mutex<BTreeSet<u32>> = Mutex::new(BTreeSet::new());
 
 /// The velocity that carries a boulder from `from` to `to` on an arc, at `SPEED` along the ground, with `GRAVITY`.
 pub fn aim(from: [f64; 3], to: [f64; 3]) -> [f64; 3] {
-    let (dx, dz) = (to[0] - from[0], to[2] - from[2]);
-    let flat = dx.hypot(dz).max(0.1);
-    let ticks = (flat / SPEED).ceil().max(1.0);
-    // y after n ticks of v - g k: n v - g n (n - 1) / 2.
-    let vy = (to[1] - from[1] + GRAVITY * ticks * (ticks - 1.0) / 2.0) / ticks;
-    [dx / ticks, vy, dz / ticks]
+    projectile::aim(from, to, SPEED, GRAVITY)
 }
 
 /// From a cyclops's tick: the throws its goal asked for, as boulders in the world.
 pub fn launch(host: &mut dyn Host, dimension: &str) {
     let throws = std::mem::take(&mut *THROWS.lock().unwrap());
     for t in throws {
-        let mut nbt = Compound::new();
-        nbt.insert("Invulnerable".into(), Tag::Byte(1));
-        if let Some(id) = host.summon(dimension, BOULDER, t.from, nbt) {
-            FLIGHTS.lock().unwrap().insert(id, (t.velocity, t.target));
-        }
+        let launch = Launch {
+            velocity: t.velocity,
+            gravity: GRAVITY,
+            life: LIFE,
+            target: Some((t.target, REACH)),
+        };
+        projectile::launch(host, dimension, BOULDER, t.from, launch);
     }
 }
 
-/// From the boulder's tick: shattered, it bursts into stone dust with a crash and is gone.
+/// From the boulder's tick: its flight over (it hit, landed or hit a wall), it bursts into stone dust with a crash and is
+/// gone, tearing up the blocks around it.
 pub fn tick(host: &mut dyn Host, dimension: &str, entity: u32) {
-    if !SHATTERED.lock().unwrap().remove(&entity) {
+    if projectile::ended(entity).is_none() {
         return;
     }
     if let Some(at) = host.entity(entity).and_then(|e| host.entity_position(e)) {
@@ -92,84 +85,12 @@ pub fn tick(host: &mut dyn Host, dimension: &str, entity: u32) {
         );
     }
     host.remove_mob(dimension, entity);
+    projectile::forget(entity);
 }
 
 /// From the mod's `living_death` (or a removal): forgets it.
 pub fn forget(entity: u32) {
-    FLIGHTS.lock().unwrap().remove(&entity);
-    SHATTERED.lock().unwrap().remove(&entity);
-}
-
-/// The boulder's flight: its own velocity and gravity every tick, until it hits or lands.
-#[derive(Clone, Debug, Default)]
-pub struct Flight {
-    velocity: Option<[f64; 3]>,
-    target: Option<Who>,
-    age: i32,
-    done: bool,
-}
-
-impl Flight {
-    fn shatter(&mut self, m: &Mob) {
-        self.done = true;
-        SHATTERED.lock().unwrap().insert(m.id);
-    }
-}
-
-impl Goal for Flight {
-    fn flags(&self) -> u8 {
-        goals::MOVE | goals::LOOK | goals::JUMP
-    }
-    fn can_use(&mut self, _: &mut Mob, _: &mut Cx) -> bool {
-        true
-    }
-    fn can_continue(&mut self, _: &mut Mob, _: &mut Cx) -> bool {
-        !self.done
-    }
-    fn every_tick(&self) -> bool {
-        true
-    }
-    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
-        if self.done {
-            return;
-        }
-        self.age += 1;
-        m.no_gravity = true;
-        if self.velocity.is_none()
-            && let Some((velocity, target)) = FLIGHTS.lock().unwrap().remove(&m.id)
-        {
-            self.velocity = Some(velocity);
-            self.target = Some(target);
-        }
-        // A boulder without a throw (one saved mid-flight) shatters.
-        let (Some(mut v), Some(who)) = (self.velocity, self.target) else {
-            if self.age > 2 {
-                self.shatter(m);
-            }
-            return;
-        };
-        if let Some(t) = cx.w.target_info(who) {
-            let mut centre = m.position;
-            centre.y += SIZE.1 / 2.0;
-            if t.alive && t.bounds.distance_squared_to_point(centre) < REACH * REACH {
-                horizon_client::mobs::ai::do_hurt_target(m, who, cx);
-                self.shatter(m);
-                return;
-            }
-        }
-        if self.age > 1 && (m.on_ground || m.horizontal_collision) || self.age > LIFE {
-            self.shatter(m);
-            return;
-        }
-        v[1] -= GRAVITY;
-        self.velocity = Some(v);
-        m.velocity.x = v[0];
-        m.velocity.y = v[1];
-        m.velocity.z = v[2];
-    }
-    fn box_clone(&self) -> Box<dyn Goal> {
-        Box::new(self.clone())
-    }
+    projectile::forget(entity);
 }
 
 /// Draws a boulder: tumbling end over end along its flight.
@@ -191,37 +112,4 @@ pub fn held(host: &dyn Host, draw: &mut horizon_client::mod_api::BlockEntityDraw
     draw.translate(at);
     creature::model::draw(host, draw, &model_boulder::BOULDER, TEXTURE, &|_| [0.0; 3]);
     draw.pop();
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// Where a boulder thrown with `velocity` from `from` is after as many ticks as it takes to cover the ground to `to`.
-    fn landing(from: [f64; 3], to: [f64; 3], velocity: [f64; 3]) -> [f64; 3] {
-        let ticks = ((to[0] - from[0]).hypot(to[2] - from[2]) / SPEED).ceil().max(1.0) as i32;
-        let (mut at, mut v) = (from, velocity);
-        for _ in 0..ticks {
-            at = [at[0] + v[0], at[1] + v[1], at[2] + v[2]];
-            v[1] -= GRAVITY;
-        }
-        at
-    }
-
-    #[test]
-    fn a_boulder_lands_where_it_was_aimed() {
-        for to in [[10.0, 0.0, 0.0], [0.0, 3.0, -15.0], [7.0, -4.0, 7.0], [0.5, 1.0, 0.0]] {
-            let from = [0.0, 4.0, 0.0];
-            let at = landing(from, to, aim(from, to));
-            for k in 0..3 {
-                assert!((at[k] - to[k]).abs() < 1e-9, "aimed at {to:?}, landed at {at:?}");
-            }
-        }
-    }
-
-    #[test]
-    fn it_flies_at_its_speed_along_the_ground() {
-        let v = aim([0.0, 0.0, 0.0], [20.0, 0.0, 0.0]);
-        assert!(v[0].hypot(v[2]) <= SPEED + 1e-9);
-    }
 }
