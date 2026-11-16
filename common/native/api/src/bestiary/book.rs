@@ -12,7 +12,13 @@ pub fn open(host: &mut dyn Host) {
     let Some(player) = host.acting_player() else {
         return;
     };
-    let text: String = load(host, player.uuid)
+    open_for_player(host, player.uuid);
+}
+
+/// Open for an explicit server player, also used by `/bestiary` as a fallback when the held guide's use is swallowed
+/// by another item or input hook.
+pub fn open_for_player(host: &mut dyn Host, player: u128) {
+    let text: String = load(host, player)
         .iter()
         .map(|e| {
             format!(
@@ -24,7 +30,7 @@ pub fn open(host: &mut dyn Host) {
             )
         })
         .collect();
-    let _ = host.net_send_to_player(player.uuid, CHANNEL, text.as_bytes());
+    let _ = host.net_send_to_player(player, CHANNEL, text.as_bytes());
 }
 
 /// The book's tabs, ribbons on its edge (SPECS §7.1).

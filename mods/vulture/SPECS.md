@@ -128,6 +128,7 @@ Variant names are simple colour names ✅, so players need not know the species.
 
 - **Sit / follow**: when following, it flies above its owner and teleports if too far away.
 - Defends its owner and attacks what the owner hits, like the wolf.
+- It cannot be ridden into water: entering water ejects its passengers, and it swims upward toward the nearest shore.
 - Can be named with a name tag. No fall damage. Healing: raw meat (+4 HP).
 - **Controls** ✅:
   - right-click = mount if it is saddled and you are its owner (only the owner rides it ✅), otherwise sit/follow;
@@ -159,6 +160,7 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
 | Sneak (held) | Noses down and **descends** ✅ (gains speed, up to the dive speed); Ctrl does the same |
 | (neither) | Flies level |
 | Sneak on the ground | Get off ✅: **only on the ground**, never in the air |
+| Water | Ejects its rider and climbs/swims toward the nearest shore |
 | "Talons" key ✅ (R, rebindable in Controls) | Catch / release (§6.4) |
 
 - **Speed and pitch** trade like a glider's ✅: diving builds speed, climbing spends it. Too slow while climbing, it

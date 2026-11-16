@@ -17,9 +17,9 @@ Everything below works and was tested in game, single player, unless said otherw
 - **The small crawlers' crawl** (§3.6, `creature::crawl`): the worm's ground crawl, now a library goal the next ground
   creatures share; Worms runs on it (tested in game, its behaviour unchanged).
 - **Glass jar and territories** (§4): catching, releasing, settling on a flower patch or in a garden, the jar on
-  display (spared by blasts and pistons). The jar left out of the creative tab when no jar mod is installed is built
-  but not yet checked in game. The **sand** rule (§4.2, for Scorpions) is coded but not yet exercised in game, its mod
-  being unbuilt.
+  display (spared by blasts and pistons). The jar's absence from the creative tab and recipe when no jar mod is
+  installed, and the catch/release/display/name/TNT/piston behavior, are confirmed. The **sand** rule (§4.2, for
+  Scorpions) is coded but not yet exercised in game.
 - **Colours and patterns** (§5), used by the butterflies.
 - **Mob helpers** (`creature::mob`): `ours` (muted, own box, own goals, spared), `resize`, `Muted`, `despawn_far` (small
   wild creatures far from players, as vanilla's ambient mobs).
@@ -255,6 +255,9 @@ A book about the series' creatures, given to every player.
   colon when one species has it: `cow`) writes down everything about it for the player who runs it: every biome it
   spawns in, every fact, every look its varieties can roll; `/bestiary unlock all` does it for every species;
   `/bestiary reset` forgets everything. The chat completes the species' ids.
+- **Known bug — fix and regression-test**: after running `/bestiary unlock all`, the Creature Guide can no longer be
+  opened. Restore opening the book after this command; verify both `/bestiary unlock all` → open the book and
+  `/bestiary reset` → open the book.
 
 - **Morphs**, planned ✅: today the morphs are the colours and patterns of the library's looks (§5). They become any look
   a species gives: a colour and pattern, or a **kind with a model of its own** (the Living Flowers' poppy, dandelion
@@ -308,13 +311,15 @@ What each item of the series is for, so a player knows how to make it and what t
 Creative, a test world; `cargo creature install` first.
 
 - The creative tab "Sunrise Creatures": every installed mod's items, spawn eggs first; the glass jar only with a jar mod.
-- `/bestiary unlock all`: every installed species' page, full; `/bestiary reset` empties the book. The wheel scrolls a
-  long page (a butterfly's) and the icons; the Items tab lists every installed mod's items, each with its recipe.
+- `/bestiary unlock all`: every installed species' page, full; then open the Creature Guide (regression for the known
+  bug in §7). `/bestiary reset` empties the book and it still opens. The wheel scrolls a long page (a butterfly's) and
+  the icons; the Items tab lists every installed mod's items, each with its recipe.
 - A new world: the creature guide given once; its bestiary pages turn in 3D, list the biomes met, the facts and the
   rarity; a craft of the guide with a vulture feather.
 - Monsters (a zombie, a skeleton) ignore a butterfly, a worm, a vulture.
-- The glass jar: catch, release on grass and on a flower (it settles), place it (sneak + right-click), break it (the
-  filled jar comes back); a named creature keeps its name; a TNT blast and a piston leave a placed jar alone.
+- The glass jar — confirmed: it is hidden when no jar mod is installed; catch, release, display and break it; names are
+  kept; TNT and pistons leave placed jars alone; flower settling works. Scorpions' sand settling rule still needs an
+  in-game check.
 - The recipe book lists the series' recipes once one ingredient is held.
 - Small fliers come out near a player within a minute or two, in their biomes and hours.
 

@@ -466,6 +466,7 @@ impl Hooks for Vulture {
 
     fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
         if event.kind == KIND {
+            water_escape(host, event.entity);
             creature::sounds::tick_post(host, event, &sounds::VOICE, creature::sounds::NEUTRAL);
             state::save(host, event.dimension, event.entity);
             state::look_for_food(host, event.dimension, event.entity);
@@ -527,4 +528,51 @@ impl Hooks for Vulture {
         event.draw.pop();
         Flow::Cancel
     }
+}
+
+/// A vulture cannot carry a rider into water. Eject everyone as soon as it enters, then keep swimming it upward and
+/// toward the nearest dry shore block until it leaves the water.
+fn water_escape(host: &mut dyn Host, id: u32) {
+    let Some(entity) = host.entity(id) else { return };
+    if !host.entity_is_in_water(entity).unwrap_or(false) {
+        return;
+    }
+    host.eject_passengers(id);
+
+    let Some(at) = host.entity_position(entity) else { return };
+    let Some(level) = host.entity_level(entity) else { return };
+    let origin = [at[0].floor() as i32, at[1].floor() as i32, at[2].floor() as i32];
+    let mut shore = None;
+    'rings: for radius in 1_i32..=8 {
+        for dx in -radius..=radius {
+            for dz in -radius..=radius {
+                if dx.abs() != radius && dz.abs() != radius {
+                    continue;
+                }
+                let feet = [origin[0] + dx, origin[1], origin[2] + dz];
+                let below = [feet[0], feet[1] - 1, feet[2]];
+                let (Some(block), Some(ground)) = (level.block(host, feet), level.block(host, below)) else {
+                    continue;
+                };
+                let (Ok(wet), Ok(ground_wet), Ok(ground_air)) = (
+                    host.block_name_in_tag(&block, "minecraft:water"),
+                    host.block_name_in_tag(&ground, "minecraft:water"),
+                    host.block_name_in_tag(&ground, "minecraft:air"),
+                ) else {
+                    continue;
+                };
+                if !wet && !ground_wet && !ground_air {
+                    shore = Some([feet[0] as f64 + 0.5, at[1], feet[2] as f64 + 0.5]);
+                    break 'rings;
+                }
+            }
+        }
+    }
+    let (vx, vz) = shore.map_or((0.0, 0.0), |to| {
+        let dx = to[0] - at[0];
+        let dz = to[2] - at[2];
+        let length = dx.hypot(dz).max(0.001);
+        (dx / length * 0.18, dz / length * 0.18)
+    });
+    host.entity_set_velocity(entity, [vx, 0.3, vz]);
 }

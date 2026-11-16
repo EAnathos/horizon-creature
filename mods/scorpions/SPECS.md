@@ -30,12 +30,13 @@ sounds` cuts, so there is no `assets/sounds.toml`): both are meant to be replace
   and the content (entity, spawn egg, the venom sac, stinger and scorpion dagger with their recipes and the venom-sac
   brewing, the loot table, the biome spawns, en/fr).
 
-Left to do: **real art** to replace the placeholder textures (`entity/scorpion/desert|badlands|cave|cave_glow` and the
-five item icons) and the synthesized sounds (then, for sounds from freesound, add `assets/sounds.toml` and cut them
-with `cargo creature sounds`); **balance** (loads and runs in game now). To refine: the cave kind by depth rather than
-biome (§2), the pinch's and sting's damage (the wandering-trader template has no `attack_damage` attribute, so
-`do_hurt_target` deals the engine default for both; the sting adds the poison), the dagger's poison-on-hit, and
-stinging the player who tries to catch a reared scorpion (§6).
+Left to do: **choose the scorpion's morph when using `/summon`** (§3; implement and test), and the dagger's Poisonous I
+enchantment and throwing (§5; neither works yet and needs implementation); real art to replace the placeholder
+creature textures and remaining item icons; the synthesized sounds (then, for sounds from freesound, add
+`assets/sounds.toml` and cut them with `cargo creature sounds`); **balance**. To refine: the cave kind by depth rather
+than biome (§2), the pinch's and sting's damage (the wandering-trader template has no `attack_damage` attribute, so
+`do_hurt_target` deals the engine default for both; the sting adds poison), and stinging the player who tries to catch a
+reared scorpion (§6).
 
 ## 1. Technical context
 
@@ -65,6 +66,8 @@ stinging the player who tries to catch a reared scorpion (§6).
 - 4 health. Neutral: it never starts a fight.
 - **Spawning**: in its biomes, alone or 2 together, on sand, red sand, terracotta, sandstone and stone; the cave
   kind in the dark. Wild ones despawn far from players.
+- **Summoning**: `/summon scorpions:scorpion` must let the player choose its morph (desert, badlands or cave); the
+  selected kind must be saved on the scorpion.
 - **Life**: nocturnal. By day it shelters in the shade (under an overhang, beside a dead bush or a cactus, in a
   cave mouth) and keeps still; at dusk it comes out and wanders slowly (the library's small crawlers), its tail low.
   The cave kind is about at any hour.
@@ -91,7 +94,10 @@ scorpion glow), "Jar" (caught one in a jar), "Settled" (settled one in a sandy p
   of Poison, as a spider eye does (if Horizon lets a mod add a brewing recipe, to check when implementing); 8 arrows
   around a venom sac craft 8 arrows of Poison (vanilla's tipped arrows).
 - **Stinger** (`scorpions:stinger`) ✅: the hooked stinger. Use ✅: with a stick, crafts a **scorpion dagger**
-  (`scorpions:scorpion_dagger`): a quick, light blade (3 damage, faster than a sword) whose hits poison for 3 s, 64 uses.
+  (`scorpions:scorpion_dagger`): a quick, light blade (3 damage, faster than a sword), 64 uses. **Wanted behavior, not
+  implemented yet**: it should visibly have the **Poisonous I** enchantment and be throwable. Neither the enchantment
+  display nor throwing currently works. **TODO for Claude: implement both.** A dagger hit should poison its target for
+  3 s.
 
 ## 6. Glass jar and territory ✅
 

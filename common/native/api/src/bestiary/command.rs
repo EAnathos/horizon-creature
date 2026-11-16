@@ -101,6 +101,7 @@ pub fn perform(host: &mut dyn Host, event: &PerformCommandEvent<'_>) -> bool {
     }
     let player = event.player.uuid;
     match (words.next(), words.next()) {
+        (None, None) | (Some("open"), None) => book::open_for_player(host, player),
         (Some("reset"), None) => {
             store(host, player, &[]);
             answer(host, "commands.creature.bestiary.reset", &[]);

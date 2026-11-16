@@ -9,7 +9,7 @@ giant of the mountains that hurls boulders, and whose eye is a rare crafting mat
 
 ## 0. Status
 
-Done and tested in game (single player), except the blocks its blows break (built, not yet checked in game).
+Done and tested in game (single player), including the blocks its blows break and damage balance.
 
 - **The cyclops** (`cyclops:cyclops`, spawn egg): a copy of the wandering trader, 4 blocks tall (box 1.8 × 4), 110
   health, blue, one big eye, tusks, a hide loincloth and a wooden club (`assets/models/cyclops.bbmodel`).
@@ -32,7 +32,7 @@ Done and tested in game (single player), except the blocks its blows break (buil
 - **Sounds**: its own, from CC0 freesound recordings (`assets/sounds.toml`): grunts, heavy steps, hurt and death, a
   roar as it lifts a boulder, the club's swing and thud, the throw, the boulder shattering, a dazed groan.
 
-Left: balance as players report.
+No known outstanding implementation or in-game check; revisit balance if player feedback calls for it.
 
 ## 1. Technical context
 
