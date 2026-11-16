@@ -30,10 +30,10 @@ sounds` cuts, so there is no `assets/sounds.toml`): both are meant to be replace
   and the content (entity, spawn egg, the venom sac, stinger and scorpion dagger with their recipes and the venom-sac
   brewing, the loot table, the biome spawns, en/fr).
 
-Left to do: **choose the scorpion's morph when using `/summon`** (§3; implement and test), and the dagger's Poisonous I
-enchantment and throwing (§5; neither works yet and needs implementation); real art to replace the placeholder
-creature textures and remaining item icons; the synthesized sounds (then, for sounds from freesound, add
-`assets/sounds.toml` and cut them with `cargo creature sounds`); **balance**. To refine: the cave kind by depth rather
+Left to do: **choose the scorpion's morph when using `/summon`** (§3; implement and test), and the dagger's **throwing**
+(§5; the Poisonous enchantment and its poison-on-hit are done, throwing is not); real art to replace the placeholder
+creature textures (the spawn egg and stinger icons were redrawn to the series' style); the synthesized sounds (then, for
+sounds from freesound, add `assets/sounds.toml` and cut them with `cargo creature sounds`); **balance**. To refine: the cave kind by depth rather
 than biome (§2), the pinch's and sting's damage (the wandering-trader template has no `attack_damage` attribute, so
 `do_hurt_target` deals the engine default for both; the sting adds poison), and stinging the player who tries to catch a
 reared scorpion (§6).
@@ -94,10 +94,10 @@ scorpion glow), "Jar" (caught one in a jar), "Settled" (settled one in a sandy p
   of Poison, as a spider eye does (if Horizon lets a mod add a brewing recipe, to check when implementing); 8 arrows
   around a venom sac craft 8 arrows of Poison (vanilla's tipped arrows).
 - **Stinger** (`scorpions:stinger`) ✅: the hooked stinger. Use ✅: with a stick, crafts a **scorpion dagger**
-  (`scorpions:scorpion_dagger`): a quick, light blade (3 damage, faster than a sword), 64 uses. **Wanted behavior, not
-  implemented yet**: it should visibly have the **Poisonous I** enchantment and be throwable. Neither the enchantment
-  display nor throwing currently works. **TODO for Claude: implement both.** A dagger hit should poison its target for
-  3 s.
+  (`scorpions:scorpion_dagger`): a quick, light blade (3 damage, faster than a sword), 64 uses. It carries the
+  **Poisonous** enchantment ✅ (`scorpions:poisonous`, a mod enchantment with a `minecraft:post_attack` →
+  `apply_mob_effect` effect): it shows on the dagger and a hit **poisons the target for 3 s** (works on mobs and
+  players, engine-side). **Still TODO**: making it **throwable** (a thrown-dagger entity, not implemented).
 
 ## 6. Glass jar and territory ✅
 

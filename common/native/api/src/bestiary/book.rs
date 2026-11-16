@@ -30,7 +30,40 @@ pub fn open_for_player(host: &mut dyn Host, player: u128) {
             )
         })
         .collect();
-    let _ = host.net_send_to_player(player, CHANNEL, text.as_bytes());
+    send_chunked(host, player, &text);
+}
+
+/// Horizon writes a custom payload's length as a `u16` and caps a payload string at 32767 bytes (`net.rs`): a full
+/// `/bestiary unlock all` (every species in every biome) overflows one packet and was silently dropped, so the book
+/// never opened. The book is sent in chunks under `CHUNK` bytes, split on line (species) boundaries, each with a flag
+/// byte; the client (`received`) accumulates them and opens on the last. (`B` one and only, `S` start, `M` more, `E`
+/// end.)
+const CHUNK: usize = 30000;
+fn send_chunked(host: &mut dyn Host, player: u128, text: &str) {
+    let mut chunks: Vec<String> = Vec::new();
+    let mut cur = String::new();
+    for line in text.split_inclusive('\n') {
+        if !cur.is_empty() && cur.len() + line.len() > CHUNK {
+            chunks.push(std::mem::take(&mut cur));
+        }
+        cur.push_str(line);
+    }
+    if !cur.is_empty() || chunks.is_empty() {
+        chunks.push(cur);
+    }
+    let n = chunks.len();
+    for (i, chunk) in chunks.iter().enumerate() {
+        let flag = match i {
+            _ if n == 1 => b'B',
+            0 => b'S',
+            _ if i == n - 1 => b'E',
+            _ => b'M',
+        };
+        let mut packet = Vec::with_capacity(1 + chunk.len());
+        packet.push(flag);
+        packet.extend_from_slice(chunk.as_bytes());
+        let _ = host.net_send_to_player(player, CHANNEL, &packet);
+    }
 }
 
 /// The book's tabs, ribbons on its edge (SPECS §7.1).
@@ -90,13 +123,30 @@ fn rows(count: usize) -> usize {
     count.div_ceil(PER_LINE)
 }
 
-/// From the library's `net_from_server`: the bestiary arrived, the book opens (on the tab last read).
+/// Accumulates the book's chunks (`send_chunked`) between the start and end packets.
+static ACCUM: Mutex<String> = Mutex::new(String::new());
+
+/// From the library's `net_from_server`: the bestiary arrives in chunks; on the last the book opens (on the tab last
+/// read).
 pub fn received(host: &mut dyn Host, channel: &str, data: &[u8]) {
-    if channel != CHANNEL {
+    if channel != CHANNEL || data.is_empty() {
         return;
     }
+    let (flag, chunk) = (data[0], String::from_utf8_lossy(&data[1..]));
+    let text = {
+        let mut accum = ACCUM.lock().unwrap();
+        if flag == b'S' || flag == b'B' {
+            accum.clear();
+        }
+        accum.push_str(&chunk);
+        // Not the last packet yet: wait for the rest before opening.
+        if flag != b'E' && flag != b'B' {
+            return;
+        }
+        std::mem::take(&mut *accum)
+    };
     let list = |s: &str| -> Vec<String> { s.split(',').filter(|x| !x.is_empty()).map(String::from).collect() };
-    let entries = String::from_utf8_lossy(data)
+    let entries = text
         .lines()
         .filter_map(|line| {
             let mut parts = line.split('|');

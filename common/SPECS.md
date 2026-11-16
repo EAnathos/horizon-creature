@@ -255,9 +255,11 @@ A book about the series' creatures, given to every player.
   colon when one species has it: `cow`) writes down everything about it for the player who runs it: every biome it
   spawns in, every fact, every look its varieties can roll; `/bestiary unlock all` does it for every species;
   `/bestiary reset` forgets everything. The chat completes the species' ids.
-- **Known bug — fix and regression-test**: after running `/bestiary unlock all`, the Creature Guide can no longer be
-  opened. Restore opening the book after this command; verify both `/bestiary unlock all` → open the book and
-  `/bestiary reset` → open the book.
+- **Fixed** (was: after `/bestiary unlock all` the Creature Guide no longer opened): the book's data (every species,
+  biome, fact and morph the player has met) is one custom payload, which overflowed Horizon's `u16`/32767-byte limit
+  once all 92 species were unlocked and was silently dropped, so the book never opened. It is now sent in chunks under
+  the limit, split on species boundaries, and the client opens on the last chunk (`book.rs`, `send_chunked`). Tested in
+  game: `/bestiary unlock all` then the guide opens, and `/bestiary reset` then it opens.
 
 - **Morphs**, planned ✅: today the morphs are the colours and patterns of the library's looks (§5). They become any look
   a species gives: a colour and pattern, or a **kind with a model of its own** (the Living Flowers' poppy, dandelion
@@ -317,7 +319,7 @@ Creative, a test world; `cargo creature install` first.
 - A new world: the creature guide given once; its bestiary pages turn in 3D, list the biomes met, the facts and the
   rarity; a craft of the guide with a vulture feather.
 - Monsters (a zombie, a skeleton) ignore a butterfly, a worm, a vulture.
-- The glass jar — confirmed: it is hidden when no jar mod is installed; catch, release, display and break it; names are
+- The glass jar, confirmed: it is hidden when no jar mod is installed; catch, release, display and break it; names are
   kept; TNT and pistons leave placed jars alone; flower settling works. Scorpions' sand settling rule still needs an
   in-game check.
 - The recipe book lists the series' recipes once one ingredient is held.

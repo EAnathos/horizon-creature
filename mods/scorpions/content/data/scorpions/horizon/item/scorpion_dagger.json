@@ -7,6 +7,9 @@
       "translate": "item.scorpions.scorpion_dagger"
     },
     "minecraft:max_damage": 64,
+    "minecraft:enchantments": {
+      "scorpions:poisonous": 1
+    },
     "minecraft:attribute_modifiers": [
       {
         "type": "minecraft:attack_damage",
