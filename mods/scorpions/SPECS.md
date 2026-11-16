@@ -11,7 +11,8 @@ tail arched over its back; leave it be and it backs away. Hit it and it fights b
 ## 0. Status
 
 In development: the spec, the model, the code (native and content), and a first pass of textures and sounds. It builds,
-installs and loads; it is **not yet tested in game**. The textures are **placeholders** (painted from the model's UVs,
+installs and loads in game (its items, the creative tab and the entity are in, checked 2026-11-16); still to balance and
+to replace the placeholder art. The textures are **placeholders** (painted from the model's UVs,
 a colour per body part) and the sounds are **synthesized placeholders** (not the freesound clips `cargo creature
 sounds` cuts, so there is no `assets/sounds.toml`): both are meant to be replaced by real art.
 
@@ -31,9 +32,10 @@ sounds` cuts, so there is no `assets/sounds.toml`): both are meant to be replace
 
 Left to do: **real art** to replace the placeholder textures (`entity/scorpion/desert|badlands|cave|cave_glow` and the
 five item icons) and the synthesized sounds (then, for sounds from freesound, add `assets/sounds.toml` and cut them
-with `cargo creature sounds`); **test in game** and balance. To refine: the cave kind by depth rather than biome (§2),
-the pinch's lesser damage (both strikes deal the entity's attack damage for now, the sting adds the poison), the
-dagger's poison-on-hit, and stinging the player who tries to catch a reared scorpion (§6).
+with `cargo creature sounds`); **balance** (loads and runs in game now). To refine: the cave kind by depth rather than
+biome (§2), the pinch's and sting's damage (the wandering-trader template has no `attack_damage` attribute, so
+`do_hurt_target` deals the engine default for both; the sting adds the poison), the dagger's poison-on-hit, and
+stinging the player who tries to catch a reared scorpion (§6).
 
 ## 1. Technical context
 
