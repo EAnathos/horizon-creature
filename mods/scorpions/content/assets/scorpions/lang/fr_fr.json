@@ -8,5 +8,9 @@
   "bestiary.scorpions.stung": "Pique",
   "bestiary.scorpions.glow": "Lueur",
   "bestiary.scorpions.jar": "Capture",
-  "bestiary.scorpions.settled": "Installe"
+  "bestiary.scorpions.settled": "Installe",
+  "subtitles.entity.scorpion.hiss": "Le scorpion siffle",
+  "subtitles.entity.scorpion.strike": "Le scorpion frappe",
+  "subtitles.entity.scorpion.hurt": "Le scorpion souffre",
+  "subtitles.entity.scorpion.death": "Le scorpion meurt"
 }

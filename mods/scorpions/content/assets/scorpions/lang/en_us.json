@@ -8,5 +8,9 @@
   "bestiary.scorpions.stung": "Stung",
   "bestiary.scorpions.glow": "Glow",
   "bestiary.scorpions.jar": "Catch",
-  "bestiary.scorpions.settled": "Settles"
+  "bestiary.scorpions.settled": "Settles",
+  "subtitles.entity.scorpion.hiss": "Scorpion hisses",
+  "subtitles.entity.scorpion.strike": "Scorpion strikes",
+  "subtitles.entity.scorpion.hurt": "Scorpion hurts",
+  "subtitles.entity.scorpion.death": "Scorpion dies"
 }

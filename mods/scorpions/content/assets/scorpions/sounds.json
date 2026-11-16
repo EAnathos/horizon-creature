@@ -1,0 +1,26 @@
+{
+  "entity.scorpion.hiss": {
+    "subtitle": "subtitles.entity.scorpion.hiss",
+    "sounds": [
+      "scorpions:scorpions/hiss"
+    ]
+  },
+  "entity.scorpion.strike": {
+    "subtitle": "subtitles.entity.scorpion.strike",
+    "sounds": [
+      "scorpions:scorpions/strike"
+    ]
+  },
+  "entity.scorpion.hurt": {
+    "subtitle": "subtitles.entity.scorpion.hurt",
+    "sounds": [
+      "scorpions:scorpions/hurt"
+    ]
+  },
+  "entity.scorpion.death": {
+    "subtitle": "subtitles.entity.scorpion.death",
+    "sounds": [
+      "scorpions:scorpions/death"
+    ]
+  }
+}

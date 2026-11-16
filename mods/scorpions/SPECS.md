@@ -10,9 +10,10 @@ tail arched over its back; leave it be and it backs away. Hit it and it fights b
 
 ## 0. Status
 
-In development: the spec, the model, and the code (native and content). It builds and loads; it is not yet tested in
-game, and its **textures and sounds are not drawn/cut yet** (the mod shows missing textures and is silent until they
-are added).
+In development: the spec, the model, the code (native and content), and a first pass of textures and sounds. It builds,
+installs and loads; it is **not yet tested in game**. The textures are **placeholders** (painted from the model's UVs,
+a colour per body part) and the sounds are **synthesized placeholders** (not the freesound clips `cargo creature
+sounds` cuts, so there is no `assets/sounds.toml`): both are meant to be replaced by real art.
 
 - **The model** (`assets/models/scorpion.bbmodel`, pictures in docs/MODELS.md): a carapace with a pair of eyes on top
   and small ones on its front corners, three broad body segments, eight thin legs bent at the knee, two big claws
@@ -28,11 +29,11 @@ are added).
   and the content (entity, spawn egg, the venom sac, stinger and scorpion dagger with their recipes and the venom-sac
   brewing, the loot table, the biome spawns, en/fr).
 
-Left to do: the **textures** (`assets/.../entity/scorpion/desert|badlands|cave|cave_glow` and the five item icons) and
-the **sounds** (`assets/sounds.toml` and the hiss, strike, hurt and death clips, cut by `cargo creature sounds`); then
-test in game and balance. To refine: the cave kind by depth rather than biome (§2), the pinch's lesser damage (both
-strikes deal the entity's attack damage for now, the sting adds the poison), the dagger's poison-on-hit, and stinging
-the player who tries to catch a reared scorpion (§6).
+Left to do: **real art** to replace the placeholder textures (`entity/scorpion/desert|badlands|cave|cave_glow` and the
+five item icons) and the synthesized sounds (then, for sounds from freesound, add `assets/sounds.toml` and cut them
+with `cargo creature sounds`); **test in game** and balance. To refine: the cave kind by depth rather than biome (§2),
+the pinch's lesser damage (both strikes deal the entity's attack damage for now, the sting adds the poison), the
+dagger's poison-on-hit, and stinging the player who tries to catch a reared scorpion (§6).
 
 ## 1. Technical context
 

@@ -28,7 +28,7 @@ cool with snow.
 
 In development: [Vanilla Bestiary](mods/vanilla_bestiary/README.md), Minecraft's own creatures in the creature guide;
 [Scorpions](mods/scorpions/README.md), real-size scorpions that rear up when you come close and sting when hit (its code
-and content in place, its textures and sounds to come).
+and content in place, with placeholder textures and sounds to refine).
 
 Every mod needs **[Horizon Creature](common/README.md)**, the library: it adds the glass jar, the creature guide and
 the "Horizon Creature" creative tab, where all the series' items are.
