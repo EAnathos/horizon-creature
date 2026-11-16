@@ -1,4 +1,4 @@
-//! Worms (SPECS.md): earthworms that make a garden grow, of the Horizon Creature series.
+//! Worms (SPECS.md): earthworms that make a garden grow, of the Sunrise Creatures series.
 //!
 //! A worm is a copy of the wandering trader (its behaviour is all goals) with a tiny box, crawling slowly (`Crawl`) and
 //! drawn with its own segmented model (`model_worm.rs`, from `assets/models/worm.bbmodel`), wiggling as it goes. Caught
@@ -286,7 +286,7 @@ impl Hooks for Worms {
             event,
             "worms",
             concat!("Worms ", env!("CARGO_PKG_VERSION")),
-            "Earthworms that make your garden grow. Needs Horizon Creature.",
+            "Earthworms that make your garden grow. Needs Sunrise Creatures.",
         );
     }
 

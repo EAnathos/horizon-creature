@@ -1,10 +1,10 @@
 # Dung Beetles: specification
 
-A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): small beetles that follow
+A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): small beetles that follow
 grazing herds, roll balls of dung in straight lines, steered by the stars, and bury them, turning worn ground back into
 grass. Simple, like Worms ✅.
 
-**Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)).
+**Requires** the series' library, Sunrise Creatures (`creature`, [common/SPECS.md](../../common/SPECS.md)).
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 

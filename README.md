@@ -1,4 +1,4 @@
-# Horizon Creature
+# Sunrise Creatures
 
 Creature mods for [Minecraft Horizon](https://playhorizon.dev), the Rust reimplementation of Minecraft Java 26.3: a
 vulture to tame and fly, butterflies and moths, fireflies, earthworms for your garden, a one-eyed giant shepherd and
@@ -30,16 +30,16 @@ In development: [Vanilla Bestiary](mods/vanilla_bestiary/README.md), Minecraft's
 [Scorpions](mods/scorpions/README.md), real-size scorpions that rear up when you come close and sting when hit (its code
 and content in place, with placeholder textures and sounds to refine).
 
-Every mod needs **[Horizon Creature](common/README.md)**, the library: it adds the glass jar, the creature guide and
-the "Horizon Creature" creative tab, where all the series' items are.
+Every mod needs **[Sunrise Creatures](common/README.md)**, the library: it adds the glass jar, the creature guide and
+the "Sunrise Creatures" creative tab, where all the series' items are.
 
 ## Install
 
 1. Get the [Horizon launcher](https://playhorizon.dev).
-2. In the launcher's **Mods** page, install **Horizon Creature**, then the creature mods you want.
+2. In the launcher's **Mods** page, install **Sunrise Creatures**, then the creature mods you want.
 3. Press **Play**. These are native mods: the launcher builds the game with them the first time (a few minutes).
 
-Horizon Creature is not listed in the launcher yet. Until then, the mods can be built from this repository
+Sunrise Creatures is not listed in the launcher yet. Until then, the mods can be built from this repository
 ([CONTRIBUTING.md](CONTRIBUTING.md)).
 
 ## In the game

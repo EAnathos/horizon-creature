@@ -1,12 +1,12 @@
 # Living Flowers: specification
 
-A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): flowers that are not quite
+A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): flowers that are not quite
 flowers. They stand among the others in a meadow until you come close, then pull up their roots and go for you.
 Befriended with a flower of their kind, one follows you and guards you, and in a flower pot it becomes a living
 decoration that sways and looks at you. **Every small and tall vanilla flower** has its living kind ✅, each with its
 own look and its own attack; the other flowering blocks (pink petals, wildflowers, cactus flower...) have none.
 
-**Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)).
+**Requires** the series' library, Sunrise Creatures (`creature`, [common/SPECS.md](../../common/SPECS.md)).
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 

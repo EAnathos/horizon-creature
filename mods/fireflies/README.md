@@ -2,7 +2,7 @@
 
 ![](../../docs/models/fireflies-firefly-front.png)
 
-A mod of the [Horizon Creature](../../README.md) series: fireflies that light up the night. **Requires** Horizon
+A mod of the [Sunrise Creatures](../../README.md) series: fireflies that light up the night. **Requires** Horizon
 Creature, the series' library.
 
 ## Finding them

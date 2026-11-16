@@ -1,7 +1,7 @@
 id = "fairies"
 name = "Fairies"
 version = "0.1.0"
-description = "Shy glowing fairies that befriend you and lighten your step. Needs Horizon Creature."
+description = "Shy glowing fairies that befriend you and lighten your step. Needs Sunrise Creatures."
 authors = ["EAnathos"]
 api = "0.2"
 side = "both"

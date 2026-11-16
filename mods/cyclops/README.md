@@ -2,13 +2,13 @@
 
 ![](../../docs/models/cyclops-cyclops-front.png)
 
-A mod of the [Horizon Creature](../../README.md) series: a one-eyed giant shepherd, four blocks tall, who lives at the
-mouths of caves with his flock. **Requires** Horizon Creature, the series' library.
+A mod of the [Sunrise Creatures](../../README.md) series: a one-eyed giant shepherd, four blocks tall, who lives at the
+mouths of caves with his flock. **Requires** Sunrise Creatures, the series' library.
 
 ## Meeting one
 
 Rarely, at a cave mouth in the mountains, the meadows, the windswept hills or on a rocky shore, a cyclops watches over
-three to five sheep that follow him everywhere. Never on Peaceful. In creative: the spawn egg (creative tab "Horizon Creature").
+three to five sheep that follow him everywhere. Never on Peaceful. In creative: the spawn egg (creative tab "Sunrise Creatures").
 
 He is hostile. Come near, hurt him or one of his sheep, and he walks up and brings his club down on you (it hurts, and
 throws you back). Keep your distance, or climb out of his club's reach, and he lifts a boulder over his head and hurls

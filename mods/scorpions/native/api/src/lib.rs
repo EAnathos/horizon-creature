@@ -1,4 +1,4 @@
-//! Scorpions (SPECS.md): real-size scorpions of deserts, badlands and caves, of the Horizon Creature series.
+//! Scorpions (SPECS.md): real-size scorpions of deserts, badlands and caves, of the Sunrise Creatures series.
 //!
 //! One entity (`scorpions:scorpion`), a copy of the wandering trader (its behaviour is all goals), with three kinds as
 //! morphs (the library's colours, `SCHEME`: desert, badlands, a glowing cave kind), each a texture. It is drawn small
@@ -286,7 +286,7 @@ impl Hooks for Scorpions {
             event,
             "scorpions",
             concat!("Scorpions ", env!("CARGO_PKG_VERSION")),
-            "Real-size scorpions of deserts, badlands and caves. Needs Horizon Creature.",
+            "Real-size scorpions of deserts, badlands and caves. Needs Sunrise Creatures.",
         );
     }
 

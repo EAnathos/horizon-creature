@@ -1,10 +1,10 @@
 # Vulture: specification
 
-A mod of the **Horizon Creature** series for **Minecraft Horizon** (a Rust reimplementation of Minecraft Java 26.3).
+A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (a Rust reimplementation of Minecraft Java 26.3).
 It adds a wild vulture that you tame by throwing raw chicken at it, ride, fit with chests, that catches creatures in its
 talons and breeds.
 
-**Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)). Systems the
+**Requires** the series' library, Sunrise Creatures (`creature`, [common/SPECS.md](../../common/SPECS.md)). Systems the
 library shares are described there; this spec gives the vulture's own rules and numbers.
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.

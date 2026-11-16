@@ -1,4 +1,4 @@
-//! Butterflies (SPECS.md): butterflies and moths of the Horizon Creature series.
+//! Butterflies (SPECS.md): butterflies and moths of the Sunrise Creatures series.
 //!
 //! So far (SPECS §0): the butterfly and the moth exist (spawn eggs), each a copy of the wandering trader (its
 //! behaviour is all goals, cleared here) with its own tiny size, drawn with its own model (`model_butterfly.rs`,
@@ -392,7 +392,7 @@ impl Hooks for Butterflies {
             event,
             "butterflies",
             concat!("Butterflies ", env!("CARGO_PKG_VERSION")),
-            "Butterflies and moths. Needs Horizon Creature.",
+            "Butterflies and moths. Needs Sunrise Creatures.",
         );
     }
 

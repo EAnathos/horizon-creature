@@ -1,10 +1,10 @@
 # Vanilla Bestiary: specification
 
-An add-on of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): Minecraft's own creatures
+An add-on of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): Minecraft's own creatures
 get pages in the creature guide's bestiary, found out in play like the series' creatures. It adds no creature and no
 item ✅.
 
-**Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)), whose book
+**Requires** the series' library, Sunrise Creatures (`creature`, [common/SPECS.md](../../common/SPECS.md)), whose book
 it fills (§7). Like every module of the series, it needs no other mod.
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.

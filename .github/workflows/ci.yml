@@ -91,6 +91,6 @@ jobs:
         run: cargo creature build
       - uses: actions/upload-artifact@v7
         with:
-          name: horizon-creature-${{ github.sha }}
+          name: sunrise-creatures-${{ github.sha }}
           path: target/dist/
           if-no-files-found: error

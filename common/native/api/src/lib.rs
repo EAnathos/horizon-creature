@@ -1,4 +1,4 @@
-//! Horizon Creature, the library of the series (common/SPECS.md).
+//! Sunrise Creatures, the library of the series (common/SPECS.md).
 //!
 //! The mods of the series reach it as the `creature` crate: the launcher adds it to their `[api]` package because
 //! their `horizon-mixin.toml` lists it in `[dependencies]` (Horizon's docs/native-mods.md, "Dependencies between trait

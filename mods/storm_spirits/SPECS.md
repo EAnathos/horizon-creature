@@ -1,10 +1,10 @@
 # Storm Spirits: specification
 
-A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): spirits of living
+A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): spirits of living
 electricity, about a player's height, born now and then where a storm's lightning strikes, in any biome. They crackle, zip about and shock what
 hits them; what they leave behind calls lightning down.
 
-**Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)).
+**Requires** the series' library, Sunrise Creatures (`creature`, [common/SPECS.md](../../common/SPECS.md)).
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 

@@ -1,4 +1,4 @@
-//! Fireflies (SPECS.md): fireflies that light up the night, of the Horizon Creature series.
+//! Fireflies (SPECS.md): fireflies that light up the night, of the Sunrise Creatures series.
 //!
 //! A firefly is a copy of the wandering trader (its behaviour is all goals) with a tiny box, flying with the library's
 //! `flutter`: out at night, drifting slowly and low, resting on the ground by day. It is drawn with its own model
@@ -159,7 +159,7 @@ impl Hooks for Fireflies {
             event,
             "fireflies",
             concat!("Fireflies ", env!("CARGO_PKG_VERSION")),
-            "Fireflies that light up the night. Needs Horizon Creature.",
+            "Fireflies that light up the night. Needs Sunrise Creatures.",
         );
     }
 

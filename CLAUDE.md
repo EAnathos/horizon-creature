@@ -1,7 +1,7 @@
-# Horizon Creature
+# Sunrise Creatures
 
 A series of native Rust mods for **Minecraft Horizon** (a Rust reimplementation of Minecraft Java 26.3): one mandatory
-library, **Horizon Creature** (`common/`, mod id `creature`), and independent creature mods in `mods/<mod>/` that all
+library, **Sunrise Creatures** (`common/`, mod id `creature`), and independent creature mods in `mods/<mod>/` that all
 depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and moths), `worms`, `fireflies`,
 `cyclops`, `fairies`, and `vanilla_bestiary` (Minecraft's creatures in the guide, in development). The other folders of
 `mods/` are planned mods (a spec, a model).

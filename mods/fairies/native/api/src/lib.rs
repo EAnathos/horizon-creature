@@ -1,4 +1,4 @@
-//! Fairies (SPECS.md): shy glowing fairies of the flowery woods and meadows, of the Horizon Creature series.
+//! Fairies (SPECS.md): shy glowing fairies of the flowery woods and meadows, of the Sunrise Creatures series.
 //!
 //! A fairy is a copy of the wandering trader (its behaviour is all goals) with a small box, flying with the library's
 //! `flutter` (out day and night, resting in the rain, landing on flowers) under its own `Fairy` goal (`companion.rs`):
@@ -292,7 +292,7 @@ impl Hooks for Fairies {
             event,
             "fairies",
             concat!("Fairies ", env!("CARGO_PKG_VERSION")),
-            "Shy glowing fairies that befriend you and lighten your step. Needs Horizon Creature.",
+            "Shy glowing fairies that befriend you and lighten your step. Needs Sunrise Creatures.",
         );
     }
 

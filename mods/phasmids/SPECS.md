@@ -1,11 +1,11 @@
 # Phasmids: specification
 
-A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): stick insects and leaf
+A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): stick insects and leaf
 insects, masters of camouflage, hiding in the trees as twigs and leaves. Still by day and swaying like a twig in the
 wind when they move, they are hard to spot: finding them is the game. Caught in a glass jar, they settle on a tree of
 your own.
 
-**Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)).
+**Requires** the series' library, Sunrise Creatures (`creature`, [common/SPECS.md](../../common/SPECS.md)).
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 

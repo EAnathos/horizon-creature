@@ -2,13 +2,13 @@
 
 ![](../../docs/models/vulture-vulture-front.png)
 
-A mod of the [Horizon Creature](../../README.md) series: a desert vulture you tame with raw chicken, saddle and fly like
-a plane, with two chests and talons. **Requires** Horizon Creature, the series' library.
+A mod of the [Sunrise Creatures](../../README.md) series: a desert vulture you tame with raw chicken, saddle and fly like
+a plane, with two chests and talons. **Requires** Sunrise Creatures, the series' library.
 
 ## Finding one
 
 Vultures live in deserts, badlands and savannas, where they soar in circles high up and land on the highest ground
-around. In creative: the spawn egg (creative tab "Horizon Creature") or `/summon vulture:vulture`.
+around. In creative: the spawn egg (creative tab "Sunrise Creatures") or `/summon vulture:vulture`.
 
 They are neutral: hit one and it dives at you from the air, with the vultures nearby. They drop feathers and meat (raw,
 or cooked when they burn). A vulture feather crafts arrows, the brush and the book and quill like a feather.

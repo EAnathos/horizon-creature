@@ -1,4 +1,4 @@
-//! Cyclops (SPECS.md): a one-eyed giant shepherd at the mouths of caves, of the Horizon Creature series.
+//! Cyclops (SPECS.md): a one-eyed giant shepherd at the mouths of caves, of the Sunrise Creatures series.
 //!
 //! A cyclops is a copy of the wandering trader (its behaviour is all goals) with its own 4-block box, drawn with its
 //! own model (`model.rs`, from `assets/models/cyclops.bbmodel`). Hostile: it goes for a player it sees within
@@ -185,7 +185,7 @@ impl Hooks for Cyclops {
             event,
             "cyclops",
             concat!("Cyclops ", env!("CARGO_PKG_VERSION")),
-            "A one-eyed giant shepherd at the mouths of caves. Needs Horizon Creature.",
+            "A one-eyed giant shepherd at the mouths of caves. Needs Sunrise Creatures.",
         );
     }
 

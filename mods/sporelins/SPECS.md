@@ -1,10 +1,10 @@
 # Sporelins: specification
 
-A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): small, shy mushroom sprites of
+A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): small, shy mushroom sprites of
 dark forests and mushroom fields. They pass for a mushroom when you come near, puff spores when startled, and plant
 mushrooms where they walk; befriended, one follows you home and tends a mushroom patch there.
 
-**Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)).
+**Requires** the series' library, Sunrise Creatures (`creature`, [common/SPECS.md](../../common/SPECS.md)).
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 

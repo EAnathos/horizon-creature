@@ -1,10 +1,10 @@
 # Scorpions: specification
 
-A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): scorpions of real size,
+A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): scorpions of real size,
 hiding in the shade of deserts, badlands and caves. Come close and one rears up in a defensive posture, claws open and
 tail arched over its back; leave it be and it backs away. Hit it and it fights back, pinching and stinging with poison.
 
-**Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)).
+**Requires** the series' library, Sunrise Creatures (`creature`, [common/SPECS.md](../../common/SPECS.md)).
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 

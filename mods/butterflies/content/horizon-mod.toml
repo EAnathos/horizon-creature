@@ -1,7 +1,7 @@
 id = "butterflies"
 name = "Butterflies"
 version = "0.1.0"
-description = "Butterflies and moths (in progress). Needs Horizon Creature."
+description = "Butterflies and moths (in progress). Needs Sunrise Creatures."
 authors = ["EAnathos"]
 api = "0.2"
 side = "both"

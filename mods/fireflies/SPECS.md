@@ -1,10 +1,10 @@
 # Fireflies: specification
 
-A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): **fireflies** that light up
+A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): **fireflies** that light up
 the night, that you catch in the glass jar and settle in your garden, or keep in a jar as a soft light ✅. Small in
 scope, like Butterflies ✅.
 
-**Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)).
+**Requires** the series' library, Sunrise Creatures (`creature`, [common/SPECS.md](../../common/SPECS.md)).
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 

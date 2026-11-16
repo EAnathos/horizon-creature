@@ -1,6 +1,6 @@
-# Horizon Creature: library specification
+# Sunrise Creatures: library specification
 
-The mandatory library of the Horizon Creature series ([docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)): the systems
+The mandatory library of the Sunrise Creatures series ([docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)): the systems
 several creature mods share, and the series' single creative tab. It adds no creature of its own.
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
@@ -50,7 +50,7 @@ stay in the vulture until a second mod needs them, except friends (§6.2), share
 
 ## 2. Technical context
 
-- **Mod id / namespace**: `creature`. Name: "Horizon Creature".
+- **Mod id / namespace**: `creature`. Name: "Sunrise Creatures".
 - **Native half**: a trait mod with an `[api]` crate (`mod-creature`), which the mods reach as the `creature` crate.
   Its `hooks()` runs before theirs (dependency order), so a mod registers its species from its own `hooks()`. It
   publishes functions, types and statics; shared state is behind `Mutex`es.
@@ -80,7 +80,7 @@ stay in the vulture until a second mod needs them, except friends (§6.2), share
 
 ### 3.3 Creative tab ✅
 
-- One tab, "Horizon Creature" (`itemGroup.creature`), generated from the modules' `module.toml`
+- One tab, "Sunrise Creatures" (`itemGroup.creature`), generated from the modules' `module.toml`
   (docs/ARCHITECTURE.md §4). Order ✅: every spawn egg first, then the library's items, then each mod's other items;
   mods in alphabetical order, each one's items in its own order.
 - Icon ✅: the creature guide book (`creature:guide`, §7).
@@ -307,7 +307,7 @@ What each item of the series is for, so a player knows how to make it and what t
 
 Creative, a test world; `cargo creature install` first.
 
-- The creative tab "Horizon Creature": every installed mod's items, spawn eggs first; the glass jar only with a jar mod.
+- The creative tab "Sunrise Creatures": every installed mod's items, spawn eggs first; the glass jar only with a jar mod.
 - `/bestiary unlock all`: every installed species' page, full; `/bestiary reset` empties the book. The wheel scrolls a
   long page (a butterfly's) and the icons; the Items tab lists every installed mod's items, each with its recipe.
 - A new world: the creature guide given once; its bestiary pages turn in 3D, list the biomes met, the facts and the

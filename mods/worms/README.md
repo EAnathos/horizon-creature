@@ -2,13 +2,13 @@
 
 ![](../../docs/models/worms-worm-front.png)
 
-A mod of the [Horizon Creature](../../README.md) series: earthworms you settle in your garden, where they help crops
-grow. **Requires** Horizon Creature, the series' library.
+A mod of the [Sunrise Creatures](../../README.md) series: earthworms you settle in your garden, where they help crops
+grow. **Requires** Sunrise Creatures, the series' library.
 
 ## Finding them
 
 Worms crawl on the grass of plains, meadows, forests and taigas, and many more come up while it rains. In creative: the
-spawn egg (creative tab "Horizon Creature").
+spawn egg (creative tab "Sunrise Creatures").
 
 ## Gardens
 

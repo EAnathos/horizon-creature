@@ -2,8 +2,8 @@
 
 ![](../../docs/models/butterflies-butterfly-front.png) ![](../../docs/models/butterflies-moth-front.png)
 
-A mod of the [Horizon Creature](../../README.md) series: butterflies by day and moths by night, in many colours and
-patterns. **Requires** Horizon Creature, the series' library.
+A mod of the [Sunrise Creatures](../../README.md) series: butterflies by day and moths by night, in many colours and
+patterns. **Requires** Sunrise Creatures, the series' library.
 
 ## Finding them
 

@@ -1,4 +1,4 @@
-//! Build tools for the Horizon Creature series (docs/ARCHITECTURE.md). Run from anywhere in the repository:
+//! Build tools for the Sunrise Creatures series (docs/ARCHITECTURE.md). Run from anywhere in the repository:
 //!
 //! ```sh
 //! cargo creature list                         # the library and the mods, with their status

@@ -1,6 +1,6 @@
 # Development conventions
 
-Rules shared by every module of the Horizon Creature series ([ARCHITECTURE.md](ARCHITECTURE.md)).
+Rules shared by every module of the Sunrise Creatures series ([ARCHITECTURE.md](ARCHITECTURE.md)).
 
 ## Language
 

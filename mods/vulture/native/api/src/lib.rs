@@ -14,7 +14,7 @@
 //!   drawn by the library's `creature::model`, in place of the trader's model; its hearts, once ridden, without the
 //!   empty ones (`mount_hud.rs` injection).
 //!
-//! It depends on the series' library, Horizon Creature (`creature`, common/SPECS.md).
+//! It depends on the series' library, Sunrise Creatures (`creature`, common/SPECS.md).
 mod flight;
 mod interaction;
 mod model;
@@ -444,7 +444,7 @@ impl Hooks for Vulture {
         event.mods.push(NativeMod {
             id: "vulture".into(),
             title: concat!("Vulture ", env!("CARGO_PKG_VERSION")).into(),
-            description: "A vulture you tame, ride and fly (Horizon Creature).".into(),
+            description: "A vulture you tame, ride and fly (Sunrise Creatures).".into(),
             keys: vec![[
                 "talons".into(),
                 "Talons (catch / release)".into(),

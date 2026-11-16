@@ -1,7 +1,7 @@
 id = "fireflies"
 name = "Fireflies"
 version = "0.1.0"
-description = "Fireflies that light up the night (in progress). Needs Horizon Creature."
+description = "Fireflies that light up the night (in progress). Needs Sunrise Creatures."
 authors = ["EAnathos"]
 api = "0.2"
 side = "both"

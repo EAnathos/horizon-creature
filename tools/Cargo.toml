@@ -2,7 +2,7 @@
 name = "creature-tools"
 version = "0.1.0"
 edition = "2024"
-description = "Build tools for the Horizon Creature series: module list, creative tab, model conversion, sounds, packaging, installing."
+description = "Build tools for the Sunrise Creatures series: module list, creative tab, model conversion, sounds, packaging, installing."
 publish = false
 
 [[bin]]

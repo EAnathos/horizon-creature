@@ -1,10 +1,10 @@
 # Magma Golem: specification
 
-A mod of the **Horizon Creature** series for **Minecraft Horizon** (Minecraft Java 26.3): a giant of living magma,
+A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): a giant of living magma,
 six blocks tall, that sleeps in the Nether as a heap of glowing rock until someone comes too close. A rare mini-boss:
 found, not summoned, fought with a boss bar, and cooled with snow.
 
-**Requires** the series' library, Horizon Creature (`creature`, [common/SPECS.md](../../common/SPECS.md)).
+**Requires** the series' library, Sunrise Creatures (`creature`, [common/SPECS.md](../../common/SPECS.md)).
 
 > ✅ = decided · ❓ = proposal to confirm · numbers are starting values, to balance in game.
 

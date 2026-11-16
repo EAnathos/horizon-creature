@@ -1,4 +1,4 @@
-# Contributing to Horizon Creature
+# Contributing to Sunrise Creatures
 
 How the repository is organised, how to build and test the mods, and the rules a change follows. Players: see the
 [README](README.md).

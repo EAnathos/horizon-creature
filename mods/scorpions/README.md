@@ -2,10 +2,10 @@
 
 ![](../../docs/models/scorpions-scorpion-front.png)
 
-A mod of the [Horizon Creature](../../README.md) series, **in development**: scorpions of real size hiding in the shade
+A mod of the [Sunrise Creatures](../../README.md) series, **in development**: scorpions of real size hiding in the shade
 of deserts, badlands and caves, where some glow cyan in the dark. Come close and one rears up, claws open and tail
 arched; hit it and it fights back with its claws and a poisoned sting. Its venom makes poison potions and arrows, its
-stinger a dagger, and a glass jar makes it a terrarium pet. **Requires** Horizon Creature, the series' library.
+stinger a dagger, and a glass jar makes it a terrarium pet. **Requires** Sunrise Creatures, the series' library.
 
 The code and content are in place, with a first pass of placeholder textures and sounds (to be replaced by real art);
 it builds and loads but is not yet tested in game. The design is in [SPECS.md](SPECS.md).

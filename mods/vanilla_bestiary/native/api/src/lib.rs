@@ -1,4 +1,4 @@
-//! Vanilla Bestiary (SPECS.md): Minecraft's own creatures in the creature guide's bestiary, of the Horizon Creature
+//! Vanilla Bestiary (SPECS.md): Minecraft's own creatures in the creature guide's bestiary, of the Sunrise Creatures
 //! series.
 //!
 //! Each creature of `creatures.rs` is registered with the library's bestiary (`creature::bestiary`), with the biomes,
@@ -204,7 +204,7 @@ impl Hooks for VanillaBestiary {
             event,
             "vanilla_bestiary",
             concat!("Vanilla Bestiary ", env!("CARGO_PKG_VERSION")),
-            "Minecraft's own creatures in the creature guide's bestiary. Needs Horizon Creature.",
+            "Minecraft's own creatures in the creature guide's bestiary. Needs Sunrise Creatures.",
         );
     }
 

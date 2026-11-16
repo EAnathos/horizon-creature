@@ -2,15 +2,15 @@
 
 ![](../../docs/models/fairies-fairy-front.png)
 
-A mod of the [Horizon Creature](../../README.md) series: tiny shy fairies of the flowery woods and meadows, glowing a
-soft violet. **Requires** Horizon Creature, the series' library.
+A mod of the [Sunrise Creatures](../../README.md) series: tiny shy fairies of the flowery woods and meadows, glowing a
+soft violet. **Requires** Sunrise Creatures, the series' library.
 
 ## Finding them
 
 In flower forests, meadows, cherry groves and birch forests, little groups of fairies flit from flower to flower, day
 and night (they rest in the rain); they are rare. They are shy: walk up to one and it flies off. Sneak, or hold out
 berries, and they let you come near.
-In creative: the spawn egg (creative tab "Horizon Creature").
+In creative: the spawn egg (creative tab "Sunrise Creatures").
 
 ## Befriending one
 

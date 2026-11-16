@@ -1,14 +1,14 @@
 # Architecture
 
 The repository holds a **series of mods** for [Minecraft Horizon](https://playhorizon.dev) (a Rust reimplementation of
-Minecraft Java 26.3), called **Horizon Creature**: one mandatory library and independent creature mods that all depend
+Minecraft Java 26.3), called **Sunrise Creatures**: one mandatory library and independent creature mods that all depend
 on it.
 
 ## 1. Modules
 
 | Module | Folder | Mod id (namespace) | Status | Spec |
 |---|---|---|---|---|
-| **Horizon Creature** (library) | `common/` | `creature` | playable | [common/SPECS.md](../common/SPECS.md) |
+| **Sunrise Creatures** (library) | `common/` | `creature` | playable | [common/SPECS.md](../common/SPECS.md) |
 | Vulture | `mods/vulture/` | `vulture` | playable | [mods/vulture/SPECS.md](../mods/vulture/SPECS.md) |
 | Butterflies | `mods/butterflies/` | `butterflies` | playable | [mods/butterflies/SPECS.md](../mods/butterflies/SPECS.md) |
 | Worms | `mods/worms/` | `worms` | playable | [mods/worms/SPECS.md](../mods/worms/SPECS.md) |
@@ -37,7 +37,7 @@ on it.
                     └───────────────────▲──────────────────┘
                                         │
                     ┌───────────────────┴──────────────────┐
-                    │    Horizon Creature (`creature`)     │  library: shared systems, the series' creative tab
+                    │    Sunrise Creatures (`creature`)     │  library: shared systems, the series' creative tab
                     └───▲───────▲───────▲───────▲───────▲──┘
                         │       │       │       │       │      required dependency, never the other way round
                      vulture    │     worms     │    cyclops
@@ -64,7 +64,7 @@ How the dependency is expressed, per half of a mod (Horizon has two kinds of mod
 | Half | File | Dependency mechanism |
 |---|---|---|
 | Native (`.hnmod`, Rust compiled into the game) | `native/horizon-mixin.toml` | `[dependencies] creature = "^0.1"` (plus any mod it requires). The launcher refuses to build without it, orders the hooks (library first) and gives the mod's `[api]` crate a `creature` crate to call (Horizon's `docs/native-mods.md`, "Dependencies between trait mods"). |
-| Content (`.hmod`, data and assets) | `content/horizon-mod.toml` | None exists in Horizon's content manifest. The native dependency covers it in practice (the library's native half is installed with its content half); the description says "Needs Horizon Creature" (and the other mods required). |
+| Content (`.hmod`, data and assets) | `content/horizon-mod.toml` | None exists in Horizon's content manifest. The native dependency covers it in practice (the library's native half is installed with its content half); the description says "Needs Sunrise Creatures" (and the other mods required). |
 | Repository tools | `module.toml` | `requires = ["<mod>"]` (none today): `cargo creature install <mod>` then also installs the mods it requires, first. |
 
 A mod with no native half yet (a pure content mod) has no enforced dependency: that is acceptable while it is in
@@ -96,7 +96,7 @@ need moves to the library once, with a list of the kinds it applies to that the 
 
 ## 4. Creative inventory
 
-The whole series shares **one creative tab**, "Horizon Creature", owned by the library
+The whole series shares **one creative tab**, "Sunrise Creatures", owned by the library
 (`common/content/data/creature/horizon/creative_tab/creature.json`).
 
 - Horizon does not let a content mod add items to another mod's tab, but a tab may name items of other mods, and the
