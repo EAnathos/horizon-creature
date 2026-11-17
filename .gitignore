@@ -2,3 +2,5 @@ target/
 sounds-src/
 __pycache__/
 .sunrise/
+common/Cargo.lock
+mods/*/Cargo.lock
