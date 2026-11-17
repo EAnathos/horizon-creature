@@ -4,3 +4,5 @@ name = "Fireflies"
 status = "playable"
 # Its items in the series' creative tab, in order.
 creative = ["fireflies:firefly_spawn_egg"]
+# Its Rust is on Sunrise's mod_api (docs/SUNRISE-PORT.md).
+ported = true

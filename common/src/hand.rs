@@ -44,3 +44,16 @@ pub fn give(host: &mut dyn ServerHost, player: PlayerRef, stack: ItemStack) {
 pub fn drop_stack(host: &mut dyn ServerHost, level: LevelRef, at: [f64; 3], stack: ItemStack) {
     let _ = level.spawn_item(host, at[0], at[1], at[2], stack, 10);
 }
+
+/// A standing player's eye height.
+const EYE_HEIGHT: f64 = 1.62;
+
+/// Where `player`'s eyes are and the way they look (a unit vector, vanilla's `Entity.calculateViewVector`).
+pub fn eye_and_look(host: &dyn Host, player: PlayerRef) -> Option<([f64; 3], [f64; 3])> {
+    let e = player.entity();
+    let at = e.position(host)?;
+    let [yaw, pitch] = e.rotation(host)?;
+    let (yaw, pitch) = (f64::from(yaw).to_radians(), f64::from(pitch).to_radians());
+    let look = [-yaw.sin() * pitch.cos(), -pitch.sin(), yaw.cos() * pitch.cos()];
+    Some(([at[0], at[1] + EYE_HEIGHT, at[2]], look))
+}

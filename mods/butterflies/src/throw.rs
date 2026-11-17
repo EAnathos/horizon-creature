@@ -1,8 +1,10 @@
 //! Thrown by hand (SPECS §4): right-click with butterfly dust throws a shimmering cloud of it ahead; confetti, a party
 //! popper: a pop at its mouth, then bits of coloured paper shot out in a cone ahead and up, falling back down. One is
 //! used up (not in creative). Particles only: neither does anything else.
-use horizon_client::items::ItemStack;
-use horizon_client::mod_api::{Host, ParticleOptions, ParticleType};
+use creature::particles::key;
+use mod_api::{
+    Hand, HostSide, InteractionResult, ItemPart, LevelRef, ParticleOptions, ServerHost, SoundSource, UseItemEvent,
+};
 
 pub const DUST: &str = "butterflies:butterfly_dust";
 pub const CONFETTI: &str = "butterflies:confetti";
@@ -33,59 +35,92 @@ const BITS: usize = 140;
 const CONE: f64 = 0.55;
 const SPEED: (f64, f64) = (0.5, 1.1);
 
-/// From the mod's `use_item`: whether `stack` was thrown.
-pub fn thrown(host: &mut dyn Host, stack: &ItemStack) -> bool {
-    let item = &*stack.item;
-    if item != DUST && item != CONFETTI {
-        return false;
+/// Butterfly dust and confetti: right-click throws them.
+pub struct Thrown;
+
+#[mod_api::sunrise_part]
+impl ItemPart for Thrown {
+    fn use_item(&self, host: HostSide, event: &mut UseItemEvent<'_>) -> Option<InteractionResult> {
+        if let HostSide::Server(host) = host {
+            let item = creature::hand::id(&*host, event.stack);
+            throw(host, event.player, event.hand, &item);
+        }
+        Some(InteractionResult::Consume)
     }
-    let Some(player) = host.acting_player() else {
-        return false;
+}
+
+/// `player` throws `item` (dust or confetti) held in `hand`.
+fn throw(host: &mut dyn ServerHost, player: u128, hand: Hand, item: &str) {
+    let Some(player) = host.player(player) else {
+        return;
     };
-    // From the eyes, along the look (vanilla's `Entity.calculateViewVector`).
-    let eye = [player.position[0], player.position[1] + EYE_HEIGHT, player.position[2]];
-    let (yaw, pitch) = (f64::from(player.yaw).to_radians(), f64::from(player.pitch).to_radians());
-    let look = [-yaw.sin() * pitch.cos(), -pitch.sin(), yaw.cos() * pitch.cos()];
+    let (Some((eye, look)), Some(level)) = (creature::hand::eye_and_look(&*host, player), player.level(&*host)) else {
+        return;
+    };
     let at = |d: f64| [eye[0] + look[0] * d, eye[1] + look[1] * d - 0.2, eye[2] + look[2] * d];
     if item == DUST {
         // A cloud that widens as it goes, the dust glinting in it.
         for (i, colour) in DUST_COLOURS.iter().enumerate() {
             let d = 1.2 + i as f64 * 0.6;
             let spread = 0.15 + i as f64 * 0.12;
-            host.send_particles(&dust(*colour, 0.7), None, at(d), [spread; 3], 0.01, 10);
+            if let Some(k) = key("minecraft:dust") {
+                level.send_particles(
+                    host,
+                    &ParticleOptions::dust(k, *colour, 0.7),
+                    None,
+                    at(d),
+                    [spread; 3],
+                    0.01,
+                    10,
+                );
+            }
         }
-        let glint = ParticleOptions::simple(ParticleType::WaxOn);
-        host.send_particles(&glint, None, at(2.5), [0.6, 0.4, 0.6], 0.5, 12);
-        host.play_sound("minecraft:block.amethyst_block.chime", at(1.5), PLAYERS, 0.8, 1.6);
+        if let Some(k) = key("minecraft:wax_on") {
+            level.send_particles(
+                host,
+                &ParticleOptions::simple(k),
+                None,
+                at(2.5),
+                [0.6, 0.4, 0.6],
+                0.5,
+                12,
+            );
+        }
+        level.play_sound(
+            host,
+            "minecraft:block.amethyst_block.chime",
+            at(1.5),
+            SoundSource::Players,
+            0.8,
+            1.6,
+            None,
+        );
     } else {
-        popper(host, at(1.8), look);
+        popper(host, level, at(1.8), look);
     }
-    creature::hand::use_one(host, stack);
-    true
+    creature::hand::use_one(host, player, hand);
 }
 
 /// A party popper going off at `mouth`, aimed along `look`: a pop with a few sparks, then the bits, each sent on
 /// its own way (a zero-count particle moves along its `spread`) in a cone ahead and a little up, falling back down.
-fn popper(host: &mut dyn Host, mouth: [f64; 3], look: [f64; 3]) {
-    let sparks = ParticleOptions::simple(ParticleType::Firework);
-    host.send_particles(&sparks, None, mouth, [0.1, 0.1, 0.1], 0.05, 4);
-    host.play_sound("minecraft:entity.firework_rocket.blast", mouth, PLAYERS, 0.6, 1.8);
-    host.play_sound("minecraft:entity.firework_rocket.twinkle", mouth, PLAYERS, 0.5, 1.6);
+fn popper(host: &mut dyn ServerHost, level: LevelRef, mouth: [f64; 3], look: [f64; 3]) {
+    if let Some(k) = key("minecraft:firework") {
+        level.send_particles(host, &ParticleOptions::simple(k), None, mouth, [0.1, 0.1, 0.1], 0.05, 4);
+    }
+    let blast = "minecraft:entity.firework_rocket.blast";
+    level.play_sound(host, blast, mouth, SoundSource::Players, 0.6, 1.8, None);
+    let twinkle = "minecraft:entity.firework_rocket.twinkle";
+    level.play_sound(host, twinkle, mouth, SoundSource::Players, 0.5, 1.6, None);
     let states: Vec<_> = CONFETTI_BLOCKS
         .iter()
-        .filter_map(|name| {
-            host.block_states()
-                .iter()
-                .find(|(_, f)| &*f.name == *name)
-                .map(|(id, _)| id)
-        })
+        .filter_map(|name| host.block_state_id(name))
         .collect();
-    if states.is_empty() {
+    let Some(k) = key("minecraft:block").filter(|_| !states.is_empty()) else {
         return;
-    }
+    };
     let mut random = creature::colours::Random::new(BITS as u32);
     let mut unit = || (random.next() % 2001) as f64 / 1000.0 - 1.0;
-    let bit = ParticleOptions::simple(ParticleType::Block);
+    let bit = ParticleOptions::simple(k);
     for i in 0..BITS {
         let dir = [
             look[0] + unit() * CONE,
@@ -95,18 +130,6 @@ fn popper(host: &mut dyn Host, mouth: [f64; 3], look: [f64; 3]) {
         let len = (dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2]).sqrt().max(1e-6);
         let speed = SPEED.0 + (unit() + 1.0) / 2.0 * (SPEED.1 - SPEED.0);
         let dir = [dir[0] / len, dir[1] / len, dir[2] / len];
-        host.send_particles(&bit, Some(states[i % states.len()]), mouth, dir, speed, 0);
+        level.send_particles(host, &bit, Some(states[i % states.len()]), mouth, dir, speed, 0);
     }
-}
-
-/// A standing player's eye height.
-const EYE_HEIGHT: f64 = 1.62;
-/// `SoundSource.PLAYERS`.
-const PLAYERS: usize = 7;
-
-fn dust(colour: [f32; 3], scale: f32) -> ParticleOptions {
-    let mut options = ParticleOptions::simple(ParticleType::Dust);
-    options.color = [colour[0], colour[1], colour[2], 1.0];
-    options.scale = scale;
-    options
 }

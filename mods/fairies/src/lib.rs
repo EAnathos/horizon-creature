@@ -11,35 +11,37 @@ mod companion;
 mod model_fairy;
 
 use std::collections::BTreeMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use creature::bestiary::{Fact, Species};
 use creature::friend::Friend;
 use creature::jar::Catchable;
-use horizon_client::mod_api::{
-    AttachmentCodec, AttachmentError, AttachmentType, BlockEntityDraw, Compound, EmissiveEvent, EntityTickPostEvent,
-    Flow, Holder, Hooks, Host, InteractEntityEvent, LivingDeathEvent, LivingIncomingDamageEvent,
-    LivingIncomingDamageV2Event, MobSubmitEvent, NativeColoredLight, NativeEffect, NativeMobRender, ParticleOptions,
-    ParticleType, RegisterGoalsEvent, Tag, Text, VisualsEvent,
+use creature::particles::key;
+use mod_api::{
+    ActiveEffect, AttachmentCodec, AttachmentError, AttachmentType, BlockEntityDrawContext, ClientHost, ColoredLight,
+    Compound, EmissiveEvent, EntityInteractEvent, EntityRenderState, EntityRenderer, EntityTickPostEvent, Flow,
+    HitHost, Holder, Hooks, HostSide, InteractionResult, ItemStack, LevelRef, LivingDeathEvent,
+    LivingIncomingDamageEvent, ParticleOptions, PlayerRef, RegisterEntityRenderersEvent, Registrar,
+    RegistrationContext, ServerHost, SoundSource, Tag, Text, VisualsEvent,
 };
 
 pub const FAIRY: &str = "fairies:fairy";
 const TEXTURE: &str = "fairies:entity/fairy/fairy";
 const DUST: &str = "fairies:fairy_dust";
 
-/// Its own sounds (SPECS §1, `assets/sounds.toml`): wings at take-off, a chime or a tiny laugh now and then (one chance
-/// in `AMBIENT_CHANCE` a tick), hurt and death, the sparkle of a new friendship (and of a gift).
+/// Its own sounds (SPECS §1, `sources/sounds.toml`): wings at take-off, a chime or a tiny laugh now and then (one chance
+/// in `AMBIENT_CHANCE` a tick), the sparkle of a new friendship (and of a gift); hurt and death are its entity type's.
 const FLUTTER: &str = "fairies:entity.fairy.flutter";
 const AMBIENT: &str = "fairies:entity.fairy.ambient";
 const BEFRIEND: &str = "fairies:entity.fairy.befriend";
-const VOICE: creature::sounds::Voice = creature::sounds::Voice {
-    hurt: "fairies:entity.fairy.hurt",
-    death: "fairies:entity.fairy.death",
-};
 const AMBIENT_CHANCE: u64 = 500;
 /// Its box (blocks: width, height, eye height); its model is about three quarters of a block tall.
-const SIZE: (f64, f64, f64) = (0.4, 0.8, 0.6);
+const SIZE: creature::mob::Size = creature::mob::Size {
+    width: 0.4,
+    height: 0.8,
+    eye_height: 0.6,
+};
 
 /// How it flies wild (SPECS §2): day and night, resting in the rain, flitting between flowers.
 static FLIGHT: creature::flutter::Kind = creature::flutter::Kind {
@@ -94,11 +96,11 @@ static BESTIARY: Species = Species {
 };
 
 /// The bestiary's 3D view: hovering, its wings open, about a block tall.
-fn book_view(host: &dyn Host, draw: &mut BlockEntityDraw, _: Option<creature::colours::Look>) {
+fn book_view(draw: &mut dyn BlockEntityDrawContext, _: Option<creature::colours::Look>) {
     draw.push();
     draw.translate([0.5, 0.0, 0.5]);
     draw.scale([BOOK_SCALE; 3]);
-    creature::model::draw(host, draw, &model_fairy::FAIRY, TEXTURE, &|_| [0.0; 3]);
+    creature::model::draw(draw, &model_fairy::FAIRY, TEXTURE, &|_| [0.0; 3]);
     draw.pop();
 }
 const BOOK_SCALE: f32 = 1.2;
@@ -119,7 +121,7 @@ const LIGHT_RADIUS: (f32, f32) = (3.0, 8.0);
 const LIGHT_INTENSITY: f32 = 0.7;
 
 /// Where each fairy is and whether it follows its friend, for its light (the client's `visuals` has no positions of
-/// its own): kept by the server's tick, read by the drawing (single player; arismoko/horizon#2740).
+/// its own): kept by the server's tick, read by the drawing (single player).
 static AT: Mutex<BTreeMap<u32, Seen>> = Mutex::new(BTreeMap::new());
 
 struct Seen {
@@ -172,66 +174,87 @@ static DUST_PAGE: creature::items::ItemPage = creature::items::ItemPage {
     }],
 };
 
-pub fn hooks() -> Box<dyn Hooks> {
-    creature::bestiary::register_item(&DUST_PAGE);
-    creature::flutter::spawns(&SPAWNING);
-    creature::jar::register(&IN_JAR);
-    creature::bestiary::register(&BESTIARY);
-    Box::new(Fairies)
-}
-
+#[derive(Default)]
 struct Fairies;
 
 /// A group's rotation this frame: the wings beat (fast in flight, slowly at rest), the arms sway, the hem flutters.
-fn pose(name: &str, mob: &NativeMobRender<'_>, flying: bool) -> [f32; 3] {
+fn pose(name: &str, age: f32, flying: bool) -> [f32; 3] {
     let beat = if flying {
-        22.0 + 26.0 * (mob.age * 1.6).sin()
+        22.0 + 26.0 * (age * 1.6).sin()
     } else {
-        10.0 + 10.0 * (mob.age * 0.1).sin()
+        10.0 + 10.0 * (age * 0.1).sin()
     };
-    let sway = 8.0 * (mob.age * 0.15).sin();
+    let sway = 8.0 * (age * 0.15).sin();
     match name {
         "wing_upper_right" | "wing_lower_right" => [0.0, -beat, 0.0],
         "wing_upper_left" | "wing_lower_left" => [0.0, beat, 0.0],
         "arm_right" => [sway, 0.0, 0.0],
         "arm_left" => [-sway, 0.0, 0.0],
-        "hem" => [0.0, mob.age * 2.0 % 360.0, 0.0],
+        "hem" => [0.0, age * 2.0 % 360.0, 0.0],
         _ => [0.0; 3],
     }
 }
 
 /// Its friend's player, if they are on the server.
-fn friend_player(host: &dyn Host, friend: Friend) -> Option<horizon_client::mod_api::NativeServerPlayer> {
-    host.server_players().into_iter().find(|p| friend.is(p.uuid))
+fn friend_player(host: &dyn ServerHost, friend: Friend) -> Option<PlayerRef> {
+    host.players()
+        .server_players()
+        .into_iter()
+        .find(|p| friend.is(p.uuid()))
 }
 
-fn sparkles(host: &mut dyn Host, at: [f64; 3], count: i32) {
-    let options = ParticleOptions::simple(ParticleType::EndRod);
-    host.send_particles(&options, None, at, [0.25, 0.3, 0.25], 0.02, count);
+/// The entity id of each befriended fairy's friend, for the damage hook (which has no players to look through).
+static FRIEND_IDS: Mutex<BTreeMap<u32, u32>> = Mutex::new(BTreeMap::new());
+
+fn sparkles(host: &mut dyn ServerHost, level: LevelRef, at: [f64; 3], count: i32) {
+    if let Some(k) = key("minecraft:end_rod") {
+        level.send_particles(
+            host,
+            &ParticleOptions::simple(k),
+            None,
+            at,
+            [0.25, 0.3, 0.25],
+            0.02,
+            count,
+        );
+    }
 }
 
 /// A wild fairy fed a berry from a player's hand (SPECS §3): one is used up (not in creative), and one time in 3 (6 for
 /// a sweet berry) it befriends them: hearts, a chime, a line on their action bar; otherwise a puff of smoke.
-fn fed(host: &mut dyn Host, fairy: u32, stack: &horizon_client::items::ItemStack, player: u128) {
-    let Some(at) = host.entity(fairy).and_then(|e| host.entity_position(e)) else {
+fn fed(host: &mut dyn ServerHost, fairy: u32, stack: &ItemStack, player: PlayerRef, hand: mod_api::Hand) {
+    let Some(e) = host.entity(fairy) else {
         return;
     };
-    let glow = &*stack.item == companion::GLOW_BERRIES;
-    creature::hand::use_one(host, stack);
-    host.play_sound("minecraft:entity.generic.eat", at, creature::sounds::NEUTRAL, 0.4, 1.8);
+    let (Some(at), Some(level)) = (e.position(host), e.level(host)) else {
+        return;
+    };
+    let glow = creature::hand::is(&*host, stack, companion::GLOW_BERRIES);
+    creature::hand::use_one(host, player, hand);
+    level.play_sound(
+        host,
+        "minecraft:entity.generic.eat",
+        at,
+        SoundSource::Neutral,
+        0.4,
+        1.8,
+        None,
+    );
     let chance = if glow { GLOW_BERRY_CHANCE } else { SWEET_BERRY_CHANCE };
     let eye = [at[0], at[1] + 0.5, at[2]];
     if !creature::colours::Random::new(fairy).next().is_multiple_of(chance) {
-        let smoke = ParticleOptions::simple(ParticleType::Smoke);
-        host.send_particles(&smoke, None, eye, [0.2, 0.2, 0.2], 0.01, 5);
+        if let Some(k) = key("minecraft:smoke") {
+            level.send_particles(host, &ParticleOptions::simple(k), None, eye, [0.2, 0.2, 0.2], 0.01, 5);
+        }
         return;
     }
-    creature::friend::befriend(host, fairy, player);
-    let hearts = ParticleOptions::simple(ParticleType::Heart);
-    host.send_particles(&hearts, None, eye, [0.3, 0.3, 0.3], 0.02, 6);
-    host.play_sound(BEFRIEND, at, creature::sounds::NEUTRAL, 1.0, 1.0);
-    host.action_bar(player, Text::translate("fairies.befriended", &[]));
-    creature::bestiary::learn(host, player, FAIRY, FRIEND_FACT);
+    creature::friend::befriend(host, fairy, player.uuid());
+    if let Some(k) = key("minecraft:heart") {
+        level.send_particles(host, &ParticleOptions::simple(k), None, eye, [0.3, 0.3, 0.3], 0.02, 6);
+    }
+    level.play_sound(host, BEFRIEND, at, SoundSource::Neutral, 1.0, 1.0, None);
+    let _ = player.action_bar(host, Text::translate("fairies.befriended", vec![]));
+    creature::bestiary::learn(host, player.uuid(), FAIRY, FRIEND_FACT);
 }
 
 /// One chance in this many that a glow berry befriends; a sweet berry is half as good (SPECS §3).
@@ -243,141 +266,159 @@ const _: () = assert!(
 );
 
 /// What a befriended fairy does for its friend now and then: Speed I near them, a pinch of dust once a day.
-fn befriended(host: &mut dyn Host, dimension: &str, fairy: u32, at: [f64; 3], friend: Friend, ticks: u32) {
-    let Some(player) = friend_player(host, friend).filter(|p| p.dimension == dimension) else {
+fn befriended(host: &mut dyn ServerHost, level: LevelRef, fairy: u32, at: [f64; 3], friend: Friend, ticks: u32) {
+    let Some(player) = friend_player(host, friend).filter(|p| p.level(&*host) == Some(level)) else {
         return;
     };
-    let near = (0..3).map(|k| (player.position[k] - at[k]).powi(2)).sum::<f64>().sqrt() < BOOST_REACH;
+    let Some(position) = player.entity().position(host) else {
+        return;
+    };
+    let near = (0..3).map(|k| (position[k] - at[k]).powi(2)).sum::<f64>().sqrt() < BOOST_REACH;
     if friend.staying || !near {
         return;
     }
-    if ticks.is_multiple_of(BOOST_EVERY) {
-        host.add_effect(
-            player.uuid,
-            &NativeEffect {
-                id: "minecraft:speed".into(),
-                amplifier: 0,
-                duration: BOOST_TICKS,
-                ambient: true,
-                particles: false,
-            },
-        );
+    if ticks.is_multiple_of(BOOST_EVERY)
+        && let (Some(speed), Some(living)) = (host.effect_key("minecraft:speed"), host.living(player.entity()))
+    {
+        living.add_effect(host, &ActiveEffect::new(speed, BOOST_TICKS, 0, true, false, true));
     }
     // A pinch of dust at its friend's feet, once a day.
-    let Some(day) = host.level(dimension).and_then(|l| l.day_time(host)).map(|t| t / 24_000) else {
+    let Some(day) = level.day_time(host).map(|t| t / 24_000) else {
         return;
     };
     let Ok(last) = DUST_DAY.get_existing(host, Holder::Entity(fairy)) else {
         return;
     };
-    if last.unwrap_or(-1) >= day {
+    if last.unwrap_or(-1) >= day || DUST_DAY.set(host, Holder::Entity(fairy), day).is_err() {
         return;
     }
-    if DUST_DAY.set(host, Holder::Entity(fairy), day).is_err() {
-        return;
+    if let Some(dust) = host.item_from_snbt(&format!("{{id:\"{DUST}\",count:1}}")) {
+        creature::hand::drop_stack(host, level, position, dust);
     }
-    let mut item = Compound::new();
-    item.insert("id".into(), Tag::String(DUST.into()));
-    item.insert("count".into(), Tag::Int(1));
-    let nbt: Compound = [("Item".into(), Tag::Compound(item))].into();
-    host.summon(dimension, "minecraft:item", player.position, nbt);
-    sparkles(host, player.position, 8);
-    host.play_sound(BEFRIEND, at, creature::sounds::NEUTRAL, 0.6, 1.3);
+    sparkles(host, level, position, 8);
+    level.play_sound(host, BEFRIEND, at, SoundSource::Neutral, 0.6, 1.3, None);
 }
 
-impl Hooks for Fairies {
-    /// Its row in Options > Mods, which switches it off and on at once (`creature::list_mod`).
-    fn mods(&self, _: &mut dyn Host, event: &mut horizon_client::mod_api::ModsEvent<'_>) {
-        creature::list_mod(
-            event,
-            "fairies",
-            concat!("Fairies ", env!("CARGO_PKG_VERSION")),
-            "Shy glowing fairies that befriend you and lighten your step. Needs Sunrise Creatures.",
+/// Its own model, glowing, its wings beating; it bobs as it hovers.
+struct Draw;
+
+impl EntityRenderer for Draw {
+    fn submit(&self, entity: &EntityRenderState, draw: &mut dyn BlockEntityDrawContext) -> Result<(), String> {
+        let mob = entity.living.as_ref();
+        let flying = creature::flutter::flying(entity.id) || companion::active(entity.id);
+        let bob = if flying { 0.04 * (entity.age * 0.2).sin() } else { 0.0 };
+        draw.push();
+        creature::model::living_pose(draw, mob);
+        draw.translate([0.0, bob, 0.0]);
+        let pose = |part: &str| pose(part, entity.age, flying);
+        creature::model::draw_shown(
+            draw,
+            &model_fairy::FAIRY,
+            TEXTURE,
+            &pose,
+            &|_| true,
+            creature::model::tint(mob),
         );
+        draw.pop();
+        Ok(())
+    }
+}
+
+#[mod_api::sunrise_mod]
+impl Hooks for Fairies {
+    fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
+        let _ = r.register_attachment_type("fairies:dust_day", false);
+        creature::flutter::register(FAIRY, SIZE);
+        creature::bestiary::register_item(&DUST_PAGE);
+        creature::flutter::spawns(&SPAWNING);
+        creature::jar::register(&IN_JAR);
+        creature::bestiary::register(&BESTIARY);
     }
 
-    fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
-        if event.mob.kind.id == FAIRY {
-            creature::flutter::register(event.mob, SIZE, &FLIGHT);
-            event.mob.ai.goals.add(0, companion::Fairy::default());
-        }
+    fn register_entity_renderers(&self, _: &RegistrationContext, event: &mut RegisterEntityRenderersEvent<'_>) {
+        event.renderers.register(FAIRY.into(), Arc::new(Draw));
     }
 
     /// Right-click: with berries, a wild one eats one (`fed`); by its friend, it stays where it is, or follows again. A
     /// name tag names it as vanilla's would; the jar is the library's (its hook runs first). Never a trading screen,
     /// which its template would open.
-    fn interact_entity(&self, host: &mut dyn Host, event: &mut InteractEntityEvent<'_>) -> Flow {
+    fn entity_interact(&self, host: HostSide, event: &mut EntityInteractEvent<'_>) -> Option<InteractionResult> {
         if event.kind != FAIRY {
-            return Flow::Continue;
+            return None;
         }
-        if event.stack.is_some_and(|s| &*s.item == "minecraft:name_tag") {
-            return Flow::Continue;
-        }
-        let (Some(player), Ok(id)) = (host.acting_player(), u32::try_from(event.entity)) else {
-            return Flow::Cancel;
+        let host = match host {
+            HostSide::Server(host) => host,
+            HostSide::Client(client) => {
+                let name_tag = event
+                    .stack
+                    .is_some_and(|s| creature::hand::is(&*client, s, "minecraft:name_tag"));
+                return (!name_tag).then_some(InteractionResult::Consume);
+            }
         };
-        let berries = event
+        if event
             .stack
-            .filter(|s| [companion::GLOW_BERRIES, companion::SWEET_BERRIES].contains(&&*s.item));
+            .is_some_and(|s| creature::hand::is(&*host, s, "minecraft:name_tag"))
+        {
+            return None;
+        }
+        let (Some(player), Ok(id)) = (host.players().acting_player(), u32::try_from(event.entity)) else {
+            return Some(InteractionResult::Consume);
+        };
+        let berries = event.stack.filter(|s| {
+            let item = creature::hand::id(&*host, s);
+            item == companion::GLOW_BERRIES || item == companion::SWEET_BERRIES
+        });
         if let Some(stack) = berries
             && creature::friend::of(id).is_none()
         {
-            fed(host, id, stack, player.uuid);
-            return Flow::Cancel;
+            fed(host, id, stack, player, event.hand);
+            return Some(InteractionResult::Consume);
         }
-        if let Some(friend) = creature::friend::of(id).filter(|f| f.is(player.uuid)) {
+        if let Some(friend) = creature::friend::of(id).filter(|f| f.is(player.uuid())) {
             let staying = !friend.staying;
             creature::friend::set_staying(id, staying);
             let key = if staying { "fairies.stays" } else { "fairies.follows" };
-            host.action_bar(player.uuid, Text::translate(key, &[]));
+            let _ = player.action_bar(host, Text::translate(key, vec![]));
         }
-        Flow::Cancel
+        Some(InteractionResult::Consume)
     }
 
-    /// A befriended fairy can't be hurt by its friend's blow (no accidents, SPECS §2): the melee hook names the player
-    /// who strikes.
-    fn living_incoming_damage_v2(&self, host: &mut dyn Host, event: &mut LivingIncomingDamageV2Event<'_>) -> Flow {
-        if creature::mob::kind(event.kind) != FAIRY {
+    /// A befriended fairy can't be hurt by its friend (no accidents, SPECS §2): their blow, their arrow or their
+    /// trident (the hit names who caused it).
+    fn living_incoming_damage(&self, _: &mut dyn HitHost, event: &mut LivingIncomingDamageEvent<'_>) -> Flow {
+        if event.kind != FAIRY {
             return Flow::Continue;
         }
-        let friend = u32::try_from(event.entity).ok().and_then(creature::friend::of);
-        let by_friend = friend.is_some_and(|f| {
-            host.server_players()
-                .iter()
-                .any(|p| p.entity_id == event.causing && f.is(p.uuid))
-        });
+        let friend = u32::try_from(event.entity)
+            .ok()
+            .and_then(|id| FRIEND_IDS.lock().unwrap().get(&id).copied());
+        let by_friend = friend.is_some_and(|f| i64::from(f) == i64::from(event.source.causing));
         if by_friend { Flow::Cancel } else { Flow::Continue }
     }
 
-    /// Nor by an arrow or a trident from a player (Horizon gives a projectile's hit no shooter here: any player's, so
-    /// in single player its friend's).
-    fn living_incoming_damage(&self, event: &mut LivingIncomingDamageEvent<'_>) -> Flow {
-        let ours = creature::mob::kind(event.kind) == FAIRY;
-        let shot = matches!(event.damage_type, "minecraft:arrow" | "minecraft:trident");
-        let befriended = u32::try_from(event.entity).is_ok_and(|id| creature::friend::of(id).is_some());
-        if ours && shot && befriended {
-            Flow::Cancel
-        } else {
-            Flow::Continue
-        }
-    }
-
-    fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
+    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
         if event.kind != FAIRY {
             return;
         }
         let fairy = event.entity;
         creature::friend::tick(host, fairy);
-        creature::flutter::tick_post(host, event.dimension, fairy);
-        creature::sounds::tick_post(host, event, &VOICE, creature::sounds::NEUTRAL);
-        let Some(at) = host.entity(fairy).and_then(|e| host.entity_position(e)) else {
+        creature::flutter::tick_post(host, event.dimension, event.kind, fairy, || {
+            vec![
+                Box::new(companion::Fairy::default()),
+                Box::new(creature::flutter::Flutter::new(&FLIGHT)),
+            ]
+        });
+        let Some(e) = host.entity(fairy) else {
+            return;
+        };
+        let (Some(at), Some(level)) = (e.position(host), e.level(host)) else {
             return;
         };
         if creature::colours::Random::new(fairy)
             .next()
             .is_multiple_of(AMBIENT_CHANCE)
         {
-            host.play_sound(AMBIENT, at, creature::sounds::NEUTRAL, 0.7, 1.0);
+            level.play_sound(host, AMBIENT, at, SoundSource::Neutral, 0.7, 1.0, None);
         }
         let ticks = {
             let mut all = TICKS.lock().unwrap();
@@ -387,19 +428,24 @@ impl Hooks for Fairies {
         };
         let friend = creature::friend::of(fairy);
         if let Some(f) = friend {
-            befriended(host, event.dimension, fairy, at, f, ticks);
+            let player = friend_player(host, f);
+            if let Some(p) = player {
+                FRIEND_IDS.lock().unwrap().insert(fairy, p.entity().id());
+            }
+            befriended(host, level, fairy, at, f, ticks);
             // A friend more than `companion::TELEPORT` blocks away: it comes to them at once.
             if !f.staying
-                && let Some(p) = friend_player(host, f).filter(|p| p.dimension == event.dimension)
-                && (0..3).map(|k| (p.position[k] - at[k]).powi(2)).sum::<f64>().sqrt() > companion::TELEPORT
+                && let Some(p) = player.filter(|p| p.level(&*host) == Some(level))
+                && let Some(pos) = p.entity().position(host)
+                && (0..3).map(|k| (pos[k] - at[k]).powi(2)).sum::<f64>().sqrt() > companion::TELEPORT
             {
-                let near = [p.position[0], p.position[1] + 2.0, p.position[2]];
-                host.teleport_mob(event.dimension, fairy, near);
-                sparkles(host, near, 10);
+                let near = [pos[0], pos[1] + 2.0, pos[2]];
+                e.teleport_to(host, near, None);
+                sparkles(host, level, near, 10);
             }
             // A faint trail of sparkles as it follows.
             if !f.staying && ticks.is_multiple_of(8) {
-                sparkles(host, [at[0], at[1] + 0.4, at[2]], 1);
+                sparkles(host, level, [at[0], at[1] + 0.4, at[2]], 1);
             }
         }
         let following = friend.is_some_and(|f| !f.staying);
@@ -414,29 +460,32 @@ impl Hooks for Fairies {
     }
 
     /// Killed, it vanishes in a puff of sparkles (it drops nothing: fairies are not loot).
-    fn living_death(&self, host: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
-        if creature::mob::kind(event.kind) != FAIRY {
+    fn living_death(&self, host: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {
+        if event.kind != FAIRY {
             return Flow::Continue;
         }
-        if let Some(at) = host.entity(event.entity).and_then(|e| host.entity_position(e)) {
-            sparkles(host, [at[0], at[1] + 0.4, at[2]], 20);
+        if let Some(e) = host.entity(event.entity)
+            && let (Some(at), Some(level)) = (e.position(host), e.level(host))
+        {
+            sparkles(host, level, [at[0], at[1] + 0.4, at[2]], 20);
         }
         creature::flutter::gone(event.entity);
         creature::friend::forget(event.entity);
         companion::forget(event.entity);
         AT.lock().unwrap().remove(&event.entity);
         TICKS.lock().unwrap().remove(&event.entity);
+        FRIEND_IDS.lock().unwrap().remove(&event.entity);
         Flow::Continue
     }
 
     /// It glows: its whole texture is full-bright.
-    fn emissive(&self, _: &dyn Host, event: &mut EmissiveEvent<'_>) {
+    fn emissive(&self, _: &dyn ClientHost, event: &mut EmissiveEvent<'_>) {
         event.layers.push((TEXTURE, TEXTURE));
     }
 
     /// A soft violet light around each fairy (seen only, it lights nothing in the world), wider around one following
     /// its friend: its night light.
-    fn visuals(&self, _: &dyn Host, event: &mut VisualsEvent<'_>) {
+    fn visuals(&self, _: &dyn ClientHost, event: &mut VisualsEvent<'_>) {
         let mut at = AT.lock().unwrap();
         at.retain(|_, seen| seen.when.elapsed().as_secs() < 2);
         let mut lights: Vec<&Seen> = at.values().collect();
@@ -444,37 +493,14 @@ impl Hooks for Fairies {
         lights.sort_by_key(|seen| !seen.following);
         for seen in lights.into_iter().take(LIGHTS) {
             let p = seen.at;
-            event.lights.push(NativeColoredLight {
-                at: [p[0], p[1] + 0.4, p[2]],
-                rgb: LIGHT_RGB,
-                radius: if seen.following { LIGHT_RADIUS.1 } else { LIGHT_RADIUS.0 },
-                intensity: LIGHT_INTENSITY,
-            });
+            let radius = if seen.following { LIGHT_RADIUS.1 } else { LIGHT_RADIUS.0 };
+            event.lights.push(ColoredLight::new(
+                [p[0], p[1] + 0.4, p[2]],
+                LIGHT_RGB,
+                radius,
+                LIGHT_INTENSITY,
+            ));
         }
-    }
-
-    fn mob_submit(&self, host: &dyn Host, event: &mut MobSubmitEvent<'_>) -> Flow {
-        let mob = event.mob;
-        if mob.kind != FAIRY {
-            return Flow::Continue;
-        }
-        let flying = creature::flutter::flying(mob.id) || companion::active(mob.id);
-        // Hovering, it bobs gently.
-        let bob = if flying { 0.04 * (mob.age * 0.2).sin() } else { 0.0 };
-        event.draw.push();
-        creature::model::death_tilt(&mut *event.draw, mob);
-        event.draw.translate([0.0, bob, 0.0]);
-        creature::model::draw_shown(
-            host,
-            &mut *event.draw,
-            &model_fairy::FAIRY,
-            TEXTURE,
-            &|part| pose(part, mob, flying),
-            &|_| true,
-            creature::model::tint(mob),
-        );
-        event.draw.pop();
-        Flow::Cancel
     }
 }
 

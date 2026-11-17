@@ -71,6 +71,8 @@ pub struct Body {
     pub no_gravity: bool,
     /// Set to 0 to spare it the fall it is in (a 1-health flier).
     pub fall_distance: f32,
+    /// Ticks it has lived (`Entity.tickCount`).
+    pub age: i32,
     pub random: Rand,
 }
 
@@ -84,13 +86,21 @@ pub struct World<'a> {
 }
 
 /// A player as a behaviour sees it.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct Player {
     pub entity_id: u32,
+    pub uuid: u128,
     pub position: Vec3,
+    /// Its eyes, and the way it looks (a unit vector).
+    pub eye: [f64; 3],
+    pub look: [f64; 3],
     pub sprinting: bool,
     pub sneaking: bool,
     pub alive: bool,
+    pub spectator: bool,
+    /// The items in its hands (`minecraft:glow_berries`), none for an empty hand.
+    pub main_hand: Option<String>,
+    pub off_hand: Option<String>,
 }
 
 impl World<'_> {
@@ -199,6 +209,7 @@ pub fn read(host: &dyn Host, entity: u32) -> Option<Body> {
         in_water: e.is_in_water(host).unwrap_or(false),
         no_gravity: e.no_gravity(host).unwrap_or(false),
         fall_distance: 1.0,
+        age: e.tick_count(host).unwrap_or(0),
         random: Rand::new(entity),
     })
 }
@@ -229,15 +240,27 @@ fn nearest_player(host: &dyn ServerHost, body: &Body) -> Option<Player> {
             let at = Vec3::of(e.position(host)?);
             let d =
                 (at.x - body.position.x).powi(2) + (at.y - body.position.y).powi(2) + (at.z - body.position.z).powi(2);
-            Some((d, e, at))
+            Some((d, p, at))
         })
         .min_by(|a, b| a.0.total_cmp(&b.0))
-        .map(|(_, e, at)| Player {
-            entity_id: e.id(),
-            position: at,
-            sprinting: e.is_sprinting(host).unwrap_or(false),
-            sneaking: e.is_crouching(host).unwrap_or(false),
-            alive: host.living(e).and_then(|l: LivingRef| l.alive(host)).unwrap_or(true),
+        .map(|(_, p, at)| {
+            let e = p.entity();
+            let (eye, look) =
+                crate::hand::eye_and_look(host, p).unwrap_or(([at.x, at.y + 1.62, at.z], [0.0, 0.0, 1.0]));
+            let hand = |h| crate::hand::held(host, p, h).map(|s| crate::hand::id(host, &s));
+            Player {
+                entity_id: e.id(),
+                uuid: p.uuid(),
+                position: at,
+                eye,
+                look,
+                sprinting: e.is_sprinting(host).unwrap_or(false),
+                sneaking: e.is_crouching(host).unwrap_or(false),
+                alive: host.living(e).and_then(|l: LivingRef| l.alive(host)).unwrap_or(true),
+                spectator: p.is_spectator(host).unwrap_or(false),
+                main_hand: hand(mod_api::Hand::Main),
+                off_hand: hand(mod_api::Hand::Off),
+            }
         })
 }
 

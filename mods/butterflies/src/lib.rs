@@ -1,8 +1,8 @@
 //! Butterflies (SPECS.md): butterflies and moths of the Sunrise Creatures series.
 //!
-//! So far (SPECS §0): the butterfly and the moth exist (spawn eggs), each a copy of the wandering trader (its
-//! behaviour is all goals, cleared here) with its own tiny size, drawn with its own model (`model_butterfly.rs`,
-//! `model_moth.rs`, from `assets/models/`). A butterfly gets a look the first time it is seen (the library's colours
+//! So far (SPECS §0): the butterfly and the moth exist (spawn eggs), each a copy of the wandering trader (its goals
+//! taken off by the library) with its own tiny size, drawn with its own model (`model_butterfly.rs`, `model_moth.rs`,
+//! from `sources/models/`). A butterfly gets a look the first time it is seen (the library's colours
 //! and patterns, common/SPECS.md §5): a base colour, a pattern and a pattern colour, more or less likely per biome
 //! (`SCHEME`). The moth has one look, painted in its texture (SPECS §2.1). On the ground a butterfly opens and closes
 //! its wings slowly. They fly by day (butterflies) or by night (moths) and land on flowers (the library's `flutter`); released
@@ -13,20 +13,25 @@ mod throw;
 
 use creature::colours::{Colour, Pattern, Scheme, Variety};
 use creature::jar::Catchable;
-use horizon_client::mod_api::{
-    BlockEntityDraw, EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, LivingDeathEvent, MobSubmitEvent,
-    NativeMobRender, RegisterGoalsEvent, UseItemEvent,
+use std::sync::Arc;
+
+use mod_api::{
+    BlockEntityDrawContext, EntityInteractEvent, EntityRenderState, EntityRenderer, EntityTickPostEvent, Flow, Hooks,
+    HostSide, InteractionResult, LivingDeathEvent, RegisterEntityRenderersEvent, Registrar, RegistrationContext,
+    ServerHost,
 };
 
 pub const BUTTERFLY: &str = "butterflies:butterfly";
 pub const MOTH: &str = "butterflies:moth";
 const MOTH_TEXTURE: &str = "butterflies:entity/moth/moth";
 
-/// Their size: a tiny box, in place of the trader's 0.6 × 1.95 (a copy of its type, as the vulture; workaround for
-/// horizon-rust/horizon#6276), and the scale their models are drawn at.
-const WIDTH: f64 = 0.5;
-const HEIGHT: f64 = 0.3;
-const EYE_HEIGHT: f64 = 0.2;
+/// Their size: a tiny box, in place of the trader's 0.6 × 1.95 (the library answers `entity_size`), and the scale their
+/// models are drawn at.
+const SIZE: creature::mob::Size = creature::mob::Size {
+    width: 0.5,
+    height: 0.3,
+    eye_height: 0.2,
+};
 const SCALE: f32 = 0.6;
 
 /// The butterfly's colours (SPECS §2), for its wings and its patterns.
@@ -219,7 +224,7 @@ const JAR_FACTS: &[creature::bestiary::Fact] = &[
 
 /// The bestiary's 3D view: the model at rest, scaled to about a block across; the butterfly in the morph picked, its
 /// wings a little open.
-fn butterfly_view(host: &dyn Host, draw: &mut BlockEntityDraw, look: Option<creature::colours::Look>) {
+fn butterfly_view(draw: &mut dyn BlockEntityDrawContext, look: Option<creature::colours::Look>) {
     draw.push();
     draw.translate([0.5, 0.1, 0.5]);
     draw.scale([BOOK_SCALE; 3]);
@@ -230,7 +235,6 @@ fn butterfly_view(host: &dyn Host, draw: &mut BlockEntityDraw, look: Option<crea
     };
     let look = look.unwrap_or_default();
     creature::colours::draw(
-        host,
         draw,
         &model_butterfly::BUTTERFLY,
         &SCHEME,
@@ -241,11 +245,11 @@ fn butterfly_view(host: &dyn Host, draw: &mut BlockEntityDraw, look: Option<crea
     draw.pop();
 }
 
-fn moth_view(host: &dyn Host, draw: &mut BlockEntityDraw, _: Option<creature::colours::Look>) {
+fn moth_view(draw: &mut dyn BlockEntityDrawContext, _: Option<creature::colours::Look>) {
     draw.push();
     draw.translate([0.5, 0.1, 0.5]);
     draw.scale([BOOK_SCALE; 3]);
-    creature::model::draw(host, draw, &model_moth::MOTH, MOTH_TEXTURE, &|_| [0.0; 3]);
+    creature::model::draw(draw, &model_moth::MOTH, MOTH_TEXTURE, &|_| [0.0; 3]);
     draw.pop();
 }
 const BOOK_SCALE: f32 = 1.2;
@@ -339,23 +343,7 @@ static CONFETTI_PAGE: creature::items::ItemPage = creature::items::ItemPage {
     }],
 };
 
-pub fn hooks() -> Box<dyn Hooks> {
-    creature::bestiary::register_item(&DUST_PAGE);
-    creature::bestiary::register_item(&CONFETTI_PAGE);
-    for s in &SPAWNING {
-        creature::flutter::spawns(s);
-    }
-    creature::hand::server_used(throw::DUST);
-    creature::hand::server_used(throw::CONFETTI);
-    for c in &IN_JAR {
-        creature::jar::register(c);
-    }
-    for species in &BESTIARY {
-        creature::bestiary::register(species);
-    }
-    Box::new(Butterflies)
-}
-
+#[derive(Default)]
 struct Butterflies;
 
 fn ours(kind: &str) -> bool {
@@ -364,17 +352,17 @@ fn ours(kind: &str) -> bool {
 
 /// A group's rotation for this frame (degrees): on the ground a butterfly opens and closes its wings slowly, basking;
 /// a moth rests with its wings flat.
-fn pose(name: &str, mob: &NativeMobRender<'_>, butterfly: bool) -> [f32; 3] {
-    let open = if creature::flutter::flying(mob.id) {
+fn pose(name: &str, id: u32, age: f32, butterfly: bool) -> [f32; 3] {
+    let open = if creature::flutter::flying(id) {
         // Flying: quick beats, the wings meeting above it.
         if butterfly {
-            30.0 + 50.0 * (mob.age * 1.3).sin()
+            30.0 + 50.0 * (age * 1.3).sin()
         } else {
-            15.0 + 35.0 * (mob.age * 1.6).sin()
+            15.0 + 35.0 * (age * 1.6).sin()
         }
     } else if butterfly {
         // Resting: a butterfly opens and closes its wings slowly, a moth keeps them flat.
-        35.0 + 35.0 * (mob.age * 0.08).sin()
+        35.0 + 35.0 * (age * 0.08).sin()
     } else {
         return [0.0; 3];
     };
@@ -385,93 +373,89 @@ fn pose(name: &str, mob: &NativeMobRender<'_>, butterfly: bool) -> [f32; 3] {
     }
 }
 
+/// Their own models: a butterfly in its look, a moth.
+struct Draw {
+    butterfly: bool,
+}
+
+impl EntityRenderer for Draw {
+    fn submit(&self, entity: &EntityRenderState, draw: &mut dyn BlockEntityDrawContext) -> Result<(), String> {
+        let mob = entity.living.as_ref();
+        let (id, age, butterfly) = (entity.id, entity.age, self.butterfly);
+        draw.push();
+        creature::model::living_pose(draw, mob);
+        draw.scale([SCALE; 3]);
+        let tint = creature::model::tint(mob);
+        if butterfly {
+            let look = creature::colours::look(id).unwrap_or_default();
+            let pose = |part: &str| pose(part, id, age, true);
+            creature::colours::draw(draw, &model_butterfly::BUTTERFLY, &SCHEME, look, &pose, tint);
+        } else {
+            let pose = |part: &str| pose(part, id, age, false);
+            creature::model::draw_shown(draw, &model_moth::MOTH, MOTH_TEXTURE, &pose, &|_| true, tint);
+        }
+        draw.pop();
+        Ok(())
+    }
+}
+
+#[mod_api::sunrise_mod]
 impl Hooks for Butterflies {
-    /// Its row in Options > Mods, which switches it off and on at once (`creature::list_mod`).
-    fn mods(&self, _: &mut dyn Host, event: &mut horizon_client::mod_api::ModsEvent<'_>) {
-        creature::list_mod(
-            event,
-            "butterflies",
-            concat!("Butterflies ", env!("CARGO_PKG_VERSION")),
-            "Butterflies and moths. Needs Sunrise Creatures.",
-        );
-    }
-
-    /// Right-click with butterfly dust or confetti: thrown (`throw.rs`).
-    fn use_item(&self, host: &mut dyn Host, event: &mut UseItemEvent<'_>) -> Flow {
-        if throw::thrown(host, event.stack) {
-            Flow::Cancel
-        } else {
-            Flow::Continue
+    fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
+        creature::flutter::register(BUTTERFLY, SIZE);
+        creature::flutter::register(MOTH, SIZE);
+        creature::bestiary::register_item(&DUST_PAGE);
+        creature::bestiary::register_item(&CONFETTI_PAGE);
+        for s in &SPAWNING {
+            creature::flutter::spawns(s);
+        }
+        for item in [throw::DUST, throw::CONFETTI] {
+            let key = r.item_key(item);
+            r.item_part(key, throw::Thrown);
+        }
+        for c in &IN_JAR {
+            creature::jar::register(c);
+        }
+        for species in &BESTIARY {
+            creature::bestiary::register(species);
         }
     }
 
-    fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
-        if !ours(&event.mob.kind.id) {
-            return;
-        }
-        let kind = if event.mob.kind.id == MOTH {
-            &MOTH_FLIGHT
-        } else {
-            &BUTTERFLY_FLIGHT
-        };
-        creature::flutter::register(event.mob, (WIDTH, HEIGHT, EYE_HEIGHT), kind);
+    fn register_entity_renderers(&self, _: &RegistrationContext, event: &mut RegisterEntityRenderersEvent<'_>) {
+        event
+            .renderers
+            .register(BUTTERFLY.into(), Arc::new(Draw { butterfly: true }));
+        event
+            .renderers
+            .register(MOTH.into(), Arc::new(Draw { butterfly: false }));
     }
 
-    /// Right-click: nothing (no trading screen, which their template would open).
-    fn interact_entity(&self, _: &mut dyn Host, event: &mut InteractEntityEvent<'_>) -> Flow {
-        if ours(event.kind) { Flow::Cancel } else { Flow::Continue }
+    /// Right-click: nothing (no trading screen, which their template would open), on both sides.
+    fn entity_interact(&self, _: HostSide, event: &mut EntityInteractEvent<'_>) -> Option<InteractionResult> {
+        ours(event.kind).then_some(InteractionResult::Consume)
     }
 
-    fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
+    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
         if event.kind == BUTTERFLY {
             creature::colours::tick(host, event.entity, &SCHEME);
         }
         if ours(event.kind) {
-            creature::flutter::tick_post(host, event.dimension, event.entity);
+            let flight = if event.kind == MOTH {
+                &MOTH_FLIGHT
+            } else {
+                &BUTTERFLY_FLIGHT
+            };
+            creature::flutter::tick_post(host, event.dimension, event.kind, event.entity, || {
+                vec![Box::new(creature::flutter::Flutter::new(flight))]
+            });
         }
     }
 
-    fn living_death(&self, _: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
-        if ours(creature::mob::kind(event.kind)) {
+    fn living_death(&self, _: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {
+        if ours(event.kind) {
             creature::flutter::gone(event.entity);
         }
         Flow::Continue
-    }
-
-    fn mob_submit(&self, host: &dyn Host, event: &mut MobSubmitEvent<'_>) -> Flow {
-        let mob = event.mob;
-        let butterfly = mob.kind == BUTTERFLY;
-        if !butterfly && mob.kind != MOTH {
-            return Flow::Continue;
-        }
-        event.draw.push();
-        creature::model::death_tilt(&mut *event.draw, mob);
-        event.draw.scale([SCALE; 3]);
-        let tint = creature::model::tint(mob);
-        if butterfly {
-            let look = creature::colours::look(mob.id).unwrap_or_default();
-            creature::colours::draw(
-                host,
-                &mut *event.draw,
-                &model_butterfly::BUTTERFLY,
-                &SCHEME,
-                look,
-                &|part| pose(part, mob, true),
-                tint,
-            );
-        } else {
-            creature::model::draw_shown(
-                host,
-                &mut *event.draw,
-                &model_moth::MOTH,
-                MOTH_TEXTURE,
-                &|part| pose(part, mob, false),
-                &|_| true,
-                tint,
-            );
-        }
-        event.draw.pop();
-        Flow::Cancel
     }
 }
 

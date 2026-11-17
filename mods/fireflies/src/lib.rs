@@ -2,20 +2,21 @@
 //!
 //! A firefly is a copy of the wandering trader (its behaviour is all goals) with a tiny box, flying with the library's
 //! `flutter`: out at night, drifting slowly and low, resting on the ground by day. It is drawn with its own model
-//! (`model_firefly.rs`, from `assets/models/firefly.bbmodel`): its lantern pulses on its own rhythm (`lit`), lit with
+//! (`model_firefly.rs`, from `sources/models/firefly.bbmodel`): its lantern pulses on its own rhythm (`lit`), lit with
 //! a texture whose lantern is full-bright (`emissive`) and a soft visual light around it (`visuals`, up to 8). Caught
 //! in the library's glass jar, released on a flower it settles there; a jar of fireflies on display gives light.
 mod model_firefly;
 
 use std::collections::BTreeMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use creature::bestiary::{Fact, Species};
 use creature::jar::Catchable;
-use horizon_client::mod_api::{
-    BlockEntityDraw, EmissiveEvent, EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, LivingDeathEvent,
-    MobSubmitEvent, NativeColoredLight, NativeMobRender, RegisterGoalsEvent, VisualsEvent,
+use mod_api::{
+    BlockEntityDrawContext, ClientHost, ColoredLight, EmissiveEvent, EntityInteractEvent, EntityRenderState,
+    EntityRenderer, EntityTickPostEvent, Flow, Hooks, HostSide, InteractionResult, LivingDeathEvent,
+    RegisterEntityRenderersEvent, Registrar, RegistrationContext, ServerHost, VisualsEvent,
 };
 
 pub const FIREFLY: &str = "fireflies:firefly";
@@ -25,7 +26,11 @@ const LIT_TEXTURE: &str = "fireflies:entity/firefly/firefly_lit";
 const GLOW: &str = "fireflies:entity/firefly/firefly_lit_glow";
 
 /// Its box (blocks) and the scale its model is drawn at.
-const SIZE: (f64, f64, f64) = (0.3, 0.2, 0.15);
+const SIZE: creature::mob::Size = creature::mob::Size {
+    width: 0.3,
+    height: 0.2,
+    eye_height: 0.15,
+};
 const SCALE: f32 = 0.5;
 
 /// How it flies (SPECS §2): at night, slow and low, long drifts and short rests; it doesn't seek flowers.
@@ -82,13 +87,12 @@ static BESTIARY: Species = Species {
 };
 
 /// The bestiary's 3D view: lit, its wings folded, about a block across.
-fn book_view(host: &dyn Host, draw: &mut BlockEntityDraw, _: Option<creature::colours::Look>) {
+fn book_view(draw: &mut dyn BlockEntityDrawContext, _: Option<creature::colours::Look>) {
     draw.push();
     draw.translate([0.5, 0.1, 0.5]);
     draw.scale([BOOK_SCALE; 3]);
     let folded = |part: &str| !part.starts_with("wing");
     creature::model::draw_shown(
-        host,
         draw,
         &model_firefly::FIREFLY,
         LIT_TEXTURE,
@@ -110,9 +114,9 @@ fn lit(id: u32) -> bool {
 }
 
 /// Where the flying fireflies are, for their visual lights (the client's `visuals` has no positions of its own): kept
-/// by the server's tick, read by the drawing (single player; arismoko/horizon#2740).
+/// by the server's tick, read by the drawing (single player).
 static FLYING_AT: Mutex<BTreeMap<u32, ([f64; 3], Instant)>> = Mutex::new(BTreeMap::new());
-/// At most this many visual lights (Horizon's budget per mod is 8), their colour, reach and strength.
+/// At most this many visual lights (a mod's budget is 8), their colour, reach and strength.
 const LIGHTS: usize = 8;
 const LIGHT_RGB: u32 = 0xD6FF6E;
 const LIGHT_RADIUS: f32 = 3.0;
@@ -128,21 +132,15 @@ static SPAWNING: creature::flutter::Spawning = creature::flutter::Spawning {
     chance: 3,
 };
 
-pub fn hooks() -> Box<dyn Hooks> {
-    creature::flutter::spawns(&SPAWNING);
-    creature::jar::register(&IN_JAR);
-    creature::bestiary::register(&BESTIARY);
-    Box::new(Fireflies)
-}
-
+#[derive(Default)]
 struct Fireflies;
 
 /// A group's rotation this frame: flying, the wing cases lift and the wings beat fast.
-fn pose(name: &str, mob: &NativeMobRender<'_>, flying: bool) -> [f32; 3] {
+fn pose(name: &str, age: f32, flying: bool) -> [f32; 3] {
     if !flying {
         return [0.0; 3];
     }
-    let beat = 25.0 + 30.0 * (mob.age * 2.2).sin();
+    let beat = 25.0 + 30.0 * (age * 2.2).sin();
     match name {
         "elytra_left" => [-20.0, 0.0, 35.0],
         "elytra_right" => [-20.0, 0.0, -35.0],
@@ -152,46 +150,66 @@ fn pose(name: &str, mob: &NativeMobRender<'_>, flying: bool) -> [f32; 3] {
     }
 }
 
-impl Hooks for Fireflies {
-    /// Its row in Options > Mods, which switches it off and on at once (`creature::list_mod`).
-    fn mods(&self, _: &mut dyn Host, event: &mut horizon_client::mod_api::ModsEvent<'_>) {
-        creature::list_mod(
-            event,
-            "fireflies",
-            concat!("Fireflies ", env!("CARGO_PKG_VERSION")),
-            "Fireflies that light up the night. Needs Sunrise Creatures.",
+/// Its own model, its lantern pulsing in flight.
+struct Draw;
+
+impl EntityRenderer for Draw {
+    fn submit(&self, entity: &EntityRenderState, draw: &mut dyn BlockEntityDrawContext) -> Result<(), String> {
+        let mob = entity.living.as_ref();
+        let flying = creature::flutter::flying(entity.id);
+        let texture = if flying && lit(entity.id) { LIT_TEXTURE } else { TEXTURE };
+        let shown = |part: &str| flying || !part.starts_with("wing");
+        draw.push();
+        creature::model::living_pose(draw, mob);
+        draw.scale([SCALE; 3]);
+        let pose = |part: &str| pose(part, entity.age, flying);
+        creature::model::draw_shown(
+            draw,
+            &model_firefly::FIREFLY,
+            texture,
+            &pose,
+            &shown,
+            creature::model::tint(mob),
         );
+        draw.pop();
+        Ok(())
+    }
+}
+
+#[mod_api::sunrise_mod]
+impl Hooks for Fireflies {
+    fn register(&self, _: &mut dyn Registrar, _: &RegistrationContext) {
+        creature::flutter::register(FIREFLY, SIZE);
+        creature::flutter::spawns(&SPAWNING);
+        creature::jar::register(&IN_JAR);
+        creature::bestiary::register(&BESTIARY);
     }
 
-    fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
-        if event.mob.kind.id == FIREFLY {
-            creature::flutter::register(event.mob, SIZE, &FLIGHT);
-        }
+    fn register_entity_renderers(&self, _: &RegistrationContext, event: &mut RegisterEntityRenderersEvent<'_>) {
+        event.renderers.register(FIREFLY.into(), Arc::new(Draw));
     }
 
-    /// Right-click: nothing (no trading screen, which its template would open).
-    fn interact_entity(&self, _: &mut dyn Host, event: &mut InteractEntityEvent<'_>) -> Flow {
-        if event.kind == FIREFLY {
-            Flow::Cancel
-        } else {
-            Flow::Continue
-        }
+    /// Right-click: nothing (no trading screen, which its template would open), on both sides.
+    fn entity_interact(&self, _: HostSide, event: &mut EntityInteractEvent<'_>) -> Option<InteractionResult> {
+        (event.kind == FIREFLY).then_some(InteractionResult::Consume)
     }
 
-    fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
+    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
         if event.kind != FIREFLY {
             return;
         }
-        creature::flutter::tick_post(host, event.dimension, event.entity);
+        creature::flutter::tick_post(host, event.dimension, event.kind, event.entity, || {
+            vec![Box::new(creature::flutter::Flutter::new(&FLIGHT))]
+        });
         if creature::flutter::flying(event.entity)
-            && let Some(at) = host.entity(event.entity).and_then(|e| host.entity_position(e))
+            && let Some(at) = host.entity(event.entity).and_then(|e| e.position(host))
         {
             FLYING_AT.lock().unwrap().insert(event.entity, (at, Instant::now()));
         }
     }
 
-    fn living_death(&self, _: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
-        if creature::mob::kind(event.kind) == FIREFLY {
+    fn living_death(&self, _: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {
+        if event.kind == FIREFLY {
             creature::flutter::gone(event.entity);
             FLYING_AT.lock().unwrap().remove(&event.entity);
         }
@@ -199,47 +217,20 @@ impl Hooks for Fireflies {
     }
 
     /// The lit texture's lantern is full-bright.
-    fn emissive(&self, _: &dyn Host, event: &mut EmissiveEvent<'_>) {
+    fn emissive(&self, _: &dyn ClientHost, event: &mut EmissiveEvent<'_>) {
         event.layers.push((LIT_TEXTURE, GLOW));
     }
 
     /// A soft yellow-green light around the lit fireflies flying (seen only, it lights nothing in the world).
-    fn visuals(&self, _: &dyn Host, event: &mut VisualsEvent<'_>) {
+    fn visuals(&self, _: &dyn ClientHost, event: &mut VisualsEvent<'_>) {
         let mut at = FLYING_AT.lock().unwrap();
         at.retain(|_, (_, seen)| seen.elapsed().as_secs() < 2);
-        for (id, (p, _)) in at.iter().filter(|(id, _)| lit(**id)).take(LIGHTS) {
-            let _ = id;
-            event.lights.push(NativeColoredLight {
-                at: [p[0], p[1] + 0.1, p[2]],
-                rgb: LIGHT_RGB,
-                radius: LIGHT_RADIUS,
-                intensity: LIGHT_INTENSITY,
-            });
+        for (_, (p, _)) in at.iter().filter(|(id, _)| lit(**id)).take(LIGHTS) {
+            let at = [p[0], p[1] + 0.1, p[2]];
+            event
+                .lights
+                .push(ColoredLight::new(at, LIGHT_RGB, LIGHT_RADIUS, LIGHT_INTENSITY));
         }
-    }
-
-    fn mob_submit(&self, host: &dyn Host, event: &mut MobSubmitEvent<'_>) -> Flow {
-        let mob = event.mob;
-        if mob.kind != FIREFLY {
-            return Flow::Continue;
-        }
-        let flying = creature::flutter::flying(mob.id);
-        let texture = if flying && lit(mob.id) { LIT_TEXTURE } else { TEXTURE };
-        let shown = |part: &str| flying || !part.starts_with("wing");
-        event.draw.push();
-        creature::model::death_tilt(&mut *event.draw, mob);
-        event.draw.scale([SCALE; 3]);
-        creature::model::draw_shown(
-            host,
-            &mut *event.draw,
-            &model_firefly::FIREFLY,
-            texture,
-            &|part| pose(part, mob, flying),
-            &shown,
-            creature::model::tint(mob),
-        );
-        event.draw.pop();
-        Flow::Cancel
     }
 }
 

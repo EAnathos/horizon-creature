@@ -3,5 +3,12 @@
   "attributes": {
     "minecraft:max_health": 4.0,
     "minecraft:movement_speed": 0.25
-  }
+  },
+  "sounds": {
+    "hurt": "fairies:entity.fairy.hurt",
+    "death": "fairies:entity.fairy.death",
+    "ambient": "none",
+    "step": "none"
+  },
+  "shadow_radius": 0.25
 }

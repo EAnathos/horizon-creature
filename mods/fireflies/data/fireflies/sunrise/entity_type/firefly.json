@@ -3,5 +3,12 @@
   "attributes": {
     "minecraft:max_health": 1.0,
     "minecraft:movement_speed": 0.2
-  }
+  },
+  "sounds": {
+    "hurt": "none",
+    "death": "none",
+    "ambient": "none",
+    "step": "none"
+  },
+  "shadow_radius": 0.15
 }

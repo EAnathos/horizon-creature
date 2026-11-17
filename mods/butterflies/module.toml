@@ -4,3 +4,5 @@ name = "Butterflies"
 status = "playable"
 # Its items in the series' creative tab, in order.
 creative = ["butterflies:butterfly_spawn_egg", "butterflies:moth_spawn_egg", "butterflies:butterfly_dust", "butterflies:confetti"]
+# Its Rust is on Sunrise's mod_api (docs/SUNRISE-PORT.md).
+ported = true

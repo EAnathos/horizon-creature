@@ -18,6 +18,7 @@
 //! - `projectile`: thrown things (the cyclops's boulder, the scorpion dagger), flown and ended (SPECS §3.9).
 //! - `guide`: the creature guide book, given at a player's first login (SPECS §7).
 //! - `bestiary`: the book's pages, what each player met and found out (SPECS §7).
+//! - `particles`: the vanilla particles the mods send, their keys asked for at registration.
 //! - `items`: the book's Items tab, a page per item of the series, with the recipes of `recipes.rs` (SPECS §7.2).
 pub mod bestiary;
 pub mod body;
@@ -31,6 +32,7 @@ pub mod items;
 pub mod jar;
 pub mod mob;
 pub mod model;
+pub mod particles;
 pub mod projectile;
 mod recipes;
 pub mod sounds;
@@ -94,6 +96,7 @@ struct Creature;
 impl Hooks for Creature {
     fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
         colours::declare(r);
+        particles::declare(r);
         territory::declare(r);
         friend::declare(r);
         jar::declare(r);

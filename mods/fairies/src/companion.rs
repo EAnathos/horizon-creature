@@ -1,19 +1,18 @@
-//! The fairy's own goal (SPECS §2, §3), above the library's wild flight (`flutter`), which it takes over while it has
-//! something to do:
+//! The fairy's own behaviour (SPECS §2, §3), above the library's wild flight (`flutter`), which it takes over while it
+//! has something to do (both run from the server tick: the library's `body`):
 //!
 //! - **Following**: befriended and not told to stay, it circles its friend's head.
 //! - **Staying**: told to stay, it hovers where it was.
 //! - **Drawn**: wild, a player holding glow berries (or sweet berries) within `DRAWN` blocks draws it: it hovers before
-//!   their face, to be fed (a right-click, the mod's `interact_entity`).
+//!   their face, to be fed (a right-click, the mod's `entity_interact`).
 //! - **Fleeing**: wild, a player who comes within `SHY` blocks without sneaking (and without berries), or runs within
 //!   `RUNNER`, scares it off.
 //!
-//! The player is the one the goal sees (`cx.w.player`): single player, as the rest of the series.
+//! The player is the nearest one (`World::player`).
 use std::collections::BTreeSet;
 use std::sync::Mutex;
 
-use horizon_client::mobs::goals;
-use horizon_client::mod_api::{Cx, Goal, Mob};
+use creature::body::{Behaviour, Body, World};
 
 /// Its friend further than this (blocks): it comes to them at once (the mod's tick teleports it).
 pub const TELEPORT: f64 = 24.0;
@@ -38,10 +37,10 @@ const FLEE_FAR: f64 = 7.0;
 pub const GLOW_BERRIES: &str = "minecraft:glow_berries";
 pub const SWEET_BERRIES: &str = "minecraft:sweet_berries";
 
-/// The fairies this goal moves now, for the drawing (their wings beat).
+/// The fairies this behaviour moves now, for the drawing (their wings beat).
 static ACTIVE: Mutex<BTreeSet<u32>> = Mutex::new(BTreeSet::new());
 
-/// Whether this goal moves it now (it is flying).
+/// Whether this behaviour moves it now (it is flying).
 pub fn active(fairy: u32) -> bool {
     ACTIVE.lock().unwrap().contains(&fairy)
 }
@@ -58,7 +57,7 @@ enum Mode {
     Flee([f64; 3]),
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct Fairy {
     mode: Option<Mode>,
     /// Ticks in the current mode.
@@ -69,14 +68,14 @@ fn distance(a: [f64; 3], b: [f64; 3]) -> f64 {
     (0..3).map(|k| (a[k] - b[k]).powi(2)).sum::<f64>().sqrt()
 }
 
-fn here(m: &Mob) -> [f64; 3] {
+fn here(m: &Body) -> [f64; 3] {
     [m.position.x, m.position.y, m.position.z]
 }
 
 impl Fairy {
     /// What it should do now, if anything (else the wild flight goes on).
-    fn choose(&self, m: &mut Mob, cx: &Cx) -> Option<Mode> {
-        let player = cx.w.player.as_ref().filter(|p| p.alive && !p.spectator);
+    fn choose(&self, m: &mut Body, cx: &World<'_>) -> Option<Mode> {
+        let player = cx.player.as_ref().filter(|p| p.alive && !p.spectator);
         if let Some(friend) = creature::friend::of(m.id) {
             if friend.staying {
                 return Some(match self.mode {
@@ -84,13 +83,11 @@ impl Fairy {
                     _ => Mode::Stay(here(m)),
                 });
             }
-            return player.filter(|p| p.uuid == friend.uuid).map(|_| Mode::Follow);
+            return player.filter(|p| friend.is(p.uuid)).map(|_| Mode::Follow);
         }
         let p = player?;
         let d = distance(p.eye, here(m));
-        let berries = |hand: &Option<std::sync::Arc<str>>| {
-            hand.as_deref().is_some_and(|i| i == GLOW_BERRIES || i == SWEET_BERRIES)
-        };
+        let berries = |hand: &Option<String>| hand.as_deref().is_some_and(|i| i == GLOW_BERRIES || i == SWEET_BERRIES);
         if (berries(&p.main_hand) || berries(&p.off_hand)) && d < DRAWN && !p.sprinting {
             return Some(Mode::Drawn);
         }
@@ -114,7 +111,7 @@ impl Fairy {
 }
 
 /// Flies straight at `target`, quickly (following its friend): a share of the way each tick, at most `FOLLOW_SPEED`.
-fn pull(m: &mut Mob, target: [f64; 3]) {
+fn pull(m: &mut Body, target: [f64; 3]) {
     let d = [
         target[0] - m.position.x,
         target[1] - m.position.y,
@@ -131,43 +128,32 @@ fn pull(m: &mut Mob, target: [f64; 3]) {
 }
 
 /// Turns to face `at`.
-fn face(m: &mut Mob, at: [f64; 3]) {
+fn face(m: &mut Body, at: [f64; 3]) {
     let yaw = (-(at[0] - m.position.x)).atan2(at[2] - m.position.z).to_degrees() as f32;
     m.yaw = yaw;
     m.body_yaw = yaw;
     m.head_yaw = yaw;
 }
 
-impl Goal for Fairy {
-    fn flags(&self) -> u8 {
-        goals::MOVE | goals::LOOK | goals::JUMP
-    }
-    fn can_use(&mut self, m: &mut Mob, cx: &mut Cx) -> bool {
+impl Behaviour for Fairy {
+    fn can_use(&mut self, m: &mut Body, cx: &World<'_>) -> bool {
         match self.choose(m, cx) {
             Some(mode) => {
                 if self.mode != Some(mode) {
                     self.ticks = 0;
                 }
                 self.mode = Some(mode);
+                ACTIVE.lock().unwrap().insert(m.id);
                 true
             }
             None => false,
         }
     }
-    fn can_continue(&mut self, m: &mut Mob, cx: &mut Cx) -> bool {
-        self.can_use(m, cx)
-    }
-    fn every_tick(&self) -> bool {
-        true
-    }
-    fn start(&mut self, m: &mut Mob, _: &mut Cx) {
-        ACTIVE.lock().unwrap().insert(m.id);
-    }
-    fn stop(&mut self, m: &mut Mob, _: &mut Cx) {
+    fn stop(&mut self, m: &mut Body, _: &World<'_>) {
         self.mode = None;
         ACTIVE.lock().unwrap().remove(&m.id);
     }
-    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
+    fn tick(&mut self, m: &mut Body, cx: &World<'_>) {
         m.no_gravity = true;
         m.fall_distance = 0.0;
         self.ticks += 1;
@@ -176,7 +162,7 @@ impl Goal for Fairy {
         };
         match mode {
             Mode::Follow => {
-                let Some(p) = cx.w.player.as_ref() else {
+                let Some(p) = cx.player.as_ref() else {
                     return;
                 };
                 let angle = (f64::from(m.age) * ORBIT_SPEED).to_radians();
@@ -193,7 +179,7 @@ impl Goal for Fairy {
                 creature::flutter::steer(m, [at[0], at[1] + bob, at[2]], 0.05);
             }
             Mode::Drawn => {
-                let Some(p) = cx.w.player.as_ref() else {
+                let Some(p) = cx.player.as_ref() else {
                     return;
                 };
                 let before = [
@@ -208,8 +194,5 @@ impl Goal for Fairy {
                 creature::flutter::steer(m, to, FLEE_SPEED);
             }
         }
-    }
-    fn box_clone(&self) -> Box<dyn Goal> {
-        Box::new(self.clone())
     }
 }
