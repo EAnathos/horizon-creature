@@ -35,7 +35,7 @@ jobs:
       - name: rustfmt (tools)
         run: cargo fmt --manifest-path tools/Cargo.toml --check
       - name: rustfmt (native code)
-        run: find common mods -path '*/src/*' -name '*.rs' -print0 | xargs -0 rustfmt --edition 2024 --check
+        run: find common mods -path '*/src/*' -not -path '*/.sunrise/*' -name '*.rs' -print0 | xargs -0 rustfmt --edition 2024 --check
       - name: clippy (tools)
         run: cargo clippy --manifest-path tools/Cargo.toml --all-targets --locked -- -D warnings
       - name: tests (tools)

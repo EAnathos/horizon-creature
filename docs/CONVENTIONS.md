@@ -53,7 +53,7 @@ committing:
 
 ```sh
 cargo fmt --manifest-path tools/Cargo.toml                                   # format the tools
-find common mods -path '*/src/*' -name '*.rs' -print0 | xargs -0 rustfmt --edition 2024   # format the modules' code
+find common mods -path '*/src/*' -not -path '*/.sunrise/*' -name '*.rs' -print0 | xargs -0 rustfmt --edition 2024   # format the modules' code
 cargo clippy --manifest-path tools/Cargo.toml --all-targets -- -D warnings   # lint the tools
 cargo creature check                                                         # the repository's consistency
 ```

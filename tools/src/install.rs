@@ -9,7 +9,6 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-
 /// The test instance, by name.
 pub const DEFAULT_INSTANCE: &str = "creature-dev";
 

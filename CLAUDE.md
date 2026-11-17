@@ -35,8 +35,8 @@ to date).
   `sunrise-launcher play --instance creature-dev --world <w> --arg --control`, then `sunrise-ctl` (in
   `~/.local/share/sunrise/launcher/versions/<version>/`): `command`, `screenshot`, `entities`, `interact-entity`...
 - Sources: `../sunrise-src` (sparse checkout of sunrise-org/sunrise: `crates/sunrise-mod-vocab` holds the hook
-  declarations with their docs, `docs/modding/src` the modding book). The pinned SDK: `common/.sunrise/sdk/`
-  (fetched by any `cargo sunrise-mod` command; `surface.json` lists the whole API).
+  declarations with their docs, `docs/modding/src` the modding book). The pinned SDK: `target/sunrise-sdk/`
+  (fetched by `cargo creature native-check`; `surface.json` lists the whole API).
 - A module's root is its package: `sunrise-mod.toml` (id, version, `[native]` pins, `[dependencies] creature`),
   `Cargo.toml` (`sunrise-mod-api` by path from `.sunrise/sdk/`), `src/`, `assets/<id>/`, `data/<id>/sunrise/`; beside it
   the repository's own `module.toml`, `SPECS.md`, `sources/` (Blockbench models, `sounds.toml`, Horizon's old

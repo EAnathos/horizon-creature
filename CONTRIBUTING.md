@@ -65,7 +65,7 @@ The modules are **pinned** to one Sunrise build, the same for every module (`[na
 | `cargo creature pack <module>` | Stages a module's package in `target/stage/` and zips it into `target/<id>.smod` |
 | `cargo creature build [mod...]` | Packages and checks (`cargo sunrise-mod check`) the library and the mods into `target/dist/`, without installing |
 | `cargo creature check` | The repository's consistency: tab, manifests, pins, translations, JSON, generated files, sounds (events, files, subtitles), recipe book advancements, docs |
-| `cargo creature native-check [sdk]` | Clippy and the unit tests on every ported crate against the pinned Sunrise SDK (fetched into `common/.sunrise/sdk/`) |
+| `cargo creature native-check [sdk]` | Clippy and the unit tests on every ported crate against the pinned Sunrise SDK (fetched into `target/sunrise-sdk/`) |
 | `cargo creature install [--instance <name>] [mod...]` | Builds and installs, then runs the instance's native build |
 
 ## Before committing

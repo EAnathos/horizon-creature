@@ -218,7 +218,6 @@ fn models(m: &Module, errors: &mut Vec<String>) {
     }
 }
 
-
 /// The module's sounds: `sounds.json` and the `.ogg` files agree, subtitles are translated, `sounds.toml`'s clips are
 /// the `.ogg` files.
 fn sounds(m: &Module, errors: &mut Vec<String>) {
@@ -368,7 +367,6 @@ fn missing_advancements<'a>(recipes: &'a [String], rewarded: &BTreeSet<String>) 
     recipes.iter().filter(|r| !rewarded.contains(*r)).collect()
 }
 
-
 /// `en_us.json` and `fr_fr.json` have the same keys.
 fn lang(dir: &Path, push: &mut impl FnMut(String)) {
     let keys = |name: &str| -> Option<BTreeSet<String>> {
@@ -447,5 +445,4 @@ mod tests {
         let recipes = ["cyclops:club".to_owned(), "cyclops:shepherds_crook".to_owned()];
         assert_eq!(missing_advancements(&recipes, &rewarded), [&recipes[1]]);
     }
-
 }

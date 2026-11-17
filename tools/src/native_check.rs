@@ -1,6 +1,6 @@
 //! Compiles every ported module's crate without the launcher, for CI and quick local checks: a workspace in
 //! `target/native-check/` whose crates are ours (their `src/` in place), each on the API of the pinned Sunrise SDK
-//! (`common/.sunrise/sdk/`, which any `cargo sunrise-mod` command in `common/` fetches), the mods on the library as the
+//! (`target/sunrise-sdk/`, fetched by `cargo sunrise-mod` in the library's staged package), the mods on the library as the
 //! `creature` crate (as the launcher gives it) and on the mods they require. Then `cargo clippy` on it, warnings denied,
 //! and their unit tests (`cargo test`: pure logic, nothing that needs a running game).
 //!
@@ -14,18 +14,14 @@ pub fn run(sdk: Option<&str>) -> crate::Result {
     let library = modules::library()?;
     let sdk = match sdk {
         Some(dir) => std::fs::canonicalize(dir).map_err(|e| format!("{dir}: {e}"))?,
-        None => {
-            let dir = library.dir.join(".sunrise/sdk");
-            if !dir.is_dir() {
-                // Fetches the pinned build's SDK into common/.sunrise/sdk/.
-                run_in(&library.dir, "cargo", &["sunrise-mod", "check"])?;
-            }
-            dir
-        }
+        None => fetch(&library)?,
     };
     let api = sdk.join("api/crates/sunrise-mod-api");
     if !api.join("Cargo.toml").is_file() {
-        return Err(format!("{}: no api/crates/sunrise-mod-api: not a Sunrise SDK", sdk.display()));
+        return Err(format!(
+            "{}: no api/crates/sunrise-mod-api: not a Sunrise SDK",
+            sdk.display()
+        ));
     }
     let ws = crate::root().join("target/native-check");
     std::fs::create_dir_all(&ws).map_err(|e| format!("{}: {e}", ws.display()))?;
@@ -49,6 +45,26 @@ pub fn run(sdk: Option<&str>) -> crate::Result {
         &["clippy", "--workspace", "--all-targets", "--", "-D", "warnings"],
     )?;
     run_in(&ws, "cargo", &["test", "--workspace"])
+}
+
+/// The pinned SDK, in `target/sunrise-sdk/`: when missing, fetched by `cargo sunrise-mod check` in the library's
+/// staged package (the check itself may fail, on a target we don't build: only the fetch matters).
+fn fetch(library: &Module) -> crate::Result<std::path::PathBuf> {
+    let sdk = crate::root().join("target/sunrise-sdk");
+    if sdk.join("api").is_dir() {
+        return Ok(sdk);
+    }
+    let stage = crate::pack::stage(library)?;
+    let _ = run_in(&stage, "cargo", &["sunrise-mod", "check"]);
+    let fetched = stage.join(".sunrise/sdk");
+    if !fetched.join("api").is_dir() {
+        return Err("cargo sunrise-mod fetched no SDK".into());
+    }
+    if sdk.exists() {
+        std::fs::remove_dir_all(&sdk).map_err(|e| format!("{}: {e}", sdk.display()))?;
+    }
+    std::fs::rename(&fetched, &sdk).map_err(|e| format!("{}: {e}", sdk.display()))?;
+    Ok(sdk)
 }
 
 /// `target/native-check/<id>/Cargo.toml`: the module's crate, by its sources, on the SDK's API at `api`.
