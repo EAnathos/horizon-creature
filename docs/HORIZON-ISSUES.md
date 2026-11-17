@@ -155,30 +155,11 @@ Moving the pin (all modules at once, docs/ARCHITECTURE.md §6):
 4. Release: bump the modules' versions and submit each module's files as a new version of its registry project
    (https://playhorizon.dev/mods/submit; the registry no longer reads GitHub releases).
 
-## Coming with the new mod system
+## Coming with Sunrise
 
-**Going upstream** (the Modding Team, 2026-11-15): the fork's mod API replaces today's, as one pull request to
-horizon-rust/horizon (prepared as arismoko/horizon#4498, not opened yet: the fork is being brought up to date with
-main first). Until it is merged and a Nightly carries it, players' launchers only build today's layout, so we stay on
-it. What changes for the series once it lands:
-
-- **One `.hmod` per module**, one manifest (`horizon-mod.toml`): the content and the native part together, in a flat
-  package (`assets/`, `data/`, `Cargo.toml`, `src/lib.rs` at the root). `.hnmod`, `horizon-mixin.toml` and
-  `horizon-native.json` are gone. Our `content/` and `native/api/` halves merge; `cargo creature pack/build/install`
-  and `check` follow.
-- **Pins in `[native]`**: `game`, `horizon` (exact commit) and `mixins` (the horizon-mixins commit). The native part
-  builds on the player's computer against that exact game build; reading internal fields stays allowed there.
-- **Engine code** in `[[native.mixin]]` (and `[[native.loop]]`, `[[native.bridge]]`, `[[native.module]]`), injections in
-  top-level `[[inject]]`: the library's creative tab injection (`common/native/jar_tab.rs`) moves there.
-- **Dependencies between mods** in `[dependencies]` (`creature = "^0.1"`), as any other; the library can publish its
-  own hooks and functions for the creature mods (events such as a creature tamed or caught in a jar).
-- **Prebuilt game** (the launcher compiles only the mod) and **`Hooks` split into server and client hosts**: our
-  `&mut dyn Host` hooks and helpers get split by side.
-- **Parts** (`ItemPart`, `BlockPart`, `EntityPart`): behaviour attached to an item, block or entity, like overriding
-  `Item` in Java. Fits the vulture's saddle, the glass jar.
-- **Listing**: each module is one registry project, one file per version, submitted through
-  https://playhorizon.dev/mods/submit (the registry no longer reads GitHub releases); one repository for the whole
-  series is fine, as the `source` link.
-
-Most of our content halves (entity types, items, recipes, loot, spawns, assets) is plain mod API and moves as is; the
-native parts need the host split and the new manifest. Gaps found while porting go to arismoko/horizon as issues.
+Horizon became **Sunrise** ([sunrise-org/sunrise](https://github.com/sunrise-org/sunrise)), and the fork's mod API is
+its API (`sunrise-mod-api`, one `.smod` per mod, `sunrise-mod.toml`, side-split hosts, Parts). Most of the issues above
+have an answer there (seats, size, sounds, shadows, the rider's input, the creative tab, a mob in a screen). What the
+port changes, workaround by workaround, is in [SUNRISE-PORT.md](SUNRISE-PORT.md) §5. New modding issues will go to
+[sunrise-org/sunrise](https://github.com/sunrise-org/sunrise/issues); the old horizon repositories stay as they are
+(no redirect), and this page's links move there as the port goes.

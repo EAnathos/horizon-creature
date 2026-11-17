@@ -35,6 +35,18 @@ depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and 
   capture the game).
 - Never modify Horizon's files in `~/.local/share/horizon-launcher`: read them, write code in this repository.
 
+## Sunrise (the port)
+
+Horizon became Sunrise; the series still builds for Horizon. The port plan and every known change: `docs/SUNRISE-PORT.md`
+(keep it up to date).
+
+- Launcher `~/Téléchargements/sunrise-launcher-linux-x86_64.AppImage`, data `~/.local/share/sunrise` (never modify it).
+- Sources: `../sunrise-src` (sparse checkout of sunrise-org/sunrise: `crates/sunrise-mod-api`, `sunrise-mod-vocab`
+  (hook declarations with their docs), `cargo-sunrise-mod`, `docs/modding/src` (the modding book)).
+- One `.smod` per mod (`sunrise-mod.toml`, `Cargo.toml`, `src/`, `assets/`, `data/<id>/sunrise/`), API crate
+  `sunrise-mod-api` (lib `mod_api`) by path from `.sunrise/sdk/`, tool `cargo sunrise-mod`, build with
+  `sunrise-launcher native-build`.
+
 ## Building and testing
 
 - `cargo creature install [--instance <name>] [mod...]` writes the creative tab, builds each module's `content/`
