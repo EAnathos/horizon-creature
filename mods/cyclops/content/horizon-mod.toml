@@ -1,8 +1,0 @@
-id = "cyclops"
-name = "Cyclops"
-version = "0.1.0"
-description = "A one-eyed giant shepherd at the mouths of caves (in progress). Needs Sunrise Creatures."
-authors = ["EAnathos"]
-api = "0.2"
-side = "both"
-capabilities = ["registries"]

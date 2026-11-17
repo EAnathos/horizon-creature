@@ -1,0 +1,19 @@
+id = "fairies"
+name = "Fairies"
+version = "0.1.0"
+description = "Shy glowing fairies that befriend you and lighten your step. Needs Sunrise Creatures."
+authors = ["EAnathos"]
+api = "0.2"
+side = "both"
+capabilities = ["registries"]
+license = "MIT"
+
+# The whole series is pinned to the same Sunrise build (docs/SUNRISE-PORT.md): `cargo sunrise-mod update` moves it.
+[native]
+game = "26.3"
+sunrise = "2d8126336e579777eabf9b2fd8b3d476236a04f2"
+mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
+
+# The series' library, reached as the `creature` crate (common/SPECS.md).
+[dependencies]
+creature = "^0.1"

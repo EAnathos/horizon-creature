@@ -1,0 +1,8 @@
+[package]
+name = "mod-fireflies"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# The pinned SDK's API crate, fetched into .sunrise/sdk/ by any `cargo sunrise-mod` command.
+sunrise-mod-api = { path = ".sunrise/sdk/api/crates/sunrise-mod-api" }
