@@ -9,3 +9,5 @@ creative = [
   "scorpions:stinger",
   "scorpions:scorpion_dagger",
 ]
+# Its Rust is on Sunrise's mod_api (docs/SUNRISE-PORT.md).
+ported = true

@@ -36,6 +36,9 @@ pub struct Cfg {
     pub settled_area: fn(&dyn Host, u32) -> Vec<[i32; 3]>,
     /// Run when it stops to rest (the worm's dig); `None` for silence.
     pub on_pause: Option<fn(&mut GoalContext<'_>)>,
+    /// Whether creature `entity` is busy with something else this tick (a scorpion rearing up, fighting): it doesn't
+    /// crawl then. `None` for never.
+    pub busy: Option<fn(u32) -> bool>,
 }
 
 /// How often a crawl asks the engine for its path again (ticks): another goal's path, or a block in the way, may have
@@ -94,8 +97,8 @@ impl Goal for Crawl {
     fn flags(&self) -> GoalFlags {
         GoalFlags::MOVE.union(GoalFlags::LOOK).union(GoalFlags::JUMP)
     }
-    fn can_use(&mut self, _: &mut GoalContext<'_>) -> bool {
-        true
+    fn can_use(&mut self, cx: &mut GoalContext<'_>) -> bool {
+        self.cfg.busy.is_none_or(|busy| !busy(cx.mob().entity().id()))
     }
     fn requires_update_every_tick(&self) -> bool {
         true

@@ -118,6 +118,7 @@ const CRAWL_CFG: creature::crawl::Cfg = creature::crawl::Cfg {
     check_every: CHECK_EVERY,
     settled_area: territory::check_garden,
     on_pause: Some(dig),
+    busy: None,
 };
 
 /// At a pause, one time in `DIG_CHANCE` it noses into the earth with a soft rustle.

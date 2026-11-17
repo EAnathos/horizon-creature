@@ -54,11 +54,12 @@ pub fn size(host: &dyn Host, event: &mut EntitySizeEvent<'_>) {
 }
 
 /// From the library's `entity_join_level`: our creature `mob` loses its template's goals, keeping ours (named with
-/// `GOAL_PREFIX`). Goals are not saved, so this runs at every join, a load from disk included.
+/// `GOAL_PREFIX`) and `float` (it swims up in water). Goals are not saved, so this runs at every join, a load from disk
+/// included.
 pub fn clear_template_goals(host: &mut dyn ServerHost, mob: MobRef) {
     for list in [mob.goals(host), mob.target_goals(host)].into_iter().flatten() {
         for goal in list {
-            if !goal.id.starts_with(GOAL_PREFIX) {
+            if !goal.id.starts_with(GOAL_PREFIX) && goal.id != "float" {
                 mob.remove_goal(host, goal.id);
                 mob.remove_target_goal(host, goal.id);
             }

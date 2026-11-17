@@ -98,6 +98,7 @@ pub struct Player {
     pub sneaking: bool,
     pub alive: bool,
     pub spectator: bool,
+    pub creative: bool,
     /// The items in its hands (`minecraft:glow_berries`), none for an empty hand.
     pub main_hand: Option<String>,
     pub off_hand: Option<String>,
@@ -258,6 +259,7 @@ fn nearest_player(host: &dyn ServerHost, body: &Body) -> Option<Player> {
                 sneaking: e.is_crouching(host).unwrap_or(false),
                 alive: host.living(e).and_then(|l: LivingRef| l.alive(host)).unwrap_or(true),
                 spectator: p.is_spectator(host).unwrap_or(false),
+                creative: p.is_creative(host).unwrap_or(false),
                 main_hand: hand(mod_api::Hand::Main),
                 off_hand: hand(mod_api::Hand::Off),
             }

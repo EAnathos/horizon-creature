@@ -2,7 +2,7 @@
 //!
 //! One entity (`scorpions:scorpion`), a copy of the wandering trader (its behaviour is all goals), with three kinds as
 //! morphs (the library's colours, `SCHEME`: desert, badlands, a glowing cave kind), each a texture. It is drawn small
-//! (a fifth of its built size) with its own model (`model_scorpion.rs`, from `assets/models/scorpion.bbmodel`).
+//! (a fifth of its built size) with its own model (`model_scorpion.rs`, from `sources/models/scorpion.bbmodel`).
 //!
 //! - It crawls slowly on the ground (the library's small crawlers, `creature::crawl`), its tail low.
 //! - **Defensive posture** (`posture.rs`): a player or a mob that is not ours coming within `POSTURE` blocks makes it
@@ -13,24 +13,25 @@
 //! - Caught in the library's glass jar; released on sand it settles (the library's sand rule). Its drops (a venom sac,
 //!   a stinger) are a loot table (content).
 //!
-//! Its poison is applied from the mod's `entity_tick_post` (the goals queue a sting, `STINGS`, since a goal can reach a
-//! mob but not a player's effects; `Host::add_effect` needs a player, as the colours' single-player statics).
+//! Its posture and its fight run from the server tick (the library's `body`) and queue their strikes (`strike`), dealt
+//! with their poison by the mod's `entity_tick_post`.
 mod dagger;
 mod fight;
 mod model_scorpion;
 mod posture;
 
 use std::collections::BTreeMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use creature::bestiary::{Fact, Rarity, Species};
 use creature::colours::{Colour, Look, Pattern, Scheme, Variety};
 use creature::jar::Catchable;
 use creature::territory::{self, Rule};
-use horizon_client::mobs::goals::{Float, HurtByTarget};
-use horizon_client::mod_api::{
-    BlockEntityDraw, EmissiveEvent, EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, LivingDeathEvent,
-    MobSubmitEvent, NativeEffect, ParticleOptions, ParticleType, RegisterGoalsEvent, Tag, TooltipEvent, UseItemEvent,
+use mod_api::{
+    ActiveEffect, BlockEntityDrawContext, ClientHost, EmissiveEvent, EntityInteractEvent, EntityPart,
+    EntityRenderState, EntityRenderer, EntityTickPostEvent, Flow, HitHost, Hooks, HostSide, InteractionResult,
+    LivingDeathEvent, LivingIncomingDamageEvent, RegisterEntityRenderersEvent, Registrar, RegistrationContext,
+    ServerHost, SoundSource,
 };
 
 pub const SCORPION: &str = "scorpions:scorpion";
@@ -49,7 +50,11 @@ const TEXTURE: [&str; 3] = [
 const CAVE_GLOW: &str = "scorpions:entity/scorpion/cave_glow";
 
 /// Its box (blocks, SPECS §1) and the scale its model is drawn at (a fifth, about 0.2 block long).
-const SIZE: (f64, f64, f64) = (0.25, 0.15, 0.25);
+const SIZE: creature::mob::Size = creature::mob::Size {
+    width: 0.25,
+    height: 0.15,
+    eye_height: 0.25,
+};
 const SCALE: f32 = 0.2;
 
 /// Where each kind lives (SPECS §2), by biome. The cave kind's "under deserts and badlands, below y 40" is left to
@@ -137,13 +142,9 @@ static IN_JAR: Catchable = Catchable {
     glows: false,
 };
 
-/// Its sounds (`assets/sounds.toml`, to cut with `cargo creature sounds` once the clips are downloaded): a dry hiss as
-/// it threatens, hurt and death. Silent until then; the ids are harmless when no `sounds.json` names them.
+/// Its sounds (`sources/sounds.toml`, to cut with `cargo creature sounds` once the clips are downloaded): a dry hiss as
+/// it threatens; hurt and death are its entity type's. Silent until then.
 const HISS: &str = "scorpions:entity.scorpion.hiss";
-const VOICE: creature::sounds::Voice = creature::sounds::Voice {
-    hurt: "scorpions:entity.scorpion.hurt",
-    death: "scorpions:entity.scorpion.death",
-};
 
 /// Its page (SPECS §4): met as its kinds (morphs), its facts shown as they are learnt.
 static BESTIARY: Species = Species {
@@ -189,13 +190,12 @@ pub const STUNG_FACT: &str = "stung";
 pub const GLOW_FACT: &str = "glow";
 
 /// The bestiary's 3D view: at rest, scaled to about a block, in the morph picked.
-fn book_view(host: &dyn Host, draw: &mut BlockEntityDraw, look: Option<Look>) {
+fn book_view(draw: &mut dyn BlockEntityDrawContext, look: Option<Look>) {
     draw.push();
     draw.translate([0.5, 0.0, 0.5]);
     draw.scale([BOOK_SCALE; 3]);
     let look = look.unwrap_or_default();
     creature::colours::draw(
-        host,
         draw,
         &model_scorpion::SCORPION,
         &SCHEME,
@@ -208,14 +208,10 @@ fn book_view(host: &dyn Host, draw: &mut BlockEntityDraw, look: Option<Look>) {
 const BOOK_SCALE: f32 = 2.4;
 
 /// How a scorpion holds itself for the drawing, by its mood (`MOODS`): reared (tail arched high, claws open) when it
-/// threatens or fights, its tail low otherwise. Single player, as the colours' render statics (arismoko/horizon#2740).
+/// threatens or fights, its tail low otherwise..
 static MOODS: Mutex<BTreeMap<u32, bool>> = Mutex::new(BTreeMap::new());
 /// Mob victims of the dagger's venom: ticks of Poison remaining. The pinned native API can damage any mob but exposes
 /// potion-effect mutation only for players, so we reproduce Poison's health ticks and particles for mob targets.
-static VENOM: Mutex<BTreeMap<u32, u8>> = Mutex::new(BTreeMap::new());
-const VENOM_TICKS: u8 = 60;
-const VENOM_INTERVAL: u8 = 25;
-
 fn set_reared(id: u32, reared: bool) {
     MOODS.lock().unwrap().insert(id, reared);
 }
@@ -243,240 +239,197 @@ fn pose(part: &str, reared: bool) -> [f32; 3] {
     [0.0; 3]
 }
 
-/// A sting's poison to apply (`STINGS`): the stinging scorpion's kind. A goal reaches a mob but not a player's effects
-/// (`Host::add_effect` needs a player), so the goal queues the kind and `entity_tick_post` poisons the player stung.
-/// Single player, as the colours' render statics (arismoko/horizon#2740): the poison lands on the one player.
-pub(crate) static STINGS: Mutex<Vec<usize>> = Mutex::new(Vec::new());
+/// A strike its behaviours made (`posture`, `fight`): (scorpion, target, the kind whose poison a sting gives).
+static STRIKES: Mutex<Vec<(u32, u32, Option<usize>)>> = Mutex::new(Vec::new());
 
-pub(crate) fn queue_sting(kind: usize) {
-    STINGS.lock().unwrap().push(kind);
+/// Damage of a pinch or a sting (half a heart more than a fist).
+const STRIKE_DAMAGE: f32 = 1.5;
+
+/// From a behaviour: `scorpion` strikes `target`, with a sting of its kind's poison when `sting` says so.
+pub(crate) fn strike(scorpion: u32, target: u32, sting: Option<usize>) {
+    STRIKES.lock().unwrap().push((scorpion, target, sting));
 }
 
-/// From `entity_tick_post`: the poison of each queued sting, on the player. Desert and badlands poison 5 s; the cave
-/// kind poisons 8 s and dazes (Nausea) 4 s (SPECS §2).
-fn apply_stings(host: &mut dyn Host) {
-    let stings: Vec<usize> = std::mem::take(&mut *STINGS.lock().unwrap());
-    for kind in stings {
-        let (poison, nausea) = if kind == CAVE { (160, 80) } else { (100, 0) };
-        for player in host.server_players() {
-            host.add_effect(player.uuid, &poison_effect("minecraft:poison", poison));
+/// From `entity_tick_post`: the strikes `scorpion` made, dealt. A sting poisons: desert and badlands 5 s; the cave
+/// kind 8 s and dazes (Nausea) 4 s (SPECS §2).
+fn apply_strikes(host: &mut dyn ServerHost, scorpion: u32) {
+    let mine: Vec<(u32, u32, Option<usize>)> = {
+        let mut all = STRIKES.lock().unwrap();
+        let (mine, rest) = all.drain(..).partition(|s| s.0 == scorpion);
+        *all = rest;
+        mine
+    };
+    for (_, target, sting) in mine {
+        let (Some(me), Some(t)) = (host.entity(scorpion), host.entity(target)) else {
+            continue;
+        };
+        if let Some(l) = host.living(me) {
+            l.swing(host, mod_api::Hand::Main, true);
+        }
+        t.hurt(host, "minecraft:mob_attack", STRIKE_DAMAGE, Some(me), Some(me));
+        if let Some(kind) = sting {
+            let (poison_ticks, nausea) = if kind == CAVE { (160, 80) } else { (100, 0) };
+            poison(host, target, "minecraft:poison", poison_ticks);
             if nausea > 0 {
-                host.add_effect(player.uuid, &poison_effect("minecraft:nausea", nausea));
+                poison(host, target, "minecraft:nausea", nausea);
             }
         }
     }
 }
 
-/// A mob poisoned by the dagger: `VENOM_TICKS` of venom from now (`venom_tick`).
-pub(crate) fn envenom(entity: u32) {
-    VENOM.lock().unwrap().insert(entity, VENOM_TICKS);
-}
-
-pub(crate) fn poison_effect(id: &str, duration: i32) -> NativeEffect {
-    NativeEffect {
-        id: id.into(),
-        amplifier: 0,
-        duration,
-        ambient: false,
-        particles: true,
-    }
-}
-
-/// The pinned API has no mob-effect setter. Keep a short poison timer for dagger-hit mobs, inflict Poison's periodic
-/// one-health damage without killing them (with the hurt flash and sound), and show Poison's swirls. Vanilla Potion effects remain used for
-/// player victims through `Host::add_effect` where that hook is available.
-fn venom_tick(host: &mut dyn Host, event: &EntityTickPostEvent<'_>) {
-    let (remaining, damage) = {
-        let mut venom = VENOM.lock().unwrap();
-        let Some(left) = venom.get_mut(&event.entity) else {
-            return;
-        };
-        *left = left.saturating_sub(1);
-        let remaining = *left;
-        let damage = remaining > 0 && remaining % VENOM_INTERVAL == 0;
-        if remaining == 0 {
-            venom.remove(&event.entity);
-        }
-        (remaining, damage)
+/// Gives `target` (a mob or a player) effect `id` for `duration` ticks.
+pub(crate) fn poison(host: &mut dyn ServerHost, target: u32, id: &str, duration: i32) {
+    let (Some(effect), Some(living)) = (host.effect_key(id), host.entity(target).and_then(|e| host.living(e))) else {
+        return;
     };
+    living.add_effect(host, &ActiveEffect::new(effect, duration, 0, false, true, true));
+}
 
-    if damage
-        && let Some(entity) = host.entity(event.entity)
-        && let Some(nbt) = host.entity_nbt(entity)
-        && let Some(Tag::Float(bits)) = nbt.get(&"Health".into())
-    {
-        // As Poison: one health, with the hurt flash and sound (magic damage), never below one.
-        if f32::from_bits(*bits) > 1.0 {
-            host.hurt_entity(event.dimension, event.entity, 1.0, "minecraft:magic", None);
-        }
-    }
+/// Its goals: crawling about, unless it rears up or fights (its `body` behaviours, `busy`).
+struct Goals;
 
-    if remaining > 0
-        && remaining % 4 == 0
-        && let Some(entity) = host.entity(event.entity)
-        && let (Some(at), Some(level)) = (host.entity_position(entity), host.entity_level(entity))
-    {
-        // Vanilla's poison swirls, in Poison's colour.
-        let mut swirl = ParticleOptions::simple(ParticleType::EntityEffect);
-        swirl.color = [0.53, 0.64, 0.39, 1.0];
-        level.send_particles(host, &swirl, None, [at[0], at[1] + 0.5, at[2]], [0.3, 0.4, 0.3], 0.0, 2);
+#[mod_api::sunrise_part]
+impl EntityPart for Goals {
+    fn register_goals(&self, goals: &mut mod_api::GoalRegistrar<'_>) {
+        goals.add_goal(3, creature::crawl::Crawl::new(&CRAWL_CFG));
     }
 }
 
-pub fn hooks() -> Box<dyn Hooks> {
-    creature::hand::server_used(dagger::DAGGER);
-    creature::jar::register(&IN_JAR);
-    creature::bestiary::register(&BESTIARY);
-    Box::new(Scorpions)
+/// Whether a scorpion rears up or fights now (its crawl waits).
+fn busy(id: u32) -> bool {
+    reared(id) || fight::target(id).is_some()
 }
 
+/// Its own model in its kind's look, reared or not.
+struct Draw;
+
+impl EntityRenderer for Draw {
+    fn submit(&self, entity: &EntityRenderState, draw: &mut dyn BlockEntityDrawContext) -> Result<(), String> {
+        let mob = entity.living.as_ref();
+        let look = creature::colours::look(entity.id).unwrap_or_default();
+        let reared = reared(entity.id);
+        draw.push();
+        creature::model::living_pose(draw, mob);
+        draw.scale([SCALE; 3]);
+        let pose = |part: &str| pose(part, reared);
+        let tint = creature::model::tint(mob);
+        creature::colours::draw(draw, &model_scorpion::SCORPION, &SCHEME, look, &pose, tint);
+        draw.pop();
+        Ok(())
+    }
+}
+
+#[derive(Default)]
 struct Scorpions;
 
+#[mod_api::sunrise_mod]
 impl Hooks for Scorpions {
-    /// A dagger hit starts three seconds of venom on a mob. The native damage hook is reached only for successful,
-    /// non-invulnerable player melee hits and includes the weapon snapshot.
-    fn living_incoming_damage_v2(
-        &self,
-        host: &mut dyn Host,
-        event: &mut horizon_client::mod_api::LivingIncomingDamageV2Event<'_>,
-    ) -> Flow {
-        if event.damage_type == "minecraft:player_attack"
-            && event
-                .weapon
-                .as_ref()
-                .is_some_and(|weapon| weapon.item.as_ref() == dagger::DAGGER)
-            && let Ok(entity) = u32::try_from(event.entity)
+    fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
+        creature::mob::ours(SCORPION, SIZE);
+        creature::projectile::register(dagger::THROWN, dagger::SIZE);
+        r.entity_part(SCORPION, Goals);
+        let dagger = r.item_key(dagger::DAGGER);
+        let _ = dagger::KEY.set(dagger);
+        r.item_part(dagger, dagger::Dagger);
+        creature::jar::register(&IN_JAR);
+        creature::bestiary::register(&BESTIARY);
+    }
+
+    fn register_entity_renderers(&self, _: &RegistrationContext, event: &mut RegisterEntityRenderersEvent<'_>) {
+        event.renderers.register(SCORPION.into(), Arc::new(Draw));
+        event.renderers.register(dagger::THROWN.into(), Arc::new(dagger::Draw));
+    }
+
+    /// Whoever hits a scorpion is fought back; a melee hit with an item is noted, for the dagger's poison.
+    fn living_incoming_damage(&self, _: &mut dyn HitHost, event: &mut LivingIncomingDamageEvent<'_>) -> Flow {
+        let Ok(entity) = u32::try_from(event.entity) else {
+            return Flow::Continue;
+        };
+        if event.kind == SCORPION
+            && let Ok(by) = u32::try_from(event.source.causing)
         {
-            dagger::poison(host, entity);
+            fight::provoke(entity, by);
+        }
+        if event.source.damage_type == "minecraft:player_attack"
+            && let Some(weapon) = event.weapon
+        {
+            DAGGER_HITS.lock().unwrap().push((entity, weapon.clone()));
         }
         Flow::Continue
     }
-    /// Its row in Options > Mods, which switches it off and on at once (`creature::list_mod`).
-    fn mods(&self, _: &mut dyn Host, event: &mut horizon_client::mod_api::ModsEvent<'_>) {
-        creature::list_mod(
-            event,
-            "scorpions",
-            concat!("Scorpions ", env!("CARGO_PKG_VERSION")),
-            "Real-size scorpions of deserts, badlands and caves. Needs Sunrise Creatures.",
-        );
+
+    /// Right-click: nothing (no trading screen, which its template would open), on both sides.
+    fn entity_interact(&self, _: HostSide, event: &mut EntityInteractEvent<'_>) -> Option<InteractionResult> {
+        (event.kind == SCORPION || event.kind == dagger::THROWN).then_some(InteractionResult::Consume)
     }
 
-    /// Right-click with the dagger: thrown (`dagger.rs`).
-    fn use_item(&self, host: &mut dyn Host, event: &mut UseItemEvent<'_>) -> Flow {
-        if dagger::throw(host, event.stack) {
-            Flow::Cancel
-        } else {
-            Flow::Continue
-        }
-    }
-
-    /// The dagger's Poisonous line.
-    fn tooltip(&self, _: &dyn Host, event: &mut TooltipEvent<'_>) {
-        dagger::tooltip(event);
-    }
-
-    fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
-        if event.mob.kind.id == dagger::THROWN {
-            creature::projectile::register(event.mob, dagger::SIZE);
-            return;
-        }
-        if event.mob.kind.id != SCORPION {
-            return;
-        }
-        creature::mob::ours(event.mob, SIZE.0, SIZE.1, SIZE.2);
-        event.mob.ai.goals.add(0, Float);
-        event.mob.ai.goals.add(1, fight::Fight::default());
-        event.mob.ai.goals.add(2, posture::Posture::default());
-        event.mob.ai.goals.add(3, creature::crawl::Crawl::new(&CRAWL_CFG));
-        // It fights back whoever hits it (SPECS §3): the vanilla "hurt by" target goal sets its target.
-        event.mob.ai.targets.add(1, HurtByTarget::new());
-    }
-
-    /// Right-click: nothing (no trading screen, which its template would open).
-    fn interact_entity(&self, _: &mut dyn Host, event: &mut InteractEntityEvent<'_>) -> Flow {
-        if event.kind == SCORPION || event.kind == dagger::THROWN {
-            Flow::Cancel
-        } else {
-            Flow::Continue
-        }
-    }
-
-    fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
-        venom_tick(host, event);
+    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
+        poison_dagger_hits(host);
         if event.kind == dagger::THROWN {
-            dagger::tick(host, event.dimension, event.entity);
+            dagger::tick(host, event.entity);
             return;
         }
         if event.kind != SCORPION {
             return;
         }
-        creature::colours::tick(host, event.entity, &SCHEME);
-        creature::sounds::tick_post(host, event, &VOICE, creature::sounds::NEUTRAL);
-        territory::tick(host, event.entity);
-        apply_stings(host);
-        if creature::mob::despawn_far(host, event.dimension, event.entity, territory::settled(event.entity)) {
-            forget(event.entity);
+        let id = event.entity;
+        creature::body::tick(host, id, || {
+            vec![Box::new(fight::Fight::default()), Box::new(posture::Posture::default())]
+        });
+        apply_strikes(host, id);
+        creature::colours::tick(host, id, &SCHEME);
+        creature::sounds::play_queued(host, id, SoundSource::Hostile);
+        territory::tick(host, id);
+        if creature::mob::despawn_far(host, event.dimension, id, territory::settled(id)) {
+            forget(id);
         }
     }
 
-    fn living_death(&self, _: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
-        VENOM.lock().unwrap().remove(&event.entity);
-        match creature::mob::kind(event.kind) {
-            SCORPION => forget(event.entity),
-            dagger::THROWN => dagger::forget(event.entity),
-            _ => {}
+    fn living_death(&self, _: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {
+        if event.kind == SCORPION {
+            forget(event.entity);
+        } else if event.kind == dagger::THROWN {
+            dagger::forget(event.entity);
         }
         Flow::Continue
     }
 
     /// The cave kind's full-bright glow: the glow texture laid over the cave one (only cave scorpions draw it).
-    fn emissive(&self, _: &dyn Host, event: &mut EmissiveEvent<'_>) {
+    fn emissive(&self, _: &dyn ClientHost, event: &mut EmissiveEvent<'_>) {
         event.layers.push((TEXTURE[CAVE], CAVE_GLOW));
     }
+}
 
-    fn mob_submit(&self, host: &dyn Host, event: &mut MobSubmitEvent<'_>) -> Flow {
-        let mob = event.mob;
-        if mob.kind == dagger::THROWN {
-            dagger::submit(host, event);
-            return Flow::Cancel;
+/// Melee hits with an item, noted by the damage hook (which can't give effects): the dagger's poison their target.
+static DAGGER_HITS: Mutex<Vec<(u32, mod_api::ItemStack)>> = Mutex::new(Vec::new());
+
+fn poison_dagger_hits(host: &mut dyn ServerHost) {
+    let hits: Vec<(u32, mod_api::ItemStack)> = std::mem::take(&mut *DAGGER_HITS.lock().unwrap());
+    for (entity, weapon) in hits {
+        if creature::hand::is(&*host, &weapon, dagger::DAGGER) {
+            dagger::poison(host, entity);
         }
-        if mob.kind != SCORPION {
-            return Flow::Continue;
-        }
-        let look = creature::colours::look(mob.id).unwrap_or_default();
-        let reared = reared(mob.id);
-        event.draw.push();
-        creature::model::death_tilt(&mut *event.draw, mob);
-        event.draw.scale([SCALE; 3]);
-        creature::colours::draw(
-            host,
-            &mut *event.draw,
-            &model_scorpion::SCORPION,
-            &SCHEME,
-            look,
-            &|part| pose(part, reared),
-            creature::model::tint(mob),
-        );
-        event.draw.pop();
-        Flow::Cancel
     }
 }
 
 /// Crawling about (the library's small crawlers): a few blocks around where it first crawled, or over its sandy patch
-/// when settled (the sand rule), its tail low.
+/// when settled (the sand rule), its tail low; not while it rears up or fights.
 const CRAWL_CFG: creature::crawl::Cfg = creature::crawl::Cfg {
-    speed: 0.012,
+    speed: 1.0,
     crawl: (40, 140),
     pause: (60, 220),
     wander: 2.5,
     check_every: 100,
     settled_area: territory::check_sand,
     on_pause: None,
+    busy: Some(busy),
 };
 
 /// Forget a gone scorpion in every static that holds it.
 fn forget(entity: u32) {
     territory::forget(entity);
+    creature::body::forget(entity);
+    fight::forget(entity);
     MOODS.lock().unwrap().remove(&entity);
 }
 
@@ -494,8 +447,7 @@ mod tests {
     }
 
     #[test]
-    fn the_cave_kind_poisons_longer_and_dazes() {
-        // Stings queued for a cave and a desert scorpion; the mood pose arches the tail when reared.
+    fn a_reared_scorpion_arches_its_tail_and_opens_its_claws() {
         assert!(pose("telson", true)[0] > pose("telson", false)[0]);
         assert_ne!(pose("claw_left_finger", true), [0.0; 3]);
         assert_eq!(pose("claw_left_finger", false), [0.0; 3]);

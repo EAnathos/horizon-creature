@@ -3,5 +3,12 @@
   "attributes": {
     "minecraft:max_health": 4.0,
     "minecraft:movement_speed": 0.2
-  }
+  },
+  "sounds": {
+    "hurt": "scorpions:entity.scorpion.hurt",
+    "death": "scorpions:entity.scorpion.death",
+    "ambient": "none",
+    "step": "none"
+  },
+  "shadow_radius": 0.2
 }

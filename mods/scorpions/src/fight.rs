@@ -1,88 +1,105 @@
-//! It fights back (SPECS §3): once the vanilla "hurt by" target goal sets its target (whoever hit it), the scorpion
-//! runs at them and strikes about once a second, a pinch or, one strike in two, a poisoned sting. It lets a target go
-//! out of `GIVE_UP` blocks, dead, or a creative player.
-use horizon_client::mobs::goals;
-use horizon_client::mobs::{Who, ai::do_hurt_target};
-use horizon_client::mod_api::{Cx, Goal, Mob, RandomSource};
+//! It fights back (SPECS §3): once something hits it (the mod's `living_incoming_damage` notes who: `provoke`), the
+//! scorpion runs at them and strikes about once a second, a pinch or, one strike in two, a poisoned sting. It lets a
+//! target go out of `GIVE_UP` blocks, dead, or a creative player.
+use std::collections::BTreeMap;
+use std::sync::Mutex;
 
-use crate::{kind, queue_sting, set_reared};
+use creature::body::{Behaviour, Body, World};
 
-/// Within this it can strike (blocks); it chases up to `GIVE_UP`, striking every `EVERY` ticks, at `CHASE_SPEED`.
+use crate::{kind, set_reared, strike};
+
+/// Within this it can strike (blocks); it chases up to `GIVE_UP`, striking every `EVERY` ticks, at `CHASE_SPEED`
+/// (blocks a tick).
 const REACH: f64 = 1.1;
 const GIVE_UP: f64 = 12.0;
 const EVERY: i32 = 20;
-const CHASE_SPEED: f64 = 1.2;
+const CHASE_SPEED: f64 = 0.1;
 
-/// The snap of its claws on a strike (`assets/sounds.toml`).
+/// The snap of its claws on a strike (`sources/sounds.toml`).
 const STRIKE: &str = "scorpions:entity.scorpion.strike";
 
-#[derive(Clone, Debug, Default)]
+/// Each scorpion's target: who hit it last (an entity id).
+static TARGETS: Mutex<BTreeMap<u32, u32>> = Mutex::new(BTreeMap::new());
+
+/// From the mod's damage hook: `scorpion` was hit by `by`.
+pub(crate) fn provoke(scorpion: u32, by: u32) {
+    TARGETS.lock().unwrap().insert(scorpion, by);
+}
+
+/// Whom `scorpion` fights, if anyone.
+pub(crate) fn target(scorpion: u32) -> Option<u32> {
+    TARGETS.lock().unwrap().get(&scorpion).copied()
+}
+
+pub(crate) fn forget(scorpion: u32) {
+    TARGETS.lock().unwrap().remove(&scorpion);
+}
+
+#[derive(Debug, Default)]
 pub(crate) struct Fight {
     cooldown: i32,
     strikes: u32,
-    repath: i32,
 }
 
-impl Goal for Fight {
-    fn flags(&self) -> u8 {
-        goals::MOVE | goals::LOOK
-    }
-    fn can_use(&mut self, m: &mut Mob, cx: &mut Cx) -> bool {
-        m.target_info(cx.w).is_some_and(|t| t.alive && !t.creative)
-    }
-    fn can_continue(&mut self, m: &mut Mob, cx: &mut Cx) -> bool {
-        let Some(t) = m.target_info(cx.w) else {
-            set_reared(m.id, false);
+/// The target's position, if it is still one to fight (alive, not creative, near enough).
+fn chased(m: &Body, cx: &World<'_>, target: u32) -> Option<[f64; 3]> {
+    let host = cx.host();
+    let e = host.entity(target)?;
+    let at = e.position(host)?;
+    let alive = host.living(e).and_then(|l| l.alive(host)).unwrap_or(false);
+    // The nearest player is the one a behaviour knows: a creative one isn't fought.
+    let creative = cx.player.as_ref().is_some_and(|p| p.entity_id == target && p.creative);
+    let far = (at[0] - m.position.x).hypot(at[2] - m.position.z) > GIVE_UP;
+    (alive && !creative && !far && e.level(host) == Some(cx.ground.level)).then_some(at)
+}
+
+impl Behaviour for Fight {
+    fn can_use(&mut self, m: &mut Body, cx: &World<'_>) -> bool {
+        let Some(t) = target(m.id) else {
             return false;
         };
-        let far = (t.position.x - m.position.x).hypot(t.position.z - m.position.z) > GIVE_UP;
-        if far || !t.alive || t.creative {
-            m.ai.target = None;
+        if chased(m, cx, t).is_none() {
+            forget(m.id);
             set_reared(m.id, false);
             return false;
         }
         true
     }
-    fn every_tick(&self) -> bool {
-        true
-    }
-    fn start(&mut self, m: &mut Mob, _: &mut Cx) {
-        set_reared(m.id, true);
-    }
-    fn stop(&mut self, m: &mut Mob, _: &mut Cx) {
+    fn stop(&mut self, m: &mut Body, _: &World<'_>) {
         set_reared(m.id, false);
-        m.ai.nav.stop();
+        m.velocity.x = 0.0;
+        m.velocity.z = 0.0;
     }
-    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
-        let Some(who) = m.ai.target else {
+    fn tick(&mut self, m: &mut Body, cx: &World<'_>) {
+        let Some(who) = target(m.id) else {
             return;
         };
-        let Some(t) = cx.w.target_info(who) else {
+        let Some(t) = chased(m, cx, who) else {
             return;
         };
         set_reared(m.id, true);
-        m.ai.look.set_look_at([t.position.x, t.eye_y, t.position.z], 30.0, 30.0);
-        let reach = (t.position.x - m.position.x).hypot(t.position.z - m.position.z);
+        let (dx, dz) = (t[0] - m.position.x, t[2] - m.position.z);
+        let reach = dx.hypot(dz);
+        let yaw = (-dx).atan2(dz).to_degrees() as f32;
+        m.yaw = yaw;
+        m.body_yaw = yaw;
+        m.head_yaw = yaw;
         self.cooldown -= 1;
-        if reach < REACH && self.cooldown <= 0 {
-            m.swing();
-            do_hurt_target(m, who, cx);
-            self.strikes += 1;
-            // One strike in two is a sting: its kind's poison, on the player (a mob takes the strike's damage only).
-            if self.strikes.is_multiple_of(2) && who == Who::Player {
-                queue_sting(kind(m.id));
+        if reach < REACH {
+            m.velocity.x = 0.0;
+            m.velocity.z = 0.0;
+            if self.cooldown <= 0 {
+                self.strikes += 1;
+                // One strike in two is a sting: its kind's poison.
+                let sting = self.strikes.is_multiple_of(2).then(|| kind(m.id));
+                strike(m.id, who, sting);
+                let pitch = 0.9 + m.random.next_float() * 0.2;
+                creature::sounds::queue(m.id, STRIKE, 0.8, pitch);
+                self.cooldown = EVERY;
             }
-            creature::sounds::queue(m.id, STRIKE, 0.8, 0.9 + m.random.next_float() * 0.2);
-            self.cooldown = EVERY;
             return;
         }
-        self.repath -= 1;
-        if self.repath <= 0 {
-            m.nav_move_to(cx.w, [t.position.x, t.position.y, t.position.z], CHASE_SPEED);
-            self.repath = 10;
-        }
-    }
-    fn box_clone(&self) -> Box<dyn Goal> {
-        Box::new(self.clone())
+        m.velocity.x = dx / reach * CHASE_SPEED;
+        m.velocity.z = dz / reach * CHASE_SPEED;
     }
 }
