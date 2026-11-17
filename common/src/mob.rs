@@ -33,6 +33,11 @@ pub fn ours(kind: &'static str, size: Size) {
     OURS.lock().unwrap().insert(kind, size);
 }
 
+/// The box of one of the series' creatures.
+pub fn size_of(kind: &str) -> Option<Size> {
+    OURS.lock().unwrap().get(kind).copied()
+}
+
 /// Whether `kind` is one of the series' creatures.
 pub fn is_ours(kind: &str) -> bool {
     OURS.lock().unwrap().contains_key(kind)

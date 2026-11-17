@@ -16,14 +16,22 @@ pub fn multiply(a: u32, b: u32) -> u32 {
 }
 
 /// The tint for a mob this frame: red while hurt or dying, as vanilla's `LivingEntityRenderState.hasRedOverlay`.
-pub fn tint(mob: &LivingRenderState) -> u32 {
-    if mob.has_red_overlay { HURT } else { WHITE }
+pub fn tint(mob: Option<&LivingRenderState>) -> u32 {
+    if mob.is_some_and(|m| m.has_red_overlay) {
+        HURT
+    } else {
+        WHITE
+    }
 }
 
 /// Turns the pose the way a living mob faces and scales it by its `minecraft:scale`, as vanilla's
 /// `LivingEntityRenderer.setupRotations` does before the model: Sunrise hands a mod's renderer the pose at the mob's
 /// feet, not turned. Then a dying mob tips over onto its side in its first second. Call before drawing it.
-pub fn living_pose(draw: &mut dyn BlockEntityDrawContext, mob: &LivingRenderState) {
+/// A mob drawn without its living state (in a screen, where Sunrise may give none) faces the viewer.
+pub fn living_pose(draw: &mut dyn BlockEntityDrawContext, mob: Option<&LivingRenderState>) {
+    let Some(mob) = mob else {
+        return;
+    };
     draw.rotate_about([0.0, 1.0, 0.0], 180.0 - mob.body_rot, [0.0, 0.0, 0.0]);
     if mob.death_time > 0.0 {
         let f = ((mob.death_time - 1.0) / 20.0 * 1.6).max(0.0).sqrt().min(1.0);

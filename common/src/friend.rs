@@ -2,13 +2,13 @@
 //! told. Users: the fairies, the vulture.
 //!
 //! The friend is saved on the entity (`creature:friend`: the player's UUID and whether it stays). The mod's goals read
-//! it through a static map (`of`), filled by `tick` from the mod's `entity_tick_post` (single player, as the territory;
-//! arismoko/horizon#2740); a change (`befriend`, `set_staying`) is saved by the next `tick`. A glass jar keeps the friend
+//! it through a static map (`of`), filled by `tick` from the mod's `entity_tick_post` (single player, as the
+//! territory); a change (`befriend`, `set_staying`) is saved by the next `tick`. A glass jar keeps the friend
 //! of the creature it holds (`jar`).
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use horizon_client::mod_api::{AttachmentCodec, AttachmentError, AttachmentType, Compound, Holder, Host, Tag};
+use mod_api::{AttachmentCodec, AttachmentError, AttachmentType, Compound, Holder, Registrar, ServerHost, Tag};
 
 /// Whom a creature is the friend of, and whether it stays where it is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -50,6 +50,11 @@ static FRIEND: AttachmentType<Option<Friend>> = AttachmentType {
     sync: false,
 };
 
+/// From the library's `register`: the friend attachment is declared.
+pub fn declare(r: &mut dyn Registrar) {
+    let _ = r.register_attachment_type("creature:friend", false);
+}
+
 fn encode(friend: &Option<Friend>) -> Result<Compound, AttachmentError> {
     let mut c = Compound::new();
     if let Some(f) = friend {
@@ -79,7 +84,7 @@ struct Known {
 static FRIENDS: Mutex<BTreeMap<u32, Known>> = Mutex::new(BTreeMap::new());
 
 /// `entity` becomes the friend of `player` (following them), saved at once.
-pub fn befriend(host: &mut dyn Host, entity: u32, player: u128) {
+pub fn befriend(host: &mut dyn ServerHost, entity: u32, player: u128) {
     let friend = Some(Friend {
         uuid: ints(player),
         staying: false,
@@ -109,7 +114,7 @@ pub fn set_staying(entity: u32, staying: bool) {
 }
 
 /// From the mod's `entity_tick_post`: its saved friend the first time, a change saved.
-pub fn tick(host: &mut dyn Host, entity: u32) {
+pub fn tick(host: &mut dyn ServerHost, entity: u32) {
     let known = FRIENDS.lock().unwrap().get(&entity).copied();
     match known {
         None => {

@@ -1,79 +1,46 @@
-//! The item in the acting player's hand, for items whose use only the server's hooks handle: the glass jar, the guide,
-//! the mods' throwables (butterfly dust, confetti).
-use std::sync::Mutex;
+//! The items in a player's hands, for items whose use the server's hooks handle: the glass jar, the guide, the mods'
+//! throwables (butterfly dust, confetti).
+use mod_api::{Hand, Host, ItemStack, LevelRef, PlayerRef, ServerHost};
 
-use horizon_client::items::ItemStack;
-use horizon_client::mod_api::{Compound, Host, Tag};
-
-/// The items the server's hooks use (`server_used`).
-static SERVER_USED: Mutex<Vec<&'static str>> = Mutex::new(Vec::new());
-
-/// From a module's `hooks()`: right-clicking `item` acts through the server's hooks. With it in the main hand, the
-/// off hand's turn is then skipped (`holds_server_used`, from the library's `interaction_key`): the client can't tell
-/// that the use acted and would go on to the off hand and place its torch (shown, then undone by the server, and the
-/// torch spent); vanilla stops at the hand that acted.
-pub fn server_used(item: &'static str) {
-    let mut used = SERVER_USED.lock().unwrap();
-    if !used.contains(&item) {
-        used.push(item);
-    }
+/// The item id of `stack` (`creature:glass_jar`).
+pub fn id(host: &dyn Host, stack: &ItemStack) -> String {
+    stack.item().id(host)
 }
 
-/// Whether the main hand holds an item `server_used` registered.
-pub fn holds_server_used(host: &dyn Host) -> bool {
-    host.held()
-        .is_some_and(|(item, _, _)| SERVER_USED.lock().unwrap().iter().any(|i| *i == item))
+/// Whether `stack` is the item `item`.
+pub fn is(host: &dyn Host, stack: &ItemStack, item: &str) -> bool {
+    id(host, stack) == item
 }
 
-/// Uses up one of `stack` from the acting player's hand (not in creative), from a `use_item` hook.
-pub fn use_one(host: &mut dyn Host, stack: &ItemStack) {
-    let Some(player) = host.acting_player() else {
-        return;
-    };
-    if player.game_mode == 1 {
+/// What `player` holds in `hand`.
+pub fn held(host: &dyn Host, player: PlayerRef, hand: Hand) -> Option<ItemStack> {
+    host.living(player.entity())?.hand_item(host, hand)
+}
+
+/// Puts `stack` (or nothing) in `player`'s `hand`.
+pub fn set_held(host: &mut dyn ServerHost, player: PlayerRef, hand: Hand, stack: Option<ItemStack>) -> bool {
+    host.living(player.entity())
+        .is_some_and(|l| l.set_hand_item(host, hand, stack).unwrap_or(false))
+}
+
+/// Uses up one of what `player` holds in `hand` (not in creative), from a use hook.
+pub fn use_one(host: &mut dyn ServerHost, player: PlayerRef, hand: Hand) {
+    if player.has_infinite_materials(host).unwrap_or(false) {
         return;
     }
-    if let Some(s) = slot_of(host, stack).and_then(|slot| host.carried_stack(slot)) {
-        s.count = s.count.saturating_sub(1);
+    if let Some(stack) = held(host, player, hand) {
+        set_held(host, player, hand, stack.shrink(1));
     }
 }
 
-/// The acting player's slot holding `stack` (the hotbar and inventory, then the off hand).
-pub fn slot_of(host: &mut dyn Host, stack: &ItemStack) -> Option<i32> {
-    // The selected hotbar slot, when it holds this stack: Horizon doesn't say which slot is selected, but `held` reads
-    // it, so each hotbar slot holding the same stack is marked a moment (its count changed, then put back) to see which
-    // one `held` sees. Without that, a jar in another slot looking the same was filled in place of the held one.
-    for s in 0..9 {
-        let Some(count) = host.carried_stack(s).filter(|c| **c == *stack).map(|c| c.count) else {
-            continue;
-        };
-        if let Some(c) = host.carried_stack(s) {
-            c.count = count + MARK;
-        }
-        let selected = host.held().is_some_and(|(_, n, _)| n == count + MARK);
-        if let Some(c) = host.carried_stack(s) {
-            c.count = count;
-        }
-        if selected {
-            return Some(s);
-        }
+/// Gives `stack` to `player`, or drops it at their feet when their inventory is full.
+pub fn give(host: &mut dyn ServerHost, player: PlayerRef, stack: ItemStack) {
+    if player.give_stack(host, stack.clone()).is_err() {
+        let _ = player.drop_stack(host, stack, false);
     }
-    (0..36)
-        .chain([-106])
-        .find(|&s| host.carried_stack(s).is_some_and(|c| *c == *stack))
 }
-
-/// A count no stack has, to tell the selected slot (`slot_of`).
-const MARK: u32 = 1000;
 
 /// Drops `stack` as an item on the ground at `at`, with its components (a jar's creature, a dagger's wear).
-pub fn drop_stack(host: &mut dyn Host, dimension: &str, at: [f64; 3], stack: &ItemStack) {
-    let mut item = Compound::new();
-    item.insert("id".into(), Tag::String((&*stack.item).into()));
-    item.insert("count".into(), Tag::Int(stack.count as i32));
-    if let Some(components) = horizon_client::item_data::encode_components(stack) {
-        item.insert("components".into(), components);
-    }
-    let nbt: Compound = [("Item".into(), Tag::Compound(item))].into();
-    host.summon(dimension, "minecraft:item", at, nbt);
+pub fn drop_stack(host: &mut dyn ServerHost, level: LevelRef, at: [f64; 3], stack: ItemStack) {
+    let _ = level.spawn_item(host, at[0], at[1], at[2], stack, 10);
 }

@@ -7,12 +7,10 @@ const COMMAND: &str = "bestiary";
 const COMMAND_LEVEL: u8 = 2;
 
 /// From the library's `register_commands`.
-pub fn commands(commands: &mut Vec<NativeCommand>) {
-    commands.push(NativeCommand::op(
-        &format!("{COMMAND} unlock <species:text?>"),
-        COMMAND_LEVEL,
-    ));
-    commands.push(NativeCommand::op(&format!("{COMMAND} reset"), COMMAND_LEVEL));
+pub fn commands(commands: &mut Vec<Command>) {
+    commands.push(Command::op(COMMAND, COMMAND_LEVEL));
+    commands.push(Command::op(&format!("{COMMAND} unlock <species:text>"), COMMAND_LEVEL));
+    commands.push(Command::op(&format!("{COMMAND} reset"), COMMAND_LEVEL));
 }
 
 /// Every look `scheme` can roll, by key: the colours, patterns and pattern colours some variety gives a weight; a
@@ -52,7 +50,7 @@ fn every_morph(scheme: &Scheme) -> Vec<String> {
 
 /// Writes down everything about `species` for `player`: every biome it spawns in (not a whole dimension's, which has
 /// no list), every fact and every look.
-fn unlock(host: &mut dyn Host, player: u128, species: &Species) {
+fn unlock(host: &mut dyn ServerHost, player: u128, species: &Species) {
     let morphs = species.scheme.map(every_morph).unwrap_or_default();
     update(host, player, species.id, |e| {
         for b in species.biomes.iter().filter(|b| !b.starts_with('@')) {
@@ -89,33 +87,39 @@ fn named(name: &str) -> Option<&'static Species> {
     }
 }
 
-fn answer(host: &mut dyn Host, key: &str, args: &[Text]) {
-    host.feedback(Text::translate(key, args));
+fn answer(host: &mut dyn ServerHost, key: &str, args: Vec<Text>) {
+    let _ = host.commands().feedback(Text::translate(key, args));
 }
 
-/// From the library's `perform_command`: the operators' `/bestiary`, for the player who runs it. Whether it was ours.
-pub fn perform(host: &mut dyn Host, event: &PerformCommandEvent<'_>) -> bool {
-    let mut words = event.command.split_whitespace();
-    if words.next() != Some(COMMAND) {
+/// From the library's `run_mod_command`: the operators' `/bestiary`, for the player who runs it. Whether it was ours.
+pub fn perform(host: &mut dyn ServerHost, event: &RunModCommandEvent<'_>) -> bool {
+    let literals = &event.command.literals;
+    if literals.first().map(String::as_str) != Some(COMMAND) {
         return false;
     }
-    let player = event.player.uuid;
-    match (words.next(), words.next()) {
-        (None, None) | (Some("open"), None) => book::open_for_player(host, player),
+    let CommandSource::Player { player, .. } = event.source else {
+        return true;
+    };
+    let player = player.uuid();
+    let species = match event.command.argument("species") {
+        Some(CommandArgumentValue::String(s)) => Some(s.as_str()),
+        _ => None,
+    };
+    match (literals.get(1).map(String::as_str), species) {
+        (None, _) => book::open_for_player(host, player),
         (Some("reset"), None) => {
             store(host, player, &[]);
-            answer(host, "commands.creature.bestiary.reset", &[]);
+            answer(host, "commands.creature.bestiary.reset", vec![]);
         }
         (Some("unlock"), Some("all")) => {
             let all: Vec<&'static Species> = SPECIES.lock().unwrap().clone();
-            let all: Vec<&'static Species> = all.into_iter().filter(|s| crate::on(host, s.id)).collect();
             for s in &all {
                 unlock(host, player, s);
             }
             answer(
                 host,
                 "commands.creature.bestiary.unlocked_all",
-                &[Text::literal(all.len().to_string())],
+                vec![Text::literal(all.len().to_string())],
             );
         }
         (Some("unlock"), Some(name)) => match named(name) {
@@ -124,32 +128,30 @@ pub fn perform(host: &mut dyn Host, event: &PerformCommandEvent<'_>) -> bool {
                 answer(
                     host,
                     "commands.creature.bestiary.unlocked",
-                    &[Text::translate(&entity_key(s.id), &[])],
+                    vec![Text::translate(entity_key(s.id), vec![])],
                 );
             }
-            None => answer(host, "commands.creature.bestiary.unknown", &[Text::literal(name)]),
+            None => answer(host, "commands.creature.bestiary.unknown", vec![Text::literal(name)]),
         },
-        _ => answer(host, "commands.creature.bestiary.usage", &[]),
+        _ => answer(host, "commands.creature.bestiary.usage", vec![]),
     }
     true
 }
 
-/// From the library's `tab_complete_v2`: `/bestiary unlock` completes `all` and the species' ids.
-pub fn complete(event: &mut TabCompleteV2Event<'_>) {
-    if event.label != COMMAND || event.arguments.len() != 2 || event.arguments[0] != "unlock" {
+/// From the library's `tab_complete`: `/bestiary unlock` completes `all` and the species' ids.
+pub fn complete(event: &mut TabCompleteEvent<'_>) {
+    let words: Vec<&str> = event.command.trim_start_matches('/').split(' ').collect();
+    if words.len() != 3 || words[0] != COMMAND || words[1] != "unlock" {
         return;
     }
-    let typed = event.arguments[1].as_str();
+    let typed = words[2];
     let ids: Vec<&'static str> = SPECIES.lock().unwrap().iter().map(|s| s.id).collect();
     for id in std::iter::once("all").chain(ids) {
         let short = id.split_once(':').map_or(id, |(_, path)| path);
         if id.starts_with(typed) || short.starts_with(typed) {
-            event.suggestions.push(Suggestion {
-                range: (event.range[0], event.range[1]),
-                text: id.to_owned(),
-                tooltip: None,
-                int_value: None,
-            });
+            event
+                .suggestions
+                .push(Suggestion::new((event.range[0], event.range[1]), id));
         }
     }
 }

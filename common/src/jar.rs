@@ -1,7 +1,7 @@
 //! The glass jar (SPECS §4.1): catching a small creature and releasing it elsewhere.
 //!
 //! - A mod registers the creatures a jar can hold (`register`), with the icon of a jar holding one.
-//! - **Catch**: right-click a registered creature with an empty `creature:glass_jar` (the library's `interact_entity`,
+//! - **Catch**: right-click a registered creature with an empty `creature:glass_jar` (the library's `entity_interact`,
 //!   which runs before the mods'): the creature is taken out of the world and the player gets a filled jar. A filled jar
 //!   is the same item, carrying the creature as item data (`minecraft:custom_data`: `creature: {kind, look}`, its look
 //!   from `colours`), its name ("Glass Jar of Butterfly") and its icon set on the stack; it doesn't stack.
@@ -16,13 +16,19 @@
 //!
 //! **Display**: sneak + right-click with a filled jar places it as a small block (`creature:jar`, or `creature:lit_jar`
 //! giving light for a creature that glows), the creature drawn inside with its species' own drawing (its bestiary 3D
-//! view); broken, it gives the filled jar back (not in creative).
+//! view); broken, it gives the filled jar back (not in creative). Its block entity (type `creature:jar`, `JarEntity`)
+//! holds the creature, sent to clients to draw it. Pistons can't move it (`push_reaction` in its block file).
 use std::sync::Mutex;
 
-use horizon_client::items::ItemStack;
-use horizon_client::mod_api::{Compound, Host, InteractEntityEvent, Tag, UseItemOnEvent};
+use mod_api::{
+    BlockEntityDrawContext, BlockEntityPart, BlockEntitySubmitEvent, BlockEntityUpdateTagEvent, BlockPart,
+    BlockUpdateFlags, ClientHost, Compound, EntityInteractEvent, Hand, Host, HostSide, InteractionResult, ItemPart,
+    ItemStack, LevelRef, LevelSide, PlayerRef, Registrar, ServerHost, Tag, UseOnEvent,
+};
 
 use crate::colours;
+use crate::hand;
+use crate::territory::Ground;
 
 pub const ITEM: &str = "creature:glass_jar";
 /// The bestiary fact a catch teaches (a species lists it among its facts to show it).
@@ -48,7 +54,7 @@ pub struct Catchable {
 
 static CATCHABLE: Mutex<Vec<&'static Catchable>> = Mutex::new(Vec::new());
 
-/// From a mod's `hooks()`: its creatures can be caught.
+/// From a mod's `register`: its creatures can be caught.
 pub fn register(catchable: &'static Catchable) {
     let mut all = CATCHABLE.lock().unwrap();
     if !all.iter().any(|c| c.kind == catchable.kind) {
@@ -102,10 +108,18 @@ fn read(data: &Compound, [kind, look, friend, name]: [&str; 4]) -> Option<Held> 
 
 /// What a filled jar holds.
 fn held(stack: &ItemStack) -> Option<Held> {
-    let Some(Tag::Compound(data)) = stack.custom_data()?.get(&DATA.into()) else {
+    let Some(Tag::Compound(custom)) = stack.components()?.as_nbt().get(&"minecraft:custom_data".into()) else {
+        return None;
+    };
+    let Some(Tag::Compound(data)) = custom.get(&DATA.into()) else {
         return None;
     };
     read(data, ["kind", "look", "friend", "name"])
+}
+
+/// An empty jar.
+fn empty(host: &dyn Host) -> Option<ItemStack> {
+    host.item_from_snbt(&format!("{{id:{},count:1}}", quoted(ITEM)))
 }
 
 /// SNBT for a string.
@@ -199,111 +213,127 @@ fn lore(kind: &str, look: Option<[String; 3]>, befriended: bool, name: Option<&s
 }
 
 /// The name a name tag gave creature `id`, if any.
-fn custom_name(host: &mut dyn Host, id: u32) -> Option<String> {
+fn custom_name(host: &mut dyn ServerHost, id: u32) -> Option<String> {
     let entity = host.entity(id)?;
-    let named = host
-        .entity_nbt(entity)
+    let named = entity
+        .nbt(host)
         .is_some_and(|nbt| matches!(nbt.get(&"CustomName".into()), Some(t) if !matches!(t, Tag::End)));
-    named.then(|| host.entity_name(entity)).flatten()
+    named.then(|| entity.name(host)).flatten()
 }
 
-/// From the library's `interact_entity`: an empty jar catches a registered creature.
-pub fn catch(host: &mut dyn Host, event: &InteractEntityEvent<'_>) -> bool {
-    let Some(stack) = event.stack.filter(|s| &*s.item == ITEM && held(s).is_none()) else {
+/// Whether the right-click of `event` is an empty jar on a registered creature (both sides answer it, so the client
+/// neither trades nor tries the off hand).
+pub fn catches(host: &dyn Host, event: &EntityInteractEvent<'_>) -> bool {
+    event
+        .stack
+        .is_some_and(|s| hand::is(host, s, ITEM) && held(s).is_none())
+        && catchable(event.kind).is_some()
+}
+
+/// From the library's `entity_interact`, on the server: an empty jar catches a registered creature. Whether it did.
+pub fn catch(host: &mut dyn ServerHost, event: &EntityInteractEvent<'_>) -> bool {
+    if !catches(&*host, event) {
         return false;
-    };
+    }
     let Some(c) = catchable(event.kind) else {
         return false;
     };
-    let (Some(player), Ok(id)) = (host.acting_player(), u32::try_from(event.entity)) else {
+    let (Some(player), Ok(id)) = (host.players().acting_player(), u32::try_from(event.entity)) else {
         return false;
     };
     // A befriended one only comes to its friend.
     let friend = crate::friend::of(id);
-    if friend.is_some_and(|f| !f.is(player.uuid)) {
+    if friend.is_some_and(|f| !f.is(player.uuid())) {
         return false;
     }
     let look = colours::saved(host, id);
     let name = custom_name(host, id);
-    let Some(jar) = filled(host, c, look.as_ref(), friend.map(|f| f.uuid), name.as_deref()) else {
+    let Some(jar) = filled(&*host, c, look.as_ref(), friend.map(|f| f.uuid), name.as_deref()) else {
         return false;
     };
-    if !host.remove_mob(&player.dimension, id) {
+    if !host.entity(id).is_some_and(|e| e.discard(host)) {
         return false;
     }
     colours::forget(id);
     crate::friend::forget(id);
+    crate::body::forget(id);
     // The bestiary: they now know a jar catches it.
-    crate::bestiary::learn(host, player.uuid, c.kind, JAR_FACT);
-    // The only jar in hand becomes the filled one, in its slot; from a stack, one is taken (not in creative, as a
-    // bucket) and the filled jar goes to the inventory.
-    let slot = crate::hand::slot_of(host, stack);
-    if stack.count == 1
-        && let Some(s) = slot.and_then(|slot| host.carried_stack(slot))
-    {
-        *s = jar;
+    crate::bestiary::learn(host, player.uuid(), c.kind, JAR_FACT);
+    // The only jar in hand becomes the filled one; from a stack, one is taken (not in creative, as a bucket) and the
+    // filled jar goes to the inventory.
+    let one = event.stack.is_some_and(|s| s.count() == 1);
+    if one {
+        hand::set_held(host, player, event.hand, Some(jar));
         return true;
     }
-    if player.game_mode != 1
-        && let Some(s) = slot.and_then(|slot| host.carried_stack(slot))
-    {
-        s.count -= 1;
-    }
-    if let Some(rest) = host.give_stack(player.uuid, jar) {
-        crate::hand::drop_stack(host, &player.dimension, player.position, &rest);
-    }
+    hand::use_one(host, player, event.hand);
+    hand::give(host, player, jar);
     true
 }
 
-/// From the library's `use_item_on`: a filled jar releases its creature on the face clicked. Whether the click was the
-/// jar's.
-pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
-    if &*event.stack.item != ITEM {
-        return false;
-    }
+/// Whether `stack` is a filled jar (its right-click on a block is the jar's).
+pub fn is_filled(host: &dyn Host, stack: &ItemStack) -> bool {
+    hand::is(host, stack, ITEM) && held(stack).is_some()
+}
+
+/// From the jar's `use_on` (`JarItem`): a filled jar releases its creature on the face clicked. Whether the click was
+/// the jar's.
+pub fn release(host: &mut dyn ServerHost, event: &UseOnEvent<'_>) -> bool {
+    let stack = event.stack;
     let Some(Held {
         kind,
         look,
         friend,
         name,
-    }) = held(event.stack)
+    }) = held(stack)
     else {
         return false;
     };
-    let Some(player) = host.acting_player() else {
+    let Some(player) = host.player(event.player) else {
+        return true;
+    };
+    let Some(level) = player.level(&*host) else {
         return true;
     };
     // Its mod isn't installed: the jar stays full.
-    if catchable(&kind).is_none() {
+    let Some(c) = catchable(&kind) else {
         return true;
-    }
-    let c = catchable(&kind).expect("checked above");
+    };
+    let (face, pos) = (event.face, event.pos);
     // Sneaking: the jar is placed as a block, the creature inside (`display`).
-    if player.sneaking {
-        place(host, event, &player, c, look.as_ref(), friend, name.as_deref());
+    if player.entity().is_shift_key_down(&*host).unwrap_or(false) {
+        place(
+            host,
+            level,
+            pos,
+            face,
+            player,
+            event.hand,
+            c,
+            look.as_ref(),
+            friend,
+            name.as_deref(),
+        );
         return true;
     }
     // On a flower (which a click hits itself, a flower being no full block) it comes out in the flower, and settles
     // there if its kind does; elsewhere on the face clicked.
     use crate::territory::Rule;
-    let on_flower = crate::territory::is_flower(host, &host.block(event.pos));
+    let ground = Ground::new(&*host, level);
+    let on_flower = ground.flower_at(pos);
     // On farmland of a big enough garden, or a big enough sandy patch, it comes out on that ground and settles there,
     // each rule teaching its own fact.
     let settle = match c.settles {
-        Some(Rule::Garden) => crate::territory::garden_at(host, event.pos).map(|f| (f, GARDEN_FACT)),
-        Some(Rule::Sand) => crate::territory::sand_at(host, event.pos).map(|f| (f, SAND_FACT)),
+        Some(Rule::Garden) => crate::territory::garden_at(ground, pos).map(|f| (f, GARDEN_FACT)),
+        Some(Rule::Sand) => crate::territory::sand_at(ground, pos).map(|f| (f, SAND_FACT)),
         _ => None,
     };
     let block = if let Some((f, _)) = settle {
         [f[0], f[1] + 1, f[2]]
     } else if on_flower {
-        event.pos
+        pos
     } else {
-        [
-            event.pos[0] + event.face[0],
-            event.pos[1] + event.face[1],
-            event.pos[2] + event.face[2],
-        ]
+        [pos[0] + face[0], pos[1] + face[1], pos[2] + face[2]]
     };
     let at = [
         f64::from(block[0]) + 0.5,
@@ -315,7 +345,8 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
     if let Some(n) = &name {
         nbt.insert("CustomName".into(), Tag::String(n.as_str().into()));
     }
-    let Some(id) = host.summon(&player.dimension, &kind, at, nbt) else {
+    let dimension = level.dimension().id(&*host).unwrap_or_default();
+    let Some(id) = host.summon(&dimension, &kind, at, nbt) else {
         return true;
     };
     if let Some(look) = &look {
@@ -326,16 +357,14 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
     }
     if let Some((f, fact)) = settle {
         crate::territory::settle(host, id, f);
-        crate::bestiary::learn(host, player.uuid, c.kind, fact);
+        crate::bestiary::learn(host, player.uuid(), c.kind, fact);
     } else if on_flower && c.settles == Some(Rule::FlowerPatch) {
         crate::territory::settle(host, id, block);
-        crate::bestiary::learn(host, player.uuid, c.kind, FLOWER_FACT);
+        crate::bestiary::learn(host, player.uuid(), c.kind, FLOWER_FACT);
     }
-    if player.game_mode != 1
-        && let Some(slot) = crate::hand::slot_of(host, event.stack)
-        && let Some(s) = host.carried_stack(slot)
-    {
-        *s = ItemStack::new(ITEM, 1);
+    if !player.has_infinite_materials(&*host).unwrap_or(false) {
+        let jar = empty(&*host);
+        hand::set_held(host, player, event.hand, jar);
     }
     true
 }
@@ -344,90 +373,59 @@ pub fn release(host: &mut dyn Host, event: &UseItemOnEvent<'_>) -> bool {
 pub const BLOCK: &str = "creature:jar";
 pub const LIT_BLOCK: &str = "creature:lit_jar";
 
-/// The placed jars' block states (the jar and the lit jar), for hooks that only see state ids (a piston's).
-static JAR_STATES: Mutex<Vec<u32>> = Mutex::new(Vec::new());
-
-/// From a hook with a host before any piston can move a jar (the library's `player_logged_in`): notes the jars' states.
-pub fn remember_states(host: &dyn Host) {
-    let mut states = JAR_STATES.lock().unwrap();
-    if states.is_empty() {
-        states.extend(
-            [BLOCK, LIT_BLOCK]
-                .iter()
-                .filter_map(|b| state_of(host, b))
-                .map(|id| id.0),
-        );
-    }
-}
-
-/// From the library's `piston_move`: a piston doesn't push or break a placed jar (its creature would be lost; a
-/// block entity doesn't move). Whether `state` is a jar's.
-pub fn is_jar_state(state: u32) -> bool {
-    JAR_STATES.lock().unwrap().contains(&state)
-}
-
 /// From the library's `explosion_detonate`: a blast spares the placed jars (their creature would be lost).
-pub fn spare_from_blast(host: &dyn Host, blocks: &mut Vec<[i32; 3]>) {
-    blocks.retain(|&pos| !is_jar_block(&host.block(pos)));
+pub fn spare_from_blast(ground: Ground<'_>, blocks: &mut Vec<[i32; 3]>) {
+    blocks.retain(|&pos| !is_jar_block(&ground.block(pos)));
 }
 
 fn is_jar_block(name: &str) -> bool {
     name == BLOCK || name == LIT_BLOCK
 }
 
-fn state_of(host: &dyn Host, name: &str) -> Option<horizon_client::mod_api::BlockStateId> {
-    host.block_states()
-        .iter()
-        .find(|(_, f)| &*f.name == name)
-        .map(|(id, _)| id)
-}
-
 /// Sneak + right-click with a filled jar: placed as a block on the face clicked, holding its creature (kind and look in
 /// its block entity), the hand's jar used up (not in creative).
+#[allow(clippy::too_many_arguments)]
 fn place(
-    host: &mut dyn Host,
-    event: &UseItemOnEvent<'_>,
-    player: &horizon_client::mod_api::NativeServerPlayer,
+    host: &mut dyn ServerHost,
+    level: LevelRef,
+    pos: [i32; 3],
+    face: [i32; 3],
+    player: PlayerRef,
+    in_hand: Hand,
     c: &Catchable,
     look: Option<&Compound>,
     friend: Option<[i32; 4]>,
     name: Option<&str>,
 ) {
-    let at = [
-        event.pos[0] + event.face[0],
-        event.pos[1] + event.face[1],
-        event.pos[2] + event.face[2],
-    ];
-    if host.block(at) != "minecraft:air" {
+    let at = [pos[0] + face[0], pos[1] + face[1], pos[2] + face[2]];
+    if Ground::new(&*host, level).block(at) != "minecraft:air" {
         return;
     }
-    let Some(state) = state_of(host, if c.glows { LIT_BLOCK } else { BLOCK }) else {
+    let Some(state) = host.block_state_id(if c.glows { LIT_BLOCK } else { BLOCK }) else {
         return;
     };
-    if !host.set_block(&player.dimension, at, state, 3) {
+    if !level
+        .set_block(host, at, state, BlockUpdateFlags::NEIGHBORS | BlockUpdateFlags::CLIENTS)
+        .unwrap_or(false)
+    {
         return;
     }
-    let kind = c.kind;
-    let look = look.cloned();
-    host.change_mod_block_entity(at, &mut |e| {
-        e.nbt.insert("Kind".into(), Tag::String(kind.into()));
-        if let Some(l) = &look {
-            e.nbt.insert("Look".into(), Tag::Compound(l.clone()));
-        }
-        if let Some(f) = friend {
-            e.nbt.insert("Friend".into(), Tag::IntArray(f.to_vec()));
-        }
-        if let Some(n) = name {
-            e.nbt.insert("Name".into(), Tag::String(n.into()));
-        }
-    });
-    host.block_entity_sync(at);
-    if player.game_mode != 1
-        && let Some(slot) = crate::hand::slot_of(host, event.stack)
-        && let Some(s) = host.carried_stack(slot)
-    {
-        s.count = 0;
+    let mut nbt = Compound::new();
+    nbt.insert("Kind".into(), Tag::String(c.kind.into()));
+    if let Some(l) = look {
+        nbt.insert("Look".into(), Tag::Compound(l.clone()));
     }
+    if let Some(f) = friend {
+        nbt.insert("Friend".into(), Tag::IntArray(f.to_vec()));
+    }
+    if let Some(n) = name {
+        nbt.insert("Name".into(), Tag::String(n.into()));
+    }
+    if let Some(entity) = host.block_entity(level, at) {
+        let _ = entity.merge_data(host, nbt);
+        let _ = entity.set_changed(host);
+    }
+    hand::use_one(host, player, in_hand);
 }
 
 /// What a placed jar holds: from its block entity's data.
@@ -435,28 +433,18 @@ fn held_in(nbt: &Compound) -> Option<Held> {
     read(nbt, ["Kind", "Look", "Friend", "Name"])
 }
 
-/// From the library's `block_entity`: a placed jar has a block entity, to hold its creature.
-pub fn block_entity(block: &str) -> Option<(String, Compound)> {
-    is_jar_block(block).then(|| (BLOCK.to_string(), Compound::new()))
-}
-
-/// From the library's `block_entity_update_tag`: clients get what a placed jar holds, to draw it.
-pub fn update_tag(entity: &horizon_client::containers::ModBlockEntity) -> Option<Compound> {
-    (entity.id == BLOCK).then(|| entity.nbt.clone())
-}
-
-/// From the library's `destroy_block`: a placed jar broken gives back the filled jar (not in creative, as a block).
-pub fn broken(host: &mut dyn Host, pos: [i32; 3]) {
-    if !is_jar_block(&host.block(pos)) {
-        return;
-    }
-    let Some(player) = host.acting_player() else {
+/// From the library's `break_block`: a placed jar broken gives back the filled jar (not in creative, as a block).
+pub fn broken(host: &mut dyn ServerHost, pos: [i32; 3]) {
+    let Some(player) = host.players().acting_player() else {
         return;
     };
-    if player.game_mode == 1 {
+    let Some(level) = player.level(&*host) else {
+        return;
+    };
+    if !is_jar_block(&Ground::new(&*host, level).block(pos)) || player.has_infinite_materials(&*host).unwrap_or(false) {
         return;
     }
-    let Some(entity) = host.mod_block_entity(pos) else {
+    let Some(data) = host.block_entity(level, pos).and_then(|e| e.data(&*host)) else {
         return;
     };
     let Some(Held {
@@ -464,13 +452,13 @@ pub fn broken(host: &mut dyn Host, pos: [i32; 3]) {
         look,
         friend,
         name,
-    }) = held_in(&entity.nbt)
+    }) = held_in(&data)
     else {
         return;
     };
     let item = match catchable(&kind) {
-        Some(c) => filled(host, c, look.as_ref(), friend, name.as_deref()),
-        None => Some(ItemStack::new(ITEM, 1)),
+        Some(c) => filled(&*host, c, look.as_ref(), friend, name.as_deref()),
+        None => empty(&*host),
     };
     if let Some(item) = item {
         let at = [
@@ -478,17 +466,55 @@ pub fn broken(host: &mut dyn Host, pos: [i32; 3]) {
             f64::from(pos[1]) + 0.3,
             f64::from(pos[2]) + 0.5,
         ];
-        crate::hand::drop_stack(host, &player.dimension, at, &item);
+        hand::drop_stack(host, level, at, item);
     }
 }
 
-/// From the library's `block_entity_submit`: draws the creature inside a placed jar, small, in the middle, with the
-/// species' own drawing (its bestiary 3D view).
-pub fn draw_inside(host: &dyn Host, event: &mut horizon_client::mod_api::BlockEntitySubmitEvent<'_>) {
-    if !is_jar_block(event.block) {
-        return;
+/// The placed jar's block entity: holds its creature, sent to clients, which draw it inside.
+pub struct JarEntity;
+
+#[mod_api::sunrise_part]
+impl BlockPart for JarEntity {}
+
+#[mod_api::sunrise_part]
+impl BlockEntityPart for JarEntity {
+    fn block_entity(&self, _: LevelSide, _: &mut mod_api::BlockEntityEvent<'_>) -> Option<Compound> {
+        Some(Compound::new())
     }
-    let Some(Held { kind, look, .. }) = held_in(&event.entity.nbt) else {
+
+    fn block_entity_update_tag(&self, event: &mut BlockEntityUpdateTagEvent<'_>) -> Option<Compound> {
+        Some(event.entity.nbt.clone())
+    }
+
+    fn block_entity_submit(&self, _: &dyn ClientHost, event: &mut BlockEntitySubmitEvent<'_>) {
+        draw_inside(&event.entity.nbt, &mut *event.draw);
+    }
+}
+
+/// The glass jar item: a filled one used on a block releases its creature.
+struct JarItem;
+
+#[mod_api::sunrise_part]
+impl ItemPart for JarItem {
+    fn use_on(&self, host: HostSide, event: &mut UseOnEvent<'_>) -> Option<InteractionResult> {
+        match host {
+            HostSide::Server(host) => release(host, event).then_some(InteractionResult::Success),
+            HostSide::Client(host) => is_filled(&*host, event.stack).then_some(InteractionResult::Success),
+        }
+    }
+}
+
+/// From the library's `register`: the jar item's part and the placed jars' block entity type, `creature:jar`.
+pub fn declare(r: &mut dyn Registrar) {
+    let item = r.item_key(ITEM);
+    r.item_part(item, JarItem);
+    let kind = r.block_entity_type("jar").blocks(&["jar", "lit_jar"]).build();
+    let _ = r.block_entity_part(&kind, JarEntity);
+}
+
+/// Draws the creature inside a placed jar, small, in the middle, with the species' own drawing (its bestiary 3D view).
+fn draw_inside(nbt: &Compound, draw: &mut dyn BlockEntityDrawContext) {
+    let Some(Held { kind, look, .. }) = held_in(nbt) else {
         return;
     };
     let Some(species) = crate::bestiary::species_of(&kind) else {
@@ -497,12 +523,11 @@ pub fn draw_inside(host: &dyn Host, event: &mut horizon_client::mod_api::BlockEn
     let look = species
         .scheme
         .and_then(|scheme| look.as_ref().and_then(|l| colours::from_compound(scheme, l)));
-    let draw = &mut *event.draw;
     draw.push();
     draw.translate([0.5, 0.06, 0.5]);
     draw.scale([INSIDE; 3]);
     draw.translate([-0.5, 0.0, -0.5]);
-    (species.draw)(host, draw, look);
+    (species.draw)(draw, look);
     draw.pop();
 }
 

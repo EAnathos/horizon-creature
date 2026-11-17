@@ -61,7 +61,7 @@ pub struct ItemPage {
 
 static PAGES: Mutex<Vec<&'static ItemPage>> = Mutex::new(Vec::new());
 
-/// From a module's `hooks()`: its item gets a page.
+/// From a module's `register`: its item gets a page.
 pub fn register(page: &'static ItemPage) {
     let mut pages = PAGES.lock().unwrap();
     if !pages.iter().any(|p| p.item == page.item) {
@@ -69,9 +69,8 @@ pub fn register(page: &'static ItemPage) {
     }
 }
 
-/// The pages shown, in the order registered (the library's first): the glass jar's only with a mod that uses it, none of
-/// a mod switched off in Options > Mods.
-pub fn pages(host: &dyn horizon_client::mod_api::Host) -> Vec<&'static ItemPage> {
+/// The pages shown, in the order registered (the library's first): the glass jar's only with a mod that uses it.
+pub fn pages() -> Vec<&'static ItemPage> {
     let jar_used = crate::jar::used();
     PAGES
         .lock()
@@ -79,7 +78,6 @@ pub fn pages(host: &dyn horizon_client::mod_api::Host) -> Vec<&'static ItemPage>
         .iter()
         .copied()
         .filter(|p| p.item != crate::jar::ITEM || jar_used)
-        .filter(|p| crate::on(host, p.item))
         .collect()
 }
 

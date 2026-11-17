@@ -1,18 +1,17 @@
 //! The bestiary, in the creature guide book (SPECS §7): what each player found out about the series' creatures.
 //!
-//! - Each mod registers its species and the facts a player can learn about them (`register`), from its `hooks()`.
+//! - Each mod registers its species and the facts a player can learn about them (`register`), from its `register`.
 //! - A player **meets** a species when a wild creature of it comes within `MEET` blocks in one of the biomes it spawns
 //!   in: its page opens, with that biome (the library's `entity_tick_post`, every `CHECK_EVERY` ticks per creature).
 //! - A player **learns** a fact when they find it out in play: the mod calls `learn` (the vulture: raw chicken eaten,
 //!   rotten flesh given). Nothing else is shown: no creature, biome or fact the player hasn't come across.
 //! - For a species with looks (the library's colours and patterns), each **morph** met is noted too.
 //! - It is kept in the player's persistent data (`creature:bestiary`), on the server. Right-click with the guide sends
-//!   it to the player's client (`creature:bestiary` channel), which opens the book: a mod screen the library draws
+//!   it to the player's client (`creature:bestiary` payload), which opens the book: a mod screen the library draws
 //!   (`draw`, `clicked`). On the right page the species met, as icons; on the left the one picked: the creature turning
 //!   in 3D, the biomes it was met in, what was found out, and its morphs met (each a swatch; picking one shows it).
-//! - The 3D view is a scene (`Host::draw_scene`, as Create's Ponder) of a moss block and an invisible block (a barrier) on it with a block
-//!   entity, whose drawing (`specimen`, from the library's `block_entity_submit`) is the species' own (`Species::draw`).
-//!   A species with no model of ours (a vanilla creature, mods/vanilla_bestiary) draws its icon there (`draw_icon`).
+//! - The 3D view draws the creature itself (`DrawContext::entity`: its own renderer, a vanilla creature's model too),
+//!   in the look picked (`colours::set_preview`). `Species::draw` draws it in a placed jar.
 //! - The right page lists the series' species first and, below a line, Minecraft's own (`minecraft:` ids, from the
 //!   Vanilla Bestiary); the wheel scrolls it when they don't fit.
 //! - Operators' commands, to check the pages (`perform`): `/bestiary unlock <species>` writes down everything about a
@@ -21,18 +20,19 @@
 mod book;
 mod command;
 
-pub use book::{clicked, draw, draw_icon, open, received, register_item, scrolled, specimen};
+pub use book::{clicked, draw, open, received, register_item, scrolled};
 pub use command::{commands, complete, perform};
 
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use horizon_client::containers::{ModBlockEntity, ModBlockEntityFields};
-use horizon_client::items::ItemStack;
-use horizon_client::mod_api::{
-    BlockEntityDraw, BlockEntitySubmitEvent, BlockStateId, Compound, Host, NativeCommand, NativeSceneBlock,
-    NativeSceneView, PerformCommandEvent, ScreenMouseButtonPressedPreEvent, ScreenRenderPostEvent, Suggestion,
-    TabCompleteV2Event, Tag, Text,
+use std::sync::OnceLock;
+
+use mod_api::{
+    BlockEntityDrawContext, ClientHost, Command, CommandArgumentValue, CommandSource, Compound, DrawContext, GuiEntity,
+    GuiEntityLook, GuiEntityView, Host, Identifier, ItemKey, ItemStack, PayloadCodec, PayloadId, Registrar,
+    RunModCommandEvent, ScreenMouseButtonPressedPreEvent, ScreenRenderPostEvent, ScreenView, ServerHost, Suggestion,
+    TabCompleteEvent, Tag, Text, ToClient,
 };
 
 use crate::colours::{self, Look, Scheme};
@@ -64,7 +64,7 @@ pub struct Species {
     pub rarity: Rarity,
     /// Draws it in the book's 3D view, standing on the block's floor, centred on the block, about a block across (the
     /// mod scales its model to fit), in `look` when it has looks.
-    pub draw: fn(&dyn Host, &mut BlockEntityDraw, Option<Look>),
+    pub draw: fn(&mut dyn BlockEntityDrawContext, Option<Look>),
 }
 
 /// How rare a species is, as its page shows it (in vanilla's rarity colours, darkened for the paper).
@@ -97,7 +97,7 @@ impl Rarity {
 
 static SPECIES: Mutex<Vec<&'static Species>> = Mutex::new(Vec::new());
 
-/// From a mod's `hooks()`: its species get pages in the book.
+/// From a mod's `register`: its species get pages in the book.
 pub fn register(species: &'static Species) {
     let mut all = SPECIES.lock().unwrap();
     if !all.iter().any(|s| s.id == species.id) {
@@ -129,7 +129,36 @@ fn is_vanilla(species: &str) -> bool {
 
 /// The key in the player's persistent data.
 const KEY: &str = "creature:bestiary";
-const CHANNEL: &str = "creature:bestiary";
+/// The book sent to a player's client: one chunk (`book::send_chunked`), its first character the chunk's flag.
+#[derive(PayloadCodec)]
+struct BookChunk {
+    text: String,
+}
+
+static BOOK_PAYLOAD: OnceLock<ToClient<BookChunk>> = OnceLock::new();
+
+/// From the library's `register`: the book's payload, received by the client (`book::received`).
+pub fn declare(r: &mut dyn Registrar) {
+    let mut payloads = r.payload_handlers();
+    let mut view = payloads.registrar("1");
+    let token = view.play_to_client_typed::<BookChunk>(PayloadId("creature:bestiary".into()), |chunk, cx| {
+        let host = cx.client_host().map_err(|e| format!("{e:?}"))?;
+        book::received(host, chunk.text.as_bytes());
+        Ok(())
+    });
+    let _ = BOOK_PAYLOAD.set(token);
+}
+
+/// Sends one chunk of the book to `player`.
+fn send(host: &mut dyn ServerHost, player: u128, packet: Vec<u8>) {
+    let (Some(token), Some(player)) = (BOOK_PAYLOAD.get(), host.player(player)) else {
+        return;
+    };
+    let chunk = BookChunk {
+        text: String::from_utf8_lossy(&packet).into_owned(),
+    };
+    let _ = token.send(host, player, &chunk);
+}
 /// A player meets a creature within this many blocks.
 const MEET: f64 = 16.0;
 const CHECK_EVERY: u32 = 40;
@@ -163,7 +192,7 @@ fn string_list(items: &[String]) -> Tag {
 
 /// The player's bestiary, in the order the species were met.
 fn load(host: &dyn Host, player: u128) -> Vec<Entry> {
-    let Some(Tag::Compound(data)) = host.player_persistent_data(player) else {
+    let Some(data) = host.player(player).and_then(|p| p.persistent_data(host)) else {
         return Vec::new();
     };
     let Some(Tag::List(list)) = data.get(&KEY.into()) else {
@@ -190,8 +219,11 @@ fn load(host: &dyn Host, player: u128) -> Vec<Entry> {
         .collect()
 }
 
-fn store(host: &mut dyn Host, player: u128, entries: &[Entry]) {
-    let Some(Tag::Compound(mut data)) = host.player_persistent_data(player) else {
+fn store(host: &mut dyn ServerHost, player: u128, entries: &[Entry]) {
+    let Some(p) = host.player(player) else {
+        return;
+    };
+    let Some(mut data) = p.persistent_data(host) else {
         return;
     };
     let list = entries
@@ -206,11 +238,11 @@ fn store(host: &mut dyn Host, player: u128, entries: &[Entry]) {
         })
         .collect();
     data.insert(KEY.into(), Tag::List(list));
-    host.set_player_persistent_data(player, Tag::Compound(data));
+    let _ = p.set_persistent_data(host, data);
 }
 
 /// Changes `player`'s page of `species` (opening it if needed), saved only when something changed.
-fn update(host: &mut dyn Host, player: u128, species: &str, change: impl FnOnce(&mut Entry)) {
+fn update(host: &mut dyn ServerHost, player: u128, species: &str, change: impl FnOnce(&mut Entry)) {
     let mut entries = load(host, player);
     let (index, new) = match entries.iter().position(|e| e.species == species) {
         Some(i) => (i, false),
@@ -230,7 +262,7 @@ fn update(host: &mut dyn Host, player: u128, species: &str, change: impl FnOnce(
 }
 
 /// From a mod: `player` found out `fact` about `species` (one of its registered facts).
-pub fn learn(host: &mut dyn Host, player: u128, species: &str, fact: &str) {
+pub fn learn(host: &mut dyn ServerHost, player: u128, species: &str, fact: &str) {
     update(host, player, species, |e| {
         if !e.facts.iter().any(|f| f == fact) {
             e.facts.push(fact.into());
@@ -244,7 +276,7 @@ static TICKS: Mutex<BTreeMap<u32, u32>> = Mutex::new(BTreeMap::new());
 /// From the library's `entity_tick_post`: the players near a creature of a registered species meet it, in its biome.
 /// Every entity ticks, and with the Vanilla Bestiary most kinds are species: the species is looked up only every
 /// `CHECK_EVERY` ticks of an entity.
-pub fn tick(host: &mut dyn Host, dimension: &str, entity: u32, kind: &str) {
+pub fn tick(host: &mut dyn ServerHost, dimension: &str, entity: u32, kind: &str) {
     {
         let mut ticks = TICKS.lock().unwrap();
         let t = ticks.entry(entity).or_insert(entity % CHECK_EVERY);
@@ -257,25 +289,22 @@ pub fn tick(host: &mut dyn Host, dimension: &str, entity: u32, kind: &str) {
     let Some(species) = species(kind) else {
         return;
     };
-    if !(species.wild)(entity) || !crate::on(host, kind) {
+    if !(species.wild)(entity) {
         return;
     }
-    let Some(at) = host.entity(entity).and_then(|e| host.entity_position(e)) else {
+    let Some(e) = host.entity(entity) else {
         return;
     };
-    let Some(biome) = host.biome([at[0].floor() as i32, at[1].floor() as i32, at[2].floor() as i32]) else {
+    let (Some(at), Some(level)) = (e.position(host), e.level(host)) else {
+        return;
+    };
+    let Some(biome) = level.biome_at(host, [at[0].floor() as i32, at[1].floor() as i32, at[2].floor() as i32]) else {
         return;
     };
     if !lives_in(species, Some(dimension), &biome) {
         return;
     }
-    let near: Vec<u128> = host
-        .server_players()
-        .into_iter()
-        .filter(|p| p.dimension == dimension)
-        .filter(|p| (0..3).map(|k| (p.position[k] - at[k]).powi(2)).sum::<f64>() <= MEET * MEET)
-        .map(|p| p.uuid)
-        .collect();
+    let near = players_near(&*host, dimension, at);
     if near.is_empty() {
         return;
     }
@@ -302,12 +331,17 @@ pub fn forget(entity: u32) {
 }
 
 /// The players within `MEET` blocks of `at` in `dimension`, for a mod's facts seen happen (a creeper exploding).
-pub fn players_near(host: &dyn Host, dimension: &str, at: [f64; 3]) -> Vec<u128> {
-    host.server_players()
+pub fn players_near(host: &dyn ServerHost, dimension: &str, at: [f64; 3]) -> Vec<u128> {
+    host.players()
+        .server_players()
         .into_iter()
-        .filter(|p| p.dimension == dimension)
-        .filter(|p| (0..3).map(|k| (p.position[k] - at[k]).powi(2)).sum::<f64>() <= MEET * MEET)
-        .map(|p| p.uuid)
+        .filter(|p| p.dimension(host).is_some_and(|d| d.to_string() == dimension))
+        .filter(|p| {
+            p.entity()
+                .position(host)
+                .is_some_and(|q| (0..3).map(|k| (q[k] - at[k]).powi(2)).sum::<f64>() <= MEET * MEET)
+        })
+        .map(|p| p.uuid())
         .collect()
 }
 

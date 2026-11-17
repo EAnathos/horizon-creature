@@ -20,14 +20,15 @@
 //! than its `cap` are within `SPAWN_NEAR` blocks, a group comes out `SPAWN_MIN` to `SPAWN_MAX` blocks away, over the
 //! ground, in one of its biomes, at its hours. Wild ones far from players despawn (`tick_post`), so they come and go.
 //!
-//! The drawing needs to know which are flying (`flying`), which their render state doesn't say: a static map, single
-//! player only (as the vulture's; arismoko/horizon#2740).
+//! The flight runs from the server tick (`body`: it sets the flier's velocity itself). The drawing needs to know which
+//! are flying (`flying`), which their render state doesn't say: a static map, single player only (as the vulture's).
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use crate::territory;
-use horizon_client::mobs::goals;
-use horizon_client::mod_api::{Cx, Goal, Host, Mob, RandomSource};
+use mod_api::{Host, LevelRef, ServerHost, SoundSource};
+
+use crate::body::{Behaviour, Body, World};
+use crate::territory::{self, Ground};
 
 /// When a kind of flier is about.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -76,25 +77,19 @@ const FLEE: f64 = 4.0;
 const CHECK_EVERY: i32 = 100;
 /// A moth is drawn to light sources this bright (a torch is 14, a lantern 15, a campfire 15) within `LIGHT_SEARCH`
 /// blocks, and flutters this close around one.
-const LIGHT_MIN: u8 = 10;
+const LIGHT_MIN: u8 = 14;
 const LIGHT_SEARCH: i32 = 10;
 const LIGHT_ORBIT: f64 = 1.6;
 
 /// The nearest bright light source around `at` (a block giving at least `LIGHT_MIN`), for a moth.
-fn brightest_light(cx: &Cx, at: [f64; 3]) -> Option<[i32; 3]> {
+fn brightest_light(world: &World<'_>, at: [f64; 3]) -> Option<[i32; 3]> {
     let c = block_of(at);
-    let world = cx.w.world;
     let mut best: Option<([i32; 3], i32)> = None;
     for dy in -4..=4 {
         for dx in -LIGHT_SEARCH..=LIGHT_SEARCH {
             for dz in -LIGHT_SEARCH..=LIGHT_SEARCH {
                 let p = [c[0] + dx, c[1] + dy, c[2] + dz];
-                let state = world.block(p[0], p[1], p[2]);
-                let bright =
-                    cx.w.facts
-                        .states
-                        .get(state.0 as usize)
-                        .is_some_and(|f| f.emission >= LIGHT_MIN);
+                let bright = world.light_emission(p) >= LIGHT_MIN;
                 let d = dx * dx + dy * dy + dz * dz;
                 if bright && best.is_none_or(|b| d < b.1) {
                     best = Some((p, d));
@@ -144,10 +139,10 @@ pub fn spawns(spawning: &'static Spawning) {
     }
 }
 
-/// Whether a kind out at `hours` is about now (from a hook: the server's day time and rain).
-fn about(host: &dyn Host, hours: Hours) -> bool {
-    let day = host.day_time().rem_euclid(24_000) < 12_500;
-    let raining = host.weather().0 > 0.2;
+/// Whether a kind out at `hours` is about now in `level` (from a hook: its day time and rain).
+fn about(host: &dyn Host, level: LevelRef, hours: Hours) -> bool {
+    let day = level.day_time(host).unwrap_or(0).rem_euclid(24_000) < 12_500;
+    let raining = level.weather(host).is_some_and(|(rain, _)| rain > 0.2);
     match hours {
         Hours::Day => day && !raining,
         Hours::Night => !day,
@@ -156,8 +151,8 @@ fn about(host: &dyn Host, hours: Hours) -> bool {
 }
 
 /// From the library's `level_tick_post`, in the overworld: groups of small fliers come out near players.
-pub fn spawn(host: &mut dyn Host, dimension: &str) {
-    if dimension != "minecraft:overworld" {
+pub fn spawn(host: &mut dyn ServerHost, level: LevelRef) {
+    if level.dimension() != mod_api::DimensionKey::OVERWORLD {
         return;
     }
     {
@@ -171,10 +166,16 @@ pub fn spawn(host: &mut dyn Host, dimension: &str) {
     let spawning: Vec<&'static Spawning> = SPAWNING.lock().unwrap().clone();
     let mut random = crate::colours::Random::new(SPAWN_EVERY);
     let mut float = || (random.next() % 10_000) as f64 / 10_000.0;
-    for player in host.server_players().into_iter().filter(|p| p.dimension == dimension) {
-        let p = player.position;
+    let players = host.players().server_players();
+    for player in players {
+        if player.level(host) != Some(level) {
+            continue;
+        }
+        let Some(p) = player.entity().position(host) else {
+            continue;
+        };
         for s in &spawning {
-            if !random_chance(&mut float, s.chance) || !about(host, s.flight.hours) {
+            if !random_chance(&mut float, s.chance) || !about(host, level, s.flight.hours) {
                 continue;
             }
             let near = {
@@ -193,11 +194,14 @@ pub fn spawn(host: &mut dyn Host, dimension: &str) {
             let angle = float() * std::f64::consts::TAU;
             let distance = SPAWN_MIN + float() * (SPAWN_MAX - SPAWN_MIN);
             let (x, z) = (p[0] + angle.cos() * distance, p[2] + angle.sin() * distance);
-            let Some(ground) = surface(host, [x.floor() as i32, p[1] as i32, z.floor() as i32]) else {
+            let Some(ground) = surface(
+                Ground::new(&*host, level),
+                [x.floor() as i32, p[1] as i32, z.floor() as i32],
+            ) else {
                 continue;
             };
-            if !host
-                .biome([x.floor() as i32, ground, z.floor() as i32])
+            if !level
+                .biome_at(host, [x.floor() as i32, ground, z.floor() as i32])
                 .is_some_and(|b| s.biomes.contains(&b.as_str()))
             {
                 continue;
@@ -209,7 +213,8 @@ pub fn spawn(host: &mut dyn Host, dimension: &str) {
                     f64::from(ground) + GROUP_HEIGHT.0 + float() * (GROUP_HEIGHT.1 - GROUP_HEIGHT.0),
                     z + (float() * 2.0 - 1.0) * GROUP_SPREAD,
                 ];
-                host.summon(dimension, s.kind, at, horizon_client::mod_api::Compound::new());
+                let dimension = level.dimension().id(host).unwrap_or_default();
+                host.summon(&dimension, s.kind, at, mod_api::Compound::new());
             }
         }
     }
@@ -221,11 +226,11 @@ fn random_chance(float: &mut impl FnMut() -> f64, n: u64) -> bool {
 }
 
 /// The first open block over the ground at `at`'s column, from 16 blocks above `at` down to 16 below (not over water).
-fn surface(host: &dyn Host, at: [i32; 3]) -> Option<i32> {
+pub fn surface(ground: Ground<'_>, at: [i32; 3]) -> Option<i32> {
     let open = |name: &str| name == "minecraft:air" || name == "minecraft:cave_air";
     (at[1] - 16..=at[1] + 16).rev().find(|&y| {
-        let below = host.block([at[0], y - 1, at[2]]);
-        open(&host.block([at[0], y, at[2]])) && !open(&below) && below != "minecraft:water"
+        let below = ground.block([at[0], y - 1, at[2]]);
+        open(&ground.block([at[0], y, at[2]])) && !open(&below) && below != "minecraft:water"
     })
 }
 
@@ -246,7 +251,7 @@ enum Mode {
     Land,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Flutter {
     kind: &'static Kind,
     mode: Mode,
@@ -278,16 +283,16 @@ impl Flutter {
         }
     }
 
-    fn awake(&self, cx: &Cx) -> bool {
+    fn awake(&self, world: &World<'_>) -> bool {
         match self.kind.hours {
-            Hours::Day => cx.w.daylight && !cx.w.raining,
-            Hours::Night => !cx.w.daylight,
-            Hours::Always => !cx.w.raining,
+            Hours::Day => world.daylight && !world.raining,
+            Hours::Night => !world.daylight,
+            Hours::Always => !world.raining,
         }
     }
 }
 
-fn between(m: &mut Mob, range: (i32, i32)) -> i32 {
+fn between(m: &mut Body, range: (i32, i32)) -> i32 {
     range.0 + m.random.next_int_bound(range.1 - range.0).unwrap_or(0)
 }
 
@@ -295,16 +300,15 @@ fn block_of(p: [f64; 3]) -> [i32; 3] {
     [p[0].floor() as i32, p[1].floor() as i32, p[2].floor() as i32]
 }
 
-/// The top of the ground at `x`, `z` (the first air block above it).
-fn ground(cx: &Cx, x: i32, z: i32) -> f64 {
-    let world = cx.w.world;
-    f64::from(world.world_surface(x, z, |s| world.is_air(s)))
+/// The top of the ground at `x`, `z` near height `y` (the first air block above it), `y` where none is found.
+fn ground(world: &World<'_>, x: i32, y: f64, z: i32) -> f64 {
+    surface(world.ground, [x, y.floor() as i32, z]).map_or(y, f64::from)
 }
 
 impl Flutter {
     /// A point to flutter to: over its patch when settled, else a few blocks around, a little above the ground.
-    fn wander(&self, m: &mut Mob, cx: &Cx) -> [f64; 3] {
-        let r = |m: &mut Mob| f64::from(m.random.next_float()) * 2.0 - 1.0;
+    fn wander(&self, m: &mut Body, cx: &World<'_>) -> [f64; 3] {
+        let r = |m: &mut Body| f64::from(m.random.next_float()) * 2.0 - 1.0;
         // A moth flutters around a light it found, close and all around it, a little above and below.
         if let Some(l) = self.light {
             return [
@@ -329,16 +333,20 @@ impl Flutter {
             }
         };
         let height = self.kind.height.0 + f64::from(m.random.next_float()) * (self.kind.height.1 - self.kind.height.0);
-        [x, ground(cx, x.floor() as i32, z.floor() as i32) + height, z]
+        [
+            x,
+            ground(cx, x.floor() as i32, m.position.y, z.floor() as i32) + height,
+            z,
+        ]
     }
 
     /// Where to land: a flower near it (one of its patch's when settled), else the ground below it.
-    fn landing(&self, m: &Mob, cx: &Cx) -> ([f64; 3], bool) {
+    fn landing(&self, m: &Body, cx: &World<'_>) -> ([f64; 3], bool) {
         let here = block_of([m.position.x, m.position.y, m.position.z]);
         let flowers = if !self.patch.is_empty() {
             self.patch.clone()
         } else if self.kind.lands_on_flowers {
-            territory::flowers_near(cx, here, FLOWER_SEARCH)
+            territory::flowers_near(cx.ground, here, FLOWER_SEARCH)
         } else {
             Vec::new()
         };
@@ -352,11 +360,14 @@ impl Flutter {
                 ],
                 true,
             ),
-            None => ([m.position.x, ground(cx, here[0], here[2]), m.position.z], false),
+            None => (
+                [m.position.x, ground(cx, here[0], m.position.y, here[2]), m.position.z],
+                false,
+            ),
         }
     }
 
-    fn take_off(&mut self, m: &mut Mob, cx: &Cx) {
+    fn take_off(&mut self, m: &mut Body, cx: &World<'_>) {
         if let Some(sound) = self.kind.takeoff {
             crate::sounds::queue(m.id, sound, TAKEOFF_VOLUME, 0.9 + m.random.next_float() * 0.2);
         }
@@ -366,14 +377,14 @@ impl Flutter {
         self.perched = false;
     }
 
-    fn steer(&self, m: &mut Mob, target: [f64; 3], speed: f64) -> bool {
+    fn steer(&self, m: &mut Body, target: [f64; 3], speed: f64) -> bool {
         steer(m, target, speed)
     }
 }
 
 /// Steers a flier towards `target` with a flutter, at most `speed` blocks a tick, facing where it goes; whether it is
 /// there (also used by a mod's own flights: a fairy following its friend).
-pub fn steer(m: &mut Mob, target: [f64; 3], speed: f64) -> bool {
+pub fn steer(m: &mut Body, target: [f64; 3], speed: f64) -> bool {
     let d = [
         target[0] - m.position.x,
         target[1] - m.position.y,
@@ -383,7 +394,7 @@ pub fn steer(m: &mut Mob, target: [f64; 3], speed: f64) -> bool {
     if len < 0.3 {
         return true;
     }
-    let jitter = |m: &mut Mob| (f64::from(m.random.next_float()) * 2.0 - 1.0) * JITTER;
+    let jitter = |m: &mut Body| (f64::from(m.random.next_float()) * 2.0 - 1.0) * JITTER;
     let (jx, jy, jz) = (jitter(m), jitter(m), jitter(m));
     m.velocity.x = m.velocity.x * 0.85 + d[0] / len * STEER + jx;
     m.velocity.y = m.velocity.y * 0.85 + d[1] / len * STEER + jy;
@@ -402,17 +413,8 @@ pub fn steer(m: &mut Mob, target: [f64; 3], speed: f64) -> bool {
     false
 }
 
-impl Goal for Flutter {
-    fn flags(&self) -> u8 {
-        goals::MOVE | goals::LOOK | goals::JUMP
-    }
-    fn can_use(&mut self, _: &mut Mob, _: &mut Cx) -> bool {
-        true
-    }
-    fn every_tick(&self) -> bool {
-        true
-    }
-    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
+impl Behaviour for Flutter {
+    fn tick(&mut self, m: &mut Body, cx: &World<'_>) {
         // No fall damage: with 1 health, a drop off a ledge would kill it.
         m.fall_distance = 0.0;
         if self.home.is_none() {
@@ -421,13 +423,13 @@ impl Goal for Flutter {
         self.check -= 1;
         if self.check <= 0 {
             self.check = CHECK_EVERY;
-            self.patch = territory::check(cx, m.id);
+            self.patch = territory::check(cx.host(), m.id);
             if self.kind.drawn_to_light {
                 self.light = brightest_light(cx, [m.position.x, m.position.y, m.position.z]);
             }
         }
         // A sprinting player close by: off it goes, away from them.
-        if let Some(p) = cx.w.player.as_ref()
+        if let Some(p) = cx.player.as_ref()
             && p.sprinting
             && p.alive
             && (p.position.x - m.position.x).hypot(p.position.z - m.position.z) < FLEE
@@ -442,7 +444,7 @@ impl Goal for Flutter {
             );
             self.target = Some([
                 x,
-                ground(cx, x.floor() as i32, z.floor() as i32) + self.kind.height.1,
+                ground(cx, x.floor() as i32, m.position.y, z.floor() as i32) + self.kind.height.1,
                 z,
             ]);
         }
@@ -503,25 +505,30 @@ impl Goal for Flutter {
         }
         FLYING.lock().unwrap().insert(m.id, self.mode != Mode::Rest);
     }
-    fn box_clone(&self) -> Box<dyn Goal> {
-        Box::new(self.clone())
-    }
 }
 
-/// From the mod's `register_goals`, for one of its fliers: muted, its own tiny box (blocks: width, height, eye height),
-/// its template's goals replaced by this flight.
-pub fn register(mob: &mut Mob, size: (f64, f64, f64), kind: &'static Kind) {
-    crate::mob::ours(mob, size.0, size.1, size.2);
-    KINDS.lock().unwrap().insert(mob.id, mob.kind.id.to_string());
-    mob.ai.goals.add(1, Flutter::new(kind));
+/// From the mod's `register`, for one of its fliers (`butterflies:butterfly`): its own tiny box, its template's goals
+/// taken off (it flies by `tick_post`).
+pub fn register(kind: &'static str, size: crate::mob::Size) {
+    crate::mob::ours(kind, size);
 }
 
-/// From the mod's `entity_tick_post`, for each of its fliers: its territory loaded and saved, and a wild one despawned
-/// far from players (a settled or befriended one stays; the mod ticks `friend` first).
-pub fn tick_post(host: &mut dyn Host, dimension: &str, entity: u32) {
-    crate::sounds::play_queued(host, entity, crate::sounds::NEUTRAL);
+/// From the mod's `entity_tick_post`, for each of its fliers (of entity type `kind`): its flight (`flight` gives its
+/// behaviours the first time: its `Flutter`, and a mod's own before it, a fairy's following), its territory loaded
+/// and saved, and a wild one despawned far from players (a settled or befriended one stays; the mod ticks `friend`
+/// first).
+pub fn tick_post(
+    host: &mut dyn ServerHost,
+    dimension: &str,
+    kind: &str,
+    entity: u32,
+    flight: impl FnOnce() -> Vec<Box<dyn Behaviour>>,
+) {
+    crate::body::tick(host, entity, flight);
+    crate::sounds::play_queued(host, entity, SoundSource::Neutral);
     territory::tick(host, entity);
-    if let Some(at) = host.entity(entity).and_then(|e| host.entity_position(e)) {
+    KINDS.lock().unwrap().insert(entity, kind.to_string());
+    if let Some(at) = host.entity(entity).and_then(|e| e.position(host)) {
         AT.lock().unwrap().insert(entity, at);
     }
     // A settled or befriended one stays.
@@ -533,6 +540,7 @@ pub fn tick_post(host: &mut dyn Host, dimension: &str, entity: u32) {
 
 /// From the mod's `living_death` (and when one despawns): what the library kept about it is dropped.
 pub fn gone(entity: u32) {
+    crate::body::forget(entity);
     crate::colours::forget(entity);
     territory::forget(entity);
     forget(entity);

@@ -108,9 +108,18 @@ fn decode(c: &Compound) -> Result<Saved, AttachmentError> {
 /// Each creature's look, for the drawing.
 static LOOKS: Mutex<BTreeMap<u32, Look>> = Mutex::new(BTreeMap::new());
 
-/// The look of creature `entity`, once `tick` has seen it.
+/// The look of creature `entity`, once `tick` has seen it; for a creature no tick has seen (the book's, drawn in a
+/// screen) the look the book shows (`set_preview`).
 pub fn look(entity: u32) -> Option<Look> {
-    LOOKS.lock().unwrap().get(&entity).copied()
+    LOOKS.lock().unwrap().get(&entity).copied().or(*PREVIEW.lock().unwrap())
+}
+
+/// The look the book shows its creature in.
+static PREVIEW: Mutex<Option<Look>> = Mutex::new(None);
+
+/// From the book, before it draws a creature: the look to draw it in.
+pub fn set_preview(look: Option<Look>) {
+    *PREVIEW.lock().unwrap() = look;
 }
 
 /// From the mod's `entity_tick_post`, for each of its creatures: its saved look the first time, or a new one rolled for
@@ -232,6 +241,7 @@ fn pick(weights: &[(usize, u32)], random: &mut Random) -> usize {
 }
 
 /// A small random source for the rolls: seeded by the entity and the time, so two creatures spawned together differ.
+#[derive(Clone, Debug)]
 pub struct Random(u64);
 
 static SALT: AtomicU64 = AtomicU64::new(0x9E37_79B9_7F4A_7C15);

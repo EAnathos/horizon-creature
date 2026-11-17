@@ -10,19 +10,71 @@
 //! - `mob`: a creature's own size and goals, its template's being a vanilla mob's (SPECS §3.2, §6.8).
 //! - `territory`: where a released creature settles and stays (SPECS §4.2).
 //! - `crawl`: how small crawlers move (worms, scorpions): a slow crawl on the ground, wandering or over a patch (SPECS §3.6).
-//!
-//! Being ported to Sunrise (docs/SUNRISE-PORT.md), not compiled yet: `bestiary`, `jar`, `friend`, `flutter`, `hand`,
-//! `items`, `guide`, `projectile`, `recipes`.
+//! - `body`: behaviours that move a creature by hand from its server tick (flight, following, carrying).
+//! - `flutter`: how small fliers move (butterflies, moths, fireflies): short flights, landing, resting (SPECS §3.5).
+//! - `friend`: a creature befriended by a player, following them or staying (SPECS §6.2).
+//! - `hand`: the items in a player's hands, for items the server's hooks use (the jar, the guide, throwables).
+//! - `jar`: the glass jar, catching a small creature and releasing it, its look kept (SPECS §4.1).
+//! - `projectile`: thrown things (the cyclops's boulder, the scorpion dagger), flown and ended (SPECS §3.9).
+//! - `guide`: the creature guide book, given at a player's first login (SPECS §7).
+//! - `bestiary`: the book's pages, what each player met and found out (SPECS §7).
+//! - `items`: the book's Items tab, a page per item of the series, with the recipes of `recipes.rs` (SPECS §7.2).
+pub mod bestiary;
+pub mod body;
 pub mod colours;
 pub mod crawl;
+pub mod flutter;
+pub mod friend;
+mod guide;
+pub mod hand;
+pub mod items;
+pub mod jar;
 pub mod mob;
 pub mod model;
+pub mod projectile;
+mod recipes;
 pub mod sounds;
 pub mod territory;
 
 use mod_api::{
-    EntityJoinLevelEvent, EntitySizeEvent, Flow, Hooks, Host, LivingChangeTargetEvent, Registrar, RegistrationContext,
-    ServerHost,
+    BreakBlockEvent, BuildCreativeModeTabContentsEvent, ClientHost, EntityInteractEvent, EntityJoinLevelEvent,
+    EntityLeaveLevelEvent, EntitySizeEvent, EntityTickPostEvent, ExplosionDetonateEvent, Flow, Hooks, Host, HostSide,
+    InteractionResult, LevelTickPostEvent, LivingChangeTargetEvent, PlayerLoggedInEvent, RegisterCommandsEvent,
+    Registrar, RegistrationContext, RunModCommandEvent, ScreenMouseButtonPressedPreEvent, ScreenMouseScrolledPreEvent,
+    ScreenRenderPostEvent, ServerHost, TabCompleteEvent,
+};
+
+/// The library's items in the guide's Items tab (SPECS §7.2).
+static GUIDE_PAGE: items::ItemPage = items::ItemPage {
+    item: guide::ITEM,
+    dropped_by: &[],
+    given_by: &[items::Use {
+        icon: "minecraft:compass",
+        key: "bestiary.creature.item.guide.given",
+    }],
+    uses: &[items::Use {
+        icon: guide::ITEM,
+        key: "bestiary.creature.item.guide.use",
+    }],
+};
+static JAR_PAGE: items::ItemPage = items::ItemPage {
+    item: jar::ITEM,
+    dropped_by: &[],
+    given_by: &[],
+    uses: &[
+        items::Use {
+            icon: jar::ITEM,
+            key: "bestiary.creature.item.glass_jar.catch",
+        },
+        items::Use {
+            icon: "minecraft:poppy",
+            key: "bestiary.creature.item.glass_jar.release",
+        },
+        items::Use {
+            icon: "minecraft:oak_planks",
+            key: "bestiary.creature.item.glass_jar.place",
+        },
+    ],
 };
 
 /// The mod a species or an item (`butterflies:moth`) belongs to: its namespace, Minecraft's own creatures the Vanilla
@@ -43,6 +95,108 @@ impl Hooks for Creature {
     fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
         colours::declare(r);
         territory::declare(r);
+        friend::declare(r);
+        jar::declare(r);
+        guide::declare(r);
+        bestiary::declare(r);
+        bestiary::register_item(&GUIDE_PAGE);
+        bestiary::register_item(&JAR_PAGE);
+    }
+
+    /// A blast spares the placed jars.
+    fn explosion_detonate(&self, host: &mut dyn ServerHost, event: &mut ExplosionDetonateEvent<'_>) {
+        if let Some(level) = host.level(event.dimension) {
+            jar::spare_from_blast(territory::Ground::new(&*host, level), event.blocks);
+        }
+    }
+
+    fn player_logged_in(&self, host: &mut dyn ServerHost, event: &mut PlayerLoggedInEvent<'_>) {
+        if let Some(player) = host.player(event.player) {
+            guide::on_login(host, player);
+        }
+    }
+
+    /// A placed jar broken gives its filled jar back.
+    fn break_block(&self, host: &mut dyn ServerHost, event: &mut BreakBlockEvent<'_>) -> Flow {
+        jar::broken(host, event.pos);
+        Flow::Continue
+    }
+
+    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
+        bestiary::tick(host, event.dimension, event.entity, event.kind);
+    }
+
+    fn entity_leave_level(&self, _: &mut dyn ServerHost, event: &mut EntityLeaveLevelEvent<'_>) {
+        bestiary::forget(event.entity);
+    }
+
+    /// Small fliers come out near players.
+    fn level_tick_post(&self, host: HostSide, event: &mut LevelTickPostEvent) {
+        if let HostSide::Server(host) = host {
+            flutter::spawn(host, event.level);
+        }
+    }
+
+    /// An empty glass jar catches a registered creature (before the mods' own right-click). Both sides answer, so the
+    /// client neither trades with it nor tries the off hand.
+    fn entity_interact(&self, host: HostSide, event: &mut EntityInteractEvent<'_>) -> Option<InteractionResult> {
+        match host {
+            HostSide::Server(host) => jar::catch(host, event).then_some(InteractionResult::Success),
+            HostSide::Client(host) => jar::catches(&*host, event).then_some(InteractionResult::Success),
+        }
+    }
+
+    /// The operators' `/bestiary`, to check its pages.
+    fn register_commands(&self, _: &mut dyn ServerHost, event: &mut RegisterCommandsEvent<'_>) {
+        bestiary::commands(event.commands);
+    }
+
+    fn run_mod_command(&self, host: &mut dyn ServerHost, event: &mut RunModCommandEvent<'_>) -> Flow {
+        if bestiary::perform(host, event) {
+            Flow::Cancel
+        } else {
+            Flow::Continue
+        }
+    }
+
+    fn tab_complete(&self, _: &mut dyn ServerHost, event: &mut TabCompleteEvent<'_>) {
+        bestiary::complete(event);
+    }
+
+    fn screen_render_post(&self, host: &dyn ClientHost, event: &mut ScreenRenderPostEvent<'_>) {
+        bestiary::draw(host, event);
+    }
+
+    /// The wheel over the book's lists scrolls them.
+    fn screen_mouse_scrolled_pre(&self, host: &dyn ClientHost, event: &mut ScreenMouseScrolledPreEvent<'_>) -> Flow {
+        if bestiary::scrolled(host, event.screen, event.scroll[1]) {
+            Flow::Cancel
+        } else {
+            Flow::Continue
+        }
+    }
+
+    fn screen_mouse_button_pressed_pre(
+        &self,
+        host: &dyn ClientHost,
+        event: &mut ScreenMouseButtonPressedPreEvent<'_>,
+    ) -> Flow {
+        if bestiary::clicked(host, event) {
+            Flow::Cancel
+        } else {
+            Flow::Continue
+        }
+    }
+
+    /// The series' tab shows the glass jar only when a mod uses it (common/SPECS.md §3.3).
+    fn build_creative_mode_tab_contents(
+        &self,
+        host: &mut dyn ClientHost,
+        event: &mut BuildCreativeModeTabContentsEvent<'_>,
+    ) {
+        if event.tab == "creature:creature" && !jar::used() {
+            event.items.retain(|s| !hand::is(&*host, s, jar::ITEM));
+        }
     }
 
     /// Our creatures' own boxes.

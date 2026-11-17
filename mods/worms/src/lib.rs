@@ -13,7 +13,9 @@ use std::sync::Mutex;
 
 use std::sync::{Arc, OnceLock};
 
-use creature::territory;
+use creature::bestiary::{Fact, Species};
+use creature::jar::Catchable;
+use creature::territory::{self, Rule};
 use mod_api::{
     BlockEntityDrawContext, EntityInteractEvent, EntityPart, EntityRenderState, EntityRenderer, EntityTickPostEvent,
     Flow, GoalContext, GoalRegistrar, Hooks, HostSide, InteractionResult, LevelTickPostEvent, LivingDeathEvent,
@@ -31,6 +33,46 @@ const SIZE: creature::mob::Size = creature::mob::Size {
     eye_height: 0.1,
 };
 const SCALE: f32 = 0.6;
+
+/// Caught in the library's glass jar, settling in a garden (SPECS §3).
+static IN_JAR: Catchable = Catchable {
+    kind: WORM,
+    model: "worms:worm_jar",
+    settles: Some(Rule::Garden),
+    glows: false,
+};
+
+static BESTIARY: Species = Species {
+    id: WORM,
+    biomes: BIOMES,
+    wild: |id| !territory::settled(id),
+    facts: &[
+        Fact {
+            id: creature::jar::JAR_FACT,
+            item: creature::jar::ITEM,
+            key: "bestiary.worms.jar",
+        },
+        Fact {
+            id: creature::jar::GARDEN_FACT,
+            item: "minecraft:wooden_hoe",
+            key: "bestiary.worms.garden",
+        },
+    ],
+    icon: "worms:worm_spawn_egg",
+    scheme: None,
+    rarity: creature::bestiary::Rarity::Common,
+    draw: jar_view,
+};
+
+/// Drawn in a placed jar: curled a little, about a block across.
+fn jar_view(draw: &mut dyn BlockEntityDrawContext, _: Option<creature::colours::Look>) {
+    draw.push();
+    draw.translate([0.5, 0.05, 0.5]);
+    draw.scale([JAR_SCALE; 3]);
+    creature::model::draw(draw, &model_worm::WORM, TEXTURE, &|part| wiggle(part, 0.0, 1.0));
+    draw.pop();
+}
+const JAR_SCALE: f32 = 1.5;
 
 /// The biomes it lives in (its spawns, and where rain brings it up).
 const BIOMES: &[&str] = &[
@@ -263,10 +305,8 @@ struct Draw;
 
 impl EntityRenderer for Draw {
     fn submit(&self, entity: &EntityRenderState, draw: &mut dyn BlockEntityDrawContext) -> Result<(), String> {
-        let Some(mob) = &entity.living else {
-            return Ok(());
-        };
-        let amount = (mob.walk_animation_speed * 8.0).clamp(0.15, 1.0);
+        let mob = entity.living.as_ref();
+        let amount = mob.map_or(1.0, |m| (m.walk_animation_speed * 8.0).clamp(0.15, 1.0));
         draw.push();
         creature::model::living_pose(draw, mob);
         draw.scale([SCALE; 3]);
@@ -297,6 +337,8 @@ struct Worms;
 impl Hooks for Worms {
     fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
         creature::mob::ours(WORM, SIZE);
+        creature::jar::register(&IN_JAR);
+        creature::bestiary::register(&BESTIARY);
         r.entity_part(WORM, Goals);
         let _ = SPARKLE.set(r.particle_key("minecraft:happy_villager"));
     }
@@ -305,9 +347,10 @@ impl Hooks for Worms {
         event.renderers.register(WORM.into(), Arc::new(Draw));
     }
 
-    /// Right-click: nothing (no trading screen, which its template would open).
+    /// Right-click: nothing (no trading screen, which its template would open), on both sides. The library's jar
+    /// answers first.
     fn entity_interact(&self, _: HostSide, event: &mut EntityInteractEvent<'_>) -> Option<InteractionResult> {
-        (event.kind == WORM).then_some(InteractionResult::Pass)
+        (event.kind == WORM).then_some(InteractionResult::Consume)
     }
 
     fn level_tick_post(&self, host: HostSide, event: &mut LevelTickPostEvent) {

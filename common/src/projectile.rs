@@ -1,29 +1,31 @@
 //! Thrown things (SPECS §3.9): the cyclops's boulder, the scorpion dagger. A projectile is a mob of its mod (a copy of
 //! the wandering trader that can't be hurt, its own box and drawing), launched with a velocity (`launch`) and flown by
-//! the `Flight` goal: its own gravity every tick, until it reaches its target (it hurts it with its own attack
-//! damage), lands, hits a wall or flies too long. The mod reads how it ended (`ended`, from its `entity_tick_post`),
+//! the `Flight` behaviour (the library's `body`, from the mod's `entity_tick_post` through `tick_post`): its own gravity
+//! every tick, until it reaches its target (it hurts it with its own attack damage), lands, hits a wall or flies too
+//! long. The mod reads how it ended (`ended`, from its `entity_tick_post`),
 //! does what its projectile does there (a boulder shatters, a dagger falls as an item) and removes it.
 //!
 //! A projectile with no target finds what it hits on its own, from the mod's hook (`hits`: the mobs and players its
 //! box meets), since a goal sees only its own target. A projectile saved mid-flight (its world left and loaded again)
 //! has lost its velocity: it ends at once, as landed.
 //!
-//! Single player: the goals and the hooks share the mob's id (as the rest of the series, arismoko/horizon#2740).
+//! Single player: the flight and the hooks share the mob's id (as the rest of the series).
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use horizon_client::mobs::Who;
-use horizon_client::mobs::goals;
-use horizon_client::mod_api::{Compound, Cx, Goal, Host, Mob, Tag};
+use mod_api::{Compound, Host, LevelRef, ServerHost, Tag};
+
+use crate::body::{Behaviour, Body, World};
 
 /// How a projectile flies: its velocity (blocks a tick), its gravity (blocks a tick, each tick), how long it may fly
-/// (ticks), and its target, if it has one, with how close it must come to its box to hit it (blocks).
+/// (ticks), and its target (its entity id), if it has one, with how close it must come to its middle to hit it
+/// (blocks).
 #[derive(Clone, Copy, Debug)]
 pub struct Launch {
     pub velocity: [f64; 3],
     pub gravity: f64,
     pub life: i32,
-    pub target: Option<(Who, f64)>,
+    pub target: Option<(u32, f64)>,
 }
 
 /// How a projectile's flight ended.
@@ -35,16 +37,18 @@ pub enum End {
     Landed,
 }
 
-/// Each projectile's launch, read by its goal on its first tick.
+/// Each projectile's launch, read by its flight on its first tick.
 static LAUNCHES: Mutex<BTreeMap<u32, Launch>> = Mutex::new(BTreeMap::new());
 /// Each flying projectile's velocity now, for its drawing (it points where it goes).
 static VELOCITIES: Mutex<BTreeMap<u32, [f64; 3]>> = Mutex::new(BTreeMap::new());
 /// How each projectile ended, for the mod's hook.
 static ENDED: Mutex<BTreeMap<u32, End>> = Mutex::new(BTreeMap::new());
+/// The target each projectile reached, for `tick_post` to hurt it.
+static REACHED: Mutex<BTreeMap<u32, u32>> = Mutex::new(BTreeMap::new());
 
 /// Summons projectile `kind` (a mob of the mod's, which `register` gives its flight) at `from`, flying as `launch` says.
 /// Its id, if it came.
-pub fn launch(host: &mut dyn Host, dimension: &str, kind: &str, from: [f64; 3], launch: Launch) -> Option<u32> {
+pub fn launch(host: &mut dyn ServerHost, dimension: &str, kind: &str, from: [f64; 3], launch: Launch) -> Option<u32> {
     let mut nbt = Compound::new();
     nbt.insert("Invulnerable".into(), Tag::Byte(1));
     let id = host.summon(dimension, kind, from, nbt)?;
@@ -53,11 +57,27 @@ pub fn launch(host: &mut dyn Host, dimension: &str, kind: &str, from: [f64; 3], 
     Some(id)
 }
 
-/// From the mod's `register_goals`, for its projectile: muted, its own box (blocks: width, height, eye height), spared,
-/// flown by `Flight`.
-pub fn register(mob: &mut Mob, size: (f64, f64, f64)) {
-    crate::mob::ours(mob, size.0, size.1, size.2);
-    mob.ai.goals.add(1, Flight::default());
+/// From the mod's `register`, for its projectile (`cyclops:boulder`): its own box, its template's goals taken off,
+/// spared; it flies by `tick_post`.
+pub fn register(kind: &'static str, size: crate::mob::Size) {
+    crate::mob::ours(kind, size);
+}
+
+/// From the mod's `entity_tick_post`, for its projectile: its flight, and the target it reached hurt with its attack
+/// damage. Then the mod reads `ended`.
+pub fn tick_post(host: &mut dyn ServerHost, id: u32) {
+    crate::body::tick(host, id, || vec![Box::new(Flight::default())]);
+    let Some(target) = REACHED.lock().unwrap().remove(&id) else {
+        return;
+    };
+    let (Some(me), Some(target)) = (host.entity(id), host.entity(target)) else {
+        return;
+    };
+    let damage = host
+        .living(me)
+        .and_then(|l| l.attribute_value(host, "minecraft:attack_damage"))
+        .unwrap_or(1.0);
+    target.hurt(host, "minecraft:mob_attack", damage as f32, Some(me), Some(me));
 }
 
 /// How projectile `id`'s flight ended, if it has (taken: told once).
@@ -78,27 +98,30 @@ pub fn stop(id: u32, end: End) {
 
 /// What projectile `id` at `at` touches now, for one with no target: the mobs (not items, orbs or other projectiles
 /// of `kind`) and players within `reach` blocks of it, leaving out `thrower` (its id).
-pub fn hits(host: &mut dyn Host, dimension: &str, at: [f64; 3], kind: &str, thrower: u32, reach: f64) -> Vec<u32> {
+pub fn hits(host: &dyn Host, level: LevelRef, at: [f64; 3], kind: &str, thrower: u32, reach: f64) -> Vec<u32> {
     let near = |p: [f64; 3]| {
         // From the projectile to the middle of a body about a block tall standing at `p`.
         let mid = [p[0], p[1] + 0.6, p[2]];
         (0..3).map(|k| (mid[k] - at[k]).powi(2)).sum::<f64>().sqrt() < reach + 0.4
     };
-    let mut found: Vec<u32> = host
-        .level_entities(dimension)
+    let r = reach + 2.0;
+    let from = [at[0] - r, at[1] - r, at[2] - r];
+    let to = [at[0] + r, at[1] + r, at[2] + r];
+    level
+        .entities_in(host, from, to)
+        .unwrap_or_default()
         .into_iter()
-        .filter(|(id, k, p)| {
-            *id != thrower && k != kind && k != "minecraft:item" && k != "minecraft:experience_orb" && near(*p)
+        .filter(|e| {
+            let k = e.kind(host).map(|k| k.id(host)).unwrap_or_default();
+            e.id() != thrower
+                && k != kind
+                && k != "minecraft:item"
+                && k != "minecraft:experience_orb"
+                && host.living(*e).is_some()
+                && e.position(host).is_some_and(near)
         })
-        .map(|(id, _, _)| id)
-        .collect();
-    found.extend(
-        host.server_players()
-            .into_iter()
-            .filter(|p| p.dimension == dimension && p.entity_id as u32 != thrower && near(p.position))
-            .map(|p| p.entity_id as u32),
-    );
-    found
+        .map(|e| e.id())
+        .collect()
 }
 
 /// From the mod's `living_death` or once it removed the projectile.
@@ -106,10 +129,12 @@ pub fn forget(id: u32) {
     LAUNCHES.lock().unwrap().remove(&id);
     VELOCITIES.lock().unwrap().remove(&id);
     ENDED.lock().unwrap().remove(&id);
+    REACHED.lock().unwrap().remove(&id);
+    crate::body::forget(id);
 }
 
 /// A projectile's flight: its own velocity and gravity every tick, until it hits its target or lands.
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct Flight {
     launch: Option<Launch>,
     age: i32,
@@ -117,26 +142,17 @@ pub struct Flight {
 }
 
 impl Flight {
-    fn end(&mut self, m: &Mob, end: End) {
+    fn end(&mut self, m: &Body, end: End) {
         self.done = true;
         ENDED.lock().unwrap().insert(m.id, end);
     }
 }
 
-impl Goal for Flight {
-    fn flags(&self) -> u8 {
-        goals::MOVE | goals::LOOK | goals::JUMP
-    }
-    fn can_use(&mut self, _: &mut Mob, _: &mut Cx) -> bool {
-        true
-    }
-    fn can_continue(&mut self, _: &mut Mob, _: &mut Cx) -> bool {
+impl Behaviour for Flight {
+    fn can_use(&mut self, _: &mut Body, _: &World<'_>) -> bool {
         !self.done
     }
-    fn every_tick(&self) -> bool {
-        true
-    }
-    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
+    fn tick(&mut self, m: &mut Body, cx: &World<'_>) {
         if self.done {
             return;
         }
@@ -157,18 +173,23 @@ impl Goal for Flight {
             }
             return;
         };
-        if let Some((who, reach)) = launch.target
-            && let Some(t) = cx.w.target_info(who)
+        if let Some((target, reach)) = launch.target
+            && let Some(t) = cx.host().entity(target)
+            && let Some(p) = t.position(cx.host())
         {
-            let mut centre = m.position;
-            centre.y += m.kind.height / 2.0;
-            if t.alive && t.bounds.distance_squared_to_point(centre) < reach * reach {
-                horizon_client::mobs::ai::do_hurt_target(m, who, cx);
+            // Its middle, a body about a block tall, from the projectile's.
+            let d = [p[0] - m.position.x, p[1] + 0.6 - m.position.y, p[2] - m.position.z];
+            let alive = cx.host().living(t).and_then(|l| l.alive(cx.host())).unwrap_or(false);
+            if alive && d.iter().map(|v| v * v).sum::<f64>() < (reach + 0.6).powi(2) {
+                REACHED.lock().unwrap().insert(m.id, target);
                 self.end(m, End::Hit);
                 return;
             }
         }
-        if self.age > 1 && (m.on_ground || m.horizontal_collision) || self.age > launch.life {
+        // A wall: it moved much less sideways than it was thrown (the engine stopped it).
+        let thrown = launch.velocity[0].hypot(launch.velocity[2]);
+        let wall = self.age > 1 && thrown > 0.05 && m.velocity.x.hypot(m.velocity.z) < thrown * 0.3;
+        if self.age > 1 && (m.on_ground || wall) || self.age > launch.life {
             self.end(m, End::Landed);
             return;
         }
@@ -178,9 +199,6 @@ impl Goal for Flight {
         m.velocity.x = launch.velocity[0];
         m.velocity.y = launch.velocity[1];
         m.velocity.z = launch.velocity[2];
-    }
-    fn box_clone(&self) -> Box<dyn Goal> {
-        Box::new(self.clone())
     }
 }
 

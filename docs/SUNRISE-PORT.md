@@ -126,8 +126,42 @@ the trader's AI. Effort: about an hour for ~1,300 lines, mostly mechanical. What
 - **Renderer**: the pose starts at the feet, unturned; `creature::model::living_pose` turns it by `body_rot` (180 -
   yaw, as vanilla) and tips a dying mob. Our generated models draw the right way up with it.
 - **Debugging**: a native mod's stderr reaches no log; write to a file while debugging.
-- **Stage 2**: the jar, the bestiary, `hand`, `friend`, `flutter`, `projectile`, `items`, `guide`; then the tools
-  (`stage`, `install`, `check`, `model` paths) and the other mods.
+
+### Stage 2: the whole library (2026-11-17) ✅
+
+Every module of the library compiles on `mod_api` (Clippy clean, its tests pass) and worms uses it all. Tried in
+game: a jar catches a worm (survival: one jar used, the filled one in the inventory) and releases it on a garden,
+the guide opens the book, which shows the worm's page with the facts just learned. What it taught:
+
+- **Motion by hand** (`creature::body`): a goal can't set velocity, but a server hook can (`EntityRef::set_velocity`,
+  `set_rotation`, `set_head_yaw`, `set_no_gravity`, `reset_fall_distance`). Our motion goals (`flutter`'s flight,
+  `projectile`'s `Flight`, the mods' own) become `Behaviour`s on a `Body` (the mob read each tick), run from the
+  mod's `entity_tick_post` (`body::tick`) and written back: the old goal code ports almost line for line. A
+  projectile's hit is applied after (`projectile::tick_post`, `EntityRef::hurt`). There is no horizontal-collision
+  read: a wall is a projectile slowed to under a third of its throw.
+- **Items**: `use_item` and `use_on` are `ItemPart` methods (`r.item_part(r.item_key(id), part)`), not global hooks:
+  the guide's and the jar's. Hand reads and writes are direct (`LivingRef::hand_item`, `set_hand_item`): the Horizon
+  trick of marking a stack to find the selected slot is gone. `entity_interact` runs on both sides: answering on the
+  client too stops the trade screen and the off hand (arismoko#3897 needs nothing more).
+- **Placed jar**: a block entity type declared in `register` (`r.block_entity_type("jar")`) with a `BlockEntityPart`
+  (`block_entity`, `block_entity_update_tag`, `block_entity_submit`); its data written with
+  `BlockEntityRef::merge_data`. Pistons: `"push_reaction": "IMMOVEABLE"` in the block's JSON (no hook).
+- **Book**: the screen is still `mod_screen_open`; drawing is on the event's `DrawContext` (`fill`, `text`,
+  `gui_draw_item_with`, `item`); text colours need an alpha byte (`0xFF......`) or nothing shows; translations come
+  from `ClientHost::translate`. The bestiary goes to the client as a typed payload (`play_to_client_typed`, a
+  `String` chunk), whose handler reaches the client host through `cx.client_host()`. `/bestiary` is a typed command
+  (`Command::op`, `run_mod_command`, `CommandSource::Player`).
+- **The book's 3D view** draws a vanilla creature itself (`DrawContext::entity`, `GuiEntity::kind`), which Horizon
+  couldn't. ❓ **Ours draw nothing that way** (the renderer is called, no error, nothing shows; a vanilla cow draws):
+  their icon stands in. To investigate, then report on sunrise-org/sunrise.
+- **Gone**: the creative tab injection (`build_creative_mode_tab_contents` hides the jar), the piston hook, the
+  "switched off in Options > Mods" filter (Sunrise's Mods screen has no switch).
+
+### Next
+
+The tools (`cargo creature` stage, build, install, check, model and preview paths, CI), then the other mods: their
+content as worms' (folders, `sunrise-mod.toml`), their native code onto the library's new shape (`EntityPart` goals or
+`body` behaviours, `EntityRenderer`, item parts, the host split), the vulture last.
 
 ## 5. Our workarounds on Sunrise
 

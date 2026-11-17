@@ -3,7 +3,8 @@
   "properties": {
     "hardness": 0.3,
     "sounds": "minecraft:glass",
-    "light": 7
+    "light": 7,
+    "push_reaction": "IMMOVEABLE"
   },
   "item": false,
   "shapes": {

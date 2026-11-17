@@ -7,17 +7,14 @@ pub fn register_item(page: &'static ItemPage) {
     items::register(page);
 }
 
-/// From the library's `use_item`, the guide in hand: sends the acting player their bestiary, their client opens it.
-pub fn open(host: &mut dyn Host) {
-    let Some(player) = host.acting_player() else {
-        return;
-    };
-    open_for_player(host, player.uuid);
+/// From the library's `use_item`, the guide in hand: sends `player` their bestiary, their client opens it.
+pub fn open(host: &mut dyn ServerHost, player: u128) {
+    open_for_player(host, player);
 }
 
 /// Open for an explicit server player, also used by `/bestiary` as a fallback when the held guide's use is swallowed
 /// by another item or input hook.
-pub fn open_for_player(host: &mut dyn Host, player: u128) {
+pub fn open_for_player(host: &mut dyn ServerHost, player: u128) {
     let text: String = load(host, player)
         .iter()
         .map(|e| {
@@ -33,13 +30,12 @@ pub fn open_for_player(host: &mut dyn Host, player: u128) {
     send_chunked(host, player, &text);
 }
 
-/// Horizon writes a custom payload's length as a `u16` and caps a payload string at 32767 bytes (`net.rs`): a full
-/// `/bestiary unlock all` (every species in every biome) overflows one packet and was silently dropped, so the book
-/// never opened. The book is sent in chunks under `CHUNK` bytes, split on line (species) boundaries, each with a flag
+/// A payload has a size limit: a full `/bestiary unlock all` (every species in every biome) can overflow one packet.
+/// The book is sent in chunks under `CHUNK` bytes, split on line (species) boundaries, each with a flag
 /// byte; the client (`received`) accumulates them and opens on the last. (`B` one and only, `S` start, `M` more, `E`
 /// end.)
 const CHUNK: usize = 30000;
-fn send_chunked(host: &mut dyn Host, player: u128, text: &str) {
+fn send_chunked(host: &mut dyn ServerHost, player: u128, text: &str) {
     let mut chunks: Vec<String> = Vec::new();
     let mut cur = String::new();
     for line in text.split_inclusive('\n') {
@@ -62,7 +58,7 @@ fn send_chunked(host: &mut dyn Host, player: u128, text: &str) {
         let mut packet = Vec::with_capacity(1 + chunk.len());
         packet.push(flag);
         packet.extend_from_slice(chunk.as_bytes());
-        let _ = host.net_send_to_player(player, CHANNEL, &packet);
+        super::send(host, player, packet);
     }
 }
 
@@ -126,10 +122,10 @@ fn rows(count: usize) -> usize {
 /// Accumulates the book's chunks (`send_chunked`) between the start and end packets.
 static ACCUM: Mutex<String> = Mutex::new(String::new());
 
-/// From the library's `net_from_server`: the bestiary arrives in chunks; on the last the book opens (on the tab last
+/// From the library's payload handler: the bestiary arrives in chunks; on the last the book opens (on the tab last
 /// read).
-pub fn received(host: &mut dyn Host, channel: &str, data: &[u8]) {
-    if channel != CHANNEL || data.is_empty() {
+pub fn received(host: &mut dyn ClientHost, data: &[u8]) {
+    if data.is_empty() {
         return;
     }
     let (flag, chunk) = (data[0], String::from_utf8_lossy(&data[1..]));
@@ -157,8 +153,6 @@ pub fn received(host: &mut dyn Host, channel: &str, data: &[u8]) {
                 morphs: list(parts.next().unwrap_or("")),
             })
         })
-        // A mod switched off in Options > Mods has its pages hidden (kept in the save, back when it is on again).
-        .filter(|e| crate::on(host, &e.species))
         .collect();
     {
         let mut book = BOOK.lock().unwrap();
@@ -197,7 +191,6 @@ const RECIPE_ROW: f32 = 3.0 * SLOT + 4.0;
 const VIEW: [f32; 4] = [MARGIN, 20.0, PAGE - 2.0 * MARGIN, 66.0];
 const ITEM_VIEW_HEIGHT: f32 = 40.0;
 const VIEW_WITH_LOOKS_HEIGHT: f32 = 52.0;
-const VIEW_SCALE: f32 = 48.0;
 const VIEW_PITCH: f32 = 22.0;
 /// One turn of the creature, in milliseconds.
 const SPIN: u128 = 12_000;
@@ -222,8 +215,9 @@ const INK: u32 = 0x3B2A1A;
 const PICKED: u32 = 0xFFE0A030;
 const FADED: u32 = 0x7A6650;
 
-fn tr(key: &str) -> String {
-    Text::translate(key, &[]).plain()
+/// The text of translation `key` in the player's language (the key itself when no language has it).
+fn tr(host: &dyn ClientHost, key: &str) -> String {
+    host.translate(key).unwrap_or_else(|| key.to_owned())
 }
 
 /// The book's top left corner, centred on the screen.
@@ -231,12 +225,12 @@ fn origin(rect: [f32; 4]) -> [f32; 2] {
     [rect[0] + (rect[2] - WIDTH) / 2.0, rect[1] + (rect[3] - HEIGHT) / 2.0]
 }
 
-fn is_mine(host: &dyn Host, id: &str) -> bool {
-    id == "mod" && host.mod_screen() == Some(MOD_ID)
+fn is_mine(host: &dyn ClientHost) -> bool {
+    host.mod_screen() == Some(MOD_ID)
 }
 
 /// `text` cut into lines at most `width` wide.
-fn wrap(host: &dyn Host, text: &str, width: f32) -> Vec<String> {
+fn wrap(host: &dyn ClientHost, text: &str, width: f32) -> Vec<String> {
     let mut lines = Vec::new();
     let mut line = String::new();
     for word in text.split_whitespace() {
@@ -245,7 +239,7 @@ fn wrap(host: &dyn Host, text: &str, width: f32) -> Vec<String> {
         } else {
             format!("{line} {word}")
         };
-        if host.text_width(&candidate) > width && !line.is_empty() {
+        if tw(host, &candidate) > width && !line.is_empty() {
             lines.push(std::mem::replace(&mut line, word.to_string()));
         } else {
             line = candidate;
@@ -264,92 +258,64 @@ enum Subject {
     Item(&'static str),
 }
 
-static SUBJECT: Mutex<Option<Subject>> = Mutex::new(None);
-
-/// The states of the scene's blocks: a barrier (invisible) to carry the block entity, and a moss block under it (grass would
-/// need a biome for its green).
-fn scene_states(host: &dyn Host) -> Option<(BlockStateId, BlockStateId)> {
-    static STATES: Mutex<Option<(BlockStateId, BlockStateId)>> = Mutex::new(None);
-    let mut cached = STATES.lock().unwrap();
-    if cached.is_none() {
-        let states = host.block_states();
-        let find = |name: &str| states.iter().find(|(_, f)| &*f.name == name).map(|(id, _)| id);
-        *cached = find("minecraft:barrier").zip(find("minecraft:moss_block"));
-    }
-    *cached
-}
-
-/// From the library's `block_entity_submit`: in the book's scene, draws the creature or the item shown.
-pub fn specimen(host: &dyn Host, event: &mut BlockEntitySubmitEvent<'_>) {
-    let subject = *SUBJECT.lock().unwrap();
-    match subject {
-        Some(Subject::Creature(species, look)) => (species.draw)(host, &mut *event.draw, look),
-        Some(Subject::Item(item)) => draw_item(host, &mut *event.draw, item),
-        None => {}
-    }
-}
-
-/// `item`, large, standing on the moss as an item in a frame.
-fn draw_item(host: &dyn Host, draw: &mut BlockEntityDraw, item: &str) {
-    draw.push();
-    draw.translate([0.5, 0.5, 0.5]);
-    draw.scale([0.9; 3]);
-    host.draw_item(
-        draw,
-        &ItemStack::new(item, 1),
-        horizon_client::mod_api::DisplayContext::Fixed,
-        None,
-        0,
-    );
-    draw.pop();
-}
-
-/// A `Species::draw` for a species with no model of ours (a vanilla creature): its icon, large, standing on the moss
-/// as an item in a frame.
-pub fn draw_icon(host: &dyn Host, draw: &mut BlockEntityDraw, _: Option<Look>) {
-    let subject = *SUBJECT.lock().unwrap();
-    if let Some(Subject::Creature(species, _)) = subject {
-        draw_item(host, draw, species.icon);
-    }
-}
-
-/// Draws `subject`, turning, in the box `rect`.
-fn view(host: &dyn Host, batch: &mut horizon_client::mod_api::HudBatch, rect: [f32; 4], subject: Subject) {
-    let Some((barrier, moss)) = scene_states(host) else {
-        return;
-    };
-    let entity = ModBlockEntity::new(ModBlockEntityFields {
-        id: "creature:specimen".into(),
-        ..ModBlockEntityFields::default()
-    });
+/// Draws `subject`, turning, in the box `rect`: a creature itself (its own renderer, in its look picked), an item's
+/// icon, large.
+fn view(host: &dyn ClientHost, batch: &mut dyn DrawContext, rect: [f32; 4], subject: Subject) {
     let yaw = (millis() % SPIN) as f32 / SPIN as f32 * 360.0;
-    *SUBJECT.lock().unwrap() = Some(subject);
-    // Seen smaller in a shorter box.
-    let scale = VIEW_SCALE * rect[3] / VIEW[3];
-    // The scene's box is its two corners, not a corner and a size.
-    host.draw_scene(
-        batch,
-        [rect[0], rect[1], rect[0] + rect[2], rect[1] + rect[3]],
-        &[
-            NativeSceneBlock {
-                pos: [0, 0, 0],
-                state: barrier,
-                entity: Some(&entity),
-            },
-            NativeSceneBlock {
-                pos: [0, -1, 0],
-                state: moss,
-                entity: None,
-            },
-        ],
-        NativeSceneView {
-            center: [0.5, 0.25, 0.5],
-            yaw,
-            pitch: VIEW_PITCH,
-            scale,
-        },
-    );
-    *SUBJECT.lock().unwrap() = None;
+    match subject {
+        // A vanilla creature drawn itself, as in the world. Ours draw nothing through `DrawContext::entity` at this
+        // pin (their renderers run but nothing shows, docs/SUNRISE-PORT.md): their icon, large, until then.
+        Subject::Creature(species, look) if !crate::mob::is_ours(species.id) => {
+            colours::set_preview(look);
+            let view = GuiEntityView::new(
+                [rect[0], rect[1], rect[0] + rect[2], rect[1] + rect[3]],
+                rect[3] * 0.66 / 1.4,
+                0.0,
+                GuiEntityLook::Turned { yaw, pitch: VIEW_PITCH },
+            );
+            let _ = batch.entity(&GuiEntity::kind(species.id), view);
+        }
+        Subject::Creature(species, _) => icon(host, batch, rect, species.icon),
+        Subject::Item(item) => icon(host, batch, rect, item),
+    }
+}
+
+/// Item `item`'s icon, large, in the middle of `rect`.
+fn icon(host: &dyn Host, batch: &mut dyn DrawContext, rect: [f32; 4], item: &str) {
+    let size = rect[3].min(rect[2]) * 0.8;
+    if let Some(key) = item_key(host, item) {
+        batch.item(
+            key,
+            [rect[0] + (rect[2] - size) / 2.0, rect[1] + (rect[3] - size) / 2.0],
+            size,
+        );
+    }
+}
+
+/// The item `id`'s key, to draw it.
+fn item_key(host: &dyn Host, id: &str) -> Option<ItemKey> {
+    host.item_key(&Identifier::parse(id).ok()?)
+}
+
+/// Draws item `id`'s icon with its top left at `at`, as in a slot, with `count` written on it.
+fn gui_item(host: &dyn Host, batch: &mut dyn DrawContext, id: &str, at: [f32; 2], count: Option<&str>) {
+    if let Some(key) = item_key(host, id) {
+        batch.gui_draw_item_with(&ItemStack::of(key), at, count);
+    }
+}
+
+/// Text drawn in `colour` (0xRRGGBB, or 0xAARRGGBB): Sunrise draws text with its alpha, our colours have none.
+fn ink(colour: u32) -> u32 {
+    if colour >> 24 == 0 {
+        colour | 0xFF00_0000
+    } else {
+        colour
+    }
+}
+
+/// How wide `text` is drawn, in GUI pixels.
+fn tw(host: &dyn ClientHost, text: &str) -> f32 {
+    host.text_width(&Text::literal(text)).map_or(0.0, |w| w as f32)
 }
 
 fn millis() -> u128 {
@@ -396,11 +362,11 @@ fn cell(x: f32, y: f32, row: usize, col: usize, scroll: usize) -> Option<[f32; 2
 }
 
 /// The ribbons above the right page: each tab's box and its label.
-fn ribbons(host: &dyn Host, x: f32, y: f32) -> [(Tab, [f32; 4], String); 2] {
-    let creatures = tr("bestiary.creature.tab.creatures");
-    let items = tr("bestiary.creature.tab.items");
-    let w1 = host.text_width(&creatures) + 8.0;
-    let w2 = host.text_width(&items) + 8.0;
+fn ribbons(host: &dyn ClientHost, x: f32, y: f32) -> [(Tab, [f32; 4], String); 2] {
+    let creatures = tr(host, "bestiary.creature.tab.creatures");
+    let items = tr(host, "bestiary.creature.tab.items");
+    let w1 = tw(host, &creatures) + 8.0;
+    let w2 = tw(host, &items) + 8.0;
     let left = x + PAGE + MARGIN;
     [
         (Tab::Creatures, [left, y - 4.0 - RIBBON, w1, RIBBON], creatures),
@@ -440,72 +406,61 @@ impl Row {
         }
     }
 
-    fn draw(&self, host: &dyn Host, batch: &mut horizon_client::mod_api::HudBatch, px: f32, at: f32) {
+    fn draw(&self, host: &dyn ClientHost, batch: &mut dyn DrawContext, px: f32, at: f32) {
         match self {
-            Row::Text(text, colour, indent) => host.text(batch, text, [px + indent, at], *colour, false),
+            Row::Text(text, colour, indent) => batch.text(text, [px + indent, at], ink(*colour), false),
             Row::Facts(facts) => {
                 let mut fx = px;
                 for (item, label) in facts {
-                    host.gui_draw_item(batch, &ItemStack::new(item, 1), [fx, at]);
-                    host.text(batch, label, [fx + 18.0, at + 4.0], INK, false);
-                    fx += 24.0 + host.text_width(label);
+                    gui_item(host, batch, item, [fx, at], None);
+                    batch.text(label, [fx + 18.0, at + 4.0], ink(INK), false);
+                    fx += 24.0 + tw(host, label);
                 }
             }
             Row::Icons(items) => {
                 for (k, item) in items.iter().enumerate() {
-                    host.gui_draw_item(batch, &ItemStack::new(item, 1), [px + k as f32 * 18.0, at]);
+                    gui_item(host, batch, item, [px + k as f32 * 18.0, at], None);
                 }
             }
             Row::Line(item, text) => {
-                host.gui_draw_item(batch, &ItemStack::new(item, 1), [px, at]);
-                host.text(batch, text, [px + 18.0, at + 4.0], INK, false);
+                gui_item(host, batch, item, [px, at], None);
+                batch.text(text, [px + 18.0, at + 4.0], ink(INK), false);
             }
             // Right under the line it follows, whose row is an icon high.
-            Row::More(text) => host.text(batch, text, [px + 18.0, at + 4.0 - (ICON_ROW - LINE)], INK, false),
+            Row::More(text) => batch.text(text, [px + 18.0, at + 4.0 - (ICON_ROW - LINE)], ink(INK), false),
             Row::Recipe(r, stations) => draw_recipe(host, batch, r, stations, px, at),
         }
     }
 }
 
 /// A recipe: its 3 × 3 grid (a slot with several items shows each in turn), its stations, an arrow, what it makes.
-fn draw_recipe(
-    host: &dyn Host,
-    batch: &mut horizon_client::mod_api::HudBatch,
-    r: &Recipe,
-    stations: &[Station],
-    px: f32,
-    at: f32,
-) {
+fn draw_recipe(host: &dyn ClientHost, batch: &mut dyn DrawContext, r: &Recipe, stations: &[Station], px: f32, at: f32) {
     let turn = (millis() / 1000) as usize;
     for (k, slot) in r.grid.iter().enumerate() {
         let [sx, sy] = [px + (k % 3) as f32 * SLOT, at + (k / 3) as f32 * SLOT];
-        host.fill(batch, [sx, sy, SLOT - 1.0, SLOT - 1.0], SLOT_BACK);
+        batch.fill([sx, sy, SLOT - 1.0, SLOT - 1.0], SLOT_BACK);
         if !slot.is_empty() {
-            host.gui_draw_item(batch, &ItemStack::new(slot[turn % slot.len()], 1), [sx, sy]);
+            gui_item(host, batch, slot[turn % slot.len()], [sx, sy], None);
         }
     }
     let ax = px + 3.0 * SLOT + 4.0;
     for (k, station) in stations.iter().enumerate() {
-        host.gui_draw_item(
-            batch,
-            &ItemStack::new(station.icon(), 1),
-            [ax + 2.0 + k as f32 * 18.0, at],
-        );
+        gui_item(host, batch, station.icon(), [ax + 2.0 + k as f32 * 18.0, at], None);
     }
-    host.text(batch, "->", [ax + 4.0, at + SLOT + 5.0], FADED, false);
+    batch.text("->", [ax + 4.0, at + SLOT + 5.0], ink(FADED), false);
     let rx = ax + 22.0;
-    host.fill(batch, [rx - 1.0, at + SLOT - 1.0, SLOT, SLOT], SLOT_BACK);
+    batch.fill([rx - 1.0, at + SLOT - 1.0, SLOT, SLOT], SLOT_BACK);
     let count = (r.count > 1).then(|| r.count.to_string());
-    host.gui_draw_item_with(batch, &ItemStack::new(r.result, 1), [rx, at + SLOT], count.as_deref());
+    gui_item(host, batch, r.result, [rx, at + SLOT], count.as_deref());
 }
 
 /// Wraps items with their word into rows `width` wide.
-fn fact_rows(host: &dyn Host, facts: Vec<(&'static str, String)>, width: f32) -> Vec<Row> {
+fn fact_rows(host: &dyn ClientHost, facts: Vec<(&'static str, String)>, width: f32) -> Vec<Row> {
     let mut rows = Vec::new();
     let mut row: Vec<(&'static str, String)> = Vec::new();
     let mut used = 0.0;
     for (item, label) in facts {
-        let w = 24.0 + host.text_width(&label);
+        let w = 24.0 + tw(host, &label);
         if !row.is_empty() && used + w > width + 6.0 {
             rows.push(Row::Facts(std::mem::take(&mut row)));
             used = 0.0;
@@ -526,7 +481,7 @@ fn icon_rows(items: Vec<&'static str>, width: f32) -> Vec<Row> {
 }
 
 /// A line with its icon, the text wrapped beside it.
-fn line_rows(host: &dyn Host, icon: &'static str, text: &str, width: f32) -> Vec<Row> {
+fn line_rows(host: &dyn ClientHost, icon: &'static str, text: &str, width: f32) -> Vec<Row> {
     let mut lines = wrap(host, text, width - 18.0).into_iter();
     let mut rows = vec![Row::Line(icon, lines.next().unwrap_or_default())];
     rows.extend(lines.map(Row::More));
@@ -534,10 +489,10 @@ fn line_rows(host: &dyn Host, icon: &'static str, text: &str, width: f32) -> Vec
 }
 
 /// A species' details: the biomes it was met in, what was found out, then its drops under their heading.
-fn creature_rows(host: &dyn Host, sp: &Species, entry: &Entry, width: f32) -> Vec<Row> {
+fn creature_rows(host: &dyn ClientHost, sp: &Species, entry: &Entry, width: f32) -> Vec<Row> {
     let mut rows = Vec::new();
     if !entry.biomes.is_empty() {
-        let biomes: Vec<String> = entry.biomes.iter().map(|b| tr(&biome_key(b))).collect();
+        let biomes: Vec<String> = entry.biomes.iter().map(|b| tr(host, &biome_key(b))).collect();
         rows.extend(
             wrap(host, &biomes.join(", "), width)
                 .into_iter()
@@ -548,22 +503,22 @@ fn creature_rows(host: &dyn Host, sp: &Species, entry: &Entry, width: f32) -> Ve
     let (drops, facts): (Vec<&Fact>, Vec<&Fact>) = sp.facts.iter().filter(known).partition(|f| f.key.is_empty());
     rows.extend(fact_rows(
         host,
-        facts.iter().map(|f| (f.item, tr(f.key))).collect(),
+        facts.iter().map(|f| (f.item, tr(host, f.key))).collect(),
         width,
     ));
     if !drops.is_empty() {
-        rows.push(Row::Text(tr("bestiary.creature.drops"), FADED, 0.0));
+        rows.push(Row::Text(tr(host, "bestiary.creature.drops"), FADED, 0.0));
         rows.extend(icon_rows(drops.iter().map(|f| f.item).collect(), width));
     }
     rows
 }
 
 /// An item's details: how it is got (its recipes, who drops it, who gives it), then its uses and what it makes.
-fn item_rows(host: &dyn Host, page: &ItemPage, width: f32) -> Vec<Row> {
+fn item_rows(host: &dyn ClientHost, page: &ItemPage, width: f32) -> Vec<Row> {
     let mut rows = Vec::new();
     let made = items::made_by(page.item);
     if !made.is_empty() || !page.dropped_by.is_empty() || !page.given_by.is_empty() {
-        rows.push(Row::Text(tr("bestiary.creature.item.get"), FADED, 0.0));
+        rows.push(Row::Text(tr(host, "bestiary.creature.item.get"), FADED, 0.0));
     }
     // Recipes from the same grid, in other stations, share one grid.
     let mut recipes: Vec<(&'static Recipe, Vec<Station>)> = Vec::new();
@@ -576,25 +531,24 @@ fn item_rows(host: &dyn Host, page: &ItemPage, width: f32) -> Vec<Row> {
     rows.extend(recipes.into_iter().map(|(r, stations)| Row::Recipe(r, stations)));
     for creature in page.dropped_by {
         let icon = species(creature).map_or_else(|| egg(creature), |s| s.icon);
-        let text = Text::translate(
-            "bestiary.creature.item.dropped_by",
-            &[Text::translate(&entity_key(creature), &[])],
-        )
-        .plain();
+        let name = tr(host, &entity_key(creature));
+        let text = tr(host, "bestiary.creature.item.dropped_by")
+            .replace("%1$s", &name)
+            .replace("%s", &name);
         rows.extend(line_rows(host, icon, &text, width));
     }
     for given in page.given_by {
-        rows.extend(line_rows(host, given.icon, &tr(given.key), width));
+        rows.extend(line_rows(host, given.icon, &tr(host, given.key), width));
     }
     let used_in = items::used_in(page.item);
     if !page.uses.is_empty() || !used_in.is_empty() {
-        rows.push(Row::Text(tr("bestiary.creature.item.uses"), FADED, 0.0));
+        rows.push(Row::Text(tr(host, "bestiary.creature.item.uses"), FADED, 0.0));
     }
     for u in page.uses {
-        rows.extend(line_rows(host, u.icon, &tr(u.key), width));
+        rows.extend(line_rows(host, u.icon, &tr(host, u.key), width));
     }
     if !used_in.is_empty() {
-        rows.push(Row::Text(tr("bestiary.creature.item.makes"), FADED, 0.0));
+        rows.push(Row::Text(tr(host, "bestiary.creature.item.makes"), FADED, 0.0));
         rows.extend(icon_rows(used_in, width));
     }
     rows
@@ -608,8 +562,8 @@ fn egg(creature: &str) -> &'static str {
 /// Draws `rows` from the `scroll`th on, in the band from `top` to `bottom`, with a scrollbar when they don't all fit.
 /// The last first row there can be, for the wheel.
 fn draw_rows(
-    host: &dyn Host,
-    batch: &mut horizon_client::mod_api::HudBatch,
+    host: &dyn ClientHost,
+    batch: &mut dyn DrawContext,
     rows: &[Row],
     px: f32,
     [top, bottom]: [f32; 2],
@@ -633,36 +587,32 @@ fn draw_rows(
     }
     if last > 0 {
         let (bx, bh) = (px + PAGE - 2.0 * MARGIN + 4.0, bottom - top);
-        host.fill(batch, [bx, top, 2.0, bh], FOLD);
+        batch.fill([bx, top, 2.0, bh], FOLD);
         let thumb = (bh / (last + 1) as f32).max(6.0);
         let at = top + (bh - thumb) * scroll as f32 / last as f32;
-        host.fill(batch, [bx, at, 2.0, thumb], 0xFF00_0000 | FADED);
+        batch.fill([bx, at, 2.0, thumb], 0xFF00_0000 | FADED);
     }
     last
 }
 
 /// From the library's `screen_render_post`: draws the open book.
-pub fn draw(host: &dyn Host, event: &mut ScreenRenderPostEvent<'_>) {
-    if !is_mine(host, event.screen.id) {
+pub fn draw(host: &dyn ClientHost, event: &mut ScreenRenderPostEvent<'_>) {
+    if !is_mine(host) {
         return;
     }
-    let batch = &mut *event.batch;
+    let batch = &mut *event.draw;
     let [x, y] = origin(event.screen.rect);
     let mut book = BOOK.lock().unwrap();
     // The ribbons, the open one in the paper's colour; the cover around two pages and the fold between them.
     for (tab, r, label) in ribbons(host, x, y) {
         let open = tab == book.tab;
-        host.fill(
-            batch,
-            [r[0], r[1], r[2], r[3] + 4.0],
-            if open { PAPER } else { RIBBON_SHUT },
-        );
+        batch.fill([r[0], r[1], r[2], r[3] + 4.0], if open { PAPER } else { RIBBON_SHUT });
         let colour = if open { INK } else { 0xEFE4C8 };
-        host.text(batch, &label, [r[0] + 4.0, r[1] + 3.0], colour, false);
+        batch.text(&label, [r[0] + 4.0, r[1] + 3.0], ink(colour), false);
     }
-    host.fill(batch, [x - 4.0, y - 4.0, WIDTH + 8.0, HEIGHT + 8.0], COVER);
-    host.fill(batch, [x, y, WIDTH, HEIGHT], PAPER);
-    host.fill(batch, [x + PAGE - 1.0, y, 2.0, HEIGHT], FOLD);
+    batch.fill([x - 4.0, y - 4.0, WIDTH + 8.0, HEIGHT + 8.0], COVER);
+    batch.fill([x, y, WIDTH, HEIGHT], PAPER);
+    batch.fill([x + PAGE - 1.0, y, 2.0, HEIGHT], FOLD);
     match book.tab {
         Tab::Creatures => draw_creatures(host, batch, &mut book, x, y),
         Tab::Items => draw_items(host, batch, &mut book, x, y),
@@ -670,55 +620,48 @@ pub fn draw(host: &dyn Host, event: &mut ScreenRenderPostEvent<'_>) {
 }
 
 /// The right page's scrollbar, when there are more rows of icons than shown.
-fn grid_scrollbar(
-    host: &dyn Host,
-    batch: &mut horizon_client::mod_api::HudBatch,
-    x: f32,
-    y: f32,
-    total: usize,
-    scroll: usize,
-) {
+fn grid_scrollbar(_: &dyn ClientHost, batch: &mut dyn DrawContext, x: f32, y: f32, total: usize, scroll: usize) {
     if total > GRID_ROWS {
         let (bx, by, bh) = (x + WIDTH - 5.0, y + GRID_TOP, GRID_ROWS as f32 * CELL - 2.0);
-        host.fill(batch, [bx, by, 2.0, bh], FOLD);
+        batch.fill([bx, by, 2.0, bh], FOLD);
         let thumb = bh * GRID_ROWS as f32 / total as f32;
         let top = by + (bh - thumb) * scroll as f32 / (total - GRID_ROWS) as f32;
-        host.fill(batch, [bx, top, 2.0, thumb], 0xFF00_0000 | FADED);
+        batch.fill([bx, top, 2.0, thumb], 0xFF00_0000 | FADED);
     }
 }
 
 /// The Creatures tab: the species met on the right, the one picked on the left.
-fn draw_creatures(host: &dyn Host, batch: &mut horizon_client::mod_api::HudBatch, book: &mut Book, x: f32, y: f32) {
+fn draw_creatures(host: &dyn ClientHost, batch: &mut dyn DrawContext, book: &mut Book, x: f32, y: f32) {
     let rx = x + PAGE + MARGIN;
-    host.text(batch, &tr("bestiary.creature.title"), [rx, y + MARGIN], INK, false);
+    batch.text(&tr(host, "bestiary.creature.title"), [rx, y + MARGIN], ink(INK), false);
     if book.entries.is_empty() {
-        for (k, line) in wrap(host, &tr("bestiary.creature.empty"), PAGE - 2.0 * MARGIN)
+        for (k, line) in wrap(host, &tr(host, "bestiary.creature.empty"), PAGE - 2.0 * MARGIN)
             .iter()
             .enumerate()
         {
-            host.text(batch, line, [rx, y + GRID_TOP + k as f32 * LINE], FADED, false);
+            batch.text(line, [rx, y + GRID_TOP + k as f32 * LINE], ink(FADED), false);
         }
         return;
     }
-    let met = format!("{}: {}", tr("bestiary.creature.met"), book.entries.len());
-    host.text(batch, &met, [rx, y + MARGIN + 12.0], FADED, false);
+    let met = format!("{}: {}", tr(host, "bestiary.creature.met"), book.entries.len());
+    batch.text(&met, [rx, y + MARGIN + 12.0], ink(FADED), false);
     let (cells, line) = grid(&book.entries);
     for &(k, row, col) in &cells {
         let Some([cx, cy]) = cell(x, y, row, col, book.grid_scroll) else {
             continue;
         };
         if k == book.selected {
-            host.fill(batch, [cx - 1.0, cy - 1.0, CELL - 2.0, CELL - 2.0], HIGHLIGHT);
+            batch.fill([cx - 1.0, cy - 1.0, CELL - 2.0, CELL - 2.0], HIGHLIGHT);
         }
         if let Some(s) = species(&book.entries[k].species) {
-            host.gui_draw_item(batch, &ItemStack::new(s.icon, 1), [cx + 1.0, cy + 1.0]);
+            gui_item(host, batch, s.icon, [cx + 1.0, cy + 1.0], None);
         }
     }
     // The line above Minecraft's own creatures, when the series' are above it.
     if let Some(row) = line.filter(|r| *r > 0)
         && let Some([_, ly]) = cell(x, y, row, 0, book.grid_scroll)
     {
-        host.fill(batch, [rx, ly - 2.0, PAGE - 2.0 * MARGIN, 1.0], FOLD);
+        batch.fill([rx, ly - 2.0, PAGE - 2.0 * MARGIN, 1.0], FOLD);
     }
     grid_scrollbar(host, batch, x, y, grid_rows(&book.entries), book.grid_scroll);
     // Left page: the creature picked.
@@ -729,11 +672,11 @@ fn draw_creatures(host: &dyn Host, batch: &mut horizon_client::mod_api::HudBatch
         return;
     };
     let (px, width) = (x + MARGIN, PAGE - 2.0 * MARGIN);
-    host.text(batch, &tr(&entity_key(&entry.species)), [px, y + 8.0], INK, false);
+    batch.text(&tr(host, &entity_key(&entry.species)), [px, y + 8.0], ink(INK), false);
     // How rare it is, on the right of its name.
-    let rarity = tr(sp.rarity.key());
-    let rx_end = x + PAGE - MARGIN - host.text_width(&rarity);
-    host.text(batch, &rarity, [rx_end, y + 8.0], sp.rarity.colour(), false);
+    let rarity = tr(host, sp.rarity.key());
+    let rx_end = x + PAGE - MARGIN - tw(host, &rarity);
+    batch.text(&rarity, [rx_end, y + 8.0], ink(sp.rarity.colour()), false);
     let morphs = sorted_morphs(sp, entry);
     let look = sp.scheme.map(|_| morphs.get(book.morph).copied().unwrap_or_default());
     // A species with looks has its swatches below: its view is shorter, to leave its details room.
@@ -743,7 +686,7 @@ fn draw_creatures(host: &dyn Host, batch: &mut horizon_client::mod_api::HudBatch
         VIEW[3]
     };
     let view_box = [x + VIEW[0], y + VIEW[1], VIEW[2], view_height];
-    host.fill(batch, view_box, VIEW_BACK);
+    batch.fill(view_box, VIEW_BACK);
     view(host, batch, view_box, Subject::Creature(sp, look));
     // Its biomes, facts and drops, scrolled by the wheel above the swatches.
     let details = creature_rows(host, sp, entry, width);
@@ -763,20 +706,16 @@ fn draw_creatures(host: &dyn Host, batch: &mut horizon_client::mod_api::HudBatch
             let sx = px + (shown % PER_LINE) as f32 * STEP;
             let sy = y + SWATCHES_TOP + (shown / PER_LINE) as f32 * STEP;
             if k == book.morph {
-                host.fill(batch, [sx - 1.0, sy - 1.0, SWATCH + 2.0, SWATCH + 2.0], PICKED);
+                batch.fill([sx - 1.0, sy - 1.0, SWATCH + 2.0, SWATCH + 2.0], PICKED);
             }
-            host.fill(batch, [sx, sy, SWATCH, SWATCH], rgb(m.base));
+            batch.fill([sx, sy, SWATCH, SWATCH], rgb(m.base));
             if scheme.patterns.get(m.pattern).is_some_and(|p| p.texture.is_some()) {
-                host.fill(
-                    batch,
-                    [sx + 3.0, sy + 3.0, SWATCH - 6.0, SWATCH - 6.0],
-                    rgb(m.pattern_colour),
-                );
+                batch.fill([sx + 3.0, sy + 3.0, SWATCH - 6.0, SWATCH - 6.0], rgb(m.pattern_colour));
             }
         }
         if let Some(m) = morphs.get(book.morph) {
             let ns = entry.species.split(':').next().unwrap_or("");
-            let name = |kind: &str, id: &str| tr(&format!("look.{ns}.{kind}.{id}"));
+            let name = |kind: &str, id: &str| tr(host, &format!("look.{ns}.{kind}.{id}"));
             let pattern = scheme.patterns.get(m.pattern);
             let mut text = name("colour", scheme.colours[m.base].id);
             if let Some(p) = pattern.filter(|p| p.texture.is_some()) {
@@ -786,11 +725,10 @@ fn draw_creatures(host: &dyn Host, batch: &mut horizon_client::mod_api::HudBatch
                     name("colour", scheme.colours[m.pattern_colour].id)
                 );
             }
-            host.text(
-                batch,
+            batch.text(
                 &text,
                 [px, y + SWATCHES_TOP + ROWS_SHOWN as f32 * STEP],
-                FADED,
+                ink(FADED),
                 false,
             );
         }
@@ -802,29 +740,29 @@ fn draw_creatures(host: &dyn Host, batch: &mut horizon_client::mod_api::HudBatch
                 y + SWATCHES_TOP,
                 ROWS_SHOWN as f32 * STEP - 3.0,
             );
-            host.fill(batch, [bx, by, 2.0, bh], FOLD);
+            batch.fill([bx, by, 2.0, bh], FOLD);
             let thumb = bh * ROWS_SHOWN as f32 / total as f32;
             let top = by + (bh - thumb) * book.scroll as f32 / (total - ROWS_SHOWN) as f32;
-            host.fill(batch, [bx, top, 2.0, thumb], 0xFF00_0000 | FADED);
+            batch.fill([bx, top, 2.0, thumb], 0xFF00_0000 | FADED);
         }
     }
 }
 
 /// The Items tab: the series' items on the right, the one picked on the left.
-fn draw_items(host: &dyn Host, batch: &mut horizon_client::mod_api::HudBatch, book: &mut Book, x: f32, y: f32) {
+fn draw_items(host: &dyn ClientHost, batch: &mut dyn DrawContext, book: &mut Book, x: f32, y: f32) {
     let rx = x + PAGE + MARGIN;
-    host.text(batch, &tr("bestiary.creature.items"), [rx, y + MARGIN], INK, false);
-    let pages = items::pages(host);
-    let count = format!("{}: {}", tr("bestiary.creature.items_count"), pages.len());
-    host.text(batch, &count, [rx, y + MARGIN + 12.0], FADED, false);
+    batch.text(&tr(host, "bestiary.creature.items"), [rx, y + MARGIN], ink(INK), false);
+    let pages = items::pages();
+    let count = format!("{}: {}", tr(host, "bestiary.creature.items_count"), pages.len());
+    batch.text(&count, [rx, y + MARGIN + 12.0], ink(FADED), false);
     for (k, row, col) in item_grid(pages.len()) {
         let Some([cx, cy]) = cell(x, y, row, col, book.item_scroll) else {
             continue;
         };
         if k == book.item {
-            host.fill(batch, [cx - 1.0, cy - 1.0, CELL - 2.0, CELL - 2.0], HIGHLIGHT);
+            batch.fill([cx - 1.0, cy - 1.0, CELL - 2.0, CELL - 2.0], HIGHLIGHT);
         }
-        host.gui_draw_item(batch, &ItemStack::new(pages[k].item, 1), [cx + 1.0, cy + 1.0]);
+        gui_item(host, batch, pages[k].item, [cx + 1.0, cy + 1.0], None);
     }
     grid_scrollbar(host, batch, x, y, pages.len().div_ceil(PER_ROW), book.item_scroll);
     // Left page: the item picked, turning, then how it is got and what it is for.
@@ -832,9 +770,9 @@ fn draw_items(host: &dyn Host, batch: &mut horizon_client::mod_api::HudBatch, bo
         return;
     };
     let (px, width) = (x + MARGIN, PAGE - 2.0 * MARGIN);
-    host.text(batch, &tr(&items::item_key(page.item)), [px, y + 8.0], INK, false);
+    batch.text(&tr(host, &items::item_key(page.item)), [px, y + 8.0], ink(INK), false);
     let view_box = [x + VIEW[0], y + VIEW[1], VIEW[2], ITEM_VIEW_HEIGHT];
-    host.fill(batch, view_box, VIEW_BACK);
+    batch.fill(view_box, VIEW_BACK);
     view(host, batch, view_box, Subject::Item(page.item));
     let details = item_rows(host, page, width);
     let top = y + VIEW[1] + ITEM_VIEW_HEIGHT + 4.0;
@@ -850,8 +788,8 @@ fn draw_items(host: &dyn Host, batch: &mut horizon_client::mod_api::HudBatch, bo
 
 /// From the library's `screen_mouse_button_pressed_pre`: a ribbon opens its tab, an icon its page, a swatch shows its
 /// morph.
-pub fn clicked(host: &dyn Host, event: &ScreenMouseButtonPressedPreEvent<'_>) -> bool {
-    if !is_mine(host, event.screen.id) || event.button != 0 {
+pub fn clicked(host: &dyn ClientHost, event: &ScreenMouseButtonPressedPreEvent<'_>) -> bool {
+    if !is_mine(host) || event.button != 0 {
         return false;
     }
     let [x, y] = origin(event.screen.rect);
@@ -868,7 +806,7 @@ pub fn clicked(host: &dyn Host, event: &ScreenMouseButtonPressedPreEvent<'_>) ->
         }
     }
     if book.tab == Tab::Items {
-        for (k, row, col) in item_grid(items::pages(host).len()) {
+        for (k, row, col) in item_grid(items::pages().len()) {
             if let Some([cx, cy]) = cell(x, y, row, col, book.item_scroll)
                 && inside(mouse, [cx, cy, CELL, CELL])
             {
@@ -914,8 +852,8 @@ fn step(scroll: &mut usize, wheel: f64, last: usize) {
 
 /// From the library's `screen_mouse_scrolled_pre`: the wheel scrolls, a row at a time, the right page's icons, the
 /// morph swatches, or the left page's details, whichever it is over. Whether it was taken.
-pub fn scrolled(host: &dyn Host, screen: &horizon_client::mod_api::NativeScreenView<'_>, scroll: f64) -> bool {
-    if !is_mine(host, screen.id) {
+pub fn scrolled(host: &dyn ClientHost, screen: &ScreenView<'_>, scroll: f64) -> bool {
+    if !is_mine(host) {
         return false;
     }
     let [x, y] = origin(screen.rect);
@@ -923,7 +861,7 @@ pub fn scrolled(host: &dyn Host, screen: &horizon_client::mod_api::NativeScreenV
     let mut book = BOOK.lock().unwrap();
     if mx >= x + PAGE && mx < x + WIDTH && my >= y && my < y + HEIGHT {
         if book.tab == Tab::Items {
-            let last = items::pages(host).len().div_ceil(PER_ROW).saturating_sub(GRID_ROWS);
+            let last = items::pages().len().div_ceil(PER_ROW).saturating_sub(GRID_ROWS);
             step(&mut book.item_scroll, scroll, last);
         } else {
             let last = grid_rows(&book.entries).saturating_sub(GRID_ROWS);
