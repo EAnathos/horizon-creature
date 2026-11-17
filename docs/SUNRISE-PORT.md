@@ -99,6 +99,36 @@ methods against Sunrise's catalog (2026-11-17):
 Port order ✅: the library first (it is every mod's dependency), then **worms** as the spike (small, ground mob,
 goals + renderer + jar), measure the effort, then the other mods, the vulture last (riding, HUD, screen).
 
+### The spike, stage 1 (branch `sunrise`, 2026-11-17) ✅
+
+The library's `model`, `mob`, `crawl`, `sounds`, `colours` and `territory`, and worms without the jar and the
+bestiary, are ported, built by `sunrise-launcher native-build` (25 s the first time, seconds after) and tried in game:
+worms are drawn with their model, wiggle, crawl over the grass, cast a small shadow, take no trades and have none of
+the trader's AI. Effort: about an hour for ~1,300 lines, mostly mechanical. What it taught:
+
+- **Layout** ✅: a module's root holds its package (`sunrise-mod.toml`, `Cargo.toml`, `src/`, `assets/`, `data/`),
+  and our own files beside it (`module.toml`, `SPECS.md`, `sources/` with the `.bbmodel` and `sounds.toml` that were
+  in `assets/`). A package refuses unknown root files (`module.toml`), so the tools stage the package files in
+  `target/stage/<id>/` and build from there (by hand for now).
+- **Building**: `sunrise-launcher native-build target/stage --instance creature-dev --trust-native-code` builds every
+  staged module and selects the build. `cargo sunrise-mod build` of a mod with a dependency wants the rustup toolchain
+  `1.99.1-x86_64-unknown-linux-gnu`, which rustup won't link from the launcher's copy: skip it, the launcher builds.
+- **Checking locally**: `cargo check` works against `.sunrise/sdk/` with the launcher's Rust
+  (`~/.local/share/sunrise/launcher/rust/1.99.1-x86_64-unknown-linux-gnu/bin`, no Clippy there; the system's
+  stable Clippy works). A mod needs the `creature` crate the launcher adds: a check copy with
+  `creature = { path = ".../common", package = "mod-creature" }`, every crate on one SDK copy (two copies collide).
+- **Goals**: an `EntityPart`'s goals join the template's. The library takes the template's off in
+  `entity_join_level` (`MobRef::goals` / `remove_goal`, every goal not named `creature:...`): a trader's are
+  `float`, `DrinkItem` (twice), `TradeWithPlayer`, `avoid_entity` (7), `panic`, `LookAtTradingPlayer`,
+  `WanderToPosition`, `MoveTowardsRestriction`, `stroll`, `InteractGoal`, `look_at_player`. A goal can't write
+  velocity or yaw: it steers through `move_to` (path), `look_at`, `jump`; keep `move_to`'s speed near 1 and the
+  slowness in the `movement_speed` attribute (0.07 left the worm still).
+- **Renderer**: the pose starts at the feet, unturned; `creature::model::living_pose` turns it by `body_rot` (180 -
+  yaw, as vanilla) and tips a dying mob. Our generated models draw the right way up with it.
+- **Debugging**: a native mod's stderr reaches no log; write to a file while debugging.
+- **Stage 2**: the jar, the bestiary, `hand`, `friend`, `flutter`, `projectile`, `items`, `guide`; then the tools
+  (`stage`, `install`, `check`, `model` paths) and the other mods.
+
 ## 5. Our workarounds on Sunrise
 
 Each line of docs/HORIZON-ISSUES.md, as Sunrise stands (book and API of `559fd52`; ❓ until tried in game):
@@ -106,9 +136,9 @@ Each line of docs/HORIZON-ISSUES.md, as Sunrise stands (book and API of `559fd52
 | Issue | On Sunrise | What the port does |
 |---|---|---|
 | #13975 seat height | `passenger_attachments` in `entity_type` JSON | Hitbox back to ~1 block, seat declared |
-| #6276 entity size | `entity_size` hook (NeoForge `EntityEvent.Size`) | Drop the cloned `MobType`, answer `entity_size` |
-| arismoko#2738 mob sounds | `sounds` in `entity_type` JSON | Declare ambient, hurt, death, step; drop the muting and the sound queue (flaps and eating stay ours) |
-| arismoko#3896 shadows | `shadow_radius`, `shadow_strength` in `entity_type` JSON | Declare each mob's shadow |
+| #6276 entity size | `entity_size` hook (NeoForge `EntityEvent.Size`) ✅ worms | Drop the cloned `MobType`, answer `entity_size` (`creature::mob::ours`) |
+| arismoko#2738 mob sounds | `sounds` in `entity_type` JSON ✅ worms | Declare ambient, hurt, death, step; drop the muting and the sound queue (flaps and eating stay ours) |
+| arismoko#3896 shadows | `shadow_radius`, `shadow_strength` in `entity_type` JSON ✅ worms | Declare each mob's shadow |
 | arismoko#2740 render state in statics | Synced attachments (`sync: true`) readable on the client through `Host::attachments`; the renderer itself has no host | Keep render state per entity id, filled from synced attachments in a client hook: works in multiplayer |
 | arismoko#2739 rider's sneak / #13972 client-side click | Server `player_input` hook (the `PlayerInput` flags, sneak included) ❓ fires for a single-player host?; `entity_mount` can cancel a dismount; `entity_controlling_passenger` | Drop `ride_keys.rs`; the vulture's `Fly` goal reads the rider's input from the server side |
 | #13973 `saddled` steering | Riding is the engine's; no `Mob.extra` field from the API | Harness in an `EntityPartState` |

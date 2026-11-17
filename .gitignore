@@ -1,3 +1,4 @@
 target/
 sounds-src/
 __pycache__/
+.sunrise/

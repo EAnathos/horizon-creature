@@ -1,7 +1,7 @@
 //! Worms (SPECS.md): earthworms that make a garden grow, of the Sunrise Creatures series.
 //!
 //! A worm is a copy of the wandering trader (its behaviour is all goals) with a tiny box, crawling slowly (`Crawl`) and
-//! drawn with its own segmented model (`model_worm.rs`, from `assets/models/worm.bbmodel`), wiggling as it goes. Caught
+//! drawn with its own segmented model (`model_worm.rs`, from `sources/models/worm.bbmodel`), wiggling as it goes. Caught
 //! in the library's glass jar, released on farmland (or a crop on it) of a garden of at least 10 connected farmland
 //! blocks, it settles there (the library's garden rule) and crawls only on that farmland; every `GROW_EVERY` ticks it
 //! makes one crop of its garden grow a stage, with green sparkles on it, at most `MAX_WORMS` worms counting per garden
@@ -11,69 +11,38 @@ mod model_worm;
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use creature::bestiary::{Fact, Species};
-use creature::jar::Catchable;
-use creature::territory::{self, Rule};
-use horizon_client::mod_api::{
-    BlockEntityDraw, Compound, EntityTickPostEvent, Flow, Hooks, Host, InteractEntityEvent, LevelTickPostEvent,
-    LivingDeathEvent, Mob, MobSubmitEvent, ParticleOptions, ParticleType, RegisterGoalsEvent,
+use std::sync::{Arc, OnceLock};
+
+use creature::territory;
+use mod_api::{
+    BlockEntityDrawContext, EntityInteractEvent, EntityPart, EntityRenderState, EntityRenderer, EntityTickPostEvent,
+    Flow, GoalContext, GoalRegistrar, Hooks, HostSide, InteractionResult, LevelTickPostEvent, LivingDeathEvent,
+    ParticleKey, ParticleOptions, RegisterEntityRenderersEvent, Registrar, RegistrationContext, ServerHost,
+    SoundSource, SpawnReason,
 };
 
 pub const WORM: &str = "worms:worm";
 const TEXTURE: &str = "worms:entity/worm/worm";
 
 /// Its box (blocks) and the scale its model is drawn at.
-const SIZE: (f64, f64, f64) = (0.3, 0.15, 0.1);
+const SIZE: creature::mob::Size = creature::mob::Size {
+    width: 0.3,
+    height: 0.15,
+    eye_height: 0.1,
+};
 const SCALE: f32 = 0.6;
 
-/// Caught in the library's glass jar, settling in a garden (SPECS §3).
-static IN_JAR: Catchable = Catchable {
-    kind: WORM,
-    model: "worms:worm_jar",
-    settles: Some(Rule::Garden),
-    glows: false,
-};
-
-static BESTIARY: Species = Species {
-    id: WORM,
-    biomes: &[
-        "minecraft:plains",
-        "minecraft:sunflower_plains",
-        "minecraft:meadow",
-        "minecraft:forest",
-        "minecraft:birch_forest",
-        "minecraft:flower_forest",
-        "minecraft:taiga",
-        "minecraft:dark_forest",
-    ],
-    wild: |id| !territory::settled(id),
-    facts: &[
-        Fact {
-            id: creature::jar::JAR_FACT,
-            item: creature::jar::ITEM,
-            key: "bestiary.worms.jar",
-        },
-        Fact {
-            id: creature::jar::GARDEN_FACT,
-            item: "minecraft:wooden_hoe",
-            key: "bestiary.worms.garden",
-        },
-    ],
-    icon: "worms:worm_spawn_egg",
-    scheme: None,
-    rarity: creature::bestiary::Rarity::Common,
-    draw: book_view,
-};
-
-/// The bestiary's 3D view: curled a little, about a block across.
-fn book_view(host: &dyn Host, draw: &mut BlockEntityDraw, _: Option<creature::colours::Look>) {
-    draw.push();
-    draw.translate([0.5, 0.05, 0.5]);
-    draw.scale([BOOK_SCALE; 3]);
-    creature::model::draw(host, draw, &model_worm::WORM, TEXTURE, &|part| wiggle(part, 0.0, 1.0));
-    draw.pop();
-}
-const BOOK_SCALE: f32 = 1.5;
+/// The biomes it lives in (its spawns, and where rain brings it up).
+const BIOMES: &[&str] = &[
+    "minecraft:plains",
+    "minecraft:sunflower_plains",
+    "minecraft:meadow",
+    "minecraft:forest",
+    "minecraft:birch_forest",
+    "minecraft:flower_forest",
+    "minecraft:taiga",
+    "minecraft:dark_forest",
+];
 
 /// A segment's turn (degrees): a wave along the body, moving with `phase`, `amount` as wide (0 still, 1 crawling).
 fn wiggle(part: &str, phase: f32, amount: f32) -> [f32; 3] {
@@ -83,20 +52,16 @@ fn wiggle(part: &str, phase: f32, amount: f32) -> [f32; 3] {
     [0.0, (phase + i * 0.9).sin() * 14.0 * amount, 0.0]
 }
 
-/// Crawling speed (blocks a tick), how long a crawl and a pause last (ticks), how far a wild one wanders from where it
+/// Crawling speed (the multiplier of its movement speed, 0.1 in its entity type: a slow crawl), how long a crawl and a pause last (ticks), how far a wild one wanders from where it
 /// first crawled.
-const SPEED: f64 = 0.015;
+const SPEED: f64 = 1.0;
 const CRAWL: (i32, i32) = (60, 200);
 const PAUSE: (i32, i32) = (40, 240);
 /// One pause in this many, it noses into the earth with a soft rustle.
 const DIG_CHANCE: u32 = 3;
 
-/// Its sounds (`assets/sounds.toml`): a dig now and then, hurt and death.
+/// Its dig now and then (`sources/sounds.toml`); its hurt and death sounds are its entity type's.
 const DIG: &str = "worms:entity.worm.dig";
-const VOICE: creature::sounds::Voice = creature::sounds::Voice {
-    hurt: "worms:entity.worm.hurt",
-    death: "worms:entity.worm.death",
-};
 const WANDER: f64 = 3.0;
 /// How often a settled worm checks its garden (ticks).
 const CHECK_EVERY: i32 = 100;
@@ -114,8 +79,8 @@ const CRAWL_CFG: creature::crawl::Cfg = creature::crawl::Cfg {
 };
 
 /// At a pause, one time in `DIG_CHANCE` it noses into the earth with a soft rustle.
-fn dig(m: &mut Mob) {
-    creature::crawl::rustle(m, DIG_CHANCE, DIG);
+fn dig(cx: &mut GoalContext<'_>) {
+    creature::crawl::rustle(cx, DIG_CHANCE, DIG);
 }
 
 /// A settled worm makes a crop of its garden grow a stage this often (ticks); at most `MAX_WORMS` worms count in one
@@ -142,7 +107,7 @@ fn grown_age(block: &str) -> Option<u32> {
 }
 
 /// From `entity_tick_post`: now and then, a settled worm makes one crop of its garden grow a stage.
-fn tend(host: &mut dyn Host, entity: u32) {
+fn tend(host: &mut dyn ServerHost, entity: u32) {
     if !territory::settled(entity) {
         return;
     }
@@ -171,15 +136,19 @@ fn tend(host: &mut dyn Host, entity: u32) {
     if worms > MAX_WORMS && (random.next() % worms as u64) as usize >= MAX_WORMS {
         return;
     }
+    let Some(ground) = territory::Ground::of_entity(&*host, entity) else {
+        return;
+    };
     let crops: Vec<([i32; 3], u32, u32)> = garden
         .iter()
         .filter_map(|f| {
             let crop = [f[0], f[1] + 1, f[2]];
-            let grown = grown_age(&host.block(crop))?;
-            let age: u32 = host.block_property(crop, "age")?.parse().ok()?;
+            let grown = grown_age(&ground.block(crop))?;
+            let age: u32 = ground.level.block_property(ground.host, crop, "age")?.parse().ok()?;
             (age < grown).then_some((crop, age, grown))
         })
         .collect();
+    let level = ground.level;
     if crops.is_empty() {
         return;
     }
@@ -191,8 +160,9 @@ fn tend(host: &mut dyn Host, entity: u32) {
             f64::from(crop[1]) + 0.4,
             f64::from(crop[2]) + 0.5,
         ];
-        let sparkle = ParticleOptions::simple(ParticleType::HappyVillager);
-        host.send_particles(&sparkle, None, at, [0.3, 0.25, 0.3], 0.0, 6);
+        if let Some(&key) = SPARKLE.get() {
+            level.send_particles(host, &ParticleOptions::simple(key), None, at, [0.3, 0.25, 0.3], 0.0, 6);
+        }
     }
 }
 
@@ -213,13 +183,16 @@ const SOIL: [&str; 5] = [
     "minecraft:podzol",
 ];
 
+/// The green sparkles of a crop helped (bone meal's), asked for at registration.
+static SPARKLE: OnceLock<ParticleKey> = OnceLock::new();
+
 /// Where each worm is, from its tick (for the rain's cap).
 static WORMS_AT: Mutex<BTreeMap<u32, [f64; 3]>> = Mutex::new(BTreeMap::new());
 static RAIN_TICKS: Mutex<u32> = Mutex::new(0);
 
 /// From `level_tick_post`, in the overworld: worms come up near players while it rains.
-fn rain(host: &mut dyn Host, dimension: &str) {
-    if dimension != "minecraft:overworld" {
+fn rain(host: &mut dyn ServerHost, level: mod_api::LevelRef) {
+    if level.dimension() != mod_api::DimensionKey::OVERWORLD {
         return;
     }
     {
@@ -230,15 +203,19 @@ fn rain(host: &mut dyn Host, dimension: &str) {
         }
         *t = 0;
     }
-    if host.weather().0 < 0.2 {
+    if level.weather(host).is_none_or(|(rain, _)| rain < 0.2) {
         return;
     }
     let mut random = creature::colours::Random::new(RAIN_EVERY);
-    for player in host.server_players().into_iter().filter(|p| p.dimension == dimension) {
-        if !random.next().is_multiple_of(RAIN_CHANCE) {
+    let players = host.players().server_players();
+    for player in players {
+        if player.level(host) != Some(level) || !random.next().is_multiple_of(RAIN_CHANCE) {
             continue;
         }
-        let p = player.position;
+        let Some(p) = player.entity().position(host) else {
+            continue;
+        };
+        let ground = territory::Ground::new(&*host, level);
         let near = WORMS_AT
             .lock()
             .unwrap()
@@ -255,108 +232,110 @@ fn rain(host: &mut dyn Host, dimension: &str) {
             (p[2] + angle.to_radians().sin() * distance).floor() as i32,
         );
         // The ground there: the first soil block under air, from a little above the player down.
-        let top = (p[1] as i32 - 8..=p[1] as i32 + 8)
-            .rev()
-            .find(|&y| SOIL.contains(&host.block([x, y, z]).as_str()) && host.block([x, y + 1, z]) == "minecraft:air");
+        let top = (p[1] as i32 - 8..=p[1] as i32 + 8).rev().find(|&y| {
+            SOIL.contains(&ground.block([x, y, z]).as_str()) && ground.block([x, y + 1, z]) == "minecraft:air"
+        });
         let Some(y) = top else {
             continue;
         };
-        let lives_here = host
-            .biome([x, y + 1, z])
-            .is_some_and(|b| BESTIARY.biomes.contains(&b.as_str()));
+        let lives_here = level
+            .biome_at(host, [x, y + 1, z])
+            .is_some_and(|b| BIOMES.contains(&b.as_str()));
         if lives_here {
             let at = [f64::from(x) + 0.5, f64::from(y + 1), f64::from(z) + 0.5];
-            host.summon(dimension, WORM, at, Compound::new());
+            level.spawn_mob(host, WORM, at, SpawnReason::Natural);
         }
     }
 }
 
-pub fn hooks() -> Box<dyn Hooks> {
-    creature::jar::register(&IN_JAR);
-    creature::bestiary::register(&BESTIARY);
-    Box::new(Worms)
+/// Its goals, added to each worm as it is built (its template's are taken off by the library as it joins).
+struct Goals;
+
+#[mod_api::sunrise_part]
+impl EntityPart for Goals {
+    fn register_goals(&self, goals: &mut GoalRegistrar<'_>) {
+        goals.add_goal(1, creature::crawl::Crawl::new(&CRAWL_CFG));
+    }
 }
 
-struct Worms;
+/// Its own segmented model, wiggling as it crawls.
+struct Draw;
 
-impl Hooks for Worms {
-    /// Its row in Options > Mods, which switches it off and on at once (`creature::list_mod`).
-    fn mods(&self, _: &mut dyn Host, event: &mut horizon_client::mod_api::ModsEvent<'_>) {
-        creature::list_mod(
-            event,
-            "worms",
-            concat!("Worms ", env!("CARGO_PKG_VERSION")),
-            "Earthworms that make your garden grow. Needs Sunrise Creatures.",
-        );
-    }
-
-    fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
-        if event.mob.kind.id != WORM {
-            return;
-        }
-        creature::mob::ours(event.mob, SIZE.0, SIZE.1, SIZE.2);
-        event.mob.ai.goals.add(1, creature::crawl::Crawl::new(&CRAWL_CFG));
-    }
-
-    /// Right-click: nothing (no trading screen, which its template would open).
-    fn interact_entity(&self, _: &mut dyn Host, event: &mut InteractEntityEvent<'_>) -> Flow {
-        if event.kind == WORM {
-            Flow::Cancel
-        } else {
-            Flow::Continue
-        }
-    }
-
-    fn level_tick_post(&self, host: &mut dyn Host, event: &mut LevelTickPostEvent<'_>) {
-        rain(host, event.dimension);
-    }
-
-    fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
-        if event.kind != WORM {
-            return;
-        }
-        creature::sounds::tick_post(host, event, &VOICE, creature::sounds::NEUTRAL);
-        territory::tick(host, event.entity);
-        tend(host, event.entity);
-        if let Some(at) = host.entity(event.entity).and_then(|e| host.entity_position(e)) {
-            WORMS_AT.lock().unwrap().insert(event.entity, at);
-        }
-        if creature::mob::despawn_far(host, event.dimension, event.entity, territory::settled(event.entity)) {
-            territory::forget(event.entity);
-            TICKS.lock().unwrap().remove(&event.entity);
-            WORMS_AT.lock().unwrap().remove(&event.entity);
-        }
-    }
-
-    fn living_death(&self, _: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
-        if creature::mob::kind(event.kind) == WORM {
-            territory::forget(event.entity);
-            TICKS.lock().unwrap().remove(&event.entity);
-            WORMS_AT.lock().unwrap().remove(&event.entity);
-        }
-        Flow::Continue
-    }
-
-    fn mob_submit(&self, host: &dyn Host, event: &mut MobSubmitEvent<'_>) -> Flow {
-        let mob = event.mob;
-        if mob.kind != WORM {
-            return Flow::Continue;
-        }
-        let amount = (mob.walk_speed * 8.0).clamp(0.15, 1.0);
-        event.draw.push();
-        creature::model::death_tilt(&mut *event.draw, mob);
-        event.draw.scale([SCALE; 3]);
+impl EntityRenderer for Draw {
+    fn submit(&self, entity: &EntityRenderState, draw: &mut dyn BlockEntityDrawContext) -> Result<(), String> {
+        let Some(mob) = &entity.living else {
+            return Ok(());
+        };
+        let amount = (mob.walk_animation_speed * 8.0).clamp(0.15, 1.0);
+        draw.push();
+        creature::model::living_pose(draw, mob);
+        draw.scale([SCALE; 3]);
         creature::model::draw_shown(
-            host,
-            &mut *event.draw,
+            draw,
             &model_worm::WORM,
             TEXTURE,
-            &|part| wiggle(part, mob.age * 0.3, amount),
+            &|part| wiggle(part, entity.age * 0.3, amount),
             &|_| true,
             creature::model::tint(mob),
         );
-        event.draw.pop();
-        Flow::Cancel
+        draw.pop();
+        Ok(())
+    }
+}
+
+/// A worm forgotten (dead, despawned).
+fn forget(entity: u32) {
+    territory::forget(entity);
+    TICKS.lock().unwrap().remove(&entity);
+    WORMS_AT.lock().unwrap().remove(&entity);
+}
+
+#[derive(Default)]
+struct Worms;
+
+#[mod_api::sunrise_mod]
+impl Hooks for Worms {
+    fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
+        creature::mob::ours(WORM, SIZE);
+        r.entity_part(WORM, Goals);
+        let _ = SPARKLE.set(r.particle_key("minecraft:happy_villager"));
+    }
+
+    fn register_entity_renderers(&self, _: &RegistrationContext, event: &mut RegisterEntityRenderersEvent<'_>) {
+        event.renderers.register(WORM.into(), Arc::new(Draw));
+    }
+
+    /// Right-click: nothing (no trading screen, which its template would open).
+    fn entity_interact(&self, _: HostSide, event: &mut EntityInteractEvent<'_>) -> Option<InteractionResult> {
+        (event.kind == WORM).then_some(InteractionResult::Pass)
+    }
+
+    fn level_tick_post(&self, host: HostSide, event: &mut LevelTickPostEvent) {
+        if let HostSide::Server(host) = host {
+            rain(host, event.level);
+        }
+    }
+
+    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
+        if event.kind != WORM {
+            return;
+        }
+        creature::sounds::play_queued(host, event.entity, SoundSource::Neutral);
+        territory::tick(host, event.entity);
+        tend(host, event.entity);
+        if let Some(at) = host.entity(event.entity).and_then(|e| e.position(host)) {
+            WORMS_AT.lock().unwrap().insert(event.entity, at);
+        }
+        if creature::mob::despawn_far(host, event.dimension, event.entity, territory::settled(event.entity)) {
+            forget(event.entity);
+        }
+    }
+
+    fn living_death(&self, _: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {
+        if event.kind == WORM {
+            forget(event.entity);
+        }
+        Flow::Continue
     }
 }
 

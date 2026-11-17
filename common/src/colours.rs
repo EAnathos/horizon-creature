@@ -8,14 +8,15 @@
 //! tinted by the pattern colour, a little grown so it shows over the base.
 //!
 //! The drawing reads the looks from a static map filled on the server's side: single player only, as the vulture's
-//! render state (Horizon can't read a mob's attachments while drawing it; workaround for arismoko/horizon#2740, fixed
-//! on the fork only).
+//! render state. On Sunrise a synced attachment can reach the client, but a renderer has no host to read it: the map
+//! could be filled from a client hook instead (docs/SUNRISE-PORT.md §5).
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use horizon_client::mod_api::{
-    AttachmentCodec, AttachmentError, AttachmentType, BlockEntityDraw, Compound, Holder, Host, Tag,
+use mod_api::{
+    AttachmentCodec, AttachmentError, AttachmentType, BlockEntityDrawContext, Compound, Holder, Registrar, ServerHost,
+    Tag,
 };
 
 use crate::model::{self, Part};
@@ -75,6 +76,11 @@ static LOOK: AttachmentType<Saved> = AttachmentType {
     sync: false,
 };
 
+/// From the library's `register`: the look attachment is declared.
+pub fn declare(r: &mut dyn Registrar) {
+    let _ = r.register_attachment_type("creature:look", false);
+}
+
 fn encode(s: &Saved) -> Result<Compound, AttachmentError> {
     let mut c = Compound::new();
     for (key, value) in [
@@ -109,7 +115,7 @@ pub fn look(entity: u32) -> Option<Look> {
 
 /// From the mod's `entity_tick_post`, for each of its creatures: its saved look the first time, or a new one rolled for
 /// the biome it is in.
-pub fn tick(host: &mut dyn Host, entity: u32, scheme: &Scheme) {
+pub fn tick(host: &mut dyn ServerHost, entity: u32, scheme: &Scheme) {
     if LOOKS.lock().unwrap().contains_key(&entity) {
         return;
     }
@@ -120,8 +126,12 @@ pub fn tick(host: &mut dyn Host, entity: u32, scheme: &Scheme) {
     let look = match saved.and_then(|s| from_saved(scheme, &s)) {
         Some(look) => look,
         None => {
-            let at = host.entity(entity).and_then(|e| host.entity_position(e));
-            let biome = at.and_then(|p| host.biome([p[0].floor() as i32, p[1].floor() as i32, p[2].floor() as i32]));
+            let e = host.entity(entity);
+            let at = e.and_then(|e| e.position(host));
+            let level = e.and_then(|e| e.level(host));
+            let biome = at.zip(level).and_then(|(p, level)| {
+                level.biome_at(host, [p[0].floor() as i32, p[1].floor() as i32, p[2].floor() as i32])
+            });
             let look = roll(scheme, biome.as_deref(), &mut Random::new(entity));
             let _ = LOOK.set(host, Holder::Entity(entity), to_saved(scheme, look));
             look
@@ -156,13 +166,13 @@ pub fn from_compound(scheme: &Scheme, look: &Compound) -> Option<Look> {
 }
 
 /// Creature `entity`'s saved look, as stored (`creature:look`), for the jar to carry it.
-pub fn saved(host: &mut dyn Host, entity: u32) -> Option<Compound> {
+pub fn saved(host: &mut dyn ServerHost, entity: u32) -> Option<Compound> {
     let saved = LOOK.get_existing(host, Holder::Entity(entity)).ok().flatten()?;
     encode(&saved).ok()
 }
 
 /// Gives creature `entity` a look carried by the jar (`saved`); `tick` reads it on its first tick.
-pub fn restore(host: &mut dyn Host, entity: u32, look: &Compound) {
+pub fn restore(host: &mut dyn ServerHost, entity: u32, look: &Compound) {
     if let Ok(saved) = decode(look) {
         let _ = LOOK.set(host, Holder::Entity(entity), saved);
     }
@@ -251,8 +261,7 @@ const PATTERN_INFLATE: f32 = 0.02;
 /// Draws `part` in `look`: the base texture in its colour, then its pattern, if any, in the pattern colour. `tint` is
 /// laid over both (`model::tint(mob)` for the hurt flash).
 pub fn draw(
-    host: &dyn Host,
-    draw: &mut BlockEntityDraw,
+    draw: &mut dyn BlockEntityDrawContext,
     part: &Part,
     scheme: &Scheme,
     look: Look,
@@ -262,7 +271,6 @@ pub fn draw(
     let colour = |i: usize| scheme.colours.get(i).map_or(model::WHITE, |c| c.rgb);
     let all = |_: &str| true;
     model::draw_layer(
-        host,
         draw,
         part,
         scheme.base_texture,
@@ -273,7 +281,6 @@ pub fn draw(
     );
     if let Some(texture) = scheme.patterns.get(look.pattern).and_then(|p| p.texture) {
         model::draw_layer(
-            host,
             draw,
             part,
             texture,

@@ -11,12 +11,14 @@
 //! frees it.
 //!
 //! The anchor is saved on the entity (`creature:territory`). The mod's goals read it through a static map (`anchor`),
-//! filled by `tick` from the mod's `entity_tick_post` (single player, as the colours; arismoko/horizon#2740), and tell a
-//! moved or lost anchor back (`moved`), which `tick` saves.
+//! filled by `tick` from the mod's `entity_tick_post` (single player, as the colours), and tell a moved or lost anchor
+//! back (`moved`), which `tick` saves. Blocks are read through a `Ground`: the host and the level the creature is in.
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use horizon_client::mod_api::{AttachmentCodec, AttachmentError, AttachmentType, Compound, Cx, Holder, Host, Tag};
+use mod_api::{
+    AttachmentCodec, AttachmentError, AttachmentType, Compound, Holder, Host, LevelRef, Registrar, ServerHost, Tag,
+};
 
 /// The flowers within this many blocks of the anchor make the area; it reaches this far around them and up.
 pub const PATCH: i32 = 8;
@@ -51,6 +53,45 @@ static ANCHOR: AttachmentType<Option<[i32; 3]>> = AttachmentType {
     sync: false,
 };
 
+/// From the library's `register`: the anchor attachment is declared.
+pub fn declare(r: &mut dyn Registrar) {
+    let _ = r.register_attachment_type("creature:territory", false);
+}
+
+/// The blocks of a level, read through a host: what a goal (its tick's read view) or a hook sees.
+#[derive(Clone, Copy)]
+pub struct Ground<'a> {
+    pub host: &'a dyn Host,
+    pub level: LevelRef,
+}
+
+impl<'a> Ground<'a> {
+    pub fn new(host: &'a dyn Host, level: LevelRef) -> Self {
+        Ground { host, level }
+    }
+
+    /// The level entity `entity` is in.
+    pub fn of_entity(host: &'a dyn Host, entity: u32) -> Option<Self> {
+        let level = host.entity(entity)?.level(host)?;
+        Some(Ground { host, level })
+    }
+
+    /// The block at `p` (`minecraft:farmland`), empty where it can't be read (not loaded).
+    pub fn block(&self, p: [i32; 3]) -> String {
+        self.level
+            .block(self.host, p)
+            .map_or(String::new(), |b| b.id(self.host))
+    }
+
+    /// Whether the block at `p` is a flower.
+    pub fn flower_at(&self, p: [i32; 3]) -> bool {
+        self.level
+            .block(self.host, p)
+            .and_then(|b| self.host.block_in_tag(b, FLOWERS))
+            .unwrap_or(false)
+    }
+}
+
 fn encode(anchor: &Option<[i32; 3]>) -> Result<Compound, AttachmentError> {
     let mut c = Compound::new();
     if let Some(a) = anchor {
@@ -75,13 +116,8 @@ struct Known {
 
 static ANCHORS: Mutex<BTreeMap<u32, Known>> = Mutex::new(BTreeMap::new());
 
-/// Whether the block named `name` is a flower (from a hook).
-pub fn is_flower(host: &dyn Host, name: &str) -> bool {
-    host.block_name_in_tag(name, FLOWERS).unwrap_or(false)
-}
-
 /// From the jar's release (or a mod): `entity` settles with `anchor`.
-pub fn settle(host: &mut dyn Host, entity: u32, anchor: [i32; 3]) {
+pub fn settle(host: &mut dyn ServerHost, entity: u32, anchor: [i32; 3]) {
     let _ = ANCHOR.set(host, Holder::Entity(entity), Some(anchor));
     ANCHORS.lock().unwrap().insert(
         entity,
@@ -93,7 +129,7 @@ pub fn settle(host: &mut dyn Host, entity: u32, anchor: [i32; 3]) {
 }
 
 /// From the mod's `entity_tick_post`: its saved anchor the first time, and a moved or lost one saved.
-pub fn tick(host: &mut dyn Host, entity: u32) {
+pub fn tick(host: &mut dyn ServerHost, entity: u32) {
     let known = ANCHORS.lock().unwrap().get(&entity).copied();
     match known {
         None => {
@@ -134,25 +170,14 @@ pub fn settled(entity: u32) -> bool {
     anchor(entity).is_some()
 }
 
-fn block_name<'a>(cx: &'a Cx, p: [i32; 3]) -> &'a str {
-    cx.w.registry
-        .state(cx.w.world.block(p[0], p[1], p[2]))
-        .map_or("", |s| s.name.as_str())
-}
-
-/// From a goal: whether the block at `p` is a flower.
-pub fn flower_at(cx: &Cx, p: [i32; 3]) -> bool {
-    cx.w.has_tag(FLOWERS, block_name(cx, p))
-}
-
-/// From a goal: the flowers within `radius` blocks (and 3 up or down) of `center`.
-pub fn flowers_near(cx: &Cx, center: [i32; 3], radius: i32) -> Vec<[i32; 3]> {
+/// The flowers within `radius` blocks (and 3 up or down) of `center`.
+pub fn flowers_near(ground: Ground<'_>, center: [i32; 3], radius: i32) -> Vec<[i32; 3]> {
     let mut found = Vec::new();
     for dy in -3..=3 {
         for dx in -radius..=radius {
             for dz in -radius..=radius {
                 let p = [center[0] + dx, center[1] + dy, center[2] + dz];
-                if flower_at(cx, p) {
+                if ground.flower_at(p) {
                     found.push(p);
                 }
             }
@@ -163,12 +188,12 @@ pub fn flowers_near(cx: &Cx, center: [i32; 3], radius: i32) -> Vec<[i32; 3]> {
 
 /// From a goal, every few seconds: the area still holds. An anchor flower that is gone moves to the nearest flower
 /// within `PATCH` blocks, or the creature is free again. The flowers of its area.
-pub fn check(cx: &Cx, entity: u32) -> Vec<[i32; 3]> {
-    let Some(anchor) = anchor(entity) else {
+pub fn check(host: &dyn Host, entity: u32) -> Vec<[i32; 3]> {
+    let (Some(anchor), Some(ground)) = (anchor(entity), Ground::of_entity(host, entity)) else {
         return Vec::new();
     };
-    let flowers = flowers_near(cx, anchor, PATCH);
-    if flower_at(cx, anchor) {
+    let flowers = flowers_near(ground, anchor, PATCH);
+    if ground.flower_at(anchor) {
         return flowers;
     }
     let distance = |p: &[i32; 3]| (0..3).map(|k| (p[k] - anchor[k]).pow(2)).sum::<i32>();
@@ -228,33 +253,33 @@ pub fn is_sand(name: &str) -> bool {
 
 /// From the jar's release: the sand-like block a creature released on `clicked` (a sand-like block, or one just below)
 /// would settle on, if its patch is big enough.
-pub fn sand_at(host: &dyn Host, clicked: [i32; 3]) -> Option<[i32; 3]> {
+pub fn sand_at(ground: Ground<'_>, clicked: [i32; 3]) -> Option<[i32; 3]> {
     let below = [clicked[0], clicked[1] - 1, clicked[2]];
-    let start = if is_sand(&host.block(clicked)) {
+    let start = if is_sand(&ground.block(clicked)) {
         clicked
-    } else if is_sand(&host.block(below)) {
+    } else if is_sand(&ground.block(below)) {
         below
     } else {
         return None;
     };
-    (connected(start, Some(SAND_RANGE), |p| is_sand(&host.block(p))).len() >= SAND_MIN).then_some(start)
+    (connected(start, Some(SAND_RANGE), |p| is_sand(&ground.block(p))).len() >= SAND_MIN).then_some(start)
 }
 
 /// From a hook: the sand-like blocks of creature `entity`'s patch (empty if it isn't settled).
 pub fn sand_of(host: &dyn Host, entity: u32) -> Vec<[i32; 3]> {
-    match anchor(entity) {
-        Some(a) => connected(a, Some(SAND_RANGE), |p| is_sand(&host.block(p))),
-        None => Vec::new(),
+    match (anchor(entity), Ground::of_entity(host, entity)) {
+        (Some(a), Some(ground)) => connected(a, Some(SAND_RANGE), |p| is_sand(&ground.block(p))),
+        _ => Vec::new(),
     }
 }
 
 /// From a goal, every few seconds: the sand-like blocks of its patch; a patch grown too small (or its anchor no longer
 /// sand) lets it go free.
-pub fn check_sand(cx: &Cx, entity: u32) -> Vec<[i32; 3]> {
-    let Some(anchor) = anchor(entity) else {
+pub fn check_sand(host: &dyn Host, entity: u32) -> Vec<[i32; 3]> {
+    let (Some(anchor), Some(ground)) = (anchor(entity), Ground::of_entity(host, entity)) else {
         return Vec::new();
     };
-    let sand = |p: [i32; 3]| is_sand(block_name(cx, p));
+    let sand = |p: [i32; 3]| is_sand(&ground.block(p));
     let patch = if sand(anchor) {
         connected(anchor, Some(SAND_RANGE), sand)
     } else {
@@ -272,33 +297,33 @@ pub fn check_sand(cx: &Cx, entity: u32) -> Vec<[i32; 3]> {
 
 /// From the jar's release: the farmland a creature released on `clicked` (farmland, or a crop on farmland) would
 /// settle on, if its garden is big enough.
-pub fn garden_at(host: &dyn Host, clicked: [i32; 3]) -> Option<[i32; 3]> {
+pub fn garden_at(ground: Ground<'_>, clicked: [i32; 3]) -> Option<[i32; 3]> {
     let below = [clicked[0], clicked[1] - 1, clicked[2]];
-    let start = if host.block(clicked) == FARMLAND {
+    let start = if ground.block(clicked) == FARMLAND {
         clicked
-    } else if host.block(below) == FARMLAND {
+    } else if ground.block(below) == FARMLAND {
         below
     } else {
         return None;
     };
-    (garden_from(start, |p| host.block(p) == FARMLAND).len() >= GARDEN_MIN).then_some(start)
+    (garden_from(start, |p| ground.block(p) == FARMLAND).len() >= GARDEN_MIN).then_some(start)
 }
 
 /// From a hook: the farmland of creature `entity`'s garden (empty if it isn't settled).
 pub fn garden_of(host: &dyn Host, entity: u32) -> Vec<[i32; 3]> {
-    match anchor(entity) {
-        Some(a) => garden_from(a, |p| host.block(p) == FARMLAND),
-        None => Vec::new(),
+    match (anchor(entity), Ground::of_entity(host, entity)) {
+        (Some(a), Some(ground)) => garden_from(a, |p| ground.block(p) == FARMLAND),
+        _ => Vec::new(),
     }
 }
 
 /// From a goal, every few seconds: the farmland of its garden; a garden grown too small (or its anchor no longer
 /// farmland) lets it go free.
-pub fn check_garden(cx: &Cx, entity: u32) -> Vec<[i32; 3]> {
-    let Some(anchor) = anchor(entity) else {
+pub fn check_garden(host: &dyn Host, entity: u32) -> Vec<[i32; 3]> {
+    let (Some(anchor), Some(ground)) = (anchor(entity), Ground::of_entity(host, entity)) else {
         return Vec::new();
     };
-    let is_farmland = |p: [i32; 3]| block_name(cx, p) == FARMLAND;
+    let is_farmland = |p: [i32; 3]| ground.block(p) == FARMLAND;
     let garden = if is_farmland(anchor) {
         garden_from(anchor, is_farmland)
     } else {
