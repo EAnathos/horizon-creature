@@ -53,7 +53,7 @@ committing:
 
 ```sh
 cargo fmt --manifest-path tools/Cargo.toml                                   # format the tools
-find common mods -path '*/native/*' -name '*.rs' -print0 | xargs -0 rustfmt --edition 2024   # format the native code
+find common mods -path '*/src/*' -name '*.rs' -print0 | xargs -0 rustfmt --edition 2024   # format the modules' code
 cargo clippy --manifest-path tools/Cargo.toml --all-targets -- -D warnings   # lint the tools
 cargo creature check                                                         # the repository's consistency
 ```
@@ -66,13 +66,13 @@ cargo creature check                                                         # t
 - **`cargo creature check`**: the shared tab is up to date, manifests carry the module's id and one version, every pin
   is the series' Horizon revision, mods depend on the library and on what they require, tab items exist, JSON parses,
   `en_us` and `fr_fr` have the same keys, no em dash in the docs.
-- CI then builds every module (`cargo creature build`) and keeps the `.hmod` and `.hnmod` files as an artifact.
+- CI then builds every module (`cargo creature build`) and keeps the `.smod` files as an artifact.
 
 ## Assets
 
 - Models: Blockbench, "free" format, box UV, one root group, no rotated cubes (rotate groups). 64×64 textures unless a
   larger mob needs more.
-- Sounds: CC0 only (freesound.org, licence checked), sources listed in the module's `assets/sounds.toml`.
+- Sounds: CC0 only (freesound.org, licence checked), sources listed in the module's `sources/sounds.toml`.
 - Recipes: each one has its recipe book advancement (`advancement/recipes/<tab>/<recipe>.json`, unlocked by having
   one of its ingredients), or the recipe book never shows it. A feather in a recipe is `#creature:feathers`.
 

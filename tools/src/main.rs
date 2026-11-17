@@ -3,17 +3,17 @@
 //! ```sh
 //! cargo creature list                         # the library and the mods, with their status
 //! cargo creature tab                          # writes the series' single creative tab and recipe table (library)
-//! cargo creature model <mod> [model]          # mods/<mod>/assets/models/<model>.bbmodel -> the mod's native/api/src/
+//! cargo creature model <mod> [model]          # mods/<mod>/sources/models/<model>.bbmodel -> the mod's src/
 //! cargo creature preview                     # every mod's .bbmodel -> pictures in docs/models/ and docs/MODELS.md
 //! cargo creature sounds <mod> [folder]        # freesound downloads (default sounds-src/) -> the mod's sounds (vulture)
-//! cargo creature pack <module>                # a module's native/ -> target/<id>.hnmod
+//! cargo creature pack <module>                # a module's package -> target/stage/, target/<id>.smod
 //! cargo creature build [mod...]               # builds the library and the mods (default: all) into target/dist/
 //! cargo creature check                        # the repository's consistency (tab, manifests, pins, lang, JSON, docs)
-//! cargo creature native-check <horizon-src>   # compiles the native crates (clippy) against a Horizon source
+//! cargo creature native-check [sdk]           # compiles the ported crates (clippy, tests) on the pinned Sunrise SDK
 //! cargo creature vanilla [jar]               # Minecraft's own data -> the Vanilla Bestiary's game_data.rs
 //! cargo creature install [--instance <name>] [mod...]
 //!                                             # builds the library and the mods (default: all), installs them in the
-//!                                             # instance (default creature-dev), runs its native build
+//!                                             # instance (default creature-dev), runs the launcher's native build
 //! ```
 //!
 //! A module is the library (`creature`) or a mod's folder name under `mods/`. `cargo creature` is an alias
@@ -46,7 +46,7 @@ pub fn root() -> PathBuf {
 pub type Result<T = ()> = std::result::Result<T, String>;
 
 const USAGE: &str = "usage: cargo creature list | tab | model <mod> [model] | preview | sounds <mod> [folder] | pack <module> \
-                     | build [mod...] | check | native-check <horizon-source> | vanilla [jar] \
+                     | build [mod...] | check | native-check [sdk] | vanilla [jar] \
                      | install [--instance <name>] [mod...]";
 
 fn list() -> Result {
@@ -55,7 +55,7 @@ fn list() -> Result {
     let width = |f: fn(&modules::Module) -> &str| all.iter().map(|m| f(m).chars().count()).max().unwrap_or(0);
     let (id_w, name_w, status_w) = (width(|m| &m.id), width(|m| &m.name), width(|m| &m.status));
     for m in &all {
-        let parts: Vec<&str> = [("content", m.content().is_some()), ("native", m.native().is_some())]
+        let parts: Vec<&str> = [("content", m.manifest().is_some()), ("native", m.native().is_some())]
             .into_iter()
             .filter_map(|(name, has)| has.then_some(name))
             .collect();
@@ -106,7 +106,7 @@ fn main() -> ExitCode {
             .and_then(|m| pack::run(&m).map(|_| ())),
         Some("build") => build::run(&args[1..]),
         Some("check") => check::run(),
-        Some("native-check") => arg(1).ok_or(USAGE.into()).and_then(native_check::run),
+        Some("native-check") => native_check::run(arg(1)),
         Some("vanilla") => vanilla::run(arg(1)),
         Some("install") => install(&args[1..]),
         _ => Err(USAGE.into()),

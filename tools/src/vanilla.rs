@@ -1,7 +1,7 @@
 //! Reads Minecraft's own data for the Vanilla Bestiary (mods/vanilla_bestiary/SPECS.md §2, §3).
 //!
 //! From the game's jar (the player's own, as the launcher prepared it), writes the mod's
-//! `native/api/src/game_data.rs`: for each creature that has a spawn egg, the biomes it spawns in on its own (each
+//! `src/game_data.rs`: for each creature that has a spawn egg, the biomes it spawns in on its own (each
 //! biome's `minecraft:gameplay/natural_mob_spawns`), what its loot table can drop (items, following the tables it
 //! names) and the first item of its `<creature>_food` tag (what breeds it). Creatures that only come with structures,
 //! raids or bosses have no biome here: the mod gives theirs.
@@ -14,7 +14,7 @@ use serde_json::Value;
 
 /// The Minecraft version of the series' Horizon pin (docs/CONVENTIONS.md).
 const VERSION: &str = "26.3";
-const OUT: &str = "mods/vanilla_bestiary/native/api/src/game_data.rs";
+const OUT: &str = "mods/vanilla_bestiary/src/game_data.rs";
 
 /// The jar the launcher prepared, when none is given.
 fn default_jar() -> crate::Result<PathBuf> {

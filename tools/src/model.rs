@@ -1,10 +1,10 @@
 //! Converts a mod's Blockbench model into Rust data (common/SPECS.md §3.1).
 //!
-//! Reads `mods/<mod>/assets/models/<model>.bbmodel` ("free" format, box UV) and writes the mod's
-//! `native/api/src/model.rs` (the model named after the mod) or `model_<model>.rs` (another one): the group tree (pivots
+//! Reads `mods/<mod>/sources/models/<model>.bbmodel` ("free" format, box UV) and writes the mod's
+//! `src/model.rs` (the model named after the mod) or `model_<model>.rs` (another one): the group tree (pivots
 //! in texels, rotations in degrees) and their cubes, with each face's UVs in `Host::draw_cube`'s order (down, up,
 //! north, south, west, east), in texels of 16 per side like a block model, as the library's `creature::model::Part`.
-//! The library draws these cubes with the mod's texture (`content/assets/<mod>/textures/entity/...`).
+//! The library draws these cubes with the mod's texture (`assets/<mod>/textures/entity/...`).
 use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::path::PathBuf;
@@ -30,13 +30,13 @@ pub fn run(module: &str, name: Option<&str>) -> crate::Result {
 pub fn render(module: &str, name: Option<&str>) -> crate::Result<(PathBuf, String, Value)> {
     let m = crate::modules::find(module)?;
     let name = name.unwrap_or(&m.id);
-    let src = m.dir.join(format!("assets/models/{name}.bbmodel"));
+    let src = m.dir.join(format!("sources/models/{name}.bbmodel"));
     let file = if name == m.id {
         "model.rs".to_owned()
     } else {
         format!("model_{name}.rs")
     };
-    let out = m.dir.join("native/api/src").join(file);
+    let out = m.dir.join("src").join(file);
     let text = std::fs::read_to_string(&src).map_err(|e| format!("{}: {e}", src.display()))?;
     let model: Value = serde_json::from_str(&text).map_err(|e| format!("{}: {e}", src.display()))?;
     let source = src.strip_prefix(crate::root()).unwrap_or(&src).display().to_string();

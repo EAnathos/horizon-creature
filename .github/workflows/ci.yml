@@ -1,8 +1,8 @@
 # Lint, test, check and build every module (docs/ARCHITECTURE.md §6).
 #
-# The native crates (`native/api/`) are compiled with Clippy against the pinned Horizon source (`cargo creature
-# native-check`); the injections (`native/*.rs` helpers) compile only in the launcher's build, inside Horizon's own
-# crates: run `cargo creature install` after changing one.
+# The ported crates (`src/` of the modules whose `module.toml` says `ported`) are compiled with Clippy against the
+# pinned Sunrise SDK (`cargo creature native-check`, which fetches it); the game build itself happens in the launcher
+# (`cargo creature install`).
 name: CI
 
 on:
@@ -17,8 +17,8 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  # The series' pinned Horizon revision (every horizon-mixin.toml; `cargo creature check` enforces it).
-  HORIZON_REV: fdc87aecdbd116bf1e08adcd062fcbaea8c2e2ca
+  # The series' pinned Sunrise build (every sunrise-mod.toml's [native] sunrise; `cargo creature check` enforces it).
+  SUNRISE_REV: 2d8126336e579777eabf9b2fd8b3d476236a04f2
 
 jobs:
   lint:
@@ -35,7 +35,7 @@ jobs:
       - name: rustfmt (tools)
         run: cargo fmt --manifest-path tools/Cargo.toml --check
       - name: rustfmt (native code)
-        run: find common mods -path '*/native/*' -name '*.rs' -print0 | xargs -0 rustfmt --edition 2024 --check
+        run: find common mods -path '*/src/*' -name '*.rs' -print0 | xargs -0 rustfmt --edition 2024 --check
       - name: clippy (tools)
         run: cargo clippy --manifest-path tools/Cargo.toml --all-targets --locked -- -D warnings
       - name: tests (tools)
@@ -44,29 +44,29 @@ jobs:
         run: cargo creature check
 
   native:
-    name: Native code (Clippy and tests against the pinned Horizon)
+    name: Native code (Clippy and tests against the pinned Sunrise SDK)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
-      - name: System libraries
-        run: sudo apt-get update -q && sudo apt-get install -yq pkg-config libasound2-dev libudev-dev
-      - name: Horizon source at the pinned revision
-        run: |
-          git init -q "$RUNNER_TEMP/horizon"
-          cd "$RUNNER_TEMP/horizon"
-          git remote add origin https://github.com/horizon-rust/horizon
-          git fetch -q --depth 1 origin "$HORIZON_REV"
-          git checkout -q FETCH_HEAD
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
             tools
             target/native-check
-      - name: Clippy and tests on the native crates
-        run: cargo creature native-check "$RUNNER_TEMP/horizon"
+      - name: Cache cargo-sunrise-mod
+        id: sunrise-mod
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/bin/cargo-sunrise-mod
+          key: cargo-sunrise-mod-${{ runner.os }}-${{ env.SUNRISE_REV }}
+      - name: Install cargo-sunrise-mod
+        if: steps.sunrise-mod.outputs.cache-hit != 'true'
+        run: cargo install --locked --git https://github.com/sunrise-org/sunrise --rev "$SUNRISE_REV" cargo-sunrise-mod
+      - name: Clippy and tests on the ported crates
+        run: cargo creature native-check
 
   build:
     name: Build the mods
@@ -78,16 +78,16 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: tools
-      - name: Cache cargo-horizon-mod
-        id: horizon-mod
+      - name: Cache cargo-sunrise-mod
+        id: sunrise-mod
         uses: actions/cache@v6
         with:
-          path: ~/.cargo/bin/cargo-horizon-mod
-          key: cargo-horizon-mod-${{ runner.os }}-${{ env.HORIZON_REV }}
-      - name: Install cargo-horizon-mod
-        if: steps.horizon-mod.outputs.cache-hit != 'true'
-        run: cargo install --locked --git https://github.com/horizon-rust/horizon --rev "$HORIZON_REV" cargo-horizon-mod
-      - name: Build the content and native packages
+          path: ~/.cargo/bin/cargo-sunrise-mod
+          key: cargo-sunrise-mod-${{ runner.os }}-${{ env.SUNRISE_REV }}
+      - name: Install cargo-sunrise-mod
+        if: steps.sunrise-mod.outputs.cache-hit != 'true'
+        run: cargo install --locked --git https://github.com/sunrise-org/sunrise --rev "$SUNRISE_REV" cargo-sunrise-mod
+      - name: Build the packages (.smod)
         run: cargo creature build
       - uses: actions/upload-artifact@v7
         with:

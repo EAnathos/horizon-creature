@@ -1,4 +1,4 @@
-//! Writes the series' single creative tab, `common/content/data/creature/horizon/creative_tab/creature.json`
+//! Writes the series' single creative tab, `common/data/creature/sunrise/creative_tab/creature.json`
 //! (docs/ARCHITECTURE.md, "Creative inventory").
 //!
 //! A content mod can't add items to another mod's tab, but a tab may list items of other mods: the game leaves out
@@ -36,7 +36,7 @@ pub fn render() -> crate::Result<(PathBuf, String, usize)> {
     let json = serde_json::json!({ "title": format!("itemGroup.{LIBRARY}"), "icon": icon, "items": items });
     let out = library
         .dir
-        .join(format!("content/data/{LIBRARY}/horizon/creative_tab/{LIBRARY}.json"));
+        .join(format!("data/{LIBRARY}/sunrise/creative_tab/{LIBRARY}.json"));
     let text = serde_json::to_string_pretty(&json).map_err(|e| e.to_string())? + "\n";
     Ok((out, text, items.len()))
 }

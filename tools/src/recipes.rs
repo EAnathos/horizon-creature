@@ -1,7 +1,7 @@
-//! Writes the library's table of the series' recipes, `common/native/api/src/recipes.rs`, for the creature guide's
+//! Writes the library's table of the series' recipes, `common/src/recipes.rs`, for the creature guide's
 //! Items tab (common/SPECS.md §7.2): how each item is made, and what it is used to make.
 //!
-//! Read from every module's `content/data/<id>/recipe/**/*.json`: shaped and shapeless crafting, smelting, smoking,
+//! Read from every module's `data/<id>/recipe/**/*.json`: shaped and shapeless crafting, smelting, smoking,
 //! campfire cooking and brewing. Each slot holds the items that fit it (a tag's items: the series' own tags read from
 //! the modules, Minecraft's from `VANILLA_TAGS`), the first one drawn. Written by `cargo creature tab` with the
 //! creative tab, checked by `cargo creature check`.
@@ -13,7 +13,7 @@ use serde_json::Value;
 
 use crate::modules;
 
-const OUT: &str = "common/native/api/src/recipes.rs";
+const OUT: &str = "common/src/recipes.rs";
 
 /// The items drawn for Minecraft's tags the series' recipes use (the game's own lists are in its jar).
 const VANILLA_TAGS: &[(&str, &[&str])] = &[
@@ -46,7 +46,7 @@ pub fn render() -> crate::Result<(PathBuf, String, usize)> {
     let mut tags: BTreeMap<String, Vec<String>> = BTreeMap::new();
     let mut files = Vec::new();
     for m in &all {
-        let Some(content) = m.content() else {
+        let Some(content) = m.manifest().map(|_| m.dir.clone()) else {
             continue;
         };
         let data = content.join("data");

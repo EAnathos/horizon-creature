@@ -1,27 +1,20 @@
 //! Builds modules without installing them: the library always, then the mods asked for and the mods they require (all
-//! the buildable ones by default). Each module's content part (`cargo horizon-mod build`) and native part (`pack.rs`,
-//! then `cargo horizon-mod check`) are made in `target/` and copied to `target/dist/`. The native Rust itself is compiled by the launcher, in an
-//! instance (`install`).
-use std::path::PathBuf;
-
+//! the buildable ones by default). Each module is packaged (`pack.rs`: staged in `target/stage/<id>/`, zipped to
+//! `target/<id>.smod`), checked by `cargo sunrise-mod check` and copied to `target/dist/`. The native Rust itself is
+//! compiled by the launcher, in an instance (`install`).
 use crate::install::run_in;
 use crate::modules::{self, Module};
 
-/// What a module's build made.
-pub struct Built {
-    pub hmod: Option<PathBuf>,
-    pub hnmod: Option<PathBuf>,
-}
-
 pub fn run(names: &[String]) -> crate::Result {
     let dist = crate::root().join("target/dist");
+    if dist.exists() {
+        std::fs::remove_dir_all(&dist).map_err(|e| format!("{}: {e}", dist.display()))?;
+    }
     std::fs::create_dir_all(&dist).map_err(|e| format!("{}: {e}", dist.display()))?;
     for m in &chosen(names)? {
-        let built = module(m)?;
-        for file in built.hmod.iter().chain(&built.hnmod) {
-            let name = file.file_name().ok_or("no file name")?;
-            std::fs::copy(file, dist.join(name)).map_err(|e| format!("{}: {e}", file.display()))?;
-        }
+        let packed = module(m)?;
+        let name = packed.smod.file_name().ok_or("no file name")?;
+        std::fs::copy(&packed.smod, dist.join(name)).map_err(|e| format!("{}: {e}", packed.smod.display()))?;
     }
     println!("{}", dist.display());
     Ok(())
@@ -45,35 +38,14 @@ pub fn chosen(names: &[String]) -> crate::Result<Vec<Module>> {
     Ok(chosen)
 }
 
-/// Builds one module's parts.
-pub fn module(m: &Module) -> crate::Result<Built> {
+/// Packages one module and checks its package as the registry does.
+pub fn module(m: &Module) -> crate::Result<crate::pack::Packed> {
     println!("== {} ({})", m.name, m.id);
-    let mut built = Built {
-        hmod: None,
-        hnmod: None,
-    };
-    if let Some(content) = m.content() {
-        run_in(&content, "cargo", &["horizon-mod", "build"])?;
-        // `cargo horizon-mod build` writes into the mod's own `target/`: the file goes to the repository's, beside the
-        // `.hnmod`, and the source folder is left clean.
-        let made = content.join("target");
-        let hmod = crate::root().join(format!("target/{}.hmod", m.id));
-        let from = made.join(format!("horizon-mod/{}.hmod", m.id));
-        if let Some(parent) = hmod.parent() {
-            std::fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
-        }
-        std::fs::copy(&from, &hmod).map_err(|e| format!("{}: {e}", hmod.display()))?;
-        std::fs::remove_dir_all(&made).map_err(|e| format!("{}: {e}", made.display()))?;
-        built.hmod = Some(hmod);
-    }
-    if m.native().is_some() {
-        let hnmod = crate::pack::run(m)?;
-        run_in(
-            &crate::root(),
-            "cargo",
-            &["horizon-mod", "check", &hnmod.to_string_lossy()],
-        )?;
-        built.hnmod = Some(hnmod);
-    }
-    Ok(built)
+    let packed = crate::pack::run(m)?;
+    run_in(
+        &crate::root(),
+        "cargo",
+        &["sunrise-mod", "check", &packed.smod.to_string_lossy()],
+    )?;
+    Ok(packed)
 }

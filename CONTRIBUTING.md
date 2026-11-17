@@ -20,69 +20,66 @@ How the repository is organised, how to build and test the mods, and the rules a
 
 | Path | Contents |
 |---|---|
-| `common/` | The library, `creature`: `content/` (`creature.hmod`: the jar, the guide, the creative tab, translations), `native/` (`creature.hnmod`: the crate `mod-creature` in `api/`, and the creative tab injection `jar_tab.rs`), `SPECS.md` |
-| `mods/<mod>/` | One mod: `content/` (its `.hmod`: entities, items, recipes, loot, spawns, textures, sounds, translations), `native/` (its `.hnmod`: the crate `mod-<mod>` in `api/`, any injection helper beside it), `assets/models/*.bbmodel` (Blockbench models), `assets/sounds.toml` (its sounds' sources), `module.toml`, `SPECS.md`, `README.md` (its page for players) |
+| `common/` | The library, `creature`: its package at the root (`sunrise-mod.toml`; `Cargo.toml` and `src/`, the crate `mod-creature`; `assets/creature/`, `data/creature/`: the jar, the guide, the creative tab, translations), `module.toml`, `SPECS.md` |
+| `mods/<mod>/` | One mod: its package at the root (`sunrise-mod.toml`; `Cargo.toml` and `src/`, the crate `mod-<mod>`; `assets/<mod>/`, `data/<mod>/`: entities, items, recipes, loot, spawns, textures, sounds, translations), `sources/` (`models/*.bbmodel`, `sounds.toml`, Horizon's old manifests while it is ported), `module.toml`, `SPECS.md`, `README.md` (its page for players) |
 | `tools/` | The build tools, `cargo creature <command>` |
 | `docs/` | Series-wide documentation |
 | `.github/workflows/ci.yml` | CI (below) |
 | `.github/dependabot.yml` | Dependabot (below) |
 
 Generated files are committed and checked by `cargo creature check`: the creative tab
-(`common/content/data/creature/horizon/creative_tab/creature.json`), each model's Rust (`native/api/src/model*.rs`) and
+(`common/data/creature/sunrise/creative_tab/creature.json`), each model's Rust (`src/model*.rs`) and
 the models' pictures (`docs/models/`, `docs/MODELS.md`). Never edit them by hand.
 
 ## Build and test
 
-You need the [Horizon launcher](https://playhorizon.dev), Rust, `cargo horizon-mod` (from Horizon's sources, at the
-series' pin) and ffmpeg to remake the sounds. In the launcher, make a test instance and set it to the series' Nightly
-(the one whose commit is CI's `HORIZON_REV`), here named `creature-dev`; any name works with `--instance`.
+You need the [Sunrise launcher](https://playsunrise.net) (signed in, with a test instance, here `creature-dev`; any
+name works with `--instance`), Rust, `cargo sunrise-mod` and ffmpeg to remake the sounds.
 
 ```sh
-cargo install --locked --git https://github.com/horizon-rust/horizon --rev <HORIZON_REV> cargo-horizon-mod
+cargo install --locked --git https://github.com/sunrise-org/sunrise cargo-sunrise-mod
 cargo creature install                                   # the library and every mod, in creature-dev
 cargo creature install vulture --instance my-instance    # one mod (with the library and what it requires)
 ```
 
-The tools find the launcher by `$HORIZON_LAUNCHER`, else `horizon-launcher` on the `PATH`, else a
-`horizon-launcher*.AppImage` in your download folder, `~/Downloads`, `~/Applications`, `~/.local/bin` or `~/bin`; its
-data by `$HORIZON_LAUNCHER_DATA`, else `$XDG_DATA_HOME/horizon-launcher` or `~/.local/share/horizon-launcher`.
+The tools find the launcher by `$SUNRISE_LAUNCHER`, else `sunrise-launcher` on the `PATH`, else a
+`sunrise-launcher*.AppImage` in your download folder, `~/Downloads`, `~/Applications`, `~/.local/bin` or `~/bin`; its
+data by `$SUNRISE_LAUNCHER_DATA`, else `$XDG_DATA_HOME/sunrise` or `~/.local/share/sunrise`.
 
-`install` writes the creative tab, builds each module's content (`.hmod`) and native (`.hnmod`) halves, installs them
-in the instance and runs its native build (a minute or two, longer the first time). Then pick the instance in the
-launcher and press **Play** (restart the launcher if it was open during the build).
+`install` writes the creative tab and packages each module (staged in `target/stage/`, zipped to `target/<id>.smod`).
+A module whose Rust is on Sunrise's API (`ported = true` in its `module.toml`) is built by the launcher
+(`sunrise-launcher native-build`, a few seconds once its tools are downloaded), which also makes that build the one the
+instance plays; a content-only module goes in the instance's `sunrise-mods/`. Then press **Play** on the instance.
 
-The native mods read internal game fields and inject into Horizon's code, so they are **pinned** to one Horizon
-revision, the same for every module (`[compatibility] horizon_revision`, `api/Cargo.toml`, CI's `HORIZON_REV`). Keep
-your test instance on that Nightly: on a newer one the launcher tries to rebuild them against code they weren't written
-for.
+The modules are **pinned** to one Sunrise build, the same for every module (`[native] sunrise` and `mixins` in
+`sunrise-mod.toml`, CI's `SUNRISE_REV`); the launcher fetches that build's SDK and compiles against it.
 
 | Command | What it does |
 |---|---|
 | `cargo creature list` | The library and the mods, with their status |
 | `cargo creature tab` | Writes the series' creative tab from the modules' `module.toml`, and the library's recipe table (`recipes.rs`, for the guide's Items tab) from their recipe files |
-| `cargo creature model <mod> [model]` | Converts a Blockbench model into Rust (`native/api/src/model.rs`, or `model_<model>.rs`) |
+| `cargo creature model <mod> [model]` | Converts a Blockbench model (`sources/models/`) into Rust (`src/model.rs`, or `model_<model>.rs`) |
 | `cargo creature preview` | Redraws every model's pictures for `docs/MODELS.md` |
-| `cargo creature sounds <mod> [folder]` | Cuts a mod's `.ogg` files from freesound downloads (default `sounds-src/`, any sample rate), as its `assets/sounds.toml` says |
+| `cargo creature sounds <mod> [folder]` | Cuts a mod's `.ogg` files from freesound downloads (default `sounds-src/`, any sample rate), as its `sources/sounds.toml` says |
 | `cargo creature vanilla [jar]` | Writes the Vanilla Bestiary's `game_data.rs` from Minecraft's jar (default: the launcher's 26.3): natural spawns, drops, breeding foods |
-| `cargo creature pack <module>` | Packages a module's native half into `target/<id>.hnmod` |
-| `cargo creature build [mod...]` | Builds the library and the mods into `target/dist/`, without installing |
+| `cargo creature pack <module>` | Stages a module's package in `target/stage/` and zips it into `target/<id>.smod` |
+| `cargo creature build [mod...]` | Packages and checks (`cargo sunrise-mod check`) the library and the mods into `target/dist/`, without installing |
 | `cargo creature check` | The repository's consistency: tab, manifests, pins, translations, JSON, generated files, sounds (events, files, subtitles), recipe book advancements, docs |
-| `cargo creature native-check <horizon-source>` | Clippy and the unit tests on every native crate against a Horizon source (a checkout at the pinned revision) |
+| `cargo creature native-check [sdk]` | Clippy and the unit tests on every ported crate against the pinned Sunrise SDK (fetched into `common/.sunrise/sdk/`) |
 | `cargo creature install [--instance <name>] [mod...]` | Builds and installs, then runs the instance's native build |
 
 ## Before committing
 
-- `rustfmt` on the tools and the native code (`rustfmt.toml`), Clippy with `-D warnings` and the tests on the tools
+- `rustfmt` on the tools and the modules' `src/` (`rustfmt.toml`), Clippy with `-D warnings` and the tests on the tools
   (`cargo test`) and the native crates (`cargo creature native-check`), `cargo creature check`.
 - A new recipe comes with its recipe book advancement (`advancement/recipes/<tab>/<name>.json`, unlocked by one of its
   ingredients and rewarding it), or the recipe book never shows it; `cargo creature check` says which lack one. A
   feather in a recipe is `#creature:feathers`.
-- A new sound: its source in the mod's `assets/sounds.toml`, `cargo creature sounds <mod>`, its event in `sounds.json`
+- A new sound: its source in the mod's `sources/sounds.toml`, `cargo creature sounds <mod>`, its event in `sounds.json`
   with a subtitle in both languages.
 - Pure logic (aiming, conversions, text built for the game) gets a unit test beside it (`#[cfg(test)]`).
 - After a native change: `cargo creature install` and a test in game, along the module's test list (its `SPECS.md`,
-  "Testing in game"). The injections (`native/*.rs` beside `api/`)
-  compile only in the launcher's build, never in CI.
+  "Testing in game").
 - After a model change: `cargo creature model <mod> [model]` and `cargo creature preview`.
 - Everything in the repository is in English. The game text is translated: keep each module's
   `assets/<id>/lang/en_us.json` and `fr_fr.json` in step. No em dash anywhere.

@@ -23,47 +23,43 @@ depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and 
   translated: keep each module's `assets/<id>/lang/en_us.json` and `fr_fr.json` in step. Conversations with the user are
   in English.
 
-## Horizon
+## Sunrise
 
-- Horizon sources and docs installed by the launcher: `~/.local/share/horizon-launcher/native/stage/`
-  - `docs/mods.md` (content mods, `entity_type`, creative tabs, menus, spawns), `docs/native-mods.md` (`native_*` hooks,
-    goals, mob rendering, "Dependencies between trait mods")
-  - `crates/cargo-horizon-mod` (the `cargo horizon-mod` tool), `crates/horizon-client/src/game/native_mob_draw.rs`, `mods/`
-- Example installed native mod: `~/.local/share/horizon-launcher/native/installed.incoming/mod_menu/`
-  (`horizon-native.json`, `mixins/<id>/horizon-mixin.toml`).
-- Rust 1.99.1 toolchain pinned by the launcher. `horizon` MCP tools available (instances, mods, `game_*` to drive and
-  capture the game).
-- Never modify Horizon's files in `~/.local/share/horizon-launcher`: read them, write code in this repository.
+Horizon became Sunrise. The port is on the `sunrise` branch (main still builds for Horizon): the library and worms run
+on Sunrise, the other mods are packaged as content only until their Rust is ported (`ported = true` in a module's
+`module.toml` turns its code on). The plan, what each step taught and what is left: `docs/SUNRISE-PORT.md` (keep it up
+to date).
 
-## Sunrise (the port)
-
-Horizon became Sunrise; the series still builds for Horizon. The port plan and every known change: `docs/SUNRISE-PORT.md`
-(keep it up to date).
-
-- Launcher `~/Téléchargements/sunrise-launcher-linux-x86_64.AppImage`, data `~/.local/share/sunrise` (never modify it).
-- Sources: `../sunrise-src` (sparse checkout of sunrise-org/sunrise: `crates/sunrise-mod-api`, `sunrise-mod-vocab`
-  (hook declarations with their docs), `cargo-sunrise-mod`, `docs/modding/src` (the modding book)).
-- One `.smod` per mod (`sunrise-mod.toml`, `Cargo.toml`, `src/`, `assets/`, `data/<id>/sunrise/`), API crate
-  `sunrise-mod-api` (lib `mod_api`) by path from `.sunrise/sdk/`, tool `cargo sunrise-mod`, build with
-  `sunrise-launcher native-build`.
+- Launcher `~/Téléchargements/sunrise-launcher-linux-x86_64.AppImage` (also in the app menu), data
+  `~/.local/share/sunrise` (never modify it), instance `creature-dev`. Agent control: start the game with
+  `sunrise-launcher play --instance creature-dev --world <w> --arg --control`, then `sunrise-ctl` (in
+  `~/.local/share/sunrise/launcher/versions/<version>/`): `command`, `screenshot`, `entities`, `interact-entity`...
+- Sources: `../sunrise-src` (sparse checkout of sunrise-org/sunrise: `crates/sunrise-mod-vocab` holds the hook
+  declarations with their docs, `docs/modding/src` the modding book). The pinned SDK: `common/.sunrise/sdk/`
+  (fetched by any `cargo sunrise-mod` command; `surface.json` lists the whole API).
+- A module's root is its package: `sunrise-mod.toml` (id, version, `[native]` pins, `[dependencies] creature`),
+  `Cargo.toml` (`sunrise-mod-api` by path from `.sunrise/sdk/`), `src/`, `assets/<id>/`, `data/<id>/sunrise/`; beside it
+  the repository's own `module.toml`, `SPECS.md`, `sources/` (Blockbench models, `sounds.toml`, Horizon's old
+  manifests).
+- Never modify Horizon's files in `~/.local/share/horizon-launcher` either.
 
 ## Building and testing
 
-- `cargo creature install [--instance <name>] [mod...]` writes the creative tab, builds each module's `content/`
-  (`.hmod`) and `native/` (`.hnmod`), always with the library, installs them in the instance (default `creature-dev`) and
-  runs its native build. The launcher's Play button ignores a bundle built from a folder: it must be installed as a
-  `.hnmod`.
+- `cargo creature install [--instance <name>] [mod...]` writes the creative tab, packages each module (staged in
+  `target/stage/`, zipped to `target/<id>.smod`, checked by `cargo sunrise-mod check`), always with the library: a
+  ported module is built by `sunrise-launcher native-build target/stage/native` (which also selects the build for the
+  instance), a content-only one goes in the instance's `sunrise-mods/`.
 - Tools are Rust (`tools/`, commands `list`, `tab`, `model`, `preview`, `sounds`, `vanilla`, `pack`, `build`, `check`,
   `native-check`, `install`; alias in `.cargo/config.toml`; the table in `CONTRIBUTING.md`).
-- Before committing: rustfmt (tools and native code, `rustfmt.toml`), Clippy `-D warnings` on the tools,
-  `cargo creature check`; CI (`.github/workflows/ci.yml`) runs them, Clippy on the native crates against the pinned
-  Horizon source (`cargo creature native-check <horizon-source>`) and `cargo creature build`. Injections compile only
-  in the launcher's build: run `cargo creature install` after changing one.
+- Before committing: rustfmt (tools and `src/`, `rustfmt.toml`), Clippy `-D warnings` on the tools,
+  `cargo creature check`, `cargo creature native-check` (Clippy and tests of the ported crates on the pinned SDK); CI
+  (`.github/workflows/ci.yml`) runs them and `cargo creature build`.
+- A native mod's stderr reaches no log: debug by writing to a file.
 - No em dash in docs or text.
-- The tools find the launcher by `$HORIZON_LAUNCHER`, the `PATH` or an AppImage in the download folder, and its data by
-  `$HORIZON_LAUNCHER_DATA` or `~/.local/share/horizon-launcher` (`tools/src/launcher.rs`).
+- The tools find the launcher by `$SUNRISE_LAUNCHER`, the `PATH` or an AppImage in the download folder, and its data by
+  `$SUNRISE_LAUNCHER_DATA` or `~/.local/share/sunrise` (`tools/src/launcher.rs`).
 
-## Known API constraints
+## Known API constraints (Horizon: the unported mods' code; their Sunrise answers are in docs/SUNRISE-PORT.md)
 
 - Native dependency: a mod's `native/horizon-mixin.toml` has `[dependencies] creature = "^0.1"`; the launcher gives its
   `[api]` crate a `creature` crate and runs the library's `hooks()` first. Content mods have no dependency field.
@@ -92,9 +88,9 @@ Each one is marked in the code with its issue and listed, with its limits and wh
 ## Models
 
 - Blockbench 5.2.2 (Flatpak `net.blockbench.Blockbench`) + jasonjgardner MCP plugin v1.10.1, `blockbench` server in
-  `.mcp.json` (Blockbench must be open). `.bbmodel` files in `mods/<mod>/assets/models/`; `cargo creature model <mod>`
-  turns `<mod>.bbmodel` into the mod's `native/api/src/model.rs`; `cargo creature preview` redraws every model's
+  `.mcp.json` (Blockbench must be open). `.bbmodel` files in `mods/<mod>/sources/models/`; `cargo creature model <mod>`
+  turns `<mod>.bbmodel` into the mod's `src/model.rs`; `cargo creature preview` redraws every model's
   pictures for `docs/MODELS.md` (run it after changing a model; `cargo creature check` fails when either is stale).
   The `.bbmodel` files and the PNG icons are the sources: no script generates them.
 - Sounds: `cargo creature sounds <mod>` cuts a mod's `.ogg` files from freesound downloads as its
-  `assets/sounds.toml` says.
+  `sources/sounds.toml` says.

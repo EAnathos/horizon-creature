@@ -157,11 +157,25 @@ the guide opens the book, which shows the worm's page with the facts just learne
 - **Gone**: the creative tab injection (`build_creative_mode_tab_contents` hides the jar), the piston hook, the
   "switched off in Options > Mods" filter (Sunrise's Mods screen has no switch).
 
-### Next
+### Stage 3: layout and tools (2026-11-17) ✅
 
-The tools (`cargo creature` stage, build, install, check, model and preview paths, CI), then the other mods: their
-content as worms' (folders, `sunrise-mod.toml`), their native code onto the library's new shape (`EntityPart` goals or
-`body` behaviours, `EntityRenderer`, item parts, the host split), the vulture last.
+Every module is on the Sunrise layout (its package at its root; `sources/` for the Blockbench models, `sounds.toml` and
+Horizon's old manifests). The tools follow: `pack` stages a module in `target/stage/<native|content>/<id>/` and zips it
+to `target/<id>.smod`; `build` checks each with `cargo sunrise-mod check`; `install` builds the ported ones with
+`sunrise-launcher native-build target/stage/native` and puts the others' content in `sunrise-mods/`; `check` reads the
+`sunrise-mod.toml` pins (and CI's `SUNRISE_REV`); `native-check` compiles the ported crates on the SDK; `model`,
+`preview`, `sounds`, `tab`, `recipes`, `vanilla` use the new paths. A module's Rust is built only once its
+`module.toml` says `ported = true` (the library and worms today). Tried: `cargo creature install` puts all nine
+modules in `creature-dev`, which loads them with no refusal.
+
+### Left to port
+
+The other mods' Rust, each onto the library's new shape (`EntityPart` goals or `body` behaviours, an
+`EntityRenderer`, item parts, the host split), then `ported = true` and a test along its spec's "Testing in game":
+butterflies and fireflies (flutter, colours), fairies (friend, flutter), scorpions (crawl, projectile, enchantment),
+cyclops (projectile), the Vanilla Bestiary (vanilla creatures, now drawable in the book), the vulture last (riding,
+its HUD, its screen: §5). Open points: our creatures in a screen (§4, stage 2), mod brewing recipes, the rider's input
+(§5).
 
 ## 5. Our workarounds on Sunrise
 

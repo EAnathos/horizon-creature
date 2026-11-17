@@ -1,10 +1,9 @@
-//! Where the Horizon launcher is on this computer, and where it keeps its data, for `install` and `vanilla`.
+//! Where the Sunrise launcher is on this computer, and where it keeps its data, for `install` and `vanilla`.
 //!
-//! - The launcher: `$HORIZON_LAUNCHER`, else `horizon-launcher` on the `PATH`, else a `horizon-launcher*.AppImage` in
+//! - The launcher: `$SUNRISE_LAUNCHER`, else `sunrise-launcher` on the `PATH`, else a `sunrise-launcher*.AppImage` in
 //!   the usual folders (the user's download folder as `xdg-user-dir` names it, `~/Downloads`, `~/Applications`,
 //!   `~/.local/bin`, `~/bin`).
-//! - Its data: `$HORIZON_LAUNCHER_DATA`, else `$XDG_DATA_HOME/horizon-launcher`, else
-//!   `~/.local/share/horizon-launcher`.
+//! - Its data: `$SUNRISE_LAUNCHER_DATA`, else `$XDG_DATA_HOME/sunrise`, else `~/.local/share/sunrise`.
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -16,11 +15,11 @@ fn home() -> crate::Result<PathBuf> {
 
 /// The launcher's command.
 pub fn binary() -> crate::Result<String> {
-    if let Some(path) = std::env::var_os("HORIZON_LAUNCHER") {
+    if let Some(path) = std::env::var_os("SUNRISE_LAUNCHER") {
         return Ok(path.to_string_lossy().into_owned());
     }
-    if on_path("horizon-launcher") {
-        return Ok("horizon-launcher".into());
+    if on_path("sunrise-launcher") {
+        return Ok("sunrise-launcher".into());
     }
     let home = home()?;
     let mut folders: Vec<PathBuf> = Vec::new();
@@ -33,18 +32,18 @@ pub fn binary() -> crate::Result<String> {
         .find_map(|dir| appimage_in(dir))
         .map(|p| p.to_string_lossy().into_owned())
         .ok_or_else(|| {
-            "no Horizon launcher found: set HORIZON_LAUNCHER to its path, or put `horizon-launcher` on the PATH".into()
+            "no Sunrise launcher found: set SUNRISE_LAUNCHER to its path, or put `sunrise-launcher` on the PATH".into()
         })
 }
 
-/// The launcher's data folder (instances, native builds, the prepared Minecraft jars).
+/// The launcher's data folder (`launcher/`: versions, Rust; `game/`: the instances).
 pub fn data_dir() -> crate::Result<PathBuf> {
-    if let Some(dir) = std::env::var_os("HORIZON_LAUNCHER_DATA") {
+    if let Some(dir) = std::env::var_os("SUNRISE_LAUNCHER_DATA") {
         return Ok(PathBuf::from(dir));
     }
     match std::env::var_os("XDG_DATA_HOME").filter(|d| !d.is_empty()) {
-        Some(dir) => Ok(PathBuf::from(dir).join("horizon-launcher")),
-        None => Ok(home()?.join(".local/share/horizon-launcher")),
+        Some(dir) => Ok(PathBuf::from(dir).join("sunrise")),
+        None => Ok(home()?.join(".local/share/sunrise")),
     }
 }
 
@@ -73,7 +72,7 @@ fn appimage_in(dir: &Path) -> Option<PathBuf> {
 fn is_launcher_appimage(path: &Path) -> bool {
     path.file_name()
         .and_then(|n| n.to_str())
-        .is_some_and(|n| n.starts_with("horizon-launcher") && n.ends_with(".AppImage"))
+        .is_some_and(|n| n.starts_with("sunrise-launcher") && n.ends_with(".AppImage"))
 }
 
 #[cfg(test)]
@@ -82,11 +81,11 @@ mod tests {
 
     #[test]
     fn recognises_the_launcher_appimage() {
-        assert!(is_launcher_appimage(Path::new("/a/horizon-launcher.AppImage")));
+        assert!(is_launcher_appimage(Path::new("/a/sunrise-launcher.AppImage")));
         assert!(is_launcher_appimage(Path::new(
-            "/a/horizon-launcher-0.2.64-x86_64.AppImage"
+            "/a/sunrise-launcher-linux-x86_64.AppImage"
         )));
-        assert!(!is_launcher_appimage(Path::new("/a/horizon-launcher.AppImage.part")));
+        assert!(!is_launcher_appimage(Path::new("/a/sunrise-launcher.AppImage.part")));
         assert!(!is_launcher_appimage(Path::new("/a/other.AppImage")));
     }
 }

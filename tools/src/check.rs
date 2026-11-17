@@ -1,18 +1,15 @@
 //! Checks the repository's consistency, without building anything (docs/CONVENTIONS.md). Run by CI.
 //!
 //! - The shared creative tab is up to date with the modules' `module.toml` (`cargo creature tab`).
-//! - Each module: its content and native manifests carry its id and the same version; every native part is pinned to
-//!   the library's Horizon revision, in `horizon-mixin.toml` and in `api/Cargo.toml` (and CI installs
-//!   `cargo-horizon-mod` at it); a mod's native part depends on
-//!   the library and on every mod its `module.toml` requires.
+//! - Each module: its `sunrise-mod.toml` carries its id, the version of its `Cargo.toml`, and the library's Sunrise and
+//!   mixins pins (`[native]`, as CI's `SUNRISE_REV`); its `Cargo.toml` takes the API from the pinned SDK; a mod
+//!   depends on the library and on every mod its `module.toml` requires.
 //! - A mod's tab items are declared items; its `requires` name mods of the series, without cycles.
 //! - Every JSON file parses; each module's `en_us` and `fr_fr` lang files have the same keys.
 //! - Generated files are up to date: each model's Rust (`cargo creature model`), and each model has its pictures in
 //!   `docs/models/` and its entry in `docs/MODELS.md` (`cargo creature preview`).
-//! - The mods that use the glass jar are the same in its recipe's condition and in the creative tab injection
-//!   (`common/native/jar_tab.rs`).
 //! - Sounds: every sound a module's `sounds.json` names is an `.ogg` of it, and every `.ogg` is named there; every
-//!   subtitle is translated; when the module has an `assets/sounds.toml`, its clips are exactly its `.ogg` files.
+//!   subtitle is translated; when the module has a `sources/sounds.toml`, its clips are exactly its `.ogg` files.
 //! - Recipes: each crafting or cooking recipe has its recipe book advancement (`advancement/recipes/<tab>/<name>.json`,
 //!   rewarding it), or the recipe book never shows it. Brewing recipes have none, as vanilla's.
 //! - The Markdown docs use no em dash.
@@ -36,29 +33,30 @@ pub fn run() -> crate::Result {
 
     let library = modules::library()?;
     let mods = modules::mods()?;
-    let revision = library
-        .native()
-        .and_then(|n| manifest(&n.join("horizon-mixin.toml")).ok())
-        .and_then(|t| Some(t.get("compatibility")?.get("horizon_revision")?.as_str()?.to_owned()));
-    let Some(revision) = revision else {
-        return Err("common/native/horizon-mixin.toml pins no horizon_revision".into());
+    let pins = library
+        .manifest()
+        .and_then(|p| manifest(&p).ok())
+        .and_then(|t| native_pins(&t));
+    let Some(pins) = pins else {
+        return Err("common/sunrise-mod.toml pins no [native] sunrise and mixins".into());
     };
     let ci = root.join(".github/workflows/ci.yml");
-    if std::fs::read_to_string(&ci).is_ok_and(|t| !t.contains(&format!("HORIZON_REV: {revision}"))) {
+    if std::fs::read_to_string(&ci).is_ok_and(|t| !t.contains(&format!("SUNRISE_REV: {}", pins.0))) {
         errors.push(format!(
-            "{}: HORIZON_REV is not the series' revision {revision}",
-            rel(&ci)
+            "{}: SUNRISE_REV is not the series' revision {}",
+            rel(&ci),
+            pins.0
         ));
     }
+    let revision = &pins;
     for m in std::iter::once(&library).chain(&mods) {
-        module(m, &mods, &revision, &mut errors);
+        module(m, &mods, revision, &mut errors);
     }
     for m in std::iter::once(&library).chain(&mods) {
         models(m, &mut errors);
         sounds(m, &mut errors);
         recipes(m, &mut errors);
     }
-    jar_users(&root, &mut errors);
     let ids: Vec<String> = mods.iter().map(|m| m.id.clone()).collect();
     if let Err(e) = modules::with_requirements(&ids) {
         errors.push(e);
@@ -95,50 +93,34 @@ pub fn run() -> crate::Result {
     Err(format!("{} problems", errors.len()))
 }
 
-fn module(m: &Module, mods: &[Module], revision: &str, errors: &mut Vec<String>) {
+/// A manifest's `[native]` pins: the Sunrise commit and the horizon-mixins commit.
+fn native_pins(t: &toml::Table) -> Option<(String, String)> {
+    let native = t.get("native")?;
+    Some((
+        native.get("sunrise")?.as_str()?.to_owned(),
+        native.get("mixins")?.as_str()?.to_owned(),
+    ))
+}
+
+/// The `Cargo.toml` dependency line every module's crate takes the API from.
+const API: &str = "sunrise-mod-api = { path = \".sunrise/sdk/api/crates/sunrise-mod-api\" }";
+
+fn module(m: &Module, mods: &[Module], revision: &(String, String), errors: &mut Vec<String>) {
     let mut push = |e: String| errors.push(e);
     let mut versions = Vec::new();
-    if let Some(content) = m.content() {
-        let path = content.join("horizon-mod.toml");
+    if let Some(path) = m.manifest() {
         match manifest(&path) {
             Ok(t) => {
                 if t.get("id").and_then(|v| v.as_str()) != Some(&m.id) {
                     push(format!("{}: id is not {}", rel(&path), m.id));
                 }
                 versions.extend(t.get("version").and_then(|v| v.as_str()).map(str::to_owned));
-            }
-            Err(e) => push(e),
-        }
-        lang(&content.join(format!("assets/{}/lang", m.id)), &mut push);
-        for item in &m.creative {
-            let name = item.split_once(':').map_or(item.as_str(), |(_, n)| n);
-            let data = content.join(format!("data/{}/horizon", m.id));
-            if !data.join(format!("item/{name}.json")).is_file() && !data.join(format!("block/{name}.json")).is_file() {
-                push(format!(
-                    "{}: creative item {item} is declared nowhere",
-                    rel(&m.dir.join("module.toml"))
-                ));
-            }
-        }
-    } else if !m.creative.is_empty() {
-        push(format!(
-            "{}: creative items but no content part",
-            rel(&m.dir.join("module.toml"))
-        ));
-    }
-    if let Some(native) = m.native() {
-        let path = native.join("horizon-mixin.toml");
-        match manifest(&path) {
-            Ok(t) => {
-                let get = |table: &str, key: &str| t.get(table)?.get(key)?.as_str().map(str::to_owned);
-                if get("mod", "id").as_deref() != Some(&m.id) {
-                    push(format!("{}: [mod] id is not {}", rel(&path), m.id));
-                }
-                versions.extend(get("mod", "version"));
-                if get("compatibility", "horizon_revision").as_deref() != Some(revision) {
+                if native_pins(&t).as_ref() != Some(revision) {
                     push(format!(
-                        "{}: not pinned to the series' Horizon revision {revision}",
-                        rel(&path)
+                        "{}: [native] is not pinned to the series' Sunrise {} and mixins {}",
+                        rel(&path),
+                        revision.0,
+                        revision.1
                     ));
                 }
                 if m.id != LIBRARY {
@@ -152,18 +134,37 @@ fn module(m: &Module, mods: &[Module], revision: &str, errors: &mut Vec<String>)
             }
             Err(e) => push(e),
         }
-        let cargo = native.join("api/Cargo.toml");
-        let text = std::fs::read_to_string(&cargo).unwrap_or_default();
-        if !text.contains(&format!("rev = \"{revision}\"")) {
-            push(format!(
-                "{}: horizon-client is not at the series' revision {revision}",
-                rel(&cargo)
-            ));
+        lang(&m.dir.join(format!("assets/{}/lang", m.id)), &mut push);
+        for item in &m.creative {
+            let name = item.split_once(':').map_or(item.as_str(), |(_, n)| n);
+            let data = m.dir.join(format!("data/{}/sunrise", m.id));
+            if !data.join(format!("item/{name}.json")).is_file() && !data.join(format!("block/{name}.json")).is_file() {
+                push(format!(
+                    "{}: creative item {item} is declared nowhere",
+                    rel(&m.dir.join("module.toml"))
+                ));
+            }
         }
+        let cargo = m.dir.join("Cargo.toml");
+        if let Ok(text) = std::fs::read_to_string(&cargo) {
+            if !text.contains(API) {
+                push(format!("{}: the API is not the pinned SDK's ({API})", rel(&cargo)));
+            }
+            versions.extend(
+                text.lines()
+                    .find_map(|l| l.trim().strip_prefix("version = \"")?.strip_suffix('"'))
+                    .map(str::to_owned),
+            );
+        }
+    } else if !m.creative.is_empty() {
+        push(format!(
+            "{}: creative items but no package",
+            rel(&m.dir.join("module.toml"))
+        ));
     }
     if versions.windows(2).any(|v| v[0] != v[1]) {
         push(format!(
-            "{}: content and native versions differ ({})",
+            "{}: sunrise-mod.toml and Cargo.toml versions differ ({})",
             m.id,
             versions.join(", ")
         ));
@@ -181,7 +182,7 @@ fn module(m: &Module, mods: &[Module], revision: &str, errors: &mut Vec<String>)
 /// Each of the module's `.bbmodel` files: its Rust as `cargo creature model` makes it, its pictures and its entry in
 /// `docs/MODELS.md`.
 fn models(m: &Module, errors: &mut Vec<String>) {
-    let Ok(entries) = std::fs::read_dir(m.dir.join("assets/models")) else {
+    let Ok(entries) = std::fs::read_dir(m.dir.join("sources/models")) else {
         return;
     };
     let docs = crate::root().join("docs");
@@ -217,47 +218,17 @@ fn models(m: &Module, errors: &mut Vec<String>) {
     }
 }
 
-/// The mods the glass jar's recipe waits for (`mod_loaded`) are the ones the creative tab injection keeps it for.
-fn jar_users(root: &Path, errors: &mut Vec<String>) {
-    let recipe = root.join("common/content/data/creature/recipe/glass_jar.json");
-    let injection = root.join("common/native/jar_tab.rs");
-    let mut in_recipe = BTreeSet::new();
-    if let Ok(v) = read_json(&recipe) {
-        collect_modids(&v, &mut in_recipe);
-    }
-    let text = std::fs::read_to_string(&injection).unwrap_or_default();
-    let in_injection: BTreeSet<String> = text
-        .lines()
-        .find(|l| l.contains("const USERS"))
-        .map(|l| {
-            l.split('"')
-                .skip(1)
-                .step_by(2)
-                .map(|s| s.trim_end_matches(':').to_owned())
-                .collect()
-        })
-        .unwrap_or_default();
-    if in_recipe.is_empty() || in_recipe != in_injection {
-        errors.push(format!(
-            "{} and {}: the jar's mods differ ({} / {})",
-            rel(&recipe),
-            rel(&injection),
-            in_recipe.into_iter().collect::<Vec<_>>().join(", "),
-            in_injection.into_iter().collect::<Vec<_>>().join(", ")
-        ));
-    }
-}
 
 /// The module's sounds: `sounds.json` and the `.ogg` files agree, subtitles are translated, `sounds.toml`'s clips are
 /// the `.ogg` files.
 fn sounds(m: &Module, errors: &mut Vec<String>) {
-    let Some(content) = m.content() else {
+    let Some(content) = m.manifest().map(|_| m.dir.clone()) else {
         return;
     };
     let assets = content.join(format!("assets/{}", m.id));
     let json = assets.join("sounds.json");
     let oggs = ogg_names(&assets.join("sounds"));
-    let toml_path = m.dir.join("assets/sounds.toml");
+    let toml_path = m.dir.join("sources/sounds.toml");
     if !json.is_file() {
         if !oggs.is_empty() || toml_path.is_file() {
             errors.push(format!("{}: sound files but no sounds.json", rel(&assets)));
@@ -349,7 +320,7 @@ fn sound_events(events: &serde_json::Value) -> (BTreeSet<String>, BTreeSet<Strin
 
 /// The module's crafting and cooking recipes each have a recipe book advancement rewarding them.
 fn recipes(m: &Module, errors: &mut Vec<String>) {
-    let Some(content) = m.content() else {
+    let Some(content) = m.manifest().map(|_| m.dir.clone()) else {
         return;
     };
     let Ok(namespaces) = std::fs::read_dir(content.join("data")) else {
@@ -397,20 +368,6 @@ fn missing_advancements<'a>(recipes: &'a [String], rewarded: &BTreeSet<String>) 
     recipes.iter().filter(|r| !rewarded.contains(*r)).collect()
 }
 
-fn collect_modids(v: &serde_json::Value, out: &mut BTreeSet<String>) {
-    match v {
-        serde_json::Value::Object(o) => {
-            if o.get("type").and_then(|t| t.as_str()) == Some("neoforge:mod_loaded")
-                && let Some(id) = o.get("modid").and_then(|i| i.as_str())
-            {
-                out.insert(id.to_owned());
-            }
-            o.values().for_each(|v| collect_modids(v, out));
-        }
-        serde_json::Value::Array(a) => a.iter().for_each(|v| collect_modids(v, out)),
-        _ => {}
-    }
-}
 
 /// `en_us.json` and `fr_fr.json` have the same keys.
 fn lang(dir: &Path, push: &mut impl FnMut(String)) {
@@ -491,14 +448,4 @@ mod tests {
         assert_eq!(missing_advancements(&recipes, &rewarded), [&recipes[1]]);
     }
 
-    #[test]
-    fn collects_the_mods_a_condition_waits_for() {
-        let recipe = serde_json::json!({ "neoforge:conditions": [{ "type": "neoforge:or", "values": [
-            { "type": "neoforge:mod_loaded", "modid": "worms" },
-            { "type": "neoforge:mod_loaded", "modid": "fairies" }
-        ] }] });
-        let mut ids = BTreeSet::new();
-        collect_modids(&recipe, &mut ids);
-        assert_eq!(ids.into_iter().collect::<Vec<_>>(), ["fairies", "worms"]);
-    }
 }

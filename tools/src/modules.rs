@@ -22,6 +22,10 @@ struct File {
     /// Other mods of the series this one requires, besides the library (docs/ARCHITECTURE.md §2).
     #[serde(default)]
     requires: Vec<String>,
+    /// Its Rust is on Sunrise's `mod_api` (docs/SUNRISE-PORT.md): built with its content. Until then only its content
+    /// is packaged. Goes once every module is ported.
+    #[serde(default)]
+    ported: bool,
 }
 
 #[derive(Debug)]
@@ -32,6 +36,7 @@ pub struct Module {
     pub icon: Option<String>,
     pub creative: Vec<String>,
     pub requires: Vec<String>,
+    pub ported: bool,
     pub dir: PathBuf,
 }
 
@@ -47,21 +52,24 @@ impl Module {
             icon: f.icon,
             creative: f.creative,
             requires: f.requires,
+            ported: f.ported,
             dir: dir.to_path_buf(),
         })
     }
 
-    pub fn content(&self) -> Option<PathBuf> {
-        Some(self.dir.join("content")).filter(|d| d.join("horizon-mod.toml").is_file())
+    /// Its package's manifest (`sunrise-mod.toml`, at the module's root), when it has one.
+    pub fn manifest(&self) -> Option<PathBuf> {
+        Some(self.dir.join("sunrise-mod.toml")).filter(|p| p.is_file())
     }
 
+    /// Its Rust crate (`Cargo.toml` and `src/` at the module's root), when it is built: ported to `mod_api`.
     pub fn native(&self) -> Option<PathBuf> {
-        Some(self.dir.join("native")).filter(|d| d.join("horizon-mixin.toml").is_file())
+        Some(self.dir.clone()).filter(|d| self.ported && d.join("Cargo.toml").is_file())
     }
 
-    /// Has something to build: a content part or a native part.
+    /// Has something to build: a package.
     pub fn buildable(&self) -> bool {
-        self.content().is_some() || self.native().is_some()
+        self.manifest().is_some()
     }
 }
 

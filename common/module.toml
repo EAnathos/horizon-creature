@@ -6,3 +6,5 @@ status = "playable"
 icon = "creature:guide"
 # The library's own items, first in the shared tab.
 creative = ["creature:guide", "creature:glass_jar"]
+# Its Rust is on Sunrise's mod_api (docs/SUNRISE-PORT.md).
+ported = true

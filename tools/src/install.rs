@@ -1,17 +1,16 @@
-//! Builds modules (`build.rs`) and installs them in a launcher instance, as the Mods page's "Build" button would: the
-//! library always, then the mods asked for and the mods they require (all the buildable ones by default), each with its
-//! content part (`.hmod`) and its native part (`.hnmod`); then the instance's native build. Pressing Play on that
-//! instance then starts the game with them. A mod the launcher leaves out of that build fails the install.
+//! Builds modules (`build.rs`) and installs them in a launcher instance: the library always, then the mods asked for
+//! and the mods they require (all the buildable ones by default). A module with Rust is built by the launcher from its
+//! staged folder (`sunrise-launcher native-build target/stage/native`), which also makes that build the one the
+//! instance plays, with their content; a content-only module's `.smod` goes in the instance's `sunrise-mods/`, turned
+//! on in `sunrise-mods.txt`. Pressing Play on that instance then starts the game with them.
 //!
-//! The launcher and its data folder are found as `launcher.rs` says (`$HORIZON_LAUNCHER`, the `PATH`, the usual
+//! The launcher and its data folder are found as `launcher.rs` says (`$SUNRISE_LAUNCHER`, the `PATH`, the usual
 //! folders).
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use crate::modules::Module;
 
-/// The test instance, by name (its id and folder are still `vulture-dev`, from the time the repository held only the
-/// vulture: the launcher renames an instance without moving it).
+/// The test instance, by name.
 pub const DEFAULT_INSTANCE: &str = "creature-dev";
 
 pub fn run(instance: &str, names: &[String]) -> crate::Result {
@@ -19,61 +18,43 @@ pub fn run(instance: &str, names: &[String]) -> crate::Result {
     let launcher = crate::launcher::binary()?;
     let (id, game) = find_instance(&launcher, instance)?;
 
+    let staged = root.join("target/stage/native");
+    if staged.exists() {
+        std::fs::remove_dir_all(&staged).map_err(|e| format!("{}: {e}", staged.display()))?;
+    }
+    let mut native = false;
     for m in &crate::build::chosen(names)? {
-        let built = crate::build::module(m)?;
-        copy_in(m, &built, &game)?;
+        let packed = crate::build::module(m)?;
+        let content = game.join("sunrise-mods");
+        if m.native().is_some() {
+            native = true;
+            // Built by the launcher with its content: a content-only copy from before would load it twice.
+            let stale = content.join(format!("{}.smod", m.id));
+            if stale.exists() {
+                std::fs::remove_file(&stale).map_err(|e| format!("{}: {e}", stale.display()))?;
+            }
+        } else {
+            copy(&packed.smod, &content)?;
+            turn_on(&game.join("sunrise-mods.txt"), &m.id)?;
+        }
+    }
+    if !native {
+        return Ok(());
     }
     run_in(
         &root,
         &launcher,
         &[
             "native-build",
+            &staged.to_string_lossy(),
             "--instance",
             &id,
             "--trust-native-code",
-            "--profile",
-            "dev",
         ],
-    )?;
-    left_out(&crate::launcher::data_dir()?.join("native/build.log"))
+    )
 }
 
-/// The launcher still succeeds when it leaves a mod out of the build (an injection it refuses, a helper file with two
-/// functions...), and the game then starts without it: its build log says so, which fails the install.
-/// Workaround for horizon-rust/horizon#13971.
-fn left_out(log: &Path) -> crate::Result {
-    let Ok(text) = std::fs::read_to_string(log) else {
-        return Ok(());
-    };
-    let problems: Vec<&str> = text
-        .lines()
-        .filter(|l| l.contains("was left out") || l.contains("\"message\""))
-        .map(str::trim)
-        .collect();
-    if problems.is_empty() {
-        Ok(())
-    } else {
-        Err(format!(
-            "the native build left mods out ({}):\n{}",
-            log.display(),
-            problems.join("\n")
-        ))
-    }
-}
-
-/// Copies one built module into the instance, and turns its content on.
-fn copy_in(m: &Module, built: &crate::build::Built, game: &Path) -> crate::Result {
-    if let Some(hmod) = &built.hmod {
-        copy(hmod, &game.join("horizon-mods"))?;
-        turn_on(&game.join("horizon-mods.txt"), &m.id)?;
-    }
-    if let Some(hnmod) = &built.hnmod {
-        copy(hnmod, &game.join("horizon-native-mods"))?;
-    }
-    Ok(())
-}
-
-/// The instance named `instance` (by name or id), from `horizon-launcher instance list --json`: its id and game folder.
+/// The instance named `instance` (by name or id), from `sunrise-launcher instance list --json`: its id and game folder.
 fn find_instance(launcher: &str, instance: &str) -> crate::Result<(String, PathBuf)> {
     let out = Command::new(launcher)
         .args(["instance", "list", "--json"])
@@ -109,7 +90,7 @@ fn copy(file: &Path, into: &Path) -> crate::Result {
     Ok(())
 }
 
-/// Turns a content mod on in the instance's `horizon-mods.txt` (`mod.<id>:true`), once.
+/// Turns a content mod on in the instance's `sunrise-mods.txt` (`mod.<id>:true`), once.
 fn turn_on(settings: &Path, id: &str) -> crate::Result {
     let line = format!("mod.{id}:true");
     let text = std::fs::read_to_string(settings).unwrap_or_default();

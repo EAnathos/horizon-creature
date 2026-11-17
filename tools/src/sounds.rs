@@ -1,8 +1,8 @@
-//! Makes a mod's sounds from freesound downloads, as its `assets/sounds.toml` says: its sources (freesound numbers) and
+//! Makes a mod's sounds from freesound downloads, as its `sources/sounds.toml` says: its sources (freesound numbers) and
 //! its clips (a slice of a source, pitch, fade, gain). The sources are CC0 (public domain: nothing to credit).
 //!
 //! The downloaded files keep the name freesound gives them (`740195__el_boss__goose-hiss.wav`): they are found by
-//! their number, in `sounds-src/` or the folder given. Output: `content/assets/<mod>/<out>/*.ogg` (`out` from the
+//! their number, in `sounds-src/` or the folder given. Output: `assets/<mod>/<out>/*.ogg` (`out` from the
 //! file, `sounds/<mod>` by default), mono 44.1 kHz, normalized volume, like vanilla sounds. Needs ffmpeg.
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -11,7 +11,7 @@ use std::process::Command;
 use serde::Deserialize;
 use serde_json::Value;
 
-/// A mod's `assets/sounds.toml`.
+/// A mod's `sources/sounds.toml`.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Recipe {
@@ -47,12 +47,12 @@ fn default_fade() -> f64 {
 
 pub fn run(module: &str, folder: Option<&str>) -> crate::Result {
     let m = crate::modules::find(module)?;
-    let path = m.dir.join("assets/sounds.toml");
+    let path = m.dir.join("sources/sounds.toml");
     let text =
         std::fs::read_to_string(&path).map_err(|e| format!("{}: {e} (no sounds for {module} yet)", path.display()))?;
     let recipe: Recipe = toml::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?;
-    let content = m.content().ok_or_else(|| format!("{module} has no content part"))?;
-    let assets = content.join(format!("assets/{}", m.id));
+    m.manifest().ok_or_else(|| format!("{module} has no package"))?;
+    let assets = m.dir.join(format!("assets/{}", m.id));
     let out = assets.join(recipe.out.clone().unwrap_or_else(|| format!("sounds/{}", m.id)));
     std::fs::create_dir_all(&out).map_err(|e| format!("{}: {e}", out.display()))?;
     let src = folder.map_or_else(|| crate::root().join("sounds-src"), PathBuf::from);

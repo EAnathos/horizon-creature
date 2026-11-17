@@ -4,3 +4,5 @@ name = "Worms"
 status = "playable"
 # Its items in the series' creative tab, in order.
 creative = ["worms:worm_spawn_egg"]
+# Its Rust is on Sunrise's mod_api (docs/SUNRISE-PORT.md).
+ported = true
