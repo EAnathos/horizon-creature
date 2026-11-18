@@ -214,12 +214,14 @@ spec is still to run. What it taught:
   mod menu type (`open_mod_menu` with its own client screen) backed by the vulture's storage
   (`PlayerRef::back_mod_menu_slots` with `MenuSlotPlace::EntityItems`, an `ENTITY_ITEMS` provider).
 - `sunrise-ctl`'s keys are the keyboard's: this instance binds sneak to E, so `hold e`, not `hold shift`.
+- Our brewing recipes (`minecraft:brewing` JSON in `data/<id>/recipe/brewing/`) load and brew as they are: an
+  awkward potion and fairy dust give Swiftness, and a venom sac gives Poison.
 - `install` stages every ported module: the launcher builds all of an instance's native mods together, so installing
   one mod must not drop the others.
 
 ### Left to port
 
-- Mod brewing recipes, each module's "Testing in game" list.
+- Each module's "Testing in game" list.
 
 ## 5. Our workarounds on Sunrise
 
