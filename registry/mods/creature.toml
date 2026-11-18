@@ -1,0 +1,48 @@
+# Written by `cargo creature release` (tools/src/release.rs): edit the module, not this file.
+id = "creature"
+kind = "native-mod"
+name = "Sunrise Creatures"
+summary = "The library of the Sunrise Creatures mods: the creature guide and its bestiary, the glass jar, the series' creative tab. Needed by every mod of the series."
+description = """
+> **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
+
+The library every mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/main/README.md) series needs. It adds no creature of its own, but what
+the creatures share:
+
+- **The creature guide**, given to every player the first time they join a world. Right-click it to open the
+  **bestiary**: each creature you come across gets a page, turning in 3D, with the biomes you met it in, how rare it is
+  and what you found out about it. A lost one is crafted again from a book, a feather and leather. Operators can fill
+  it to look through it: `/bestiary unlock <species>` (or `all`) writes down everything about a species, and
+  `/bestiary reset` empties it.
+- **The glass jar** (3 glass in a U and an oak slab, makes 2), with Butterflies, Fireflies or Worms installed: it
+  catches their creatures and releases them where you want them to stay. Sneak + right-click places a filled jar on
+  display.
+- **The "Sunrise Creatures" creative tab**, with every item of the series.
+- Monsters leave the series' creatures alone.
+
+For developers: [SPECS.md](https://github.com/EAnathos/sunrise-creatures/blob/main/common/SPECS.md) and [CONTRIBUTING.md](https://github.com/EAnathos/sunrise-creatures/blob/main/CONTRIBUTING.md).
+"""
+authors = ["EAnathos"]
+owners = ["EAnathos"]
+license = "MIT"
+source = "https://github.com/EAnathos/sunrise-creatures"
+icon = "icons/creature.png"
+categories = ["library"]
+tags = ["creatures", "bestiary", "glass-jar", "guide"]
+key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.1"
+published = "2026-11-18"
+game = "26.3"
+file = "creature-0.1.1.smod"
+sha256 = "7f72b78df924a1d43b6a7406f9290f46473ebe2ba0d905b7e4ced06e674ea596"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw67JdzeyGvVoJqkxyuRJe6glhIenrR626B0fWwa3GTOqYUT4tfC7EW983Fca0TX2pdpJd+37iXVHqaljDCkbY1wI=
+trusted comment: timestamp:1795041426	file:creature-0.1.1.smod	hashed
+3j4nDDaotrYffks6xGTQO60x6N1beHtJAtnV2NEQT0WX4wEoS1PG9yX/49ZjPpQebz/s9baz0c9WPSdHE0FFCA==
+"""
+changelog = """
+- First release on Sunrise.
+"""

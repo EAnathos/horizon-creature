@@ -1,0 +1,55 @@
+# Written by `cargo creature release` (tools/src/release.rs): edit the module, not this file.
+id = "butterflies"
+kind = "native-mod"
+name = "Butterflies"
+summary = "Butterflies by day and moths by night, in many colours and patterns; catch them in a jar."
+description = """
+> **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
+
+![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/main/docs/models/butterflies-butterfly-front.png) ![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/main/docs/models/butterflies-moth-front.png)
+
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/main/README.md) series: butterflies by day and moths by night, in many colours and
+patterns. **Requires** Sunrise Creatures, the series' library.
+
+## Finding them
+
+Butterflies flutter by day, in fair weather, in flower forests, meadows, plains, forests, birch forests, cherry groves
+and jungles, landing on flowers. Moths come out at night in forests, taigas, plains and meadows, and circle around
+torches and lanterns. Both fly off when you sprint at them. In creative: their spawn eggs (creative tab "Horizon
+Creature").
+
+Each butterfly has its own look: a colour (white, lemon, orange, red, sky blue, violet, brown, black) and a pattern
+(plain, eye spots, wing tips, veins, dots, tails) in a second colour, some likelier in some biomes. The bestiary keeps
+the ones you met.
+
+## Jars and dust
+
+- Catch one with a **glass jar** (right-click it) and release it on a block: it keeps its colours. Released on a
+  flower, it stays around the flowers nearby. Sneak + right-click places the jar on display.
+- **Butterfly dust** drops from both. Right-click to throw a shimmering cloud of it.
+- **Confetti**: paper and butterfly dust make 8. Right-click to throw a burst of colours.
+"""
+authors = ["EAnathos"]
+owners = ["EAnathos"]
+license = "MIT"
+source = "https://github.com/EAnathos/sunrise-creatures"
+icon = "icons/butterflies.png"
+categories = ["mobs", "decoration"]
+tags = ["butterflies", "moths", "insects", "ambient"]
+key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-18"
+game = "26.3"
+file = "butterflies-0.1.0.smod"
+sha256 = "a25978ec3496d9022ee753bc546abb7deaa989f66ec390154ce31841972a98a9"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw6+jRB5RTb1b6hEBUEIuMjTIYdC4prsLY/vilx+uwj/ARyu5M3KYtd1b39LxYBI2sdUrD7JyJjaQz+9l6NWN4KgA=
+trusted comment: timestamp:1795041435	file:butterflies-0.1.0.smod	hashed
+NuXESX/e0fr0IZDt6jdPZM9J3cvUJ63mn7S6Uq0wMbeWRzfAzbHVlftcm0D8rGTYwsXfA6bTOqK+1arADLDABw==
+"""
+changelog = """
+- First release on Sunrise.
+"""

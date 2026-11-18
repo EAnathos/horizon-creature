@@ -1,0 +1,40 @@
+# Written by `cargo creature release` (tools/src/release.rs): edit the module, not this file.
+id = "vanilla_bestiary"
+kind = "native-mod"
+name = "Vanilla Bestiary"
+summary = "Minecraft's own creatures in the creature guide's bestiary: where you met them, what they eat, give and drop."
+description = """
+> **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
+
+An add-on of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/main/README.md) series: Minecraft's own creatures get pages in
+the creature guide's bestiary, below the series' creatures, found out in play like them: where you met them, what
+breeds and tames them, what they give (milk, wool, eggs, a fish in a bucket), what they drop, and one thing they do (a
+creeper exploding, a zombie drowning). A wild one counts, not one from a spawn egg, bred or tamed. It adds no creature
+and no item. **Requires** Sunrise Creatures, the series' library.
+
+Its design is in [SPECS.md](https://github.com/EAnathos/sunrise-creatures/blob/main/mods/vanilla_bestiary/SPECS.md).
+"""
+authors = ["EAnathos"]
+owners = ["EAnathos"]
+license = "MIT"
+source = "https://github.com/EAnathos/sunrise-creatures"
+icon = "icons/vanilla_bestiary.png"
+categories = ["game-mechanics", "utility"]
+tags = ["bestiary", "guide", "vanilla", "creatures"]
+key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-18"
+game = "26.3"
+file = "vanilla_bestiary-0.1.0.smod"
+sha256 = "694271d2159e6a865583a49addc77c7e53f9b5f2570133b5a25c96cdf2a7b626"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw63W+Fkx6Upd5FHqICNw5NvoS9LGIoAcrBKC+RfjbWc9FcstELc6BwPKPgicoWGt+pM1lZELLRWS4kpnw4jXHqwk=
+trusted comment: timestamp:1795041535	file:vanilla_bestiary-0.1.0.smod	hashed
+YCms/6cHTEaKg5/B39KehaRmP7/JNZRtrEeHHu0eup+rRQ3UtvMXQz1ZMlvOcVv+vDs9CNVwyWbLmPgEYp6JAg==
+"""
+changelog = """
+- First release on Sunrise.
+"""

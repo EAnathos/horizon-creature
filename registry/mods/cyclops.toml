@@ -1,0 +1,56 @@
+# Written by `cargo creature release` (tools/src/release.rs): edit the module, not this file.
+id = "cyclops"
+kind = "native-mod"
+name = "Cyclops"
+summary = "A one-eyed giant shepherd at cave mouths, with its flock, a club that breaks the ground and boulders it throws."
+description = """
+> **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
+
+![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/main/docs/models/cyclops-cyclops-front.png)
+
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/main/README.md) series: a one-eyed giant shepherd, four blocks tall, who lives at the
+mouths of caves with his flock. **Requires** Sunrise Creatures, the series' library.
+
+## Meeting one
+
+Rarely, at a cave mouth in the mountains, the meadows, the windswept hills or on a rocky shore, a cyclops watches over
+three to five sheep that follow him everywhere. Never on Peaceful. In creative: the spawn egg (creative tab "Sunrise Creatures").
+
+He is hostile. Come near, hurt him or one of his sheep, and he walks up and brings his club down on you (it hurts, and
+throws you back). Keep your distance, or climb out of his club's reach, and he lifts a boulder over his head and hurls
+it at you. Wherever the club or the boulder lands, the blocks around it break (chests and other containers are spared;
+nothing breaks with the `mobGriefing` game rule off). His eye is his weak spot: an arrow
+or a trident in it hurts twice as much and leaves him dazed for a moment.
+
+## What he leaves
+
+- **His eye**, when you kill him. With 4 sticks and wool it makes a **shepherd's crook**: while you hold it, the farm
+  animals around you (sheep, cows, pigs, goats, chickens) follow you. His sheep too.
+- Sometimes **his club**: a slow, heavy wooden weapon that hits hard and throws back. You can also make one from 4
+  logs and a stick.
+- Some leather.
+"""
+authors = ["EAnathos"]
+owners = ["EAnathos"]
+license = "MIT"
+source = "https://github.com/EAnathos/sunrise-creatures"
+icon = "icons/cyclops.png"
+categories = ["mobs", "adventure"]
+tags = ["cyclops", "giant", "hostile", "boss"]
+key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-18"
+game = "26.3"
+file = "cyclops-0.1.0.smod"
+sha256 = "f5c98f0377e0bf2ceb4df37c79eaa5a518824a147f18cd00391f4660419269b9"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw6+ZlmoQqCqSEobQivHfKA/pvD+NFeKhLkP2G9Ho/xXlA+gh9CzBr2qAdjJJ1OPzGBW5AdVs7xvBAEhI6f7HDOwQ=
+trusted comment: timestamp:1795041443	file:cyclops-0.1.0.smod	hashed
+6slq2IMQi5OM0ePDw1+vN+jEVDDckkUF6jW12LdKfruGpnAMSnOJTiUA6mZRDRR8J4FlHMrYTLdivffVoLj2Dw==
+"""
+changelog = """
+- First release on Sunrise.
+"""

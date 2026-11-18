@@ -1,0 +1,81 @@
+# Written by `cargo creature release` (tools/src/release.rs): edit the module, not this file.
+id = "vulture"
+kind = "native-mod"
+name = "Vulture"
+summary = "A desert vulture you tame with raw chicken, saddle and fly like a plane, with two chests and talons to carry a creature."
+description = """
+> **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
+
+![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/main/docs/models/vulture-vulture-front.png)
+
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/main/README.md) series: a desert vulture you tame with raw chicken, saddle and fly like
+a plane, with two chests and talons. **Requires** Sunrise Creatures, the series' library.
+
+## Finding one
+
+Vultures live in deserts, badlands and savannas, where they soar in circles high up and land on the highest ground
+around. In creative: the spawn egg (creative tab "Sunrise Creatures") or `/summon vulture:vulture`.
+
+They are neutral: hit one and it dives at you from the air, with the vultures nearby. They drop feathers and meat (raw,
+or cooked when they burn). A vulture feather crafts arrows, the brush and the book and quill like a feather.
+
+## Taming
+
+Throw raw chicken near it (Q): it walks to the meat and eats it, and one time in four it is yours (hearts). A tamed
+vulture follows you in the air and lands near you, and defends you. Each vulture has its own health and speed.
+
+Its owner's right-click:
+
+- a **saddle** puts it on; then right-click to ride it;
+- a **chest** adds one (two at most, saddle needed);
+- raw meat heals it, or makes a baby grow faster;
+- rotten flesh makes two grown vultures want a baby, which takes after both parents;
+- anything else: sit or follow.
+
+**Sneak + right-click** opens its screen: the saddle, sit / follow, and the chests' slots.
+
+## Flying
+
+It always flies forward and goes where you look, banking into its turns.
+
+| Key | Effect |
+|---|---|
+| Look left / right | Bank and turn |
+| A / D | Steer left / right |
+| Space (held) | Climb; takes off from the ground |
+| Sneak (held) | Descend |
+| W | Flap, up to cruising speed |
+| (nothing) | Glide, slowly losing height |
+| S | Brake; on the ground, back up slowly |
+| R | Talons: catch the small creature below, let it go |
+| Sneak on the ground | Get off |
+
+## Credits
+
+Its sounds are made from [CC0](https://creativecommons.org/publicdomain/zero/1.0/) recordings from
+[freesound.org](https://freesound.org) (hissing geese, wings, a vulture imitation).
+"""
+authors = ["EAnathos"]
+owners = ["EAnathos"]
+license = "MIT"
+source = "https://github.com/EAnathos/sunrise-creatures"
+icon = "icons/vulture.png"
+categories = ["mobs", "transportation", "adventure"]
+tags = ["vulture", "flying", "mount", "taming", "birds"]
+key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-18"
+game = "26.3"
+file = "vulture-0.1.0.smod"
+sha256 = "d6b1074752b6c689d97cd64795ce9e2d012bc5dd6db96d8fa03d35dca6d277d4"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw6+RBu73B64zqOQgImHJ/uIBZSmZcMm5Cwq+4+xt7ExNDSi8wn31b5eeYDUalKAv4z1a0Es5L4BklWgLuXWvfoQ8=
+trusted comment: timestamp:1795041542	file:vulture-0.1.0.smod	hashed
+NnN7ySszJL9TJYUPKCwk3FSsAhaZz2m9lQ520u5EePV2PDcn43iD7Id6eKP/il8RM+NQFHRnArQggVVrGEJsCw==
+"""
+changelog = """
+- First release on Sunrise.
+"""

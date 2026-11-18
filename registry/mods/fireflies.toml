@@ -1,0 +1,48 @@
+# Written by `cargo creature release` (tools/src/release.rs): edit the module, not this file.
+id = "fireflies"
+kind = "native-mod"
+name = "Fireflies"
+summary = "Fireflies that light up warm nights; kept in a glass jar, they make a soft lantern."
+description = """
+> **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
+
+![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/main/docs/models/fireflies-firefly-front.png)
+
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/main/README.md) series: fireflies that light up the night. **Requires** Horizon
+Creature, the series' library.
+
+## Finding them
+
+At night, near swamps, rivers, plains, meadows and forests, fireflies drift low and slowly in small groups, their
+lanterns pulsing yellow-green. By day they rest on the ground. In creative: the spawn egg (creative tab "Horizon
+Creature").
+
+## Jars
+
+Catch one with a **glass jar** (right-click it). Release it on a flower and it stays there, lighting up your garden at
+night; or place the filled jar (sneak + right-click) as a small glowing lantern.
+"""
+authors = ["EAnathos"]
+owners = ["EAnathos"]
+license = "MIT"
+source = "https://github.com/EAnathos/sunrise-creatures"
+icon = "icons/fireflies.png"
+categories = ["mobs", "decoration"]
+tags = ["fireflies", "insects", "ambient", "light"]
+key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-18"
+game = "26.3"
+file = "fireflies-0.1.0.smod"
+sha256 = "503227c5bca42a59bc1aceb815ec28cde058fc3732e850899a95692e12beefd6"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw64WREXX8+zX9t6d7RSrNQCwft8ndv6QjNe2pEJRG75qf1Go660amZUbSgDCrawNBoxKfHvMgBUxNEz8JjtVpSQ8=
+trusted comment: timestamp:1795041458	file:fireflies-0.1.0.smod	hashed
+uYOvgdx/2Z96v8XlOkV2tHlmdkhmQ2OXQGg3Rih0V3/2JF3RSb4vTaq9OaXScFV1sxKt1U8X/BVf6qqOwtEADg==
+"""
+changelog = """
+- First release on Sunrise.
+"""

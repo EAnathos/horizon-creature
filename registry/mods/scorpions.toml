@@ -1,0 +1,42 @@
+# Written by `cargo creature release` (tools/src/release.rs): edit the module, not this file.
+id = "scorpions"
+kind = "native-mod"
+name = "Scorpions"
+summary = "Real-size scorpions in deserts, badlands and caves: they rear up when you come close and sting when hit. Their stinger makes a dagger you throw."
+description = """
+> **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
+
+![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/main/docs/models/scorpions-scorpion-front.png)
+
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/main/README.md) series: scorpions of real size hiding in the shade
+of deserts, badlands and caves, where some glow cyan in the dark. Come close and one rears up, claws open and tail
+arched; hit it and it fights back with its claws and a poisoned sting. Its venom makes poison potions and arrows, its
+stinger a dagger, and a glass jar makes it a terrarium pet. **Requires** Sunrise Creatures, the series' library.
+
+`/summon scorpions:scorpion ~ ~ ~ {Tags:["cave"]}` makes one of a kind (`desert`, `badlands` or `cave`). The design is
+in [SPECS.md](https://github.com/EAnathos/sunrise-creatures/blob/main/mods/scorpions/SPECS.md).
+"""
+authors = ["EAnathos"]
+owners = ["EAnathos"]
+license = "MIT"
+source = "https://github.com/EAnathos/sunrise-creatures"
+icon = "icons/scorpions.png"
+categories = ["mobs", "equipment", "adventure"]
+tags = ["scorpions", "desert", "poison", "dagger", "insects"]
+key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-18"
+game = "26.3"
+file = "scorpions-0.1.0.smod"
+sha256 = "8e0c7a72b544dfe06e4bbb0394b8e5a1560a89dc70f6c2da4d22c040b5e5b04a"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw6+/CglhVIsEumCftgJkSioSvWVYo8GTG85Q0nZAuqIUWw4TKMuzD7NAWIneeQ6JskZAvStbhtvRb9212rdiW3gk=
+trusted comment: timestamp:1795041465	file:scorpions-0.1.0.smod	hashed
+Mimh6+syqSDaDPNlG5iHTqQIAmz5EC5jOZHCnOg958ixTmn5XRQwLd0QcMVb+452Ptwgy+x4h9J6cJGlvhThCw==
+"""
+changelog = """
+- First release on Sunrise.
+"""
