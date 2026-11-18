@@ -13,7 +13,7 @@ your own.
 
 Planned: the spec and the models, no code yet.
 
-- **The stick insect** (`assets/models/stick_insect.bbmodel`, pictures in docs/MODELS.md): a long thin twig of a body
+- **The stick insect** (`assets/models/stick_insect.bbmodel`, pictures in docs/models/): a long thin twig of a body
   (head, thorax, abdomen and a forked tip, with darker node bands like a twig's), long antennae, the front legs held
   straight forward along them as real stick insects do to look like a twig, and two pairs of long thin legs bent at the
   knee. Groups: `body`, `abdomen`, `abdomen_tip`, `antenna_*`, `leg_front_*`, `leg_mid_*`, `leg_hind_*` and their

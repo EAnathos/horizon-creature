@@ -12,7 +12,7 @@ found, not summoned, fought with a boss bar, and cooled with snow.
 
 Planned: the spec and the model, no code yet.
 
-- **The model** (`assets/models/magma_golem.bbmodel`, pictures in docs/MODELS.md): our own design, about 6 blocks
+- **The model** (`assets/models/magma_golem.bbmodel`, pictures in docs/models/): our own design, about 6 blocks
   tall, built from boulders of dark grey-brown rock split by glowing orange seams, lava showing at the belly, the
   chest, the elbows, the wrists and the knees. Hunched forward like an ape: a massive back and huge shoulders rise
   above its head, held low in front: plain dark stone, a heavy overhanging brow, two glowing eyes in dark sockets, a

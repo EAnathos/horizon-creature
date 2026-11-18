@@ -12,7 +12,7 @@ night.
 
 Planned: the spec and the model, no code yet.
 
-- **The model** (`assets/models/jellyfish.bbmodel`, pictures in docs/MODELS.md): a domed bell in three tiers with a
+- **The model** (`assets/models/jellyfish.bbmodel`, pictures in docs/models/): a domed bell in three tiers with a
   thin rim, four frilled oral arms under it and eight long thin tentacles around the rim, each in two parts to sway.
   One model for every kind, a texture each (§2): moon jelly (pale lilac, four pink rings on top), sea nettle (amber,
   red stripes, red tentacles), glow jelly (deep blue, cyan spots and tentacles).

@@ -12,7 +12,7 @@ hits them; what they leave behind calls lightning down.
 
 Planned: the spec and the model, no code yet.
 
-- **The model** (`assets/models/storm_spirit.bbmodel`, pictures in docs/MODELS.md): a deep blue figure streaked with
+- **The model** (`assets/models/storm_spirit.bbmodel`, pictures in docs/models/): a deep blue figure streaked with
   pale lightning, a broad chest with a white-gold core showing front and back, a small head with two white eyes under
   a crest of three white arcs, arc spikes on the shoulders, long two-jointed arms spread wide ending in three white
   claws, no legs: a waist that thins into a zigzag tail. Four loose zigzag sparks float around it (`sparks`, to

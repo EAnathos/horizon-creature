@@ -12,7 +12,7 @@ one becomes a fishing companion that dives for fish and shows you where to cast.
 
 Planned: the spec and the model, no code yet.
 
-- **The model** (`assets/models/seagull.bbmodel`, pictures in docs/MODELS.md): a white gull with a pale grey back and
+- **The model** (`assets/models/seagull.bbmodel`, pictures in docs/models/): a white gull with a pale grey back and
   wings, black wing tips with white spots, a yellow hooked beak with a red spot, pale eyes and pink webbed feet. Its
   parts are named as the vulture's (`body`, `tail`, `neck`, `head`, `wing_*`, `wing_*_mid`, `wing_*_tip`, `leg_*`), so
   the shared flight poses it; built with its wings spread, folded on the ground by the pose.

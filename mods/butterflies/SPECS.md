@@ -12,7 +12,7 @@ flowery places, that you catch in a glass jar and settle where you like. Deliber
 Done and tested in game (single player).
 
 - **Butterflies and moths** (`butterflies:butterfly`, `butterflies:moth`, spawn eggs): tiny wandering trader copies, 1
-  health, muted, drawn from `assets/models/butterfly.bbmodel` and `moth.bbmodel` (pictures in docs/MODELS.md). A
+  health, muted, drawn from `assets/models/butterfly.bbmodel` and `moth.bbmodel` (pictures in docs/models/). A
   butterfly gets a look the first time it is seen, from the library's colours and patterns (common/SPECS.md §5): 8
   colours, 6 patterns (plain, eye spots, wing tips, veins, dots, tails), weighted per biome (§2); the moth is painted
   (§2.1).

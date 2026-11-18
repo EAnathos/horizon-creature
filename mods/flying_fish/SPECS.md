@@ -12,7 +12,7 @@ swooping seagull.
 
 Planned: the spec and the model, no code yet.
 
-- **The model** (`assets/models/flying_fish.bbmodel`, pictures in docs/MODELS.md): a slim fish about three quarters of
+- **The model** (`assets/models/flying_fish.bbmodel`, pictures in docs/models/): a slim fish about three quarters of
   a block long, its big pectoral fins spread as wings (about 0.8 block across, each in two parts swept back), a small
   pair of pelvic fins behind them (the "four-winged" look), a dorsal and an anal fin, and a forked tail whose lower lobe
   is longer, as the real fish's, which it beats on the water to glide again. Groups: `body`, `fin_left`, `fin_right`

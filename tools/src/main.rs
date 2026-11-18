@@ -4,7 +4,7 @@
 //! cargo creature list                         # the library and the mods, with their status
 //! cargo creature tab                          # writes the series' single creative tab and recipe table (library)
 //! cargo creature model <mod> [model]          # mods/<mod>/sources/models/<model>.bbmodel -> the mod's src/
-//! cargo creature preview                     # every mod's .bbmodel -> pictures in docs/models/ and docs/MODELS.md
+//! cargo creature preview                     # every mod's .bbmodel -> pictures in docs/models/
 //! cargo creature sounds <mod> [folder]        # freesound downloads (default sounds-src/) -> the mod's sounds (vulture)
 //! cargo creature pack <module>                # a module's package -> target/stage/, target/<id>.smod
 //! cargo creature build [mod...]               # builds the library and the mods (default: all) into target/dist/

@@ -16,7 +16,7 @@ to replace the placeholder art. The textures are **placeholders** (painted from 
 a colour per body part) and the sounds are **synthesized placeholders** (not the freesound clips `cargo creature
 sounds` cuts, so there is no `assets/sounds.toml`): both are meant to be replaced by real art.
 
-- **The model** (`assets/models/scorpion.bbmodel`, pictures in docs/MODELS.md): a carapace with a pair of eyes on top
+- **The model** (`assets/models/scorpion.bbmodel`, pictures in docs/models/): a carapace with a pair of eyes on top
   and small ones on its front corners, three broad body segments, eight thin legs bent at the knee, two big claws
   (pedipalps: arm, forearm, a palm with a fixed finger and a moving finger, `claw_*_finger`, that opens and closes),
   and the tail in five segments ending in the bulb and its hooked stinger (`tail_1` to `tail_5`, `telson`). Built at a

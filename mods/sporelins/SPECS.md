@@ -12,7 +12,7 @@ mushrooms where they walk; befriended, one follows you home and tends a mushroom
 
 Planned: the spec and the model, no code yet.
 
-- **Two models**, one per look (pictures in docs/MODELS.md), with the same groups so the same code poses both:
+- **Two models**, one per look (pictures in docs/models/), with the same groups so the same code poses both:
   - the red cap (`assets/models/sporelin.bbmodel`): about two thirds of a block tall, a rounded red cap with white
     spots over beige gills (`head`), a pale stem for a body with two dark eyes and pink cheeks (`body`), two stubby
     arms and two short legs;

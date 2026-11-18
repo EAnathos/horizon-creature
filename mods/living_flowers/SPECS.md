@@ -14,7 +14,7 @@ own look and its own attack; the other flowering blocks (pink petals, wildflower
 
 Planned: the spec and the models, no code yet.
 
-- **One model per kind** (`assets/models/<kind>.bbmodel`, pictures in docs/MODELS.md), all with the same groups so the
+- **One model per kind** (`assets/models/<kind>.bbmodel`, pictures in docs/models/), all with the same groups so the
   same code poses them all: two root feet (`root_*`), a stem or a body (`body`), two leaves for arms (`leaf_*`) and the
   bloom for a head (`head`), its face in the middle (glowing eyes, a zigzag of teeth) and its petals around it, each a
   group (`petal_top`, `petal_bottom`, `petal_left`, `petal_right`) that opens wide when it attacks and closes while it

@@ -12,7 +12,7 @@ grass. Simple, like Worms ✅.
 
 Planned: the spec and the model, no code yet.
 
-- **The model** (`assets/models/dung_beetle.bbmodel`, pictures in docs/MODELS.md), after a photo of a dung beetle at
+- **The model** (`assets/models/dung_beetle.bbmodel`, pictures in docs/models/), after a photo of a dung beetle at
   work: a domed, matte black-brown beetle (the wing cases and the pronotum rounded from stacked cubes, faint straw
   specks, reddish hairs underneath), standing high and head down (the body tilted 12°), a flat semicircular head shield
   and short antennae. Six thin two-part legs: the front ones short and planted under the head, the middle ones long and

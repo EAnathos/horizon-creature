@@ -7,7 +7,7 @@
 //! - A mod's tab items are declared items; its `requires` name mods of the series, without cycles.
 //! - Every JSON file parses; each module's `en_us` and `fr_fr` lang files have the same keys.
 //! - Generated files are up to date: each model's Rust (`cargo creature model`), and each model has its pictures in
-//!   `docs/models/` and its entry in `docs/MODELS.md` (`cargo creature preview`).
+//!   `docs/models/` (`cargo creature preview`).
 //! - Sounds: every sound a module's `sounds.json` names is an `.ogg` of it, and every `.ogg` is named there; every
 //!   subtitle is translated; when the module has a `sources/sounds.toml`, its clips are exactly its `.ogg` files.
 //! - Recipes: each crafting or cooking recipe has its recipe book advancement (`advancement/recipes/<tab>/<name>.json`,
@@ -179,14 +179,12 @@ fn module(m: &Module, mods: &[Module], revision: &(String, String), errors: &mut
     }
 }
 
-/// Each of the module's `.bbmodel` files: its Rust as `cargo creature model` makes it, its pictures and its entry in
-/// `docs/MODELS.md`.
+/// Each of the module's `.bbmodel` files: its Rust as `cargo creature model` makes it, and its pictures.
 fn models(m: &Module, errors: &mut Vec<String>) {
     let Ok(entries) = std::fs::read_dir(m.dir.join("sources/models")) else {
         return;
     };
     let docs = crate::root().join("docs");
-    let index = std::fs::read_to_string(docs.join("MODELS.md")).unwrap_or_default();
     for path in entries.flatten().map(|e| e.path()) {
         let Some(name) = path
             .file_name()
@@ -209,7 +207,7 @@ fn models(m: &Module, errors: &mut Vec<String>) {
             Err(e) => errors.push(e),
         }
         let pictures = ["front", "back"].map(|side| docs.join(format!("models/{}-{name}-{side}.png", m.id)));
-        if !pictures.iter().all(|p| p.is_file()) || !index.contains(&rel(&path)) {
+        if !pictures.iter().all(|p| p.is_file()) {
             errors.push(format!(
                 "{}: no pictures in docs/, run `cargo creature preview`",
                 rel(&path)

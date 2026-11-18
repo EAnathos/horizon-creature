@@ -48,7 +48,9 @@ to date).
 - `cargo creature install [--instance <name>] [mod...]` writes the creative tab, packages each module (staged in
   `target/stage/`, zipped to `target/<id>.smod`, checked by `cargo sunrise-mod check`), always with the library: a
   ported module is built by `sunrise-launcher native-build target/stage/native` (which also selects the build for the
-  instance), a content-only one goes in the instance's `sunrise-mods/`.
+  instance), a content-only one goes in the instance's `sunrise-mods/`. The launcher's "Installed mods" list shows only what its mod
+  browser installed: our native modules never appear there (they are built into the game the instance plays, its
+  version a `native-<rev>-<hash>` build; `sunrise-launcher instance list`).
 - Tools are Rust (`tools/`, commands `list`, `tab`, `model`, `preview`, `sounds`, `vanilla`, `pack`, `build`, `check`,
   `native-check`, `install`; alias in `.cargo/config.toml`; the table in `CONTRIBUTING.md`).
 - Before committing: rustfmt (tools and `src/`, `rustfmt.toml`), Clippy `-D warnings` on the tools,
@@ -82,7 +84,7 @@ Each one is marked in the code with its issue and listed, with its limits and wh
 - Blockbench 5.2.2 (Flatpak `net.blockbench.Blockbench`) + jasonjgardner MCP plugin v1.10.1, `blockbench` server in
   `.mcp.json` (Blockbench must be open). `.bbmodel` files in `mods/<mod>/sources/models/`; `cargo creature model <mod>`
   turns `<mod>.bbmodel` into the mod's `src/model.rs`; `cargo creature preview` redraws every model's
-  pictures for `docs/MODELS.md` (run it after changing a model; `cargo creature check` fails when either is stale).
+  pictures in `docs/models/`, shown by the READMEs and specs (run it after changing a model; `cargo creature check` fails when either is stale).
   The `.bbmodel` files and the PNG icons are the sources: no script generates them.
 - Sounds: `cargo creature sounds <mod>` cuts a mod's `.ogg` files from freesound downloads as its
   `sources/sounds.toml` says.
