@@ -371,7 +371,6 @@ fn entry(
     };
     let owners: Vec<String> = OWNERS.iter().map(|s| s.to_string()).collect();
     let mut out = String::new();
-    out.push_str("# Written by `cargo creature release` (tools/src/release.rs): edit the module, not this file.\n");
     out.push_str(&format!("id = {}\n", basic(&m.id)));
     out.push_str("kind = \"native-mod\"\n");
     out.push_str(&format!("name = {}\n", basic(&manifest.name)));

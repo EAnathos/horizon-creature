@@ -35,10 +35,12 @@ refused fails before release.
 3. **Release.** `cargo creature release [module...]` (default: every published module): it builds each package,
    checks it as the registry does (`cargo sunrise-mod check`), names it `target/release/<id>-<version>.smod`, signs it
    if the series has a key (below), and writes its entry `registry/mods/<id>.toml` (the new version first, the old ones
-   kept) and its icon `registry/icons/<id>.png`. A version already published with another file is refused. Commit
-   `registry/` with the version.
+   kept) and its icon `registry/icons/<id>.png`. A version already published with another file is refused. Signing
+   asks the key's password once per file: a wrong one stops the run, which goes on with
+   `cargo creature release <the modules left>` (those signed already are kept). Commit `registry/` with the version.
 4. **GitHub release.** One release of this repository per module version, tag `<id>-<version>`, the `.smod` (and its
-   `.minisig`) as its asset: the command prints each `gh release create` line.
+   `.minisig`) as its asset, marked a pre-release while the series is in beta (0.x): the command prints each
+   `gh release create` line (add `--prerelease`).
 5. **Registry pull request.** In a fork of sunrise-org/sunrise-mods, copy `registry/mods/<id>.toml` and
    `registry/icons/<id>.png`, commit with a sign-off (`git commit -s`: the registry's `dco` check), and open a pull
    request whose description links each file (its GitHub release asset) with its SHA-256 (the command prints both). A
@@ -46,8 +48,25 @@ refused fails before release.
    form (playsunrise.net/mods/submit) opens the same pull request once its service runs. Questions come as comments on
    the pull request.
 
+   Before opening it, run the registry's own checks on the fork's branch (`.github/workflows/check.yml` there): with
+   `base` a checkout of sunrise-mods' `main`, `head` the branch and `files/` holding each new file named by its SHA-256,
+
+   ```bash
+   cargo sunrise-mod registry review base head --author EAnathos
+   cargo sunrise-mod registry check base head --files files
+   ```
+
+   Sunrise's modding book still warns against submitting code mods (a note from when the mod API was the fork's); the
+   registry's own README takes native mods, and lists some: go by the registry.
+
 The library goes first: every mod requires it (`[dependencies] creature`), and a player installs it with them (the
 registry lists no dependencies; the game refuses a mod without its library and says why).
+
+## Published
+
+| Version | What | Registry |
+|---|---|---|
+| library 0.1.1, the eight mods 0.1.0 (2026-11-18) | First releases, signed; GitHub releases `<id>-<version>` (pre-releases) | [sunrise-org/sunrise-mods#10](https://github.com/sunrise-org/sunrise-mods/pull/10), in review |
 
 ## Signing (recommended)
 
@@ -57,8 +76,9 @@ A signed project can only be updated with its key. Once:
 minisign -G -p registry/minisign.pub -s ~/.minisign/sunrise-mods.key
 ```
 
-`registry/minisign.pub` is committed; the secret key and its password stay private and backed up (never in the
-repository). From then on `cargo creature release` signs every file: set `SUNRISE_MODS_KEY` to the secret key's path.
+`registry/minisign.pub` is committed (key `EBB079C007FD597B`, made 2026-11-18); the secret key
+(`~/.minisign/sunrise-mods.key`) and its password stay private and backed up (never in the repository): without them,
+no version of these projects can be published again. From then on `cargo creature release` signs every file: set `SUNRISE_MODS_KEY` to the secret key's path.
 Every version of a project with a key must be signed, by the same key.
 
 ## Updates and takedowns

@@ -1,4 +1,3 @@
-# Written by `cargo creature release` (tools/src/release.rs): edit the module, not this file.
 id = "worms"
 kind = "native-mod"
 name = "Worms"

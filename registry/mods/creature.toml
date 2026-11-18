@@ -1,4 +1,3 @@
-# Written by `cargo creature release` (tools/src/release.rs): edit the module, not this file.
 id = "creature"
 kind = "native-mod"
 name = "Sunrise Creatures"
