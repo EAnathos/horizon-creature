@@ -27,7 +27,7 @@ Everything below works and was tested in game, single player, unless said otherw
   the mods' throwables) skip the off hand's turn, and `use_one` uses one up.
 - **Creature guide book and bestiary** (§7).
 
-Limits: single player only (the drawing reads render state from statics, arismoko/horizon#2740); the systems of §6
+Limits: single player only (the drawing reads render state from statics, kept on the server's side); the systems of §6
 stay in the vulture until a second mod needs them, except friends (§6.2), shared with the Fairies.
 
 ## 1. Role and rules ✅

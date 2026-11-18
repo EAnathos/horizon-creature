@@ -21,7 +21,7 @@ Planned: the spec and the model, no code yet.
   animations (§2.1): `body` (at the hips), `head` (the neck), `jaw`, `arm_*` (the shoulders), `forearm_*` (the
   elbows), `fist_*` (the wrists), `leg_*` (the hips), `shin_*` (the knees).
 
-Next: the code once Horizon's launcher builds the pinned revision again (docs/HORIZON-ISSUES.md, #15764), and the
+Next: the code, on Sunrise, and the
 library's lobbed projectiles (common/SPECS.md §3.9) moved from the Cyclops with it.
 
 ## 1. Technical context

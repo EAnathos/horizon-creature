@@ -1,11 +1,12 @@
 //! The vulture's screen and its chests' contents (SPECS §6.1, §6.3).
 //!
-//! Its owner opens it with sneak + right-click (`interaction.rs`, opened on its next tick). It is a chest menu a mod opens (`open_menu`): the
+//! Its owner opens it with sneak + right-click (`interaction.rs`). It is a chest menu a mod opens (`open_menu`): the
 //! top row is the vulture's (its saddle, sit / follow, a button per chest), then 15 slots per chest. Such a menu
 //! moves nothing by itself: its clicks (`clicked`) are the screen's. A click (left, right or with shift) on a stack
 //! sends it across, from a chest to the inventory or back, as much of it as fits; other clicks (a drag, a number key)
 //! do nothing. Items can't go on the cursor: writing to a player's slots or cursor through `ItemPlace` from the click
-//! hook moves nothing on this revision, so the stacks are written directly (`set_inventory_slot`, `menu_set_items`).
+//! hook moves nothing on this revision (sunrise-org/sunrise#2671), so the stacks are written directly
+//! (`set_inventory_slot`, `menu_set_items`).
 //!
 //! The contents of its chests are saved in the `vulture:chests` attachment after each click (each slot's item as its
 //! NBT, read back with a host: `ItemStack::from_nbt`); a chest taken off, the saddle taken off (only without chests)
@@ -143,21 +144,9 @@ fn set_contents(host: &mut dyn ServerHost, id: u32, items: &[Option<ItemStack>])
     let _ = CHESTS.set(host, Holder::Entity(id), nbt);
 }
 
-/// Screens asked for by a click, opened on the vulture's next tick: a menu opened while the clicking player's own
-/// action is handled doesn't show.
-static ASKED: Mutex<BTreeMap<u32, u128>> = Mutex::new(BTreeMap::new());
-
-/// Sneak + right-click on its own vulture (`interaction.rs` checked it is the owner): its screen, next tick.
-pub fn ask(player: PlayerRef, id: u32) {
-    ASKED.lock().unwrap().insert(id, player.uuid());
-}
-
-/// From the vulture's tick: opens the screen asked for it.
-pub fn tick(host: &mut dyn ServerHost, id: u32) {
-    let asked = ASKED.lock().unwrap().remove(&id);
-    if let Some(uuid) = asked {
-        open(host, uuid, id, MenuReplace::CloseFirst);
-    }
+/// Sneak + right-click on its own vulture (`interaction.rs` checked it is the owner): its screen.
+pub fn ask(host: &mut dyn ServerHost, player: PlayerRef, id: u32) {
+    open(host, player.uuid(), id, MenuReplace::CloseFirst);
 }
 
 fn open(host: &mut dyn ServerHost, uuid: u128, id: u32, replace: MenuReplace) {

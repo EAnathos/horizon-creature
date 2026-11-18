@@ -1,6 +1,6 @@
 # Sunrise Creatures
 
-A series of native Rust mods for **Minecraft Horizon** (a Rust reimplementation of Minecraft Java 26.3): one mandatory
+A series of native Rust mods for **Sunrise** (formerly Horizon, a Rust reimplementation of Minecraft Java 26.3): one mandatory
 library, **Sunrise Creatures** (`common/`, mod id `creature`), and independent creature mods in `mods/<mod>/` that all
 depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and moths), `worms`, `fireflies`,
 `cyclops`, `fairies`, and `vanilla_bestiary` (Minecraft's creatures in the guide, in development). The other folders of
@@ -8,8 +8,8 @@ depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and 
 
 - **Players**: `README.md` and each module's `README.md`. **Developers**: `CONTRIBUTING.md`.
 - **Architecture**: `docs/ARCHITECTURE.md` (modules, dependencies, what goes in the library, the single creative tab,
-  adding a mod). **Conventions**: `docs/CONVENTIONS.md`. **Horizon issues** we raised or follow, and our workarounds:
-  `docs/HORIZON-ISSUES.md` (keep it up to date; mod-API PRs and new modding issues go to arismoko/horizon, game bugs to horizon-rust).
+  adding a mod). **Conventions**: `docs/CONVENTIONS.md`. **Sunrise issues** we raised or follow, and our workarounds:
+  `docs/SUNRISE-ISSUES.md` (keep it up to date; issues go to sunrise-org/sunrise).
 - **Specs**: one `SPECS.md` per module, source of truth for it (✅ decided, ❓ to confirm; §0 is its current status, not a log). A mod's
   spec links to `common/SPECS.md` for shared systems instead of describing them.
 - **Rule of two**: a system used (or specified) by two or more mods goes in the library; species content stays in mods.
@@ -59,31 +59,23 @@ to date).
 - The tools find the launcher by `$SUNRISE_LAUNCHER`, the `PATH` or an AppImage in the download folder, and its data by
   `$SUNRISE_LAUNCHER_DATA` or `~/.local/share/sunrise` (`tools/src/launcher.rs`).
 
-## Known API constraints (Horizon: the unported mods' code; their Sunrise answers are in docs/SUNRISE-PORT.md)
+## Known API constraints
 
-- Native dependency: a mod's `native/horizon-mixin.toml` has `[dependencies] creature = "^0.1"`; the launcher gives its
-  `[api]` crate a `creature` crate and runs the library's `hooks()` first. Content mods have no dependency field.
-- A content mod can't add items to another mod's creative tab, but a tab may list other mods' items (missing ones are
-  left out): hence the library's generated tab.
 - A mod's living entity type can only copy `minecraft:zombie`, `minecraft:villager` or `minecraft:wandering_trader`
-  (the vulture uses the wandering trader, whose behaviour is all goals).
-- Rendering: `native_mob_submit` + `native_draw_cube`, through `creature::model::draw` (cubes, pivots,
-  `<mod>:entity/...` textures).
-- Riding: `/ride` and `Host::mount` (the vulture's right-click) put a player on any mob; Horizon copies the rider's keys
-  into `Mob.rider`, which the `Fly` goal reads. These are internal fields: the Horizon revision is pinned, the same for
-  every module.
-- Code injected into the right-click (`native_interact_entity`) runs on a client-side copy: what it changes on a mob is
-  lost, and `start_riding` there seats the player on the client only (the mob's goals never see a rider, the client
-  moves the mount itself). Handle clicks in the server trait hook (`interact_entity`), change a mob through its goals
-  (the vulture's `state::request`), mount with `Host::mount`, and read the player from `acting_player()` (its
-  `sneaking`, `entity_id`).
-- Mob sounds are always prefixed with `minecraft:` by Horizon: our mobs are muted and play their own through
-  `creature::sounds` (`Host::play_sound`).
+  (ours copy the trader, whose behaviour is all goals; the library takes its goals off at join).
+- `entity_tick_post` fires only because the library answers `entity_tick_listened`: our behaviours (`creature::body`)
+  run there, on the server. A behaviour can't hurt, give effects or set targets: it queues, the tick hook applies.
+- Rendering: a mod's `EntityRenderer`, posed at the feet, unturned (`creature::model::living_pose`, `draw`).
+- Riding: the rider's keys come from the server `player_input` hook; the rider is the mount's first passenger
+  (`controlling_passenger` is empty unless vanilla steers it); `entity_mount` can cancel a dismount.
+- `EntityRef::leash_holder` answers `Some(LeashHolder::Unleashed)` for a mob without a lead.
+- A payload's string holds at most 4096 bytes (`PAYLOAD_MAX_STRING_BYTES`).
+- More in `docs/SUNRISE-PORT.md` (what each port step taught).
 
-## Horizon workarounds
+## Sunrise workarounds
 
 Each one is marked in the code with its issue and listed, with its limits and when to drop it, in
-`docs/HORIZON-ISSUES.md` (keep it up to date).
+`docs/SUNRISE-ISSUES.md` (keep it up to date).
 
 ## Models
 

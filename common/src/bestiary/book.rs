@@ -267,7 +267,8 @@ fn view(host: &dyn ClientHost, batch: &mut dyn DrawContext, rect: [f32; 4], subj
     match subject {
         // A creature drawn itself, as in the world: a vanilla one about 1.4 blocks to the box's two thirds, ours by
         // their own box (its height, or half its width for a creature seen side on). Sunrise centres a screen's
-        // entity by its type's height, our template's (a trader's), so ours are moved to stand by their own.
+        // entity by its type's height, our template's (a trader's: sunrise-org/sunrise#1134), so ours are moved to
+        // stand by their own.
         Subject::Creature(species, look) => {
             colours::set_preview(look);
             let (extent, offset) = match crate::mob::size_of(species.id) {

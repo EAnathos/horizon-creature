@@ -19,7 +19,7 @@ Planned: the spec and the model, no code yet.
   flicker in game). Its parts (`body`, `head`, `arm_*`, `forearm_*`, `hand_*`, `tail`, `tail_mid`, `tail_tip`,
   `spark_*`) are ready to animate.
 
-Next: the code once Horizon's launcher builds the pinned revision again (docs/HORIZON-ISSUES.md, #15764).
+Next: the code, on Sunrise.
 
 ## 1. Technical context
 

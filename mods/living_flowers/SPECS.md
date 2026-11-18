@@ -23,8 +23,7 @@ Planned: the spec and the models, no code yet.
   pink) and the golden dandelion (a second texture of `dandelion.bbmodel`). The eyeblossom is one model, open or closed
   by its pose.
 
-Next: the code once Horizon's launcher builds the pinned revision again
-(docs/HORIZON-ISSUES.md, #15764).
+Next: the code, on Sunrise.
 
 ## 1. Technical context
 

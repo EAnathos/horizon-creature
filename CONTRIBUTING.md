@@ -8,7 +8,7 @@ How the repository is organised, how to build and test the mods, and the rules a
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): the modules, their dependencies and responsibilities, what goes in the
   library (the rule of two), the creative tab, building, adding a mod.
 - [docs/CONVENTIONS.md](docs/CONVENTIONS.md): ids, translations, specs, code and assets conventions.
-- [docs/HORIZON-ISSUES.md](docs/HORIZON-ISSUES.md): the Horizon issues we raised or follow, their status, and the
+- [docs/SUNRISE-ISSUES.md](docs/SUNRISE-ISSUES.md): the Sunrise issues we raised or follow, their status, and the
   workaround each one left in our code. Keep it up to date.
 - [docs/SUNRISE-PORT.md](docs/SUNRISE-PORT.md): moving the series from Horizon to Sunrise, what changes and in
   what order.
@@ -100,9 +100,8 @@ are left out: Horizon, their only dependency, is pinned for the whole series and
 - **No mod requires another**: optional content between mods goes through conditional recipes
   (`neoforge:conditions`, `mod_loaded`, `not`). A library feature some mods need (the glass jar) switches on with them.
 - **One creative tab**, the library's, generated from each module's `module.toml` (`creative` list). Mods declare none.
-- **Horizon issues**: a missing API or a bug becomes an issue (modding issues on
-  [arismoko/horizon](https://github.com/arismoko/horizon/issues), game bugs on
-  [horizon-rust/horizon](https://github.com/horizon-rust/horizon/issues)) and a workaround marked in the code with its
-  issue, listed in `docs/HORIZON-ISSUES.md`.
+- **Sunrise issues**: a missing API or a bug becomes an issue on
+  [sunrise-org/sunrise](https://github.com/sunrise-org/sunrise/issues) and a workaround marked in the code with its
+  issue, listed in `docs/SUNRISE-ISSUES.md`.
 
 Adding a mod: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), "Adding a mod".

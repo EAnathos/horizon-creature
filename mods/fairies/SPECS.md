@@ -29,8 +29,7 @@ Built and tested in game (single player).
   player's arrow or trident: Horizon doesn't say whose).
 - **Glass jar** (§5): caught as the other creatures (a befriended one only by its friend), still befriended once let
   out, its name kept; released on a flower it settles there; on display, a jar that glows (light 7, as fireflies).
-- **Fairy dust** (§6): its brewing recipe is written (awkward potion + fairy dust = Swiftness, `data/fairies/recipe/brewing/`);
-  Horizon brews it from the fork's newer revisions, not at our pin (docs/HORIZON-ISSUES.md).
+- **Fairy dust** (§6): brews (awkward potion + fairy dust = Swiftness, `data/fairies/recipe/brewing/`).
 - **Bestiary page**: the biomes met in, "Friend", "Catch".
 - **Sounds**: its own, from CC0 freesound recordings (`assets/sounds.toml`): wings at take-off, a chime or a tiny laugh
   now and then, hurt, vanishing, the sparkle of a new friendship and of a gift. English and French subtitles.

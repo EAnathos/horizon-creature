@@ -21,8 +21,7 @@ Planned: the spec and the model, no code yet.
 
   Hiding, it pulls its cap down over its stem (a pose of `head`).
 
-Next: the code once Horizon's launcher builds the pinned revision again
-(docs/HORIZON-ISSUES.md, #15764). The library's side comes with it: taming and ownership move from the vulture to the
+Next: the code, on Sunrise. The library's side comes with it: taming and ownership move from the vulture to the
 library (common/SPECS.md §6.2).
 
 ## 1. Technical context

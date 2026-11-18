@@ -207,12 +207,12 @@ spec is still to run. What it taught:
   `entity_mount` cancels a dismount while no ground lies under its feet (its `on_ground` flickers when ridden). The
   game draws the mount's hearts itself (vanilla's `vehicle_health` for a living vehicle): no HUD code.
 - `EntityRef::leash_holder` answers `Some(LeashHolder::Unleashed)` for a mob without a lead: `is_some()` is no test.
-- The vulture's screen is a chest menu opened from code (`ServerHost::open_menu`), on the vulture's next tick (opened
-  from the click itself it doesn't show). Its clicks reach `menu_clicked` and move nothing by themselves; writing
-  through `ItemPlace` (the cursor, a player's slot) from that hook moves nothing either on this revision, so a click
-  sends a whole stack across (`set_inventory_slot`, `menu_set_items`), with no cursor. ❓ The full chest feel needs a
-  mod menu type (`open_mod_menu` with its own client screen) backed by the vulture's storage
-  (`PlayerRef::back_mod_menu_slots` with `MenuSlotPlace::EntityItems`, an `ENTITY_ITEMS` provider).
+- The vulture's screen is a chest menu opened from code (`ServerHost::open_menu`), from the click itself. Its clicks
+  reach `menu_clicked` and move nothing by themselves; writing through `ItemPlace` (the cursor, a player's slot) from
+  that hook moves nothing either on this revision, so a click sends a whole stack across (`set_inventory_slot`,
+  `menu_set_items`), with no cursor (sunrise-org/sunrise#2671). ❓ The full chest feel needs a mod menu type
+  (`open_mod_menu` with its own client screen) backed by the vulture's storage (`PlayerRef::back_mod_menu_slots` with
+  `MenuSlotPlace::EntityItems`, an `ENTITY_ITEMS` provider).
 - `sunrise-ctl`'s keys are the keyboard's: this instance binds sneak to E, so `hold e`, not `hold shift`.
 - Our brewing recipes (`minecraft:brewing` JSON in `data/<id>/recipe/brewing/`) load and brew as they are: an
   awkward potion and fairy dust give Swiftness, and a venom sac gives Poison.
@@ -225,7 +225,8 @@ spec is still to run. What it taught:
 
 ## 5. Our workarounds on Sunrise
 
-Each line of docs/HORIZON-ISSUES.md, as Sunrise stands (book and API of `559fd52`; ❓ until tried in game):
+Each line of the old docs/HORIZON-ISSUES.md (`git show e542ff7:docs/HORIZON-ISSUES.md`), as Sunrise stands; what is
+still open is in docs/SUNRISE-ISSUES.md (book and API of `559fd52`; ❓ until tried in game):
 
 | Issue | On Sunrise | What the port does |
 |---|---|---|
@@ -236,7 +237,7 @@ Each line of docs/HORIZON-ISSUES.md, as Sunrise stands (book and API of `559fd52
 | arismoko#2740 render state in statics | Synced attachments (`sync: true`) readable on the client through `Host::attachments`; the renderer itself has no host | Keep render state per entity id, filled from synced attachments in a client hook: works in multiplayer |
 | arismoko#2739 rider's sneak / #13972 client-side click | Server `player_input` hook (the `PlayerInput` flags, sneak included) ✅ fires in single player; `entity_mount` can cancel a dismount; the rider is the first passenger | Drop `ride_keys.rs`; the vulture's `Fly` goal reads the rider's input from the server side |
 | #13973 `saddled` steering | Riding is the engine's; no `Mob.extra` field from the API | Harness in an `EntityPartState` |
-| #13974 `open_menu` from a click | ✅ `ServerHost::open_menu`, but from the click it doesn't show | Opened on the vulture's next tick, as on Horizon |
+| #13974 `open_menu` from a click | ✅ `ServerHost::open_menu` from `entity_interact` | Opened from the click; the next-tick request dropped |
 | arismoko#2741 mount hearts | ✅ vanilla draws a living vehicle's hearts | `mount-hud` injection dropped |
 | arismoko#4357 `mob_kind` prefix | ❓ check `living_death`'s `kind` on a mod mob | Compare `event.kind` directly |
 | arismoko#3897 off-hand use | ❓ retest | Drop `hand::holds_server_used` if fixed |

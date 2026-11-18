@@ -20,7 +20,7 @@ Planned: the spec and the model, no code yet.
   three crossed cubes, `ball`), and a small one for while it shapes it (`ball_small`); the game shows one ball or none
   (`draw_shown`) and poses it all.
 
-Next: the code once Horizon's launcher builds the pinned revision again (docs/HORIZON-ISSUES.md, #15764). The library's side comes with it: the small
+Next: the code, on Sunrise. The library's side comes with it: the small
 crawlers and the chickens' pecking (common/SPECS.md §3.6, §3.7), and the pasture rule (§4.2).
 
 ## 1. Technical context

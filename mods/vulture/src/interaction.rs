@@ -70,7 +70,7 @@ pub fn clicked(host: &mut dyn ServerHost, id: u32, event: &EntityInteractEvent<'
         return;
     }
     if player.entity().is_shift_key_down(&*host).unwrap_or(false) {
-        screen::ask(player, id);
+        screen::ask(host, player, id);
         return;
     }
     let baby = saved.age < 0;

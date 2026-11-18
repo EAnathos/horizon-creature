@@ -17,7 +17,7 @@ Planned: the spec and the model, no code yet.
   One model for every kind, a texture each (§2): moon jelly (pale lilac, four pink rings on top), sea nettle (amber,
   red stripes, red tentacles), glow jelly (deep blue, cyan spots and tentacles).
 
-Next: the code once Horizon's launcher builds the pinned revision again (docs/HORIZON-ISSUES.md, #15764).
+Next: the code, on Sunrise.
 
 ## 1. Technical context
 

@@ -36,10 +36,7 @@ library's book tabs (common/SPECS.md §7.1).
   in English and French). No entity, no item.
 - Uses from the library: the bestiary (§7): it registers one species per vanilla creature (`creature::bestiary::
   register`), with its biomes, its facts, its spawn egg as icon and its rarity.
-- **No 3D view** ✅: the book's 3D view draws blocks and our own models (`Host::draw_scene`), not a vanilla mob's model,
-  at our Horizon pin. A vanilla creature's page shows its spawn egg, large and turning, in place of it
-  (`creature::bestiary::draw_icon` as its `Species::draw`, drawn with `Host::draw_item`), until Horizon can draw an
-  entity in a scene (a request to file, docs/HORIZON-ISSUES.md).
+- **3D view** ✅: the book draws a vanilla creature itself (`DrawContext::entity`), turning.
 - **The game's data** ✅: `cargo creature vanilla [jar]` reads the biomes, drops and breeding foods from the game's jar
   (default: the launcher's 26.3) into `game_data.rs`. Run it again when the series moves to another Minecraft version.
 

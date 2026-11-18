@@ -111,7 +111,7 @@ The whole series shares **one creative tab**, "Sunrise Creatures", owned by the 
 
 ```
 .cargo/config.toml      `cargo creature <command>` alias
-docs/                   series-wide docs: ARCHITECTURE.md (this file), CONVENTIONS.md, HORIZON-ISSUES.md,
+docs/                   series-wide docs: ARCHITECTURE.md (this file), CONVENTIONS.md, SUNRISE-ISSUES.md,
                         MODELS.md (generated, with its pictures in models/)
 common/                 the library
   module.toml           repository metadata for the tools (id, name, status, tab icon, its tab items, `ported`)

@@ -78,5 +78,5 @@ cargo creature check                                                         # t
 
 ## Versions and commits
 
-- Semver per module, content and native versions kept equal (ARCHITECTURE.md §6). One Horizon pin for the series.
+- Semver per module, content and native versions kept equal (ARCHITECTURE.md §6). One Sunrise pin for the series (docs/SUNRISE-ISSUES.md, "Moving the pin").
 - A commit touches one module when it can; a library change and the mod changes that need it go together.

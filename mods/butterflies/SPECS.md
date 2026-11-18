@@ -30,9 +30,6 @@ Done and tested in game (single player).
 - **Sounds**: a soft flutter when one takes off (a moth's is duller), from CC0 freesound recordings
   (`assets/sounds.toml`).
 
-Left: their shadow is too big (Horizon gives a mod mob 0.5;
-arismoko/horizon#3896).
-
 ## 1. Technical context
 
 - **Mod id**: `butterflies`. Entities `butterflies:butterfly`, `butterflies:moth` ✅; item `butterflies:butterfly_dust`

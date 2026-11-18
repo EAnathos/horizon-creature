@@ -46,7 +46,7 @@ Left: tuning (flight numbers, taming odds, speeds, the dive attack) as players r
 - **Format**: a Horizon native mod = a content mod (items, recipes, loot, textures, sounds, entity type in JSON)
   + Rust code built into Horizon (`horizon-mixin.toml`, `native_*` hooks). Tool: `cargo horizon-mod`.
 - **Toolchain**: the Rust the Horizon launcher pins.
-- **Target**: game 26.3, on the series' pinned Horizon revision (docs/HORIZON-ISSUES.md).
+- **Target**: game 26.3, on the series' pinned Sunrise revision (docs/SUNRISE-ISSUES.md).
 - **Mod id**: `vulture` (ids kept from before the series, so test worlds still load).
 - **Dependency** ✅: the library `creature` (`[dependencies] creature = "^0.1"` in `native/horizon-mixin.toml`). Entity `vulture:vulture`, items `vulture:feather`, `vulture:raw_vulture`,
   `vulture:cooked_vulture` (the saddle is vanilla's).

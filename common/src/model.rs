@@ -27,7 +27,9 @@ pub fn tint(mob: Option<&LivingRenderState>) -> u32 {
 /// Turns the pose the way a living mob faces and scales it by its `minecraft:scale`, as vanilla's
 /// `LivingEntityRenderer.setupRotations` does before the model: Sunrise hands a mod's renderer the pose at the mob's
 /// feet, not turned. Then a dying mob tips over onto its side in its first second. Call before drawing it.
-/// A mob drawn without its living state faces the viewer.
+/// A mob drawn without its living state faces the viewer. In a screen (`IN_A_SCREEN`) it is mirrored along z: at our
+/// pin a screen's entity keeps only the faces turned towards the viewer, and ours are wound the other way there (fixed
+/// upstream by sunrise-org/sunrise `8c00340`: drop the mirror once the pin has it, docs/SUNRISE-ISSUES.md).
 pub fn living_pose(draw: &mut dyn BlockEntityDrawContext, entity: &EntityRenderState) {
     if entity.id == IN_A_SCREEN {
         draw.scale([1.0, 1.0, -1.0]);

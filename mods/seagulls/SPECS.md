@@ -17,8 +17,7 @@ Planned: the spec and the model, no code yet.
   parts are named as the vulture's (`body`, `tail`, `neck`, `head`, `wing_*`, `wing_*_mid`, `wing_*_tip`, `leg_*`), so
   the shared flight poses it; built with its wings spread, folded on the ground by the pose.
 
-Next: the code once Horizon's launcher builds the pinned revision again
-(docs/HORIZON-ISSUES.md, #15764). The library's side comes with it: the vulture's flight (without riding) and taming
+Next: the code, on Sunrise. The library's side comes with it: the vulture's flight (without riding) and taming
 move to the library (common/SPECS.md §6.1, §6.2).
 
 ## 1. Technical context

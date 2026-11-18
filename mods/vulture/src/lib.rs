@@ -733,7 +733,6 @@ impl Hooks for Vulture {
             }
         }
         talons::carry(host, id);
-        screen::tick(host, id);
         state::births(host, event.dimension);
         for player in state::take_taming_seen() {
             creature::bestiary::learn(host, player, KIND, TAME_FACT);
