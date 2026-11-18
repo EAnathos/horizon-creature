@@ -172,7 +172,8 @@ modules in `creature-dev`, which loads them with no refusal.
 
 Ported to `mod_api`, `ported = true`, Clippy clean, their tests passing, all built together by the launcher and
 tried in game (each summoned, drawn and moving): butterflies, fireflies, fairies, scorpions, the cyclops, the Vanilla
-Bestiary (with the library and worms). Not yet tested further than that: each module's "Testing in game" list in its
+Bestiary (with the library and worms), then the vulture (ridden: it takes off, climbs, flies where the rider looks,
+descends and lands). Not yet tested further than that: each module's "Testing in game" list in its
 spec is still to run. What it taught:
 
 - `body` grew: the nearest player's eyes, look, held items, creative and spectator; the creature's age, health and
@@ -191,16 +192,23 @@ spec is still to run. What it taught:
   "born tame" no longer guesses.
 - `tooltip`, `use_item`, `use_on` are item part methods; `entity_interact` answered on both sides stops the trade
   screen.
+- **`entity_tick_post` fires only for a mod that answers `entity_tick_listened`** (`event.listened = true`, in the
+  library): without it every behaviour of ours was dead, and the first tries above saw only the template's goals. ❓
+  Each mod's behaviours (flutter flight, scorpion posture, cyclops fight, fairy companion, bestiary meetings) are to
+  try again with it.
+- Riding: the server `player_input` hook fires in single player and gives the rider's keys; a mob's
+  `controlling_passenger` is empty unless vanilla steers it (saddled), so the vulture reads its first passenger.
+  `entity_mount` cancels a dismount while no ground lies under its feet (its `on_ground` flickers when ridden). ❓ A
+  sneak through `sunrise-ctl` dismounts nothing, a pig neither: to try with the keyboard.
 - `install` stages every ported module: the launcher builds all of an instance's native mods together, so installing
   one mod must not drop the others.
 
 ### Left to port
 
-The vulture (riding, its screen, its HUD, talons, breeding). Its `Mob.extra` bridge (tame, owner, sitting, age, love,
-lead, chests) becomes its own state (it already saves it in attachments); leads are native (`leash_to`); food on the
-ground through `item_entity`; ridden flight from the server `player_input` hook's key flags (❓ in single player) with
-`entity_mount` cancelling a dismount in the air; its HUD hearts through `gui_layer_pre` or a `[[native.mixin]]`. Open
-points: our creatures in a screen (stage 2), mod brewing recipes.
+- The vulture's screen (saddle, sit / follow, chests): a mod menu type; until then sneak + right-click says it is
+  not there yet. Its chests' contents are kept and dropped at its death.
+- Its HUD hearts when ridden: `gui_layer_pre` on `vehicle_health`, or a `[[native.mixin]]`.
+- Our creatures in a screen (stage 2), mod brewing recipes, each module's "Testing in game" list.
 
 ## 5. Our workarounds on Sunrise
 
@@ -213,7 +221,7 @@ Each line of docs/HORIZON-ISSUES.md, as Sunrise stands (book and API of `559fd52
 | arismoko#2738 mob sounds | `sounds` in `entity_type` JSON ✅ worms | Declare ambient, hurt, death, step; drop the muting and the sound queue (flaps and eating stay ours) |
 | arismoko#3896 shadows | `shadow_radius`, `shadow_strength` in `entity_type` JSON ✅ worms | Declare each mob's shadow |
 | arismoko#2740 render state in statics | Synced attachments (`sync: true`) readable on the client through `Host::attachments`; the renderer itself has no host | Keep render state per entity id, filled from synced attachments in a client hook: works in multiplayer |
-| arismoko#2739 rider's sneak / #13972 client-side click | Server `player_input` hook (the `PlayerInput` flags, sneak included) ❓ fires for a single-player host?; `entity_mount` can cancel a dismount; `entity_controlling_passenger` | Drop `ride_keys.rs`; the vulture's `Fly` goal reads the rider's input from the server side |
+| arismoko#2739 rider's sneak / #13972 client-side click | Server `player_input` hook (the `PlayerInput` flags, sneak included) ✅ fires in single player; `entity_mount` can cancel a dismount; the rider is the first passenger | Drop `ride_keys.rs`; the vulture's `Fly` goal reads the rider's input from the server side |
 | #13973 `saddled` steering | Riding is the engine's; no `Mob.extra` field from the API | Harness in an `EntityPartState` |
 | #13974 `open_menu` from a click | ❓ test from `entity_interact` | Open the screen from the click |
 | arismoko#2741 mount hearts | `gui_layer_pre` on `vehicle_health` ❓ heart count | Drop the `mount-hud` injection if the layer hook is enough, else a `[[native.mixin]]` |

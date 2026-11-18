@@ -1,24 +1,27 @@
 //! The vulture (mods/vulture/SPECS.md).
 //!
-//! - `vulture:vulture` copies the wandering trader (content part, `content/`): we clear its goals and give it ours,
-//!   `NoFall` and `Fly`.
-//! - Mounting: a right-click on it by its owner, once it wears a harness (`interaction.rs`, `Host::mount`), or
-//!   `/ride`. Horizon then copies the rider's keys into `Mob.rider` every tick (`game/mounts.rs`, `tick_mount_riding`):
-//!   forward/back, left/right, jump (Space), sprint (Ctrl). Sneaking gets off, only on the ground (`ride_keys.rs`).
+//! - `vulture:vulture` copies the wandering trader: the library takes its goals off; it strolls, looks at players and
+//!   turns on whoever hurts it with vanilla's goals (added when it joins), and everything else it does runs from its
+//!   server tick (the library's `body`): `Sync` (its state, `state.rs`), `Fly` (ridden), `tame::Sit`,
+//!   `wild::DiveAttack`, `tame::Mate`, `tame::Eat`, `tame::FollowOwner`, `wild::Soar`.
+//! - Mounting: a right-click on it by its owner, once it wears a saddle (`interaction.rs`, `EntityRef::start_riding`),
+//!   or `/ride`. Its rider's keys are heard by the server (`ride.rs`, `player_input`); sneaking descends in the air,
+//!   getting off only on the ground. The rider sits on its harness: its seat is declared in its entity type
+//!   (`passenger_attachments`).
 //! - Flight (`flight.rs`): it sets the vulture's speed directly, without gravity, flown like a plane, banking into
-//!   arc turns (SPECS §6.2). `Fly` steers it from `Mob.rider`; the wild vulture's `wild::Soar` from its own AI.
+//!   arc turns (SPECS §6.2).
 //! - Wild (SPECS §4): it soars in circles high up and glides back down (`wild.rs`), walks about, and fights back
-//!   in the air (`wild::DiveAttack`), its target chosen by vanilla's `HurtByTarget`.
-//! - Sounds: its own, not the trader's (`sounds.rs`, played by the library's `creature::sounds`).
-//! - Drawing: the Blockbench model (`assets/models/vulture.bbmodel`, converted into `model.rs`), posed by `pose` and
-//!   drawn by the library's `creature::model`, in place of the trader's model; its hearts, once ridden, without the
-//!   empty ones (`mount_hud.rs` injection).
+//!   in the air (`wild::DiveAttack`). Tamed, it defends its owner and attacks what they attack (`defend`).
+//! - Sounds: its hurt and death are its entity type's; its call, flaps and meals ours (`sounds.rs`).
+//! - Drawing: the Blockbench model (`sources/models/vulture.bbmodel`, converted into `model.rs`), posed by `pose`, by
+//!   its renderer (`Draw`).
 //!
 //! It depends on the series' library, Sunrise Creatures (`creature`, common/SPECS.md).
 mod flight;
 mod interaction;
 mod model;
 mod model_baby;
+mod ride;
 mod screen;
 mod sounds;
 mod state;
@@ -26,22 +29,27 @@ mod talons;
 mod tame;
 mod wild;
 
+use std::collections::BTreeMap;
+use std::sync::{Arc, Mutex, OnceLock};
+
+use creature::body::{Behaviour, Body, World};
 use flight::{Controls, Flight};
-use horizon_client::mobs::goals::{self, HurtByTarget, LookAtPlayer, Stroll};
-use horizon_client::mobs::{MobEvent, Who};
-use horizon_client::mod_api::{
-    BlockEntityDraw, Cx, EntityTickListenedEvent, EntityTickPostEvent, Flow, Goal, Hooks, Host, InteractEntityEvent,
-    KeyEvent, LivingDeathEvent, MenuClickedEvent, MenuClosedEvent, MenuInputClosedEvent, Mob, MobSubmitEvent,
-    ModsEvent, NativeMobRender, NativeMod, RandomSource, RegisterGoalsEvent,
+use mod_api::{
+    BlockEntityDrawContext, ClientHost, EntityInteractEvent, EntityJoinLevelEvent, EntityMountEvent, EntityRenderState,
+    EntityRenderer, EntityTickPostEvent, Flow, GoalSpec, HitHost, Hooks, HostSide, InteractionResult,
+    KeyMappingPreEvent, KeyRegistration, LivingDeathEvent, LivingIncomingDamageEvent, LivingRenderState,
+    ParticleOptions, PayloadCodec, PayloadId, PlayerInputEvent, RegisterEntityRenderersEvent, Registrar,
+    RegistrationContext, ServerHost, SoundSource, ToServer,
 };
 
 pub const KIND: &str = "vulture:vulture";
-/// Its hitbox and eye height, in blocks (SPECS §4). The height is also where a rider sits (Horizon seats a rider on
-/// a mod mob at its box's top), so it is set for the rider to sit on the harness's seat (workaround for
-/// horizon-rust/horizon#13975: back to ~1.0 once a seat can be declared).
-const WIDTH: f64 = 1.2;
-const HEIGHT: f64 = 0.6;
-const EYE_HEIGHT: f64 = 0.55;
+/// Its hitbox and eye height, in blocks (SPECS §4); its rider sits on its harness (its entity type's
+/// `passenger_attachments`).
+const SIZE: creature::mob::Size = creature::mob::Size {
+    width: 1.2,
+    height: 1.0,
+    eye_height: 0.9,
+};
 
 /// Its page in the bestiary (common/SPECS.md §7), and what a player can find out about it (SPECS §5, §8).
 static BESTIARY: creature::bestiary::Species = creature::bestiary::Species {
@@ -77,13 +85,12 @@ static BESTIARY: creature::bestiary::Species = creature::bestiary::Species {
 
 /// The vulture in the bestiary's 3D view: its model as built (wings spread), without harness or chests, scaled to about
 /// a block across.
-fn book_view(host: &dyn Host, draw: &mut BlockEntityDraw, _: Option<creature::colours::Look>) {
+fn book_view(draw: &mut dyn BlockEntityDrawContext, _: Option<creature::colours::Look>) {
     draw.push();
     draw.translate([0.5, 0.0, 0.5]);
     draw.scale([BOOK_SCALE; 3]);
     let worn = |part: &str| !matches!(part, "harness" | "chest_left" | "chest_right");
     creature::model::draw_shown(
-        host,
         draw,
         &model::VULTURE,
         TEXTURE,
@@ -130,22 +137,14 @@ static COOKED_PAGE: creature::items::ItemPage = creature::items::ItemPage {
     }],
 };
 
-pub fn hooks() -> Box<dyn Hooks> {
-    creature::bestiary::register(&BESTIARY);
-    creature::bestiary::register_item(&FEATHER_PAGE);
-    creature::bestiary::register_item(&RAW_PAGE);
-    creature::bestiary::register_item(&COOKED_PAGE);
-    Box::new(Vulture)
-}
-
+#[derive(Default)]
 struct Vulture;
 
-/// Walking speed on the ground, ridden, in blocks per tick: as fast as it walks by itself (its
-/// `minecraft:movement_speed`, 0.3 in `vulture.json`, at `Stroll`'s 0.6).
+/// Walking speed on the ground, ridden, in blocks per tick: as fast as it walks by itself.
 const WALK: f64 = 0.1;
 /// Backing up on the ground (S), a share of `WALK`.
 const BACK: f64 = 0.4;
-/// Its peck when it fights back (SPECS §4).
+/// Its peck when it fights (SPECS §4).
 const ATTACK_DAMAGE: f32 = 3.0;
 
 /// The pitch it takes, ridden, climbing (Space) and descending (sneak), in degrees.
@@ -156,32 +155,30 @@ const STEER: f32 = 45.0;
 
 /// Ridden flight (SPECS §6.2): the rider's look turns it and the keys steer `flight::Flight`. W flaps up to the
 /// cruising speed, S brakes, A / D steer to a side, Space climbs with strong flaps (and takes off from the ground), sneak
-/// descends (getting off only on the ground, `ride_keys.rs`); on the ground it walks, and S backs it up slowly.
-#[derive(Clone, Debug, Default)]
+/// descends (getting off only on the ground, `ride.rs`); on the ground it walks, and S backs it up slowly.
+#[derive(Debug, Default)]
 struct Fly {
     flight: Flight,
+    on: bool,
 }
 
-impl Goal for Fly {
-    fn flags(&self) -> u8 {
-        goals::MOVE | goals::LOOK | goals::JUMP
+impl Behaviour for Fly {
+    fn can_use(&mut self, m: &mut Body, _: &World<'_>) -> bool {
+        let on = ride::of(m.id).is_some();
+        if on && !self.on {
+            self.flight = Flight::default();
+            m.body_yaw = m.yaw;
+        }
+        self.on = on;
+        on
     }
-    fn can_use(&mut self, m: &mut Mob, _: &mut Cx) -> bool {
-        m.rider.is_some()
-    }
-    fn every_tick(&self) -> bool {
-        true
-    }
-    fn start(&mut self, m: &mut Mob, _: &mut Cx) {
-        self.flight = Flight::default();
-        m.body_yaw = m.yaw;
-    }
-    fn stop(&mut self, m: &mut Mob, _: &mut Cx) {
+    fn stop(&mut self, m: &mut Body, _: &World<'_>) {
+        self.on = false;
         self.flight.land(m);
         talons::release(m.id);
     }
-    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
-        let Some(r) = m.rider else {
+    fn tick(&mut self, m: &mut Body, cx: &World<'_>) {
+        let Some(r) = ride::of(m.id) else {
             return;
         };
         if m.on_ground && !r.jumping {
@@ -197,10 +194,10 @@ impl Goal for Fly {
             m.velocity.z = (fwd * c + strafe * s) * WALK;
             return;
         }
-        // Space climbs, sneak (or Ctrl, `ride_keys.rs`) descends, nothing keeps it level; the look only turns it.
+        // Space climbs, sneak descends, nothing keeps it level; the look only turns it.
         let pitch = if r.jumping {
             -CLIMB_PITCH
-        } else if r.sprint {
+        } else if r.descend {
             DESCEND_PITCH
         } else {
             0.0
@@ -216,58 +213,41 @@ impl Goal for Fly {
         };
         self.flight.tick(m, &controls);
         if talons::take_press() {
-            talons::toggle(m, cx.w);
+            talons::toggle(m, cx);
         }
         talons::follow(m);
     }
-    fn box_clone(&self) -> Box<dyn Goal> {
-        Box::new(self.clone())
-    }
 }
 
-/// No fall damage (SPECS §6), ridden or not: the fall distance is reset every tick, before the move that could land
-/// it. Also gives it its call.
-#[derive(Clone, Debug)]
-struct NoFall;
+/// Every tick, beside what it does: its state (`state::sync`), no fall damage (SPECS §6), its hearts, its call.
+#[derive(Debug)]
+struct Sync;
 
-impl Goal for NoFall {
-    fn flags(&self) -> u8 {
-        0
+impl Behaviour for Sync {
+    fn claims(&self) -> bool {
+        false
     }
-    fn can_use(&mut self, _: &mut Mob, _: &mut Cx) -> bool {
-        true
-    }
-    fn every_tick(&self) -> bool {
-        true
-    }
-    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
+    fn tick(&mut self, m: &mut Body, cx: &World<'_>) {
         m.fall_distance = 0.0;
+        let fighting = tame::fighting(m, cx);
         // A baby fed raw meat: a burst of hearts as it grows (SPECS §8).
-        if state::sync_mob(m) {
-            cx.events.push(MobEvent::LevelParticles {
-                kind: "minecraft:heart",
-                at: [m.position.x, m.position.y + 0.8, m.position.z],
-                spread: [0.4, 0.3, 0.4],
-                speed: 0.02,
-                count: 5,
-            });
+        if state::sync(m, ride::of(m.id).is_some(), fighting) {
+            particles(
+                m.id,
+                "minecraft:heart",
+                [m.position.x, m.position.y + 0.8, m.position.z],
+                5,
+            );
         }
         // In love: hearts now and then, as vanilla's animals show (SPECS §8).
-        if m.extra.in_love > 0 && m.extra.in_love % 10 == 0 {
-            cx.events.push(MobEvent::LevelParticles {
-                kind: "minecraft:heart",
-                at: [m.position.x, m.position.y + 1.0, m.position.z],
-                spread: [0.4, 0.3, 0.4],
-                speed: 0.02,
-                count: 1,
-            });
-        }
-        // A tamed vulture never turns on its owner, even when they hit it.
-        if m.extra.tame
-            && m.ai.target == Some(Who::Player)
-            && cx.w.player.as_ref().is_some_and(|p| m.extra.owner == Some(p.uuid))
-        {
-            m.ai.target = None;
+        let love = state::love(m.id);
+        if love > 0 && love % 10 == 0 {
+            particles(
+                m.id,
+                "minecraft:heart",
+                [m.position.x, m.position.y + 1.0, m.position.z],
+                1,
+            );
         }
         // A quiet bird: one call every 20 s on average (a vanilla mob: every 4 s).
         if m.random.next_int_bound(400).unwrap_or(1) == 0 {
@@ -275,8 +255,143 @@ impl Goal for NoFall {
             sounds::queue(m.id, sounds::AMBIENT, 1.0, pitch);
         }
     }
-    fn box_clone(&self) -> Box<dyn Goal> {
-        Box::new(self.clone())
+}
+
+/// A vulture's target, as its mob holds it: who, where, its eyes' height.
+#[derive(Clone, Copy, Debug)]
+pub struct Target {
+    pub id: u32,
+    pub at: [f64; 3],
+    pub eye_y: f64,
+}
+
+/// Its target, if alive and not its owner (a tamed vulture never turns on its owner, even when they hit it: the
+/// target is let go, `LET_GO`).
+pub fn target(cx: &World<'_>, id: u32) -> Option<Target> {
+    let host = cx.host();
+    let t = host.entity(id).and_then(|e| host.mob(e))?.target(host)?;
+    let e = t.entity();
+    if !t.alive(host).unwrap_or(false) {
+        return None;
+    }
+    let owner = state::saved(id).owner;
+    if owner.is_some()
+        && cx
+            .player
+            .as_ref()
+            .is_some_and(|p| p.entity_id == e.id() && owner == Some(creature::friend::ints(p.uuid)))
+    {
+        LET_GO.lock().unwrap().push(id);
+        return None;
+    }
+    let at = e.position(host)?;
+    let eye_y = at[1] + e.dimensions(host).map_or(1.6, |d| d[1] * 0.85);
+    Some(Target { id: e.id(), at, eye_y })
+}
+
+/// What its behaviours asked its tick to do, as they can't (`apply`): strikes, particles, a target let go.
+static STRIKES: Mutex<Vec<(u32, u32)>> = Mutex::new(Vec::new());
+/// Particles asked for: (vulture, kind, where, how many).
+type Particles = Vec<(u32, &'static str, [f64; 3], i32)>;
+static PARTICLES: Mutex<Particles> = Mutex::new(Vec::new());
+static LET_GO: Mutex<Vec<u32>> = Mutex::new(Vec::new());
+
+/// From a behaviour: vulture `id` strikes `target` with its beak.
+pub fn strike(id: u32, target: u32) {
+    STRIKES.lock().unwrap().push((id, target));
+}
+
+/// From a behaviour: particles `kind` around `at`.
+pub fn particles(id: u32, kind: &'static str, at: [f64; 3], count: i32) {
+    PARTICLES.lock().unwrap().push((id, kind, at, count));
+}
+
+/// Hits seen by the damage hook (victim, who caused it), for the vultures defending their owners (`defend`).
+static HITS: Mutex<Vec<(u32, u32)>> = Mutex::new(Vec::new());
+
+/// From vulture `id`'s tick: what its behaviours asked, done; it defends its owner.
+fn apply(host: &mut dyn ServerHost, id: u32) {
+    let Some(me) = host.entity(id) else {
+        return;
+    };
+    let Some(level) = me.level(host) else {
+        return;
+    };
+    let mine = |list: &Mutex<Vec<(u32, u32)>>| {
+        let mut all = list.lock().unwrap();
+        let (mine, rest): (Vec<_>, Vec<_>) = all.drain(..).partition(|s| s.0 == id);
+        *all = rest;
+        mine
+    };
+    for (_, target) in mine(&STRIKES) {
+        if let Some(t) = host.entity(target) {
+            if let Some(l) = host.living(me) {
+                l.swing(host, mod_api::Hand::Main, true);
+            }
+            t.hurt(host, "minecraft:mob_attack", ATTACK_DAMAGE, Some(me), Some(me));
+        }
+    }
+    let shown: Vec<_> = {
+        let mut all = PARTICLES.lock().unwrap();
+        let (mine, rest): (Vec<_>, Vec<_>) = all.drain(..).partition(|p| p.0 == id);
+        *all = rest;
+        mine
+    };
+    for (_, kind, at, count) in shown {
+        if let Some(k) = creature::particles::key(kind) {
+            level.send_particles(
+                host,
+                &ParticleOptions::simple(k),
+                None,
+                at,
+                [0.4, 0.4, 0.4],
+                0.02,
+                count,
+            );
+        }
+    }
+    let let_go = {
+        let mut all = LET_GO.lock().unwrap();
+        let had = all.contains(&id);
+        all.retain(|v| *v != id);
+        had
+    };
+    if let_go && let Some(m) = host.mob(me) {
+        m.set_target(host, None);
+    }
+    defend(host, id);
+}
+
+/// A tamed vulture, free (not sitting, not ridden), turns on what hurt its owner and on what its owner hurt, as
+/// vanilla's wolf (`OwnerHurtByTargetGoal`, `OwnerHurtTargetGoal`).
+fn defend(host: &mut dyn ServerHost, id: u32) {
+    let saved = state::saved(id);
+    let Some(owner) = saved.owner else {
+        return;
+    };
+    if saved.sitting || ride::of(id).is_some() {
+        return;
+    }
+    let owner = creature::friend::uuid(owner);
+    let Some(owner) = host.players().server_players().into_iter().find(|p| p.uuid() == owner) else {
+        return;
+    };
+    let owner = owner.entity().id();
+    let hits: Vec<(u32, u32)> = HITS.lock().unwrap().clone();
+    let target = hits.iter().rev().find_map(|&(victim, by)| {
+        if victim == owner && by != id {
+            Some(by)
+        } else if by == owner && victim != id {
+            Some(victim)
+        } else {
+            None
+        }
+    });
+    if let (Some(t), Some(m)) = (
+        target.and_then(|t| host.entity(t)).and_then(|e| host.living(e)),
+        host.entity(id).and_then(|e| host.mob(e)),
+    ) {
+        m.set_target(host, Some(t));
     }
 }
 
@@ -299,14 +414,24 @@ const BABY_TEXTURE: &str = "vulture:entity/vulture/baby";
 /// How far its back slopes down to the tail on the ground, in degrees.
 const HUNCH: f32 = 18.0;
 
+/// What a frame of a vulture shows, for `pose`.
+struct Frame {
+    age: f32,
+    /// Its head's turn from its body (where it looks: the bank), and its pitch (degrees).
+    head_yaw: f32,
+    pitch: f32,
+    walk_position: f32,
+    walk_speed: f32,
+    flying: bool,
+}
+
 /// A group's rotation for this frame, in degrees (x, y, z), on top of its rest rotation.
 ///
-/// In flight the body takes the flight's pitch (`pitch`, which `Fly` keeps in `head_pitch`) and banks with the turn:
-/// the gap between its heading and its head (where the rider looks, `head_yaw`). On the ground the wings fold along the
-/// flanks of its hunched body: the arm turned back with its coverts outward, the forearm folded forward over it, the hand back again, its
-/// primaries along the tail.
-fn pose(name: &str, mob: &NativeMobRender<'_>, flapping: bool, look: &state::Look, carrying: bool) -> [f32; 3] {
-    let flying = !mob.on_ground;
+/// In flight the body takes the flight's pitch and banks with the turn: the gap between its heading and its head
+/// (where the rider looks). On the ground the wings fold along the flanks of its hunched body: the arm turned back with
+/// its coverts outward, the forearm folded forward over it, the hand back again, its primaries along the tail.
+fn pose(name: &str, mob: &Frame, flapping: bool, look: &state::Look, carrying: bool) -> [f32; 3] {
+    let flying = mob.flying;
     // A peck: the head goes down and back up after it ate; a strike, quicker.
     let since_meal = mob.age - look.ate_at as f32;
     let peck = if look.ate_at > 0 && (0.0..PECK).contains(&since_meal) {
@@ -381,113 +506,26 @@ fn pose(name: &str, mob: &NativeMobRender<'_>, flapping: bool, look: &state::Loo
     }
 }
 
-impl Hooks for Vulture {
-    fn register_goals(&self, event: &mut RegisterGoalsEvent<'_>) {
-        if event.mob.kind.id != KIND {
-            return;
-        }
-        // Without the wandering trader's sounds (its own come from `sounds.rs`), goals or size: its own size (SPECS §4)
-        // in place of the trader's 0.6 × 1.95 (workaround for horizon-rust/horizon#6276), spared by monsters.
-        creature::mob::ours(event.mob, WIDTH, HEIGHT, EYE_HEIGHT);
-        // Neutral: it fights back with its beak, diving from the air, and nearby vultures join in (SPECS §4).
-        event.mob.attrs.attack_damage = ATTACK_DAMAGE;
-        let ai = &mut event.mob.ai;
-        ai.goals.add(0, NoFall);
-        ai.goals.add(1, Fly::default());
-        ai.goals.add(2, tame::Sit);
-        ai.goals.add(2, wild::DiveAttack::default());
-        ai.goals.add(3, tame::Mate::default());
-        ai.goals.add(3, tame::Eat::default());
-        ai.goals.add(4, tame::FollowOwner::default());
-        ai.goals.add(5, wild::Soar::new());
-        ai.goals.add(6, Stroll::new(0.6));
-        ai.goals.add(7, LookAtPlayer::new(8.0));
-        ai.targets.add(1, tame::OwnerHurtBy::default());
-        ai.targets.add(2, tame::OwnerHurt::default());
-        ai.targets.add(3, HurtByTarget::new().alert());
-    }
+/// Whether each vulture is off the ground, from its server tick, for the drawing (single player).
+static FLYING: Mutex<BTreeMap<u32, bool>> = Mutex::new(BTreeMap::new());
 
-    /// Right-click (`interaction.rs`). Always taken: no trading.
-    fn interact_entity(&self, host: &mut dyn Host, event: &mut InteractEntityEvent<'_>) -> Flow {
-        if event.kind != KIND {
-            return Flow::Continue;
-        }
-        if let Ok(id) = u32::try_from(event.entity) {
-            interaction::clicked(host, id);
-        }
-        Flow::Cancel
-    }
+/// The Blockbench model (`model.rs`), posed by `pose` every frame.
+struct Draw;
 
-    fn menu_clicked(&self, host: &mut dyn Host, event: &mut MenuClickedEvent) {
-        screen::clicked(host, event);
-    }
-
-    fn menu_closed(&self, _: &mut dyn Host, event: &mut MenuClosedEvent) {
-        screen::forget(event.uuid);
-    }
-
-    fn menu_input_closed(&self, host: &mut dyn Host, event: &mut MenuInputClosedEvent<'_>) {
-        screen::closed(host, event);
-    }
-
-    fn living_death(&self, host: &mut dyn Host, event: &mut LivingDeathEvent<'_>) -> Flow {
-        if creature::mob::kind(event.kind) == KIND {
-            screen::died(host, &state::dimension(event.entity), event.entity);
-            talons::release(event.entity);
-            creature::friend::forget(event.entity);
-        }
-        Flow::Continue
-    }
-
-    /// Its page in Options > Mods, where the talons key can be changed.
-    fn mods(&self, _: &mut dyn Host, event: &mut ModsEvent<'_>) {
-        event.mods.push(NativeMod {
-            id: "vulture".into(),
-            title: concat!("Vulture ", env!("CARGO_PKG_VERSION")).into(),
-            description: "A vulture you tame, ride and fly (Sunrise Creatures).".into(),
-            keys: vec![[
-                "talons".into(),
-                "Talons (catch / release)".into(),
-                talons::DEFAULT_KEY.into(),
-            ]],
-        });
-    }
-
-    /// The talons key (SPECS §6.4), taken by the ridden vulture.
-    fn key(&self, host: &mut dyn Host, event: &mut KeyEvent<'_>) {
-        if event.pressed && event.key == host.mod_key("vulture", talons::KEY, talons::DEFAULT_KEY) {
-            talons::press();
-        }
-    }
-
-    fn entity_tick_listened(&self, _: &mut dyn Host, event: &mut EntityTickListenedEvent) {
-        event.listened = true;
-    }
-
-    fn entity_tick_post(&self, host: &mut dyn Host, event: &mut EntityTickPostEvent<'_>) {
-        if event.kind == KIND {
-            water_escape(host, event.entity);
-            creature::sounds::tick_post(host, event, &sounds::VOICE, creature::sounds::NEUTRAL);
-            state::save(host, event.dimension, event.entity);
-            state::look_for_food(host, event.dimension, event.entity);
-            talons::carry(host, event.dimension, event.entity);
-            screen::tick(host, event.entity);
-            state::births(host, event.dimension);
-            for player in state::take_taming_seen() {
-                creature::bestiary::learn(host, player, KIND, TAME_FACT);
-            }
-        }
-    }
-
-    /// The Blockbench model (`model.rs`), posed by `pose` every frame.
-    fn mob_submit(&self, host: &dyn Host, event: &mut MobSubmitEvent<'_>) -> Flow {
-        let mob = event.mob;
-        if mob.kind != KIND {
-            return Flow::Continue;
-        }
-        let flapping = flight::flapping(mob.id);
-        let look = state::look(mob.id);
-        let carrying = talons::carrying(mob.id);
+impl EntityRenderer for Draw {
+    fn submit(&self, entity: &EntityRenderState, draw: &mut dyn BlockEntityDrawContext) -> Result<(), String> {
+        let mob: Option<&LivingRenderState> = entity.living.as_ref();
+        let frame = Frame {
+            age: entity.age,
+            head_yaw: mob.map_or(0.0, |m| m.y_rot),
+            pitch: mob.map_or(0.0, |m| m.x_rot),
+            walk_position: mob.map_or(0.0, |m| m.walk_animation_pos),
+            walk_speed: mob.map_or(0.0, |m| m.walk_animation_speed),
+            flying: FLYING.lock().unwrap().get(&entity.id).copied().unwrap_or(false),
+        };
+        let flapping = flight::flapping(entity.id);
+        let look = state::look(entity.id);
+        let carrying = talons::carrying(entity.id);
         let shown = |part: &str| match part {
             "harness" => look.harness,
             "chest_left" => look.chests >= 1,
@@ -507,40 +545,205 @@ impl Hooks for Vulture {
             let t = (look.growth - state::JUVENILE) / (1.0 - state::JUVENILE);
             (&model::VULTURE, TEXTURE, JUVENILE_SCALE + (1.0 - JUVENILE_SCALE) * t)
         };
-        event.draw.push();
-        creature::model::death_tilt(&mut *event.draw, mob);
+        draw.push();
+        creature::model::living_pose(draw, mob);
         if scale < 1.0 {
-            event.draw.scale([scale; 3]);
+            draw.scale([scale; 3]);
         }
         // Sitting: settled on its belly, legs folded under it.
         if look.sitting {
-            event.draw.translate([0.0, -SIT_DROP, 0.0]);
+            draw.translate([0.0, -SIT_DROP, 0.0]);
         }
-        creature::model::draw_shown(
-            host,
-            &mut *event.draw,
-            part,
-            texture,
-            &|part| pose(part, mob, flapping, &look, carrying),
-            &shown,
-            creature::model::tint(mob),
+        let pose = |p: &str| pose(p, &frame, flapping, &look, carrying);
+        creature::model::draw_shown(draw, part, texture, &pose, &shown, creature::model::tint(mob));
+        draw.pop();
+        Ok(())
+    }
+}
+
+/// The talons key, sent from the client to the server.
+#[derive(PayloadCodec)]
+struct TalonsPress {
+    key: String,
+}
+
+static TALONS: OnceLock<ToServer<TalonsPress>> = OnceLock::new();
+
+#[mod_api::sunrise_mod]
+impl Hooks for Vulture {
+    fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
+        creature::mob::ours(KIND, SIZE);
+        let _ = r.register_attachment_type("vulture:state", false);
+        screen::declare(r);
+        creature::bestiary::register(&BESTIARY);
+        creature::bestiary::register_item(&FEATHER_PAGE);
+        creature::bestiary::register_item(&RAW_PAGE);
+        creature::bestiary::register_item(&COOKED_PAGE);
+        r.register_key_mapping(
+            KeyRegistration::new(talons::KEY, talons::DEFAULT_KEY)
+                .label("key.vulture.talons")
+                .category("key.categories.vulture"),
         );
-        event.draw.pop();
-        Flow::Cancel
+        let mut payloads = r.payload_handlers();
+        let mut view = payloads.registrar("1");
+        let token = view.play_to_server_typed::<TalonsPress>(PayloadId("vulture:talons".into()), |_, _| {
+            talons::press();
+            Ok(())
+        });
+        let _ = TALONS.set(token);
+    }
+
+    fn register_entity_renderers(&self, _: &RegistrationContext, event: &mut RegisterEntityRenderersEvent<'_>) {
+        event.renderers.register(KIND.into(), Arc::new(Draw));
+    }
+
+    /// Its vanilla goals, added when it joins (the library took its template's off just before): it strolls, looks at
+    /// players, and turns on whoever hurts it, with the vultures near it (SPECS §4).
+    fn entity_join_level(&self, host: &mut dyn ServerHost, event: &mut EntityJoinLevelEvent<'_>) -> Flow {
+        if event.kind != KIND {
+            return Flow::Continue;
+        }
+        let Some(m) = host.entity(event.entity).and_then(|e| host.mob(e)) else {
+            return Flow::Continue;
+        };
+        m.add_goal(
+            host,
+            6,
+            &GoalSpec::Stroll {
+                speed: 0.6,
+                interval: 120,
+                water_avoiding: Some(0.001),
+                swim: false,
+                flying: false,
+            },
+        );
+        m.add_goal(
+            host,
+            7,
+            &GoalSpec::LookAtPlayer {
+                range: 8.0,
+                probability: 0.02,
+                only_horizontal: false,
+                mobs: false,
+                only: None,
+            },
+        );
+        m.add_target_goal(host, 3, &GoalSpec::HurtByTarget { alert: true });
+        Flow::Continue
+    }
+
+    /// Right-click (`interaction.rs`). Always taken, on both sides: no trading.
+    fn entity_interact(&self, host: HostSide, event: &mut EntityInteractEvent<'_>) -> Option<InteractionResult> {
+        if event.kind != KIND {
+            return None;
+        }
+        if let (HostSide::Server(host), Ok(id)) = (host, u32::try_from(event.entity)) {
+            interaction::clicked(host, id, event);
+        }
+        Some(InteractionResult::Consume)
+    }
+
+    /// The rider's keys, for the ridden flight.
+    fn player_input(&self, _: &mut dyn ServerHost, event: &mut PlayerInputEvent<'_>) {
+        ride::heard(event.player, event.flags);
+    }
+
+    /// Sneaking in the air descends: a rider getting off a vulture that isn't on the ground stays on.
+    fn entity_mount(&self, host: &mut dyn ServerHost, event: &mut EntityMountEvent<'_>) -> Flow {
+        if event.vehicle_kind == KIND && !event.mounting && ride::keep_seated(&*host, event.vehicle) {
+            return Flow::Cancel;
+        }
+        Flow::Continue
+    }
+
+    /// Hits on and by its owner, for `defend`.
+    fn living_incoming_damage(&self, _: &mut dyn HitHost, event: &mut LivingIncomingDamageEvent<'_>) -> Flow {
+        if let (Ok(victim), Ok(by)) = (u32::try_from(event.entity), u32::try_from(event.source.causing)) {
+            let mut hits = HITS.lock().unwrap();
+            hits.push((victim, by));
+            let excess = hits.len().saturating_sub(16);
+            hits.drain(..excess);
+        }
+        Flow::Continue
+    }
+
+    fn living_death(&self, host: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {
+        if event.kind == KIND {
+            screen::died(host, event.entity);
+            talons::release(event.entity);
+            ride::forget(event.entity);
+            creature::friend::forget(event.entity);
+            creature::body::forget(event.entity);
+            FLYING.lock().unwrap().remove(&event.entity);
+        }
+        Flow::Continue
+    }
+
+    /// The talons key (SPECS §6.4), sent to the server, where the ridden vulture takes it.
+    fn key_mapping_pre(&self, host: &mut dyn ClientHost, event: &mut KeyMappingPreEvent<'_>) -> Flow {
+        if event.mapping == talons::KEY
+            && event.pressed
+            && let Some(token) = TALONS.get()
+        {
+            let _ = token.send(
+                host,
+                &TalonsPress {
+                    key: talons::KEY.into(),
+                },
+            );
+        }
+        Flow::Continue
+    }
+
+    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
+        if event.kind != KIND {
+            return;
+        }
+        let id = event.entity;
+        water_escape(host, id);
+        ride::read(&*host, id);
+        creature::body::tick(host, id, || {
+            vec![
+                Box::new(Sync),
+                Box::new(Fly::default()),
+                Box::new(tame::Sit),
+                Box::new(wild::DiveAttack::default()),
+                Box::new(tame::Mate::default()),
+                Box::new(tame::Eat::default()),
+                Box::new(tame::FollowOwner::default()),
+                Box::new(wild::Soar::new()),
+            ]
+        });
+        apply(host, id);
+        creature::sounds::play_queued(host, id, SoundSource::Neutral);
+        state::save(host, event.dimension, id);
+        if let Some(e) = host.entity(id) {
+            FLYING.lock().unwrap().insert(id, !e.on_ground(host).unwrap_or(true));
+            if let Some(level) = e.level(host) {
+                state::look_for_food(host, level, id);
+            }
+        }
+        talons::carry(host, id);
+        state::births(host, event.dimension);
+        for player in state::take_taming_seen() {
+            creature::bestiary::learn(host, player, KIND, TAME_FACT);
+        }
     }
 }
 
 /// A vulture cannot carry a rider into water. Eject everyone as soon as it enters, then keep swimming it upward and
 /// toward the nearest dry shore block until it leaves the water.
-fn water_escape(host: &mut dyn Host, id: u32) {
+fn water_escape(host: &mut dyn ServerHost, id: u32) {
     let Some(entity) = host.entity(id) else { return };
-    if !host.entity_is_in_water(entity).unwrap_or(false) {
+    if !entity.is_in_water(host).unwrap_or(false) {
         return;
     }
-    host.eject_passengers(id);
-
-    let Some(at) = host.entity_position(entity) else { return };
-    let Some(level) = host.entity_level(entity) else { return };
+    entity.eject_passengers(host);
+    let (Some(at), Some(level)) = (entity.position(host), entity.level(host)) else {
+        return;
+    };
+    let ground = creature::territory::Ground::new(&*host, level);
+    let wet = |name: &str| name.contains("water") || name == "minecraft:kelp" || name.contains("seagrass");
     let origin = [at[0].floor() as i32, at[1].floor() as i32, at[2].floor() as i32];
     let mut shore = None;
     'rings: for radius in 1_i32..=8 {
@@ -550,19 +753,9 @@ fn water_escape(host: &mut dyn Host, id: u32) {
                     continue;
                 }
                 let feet = [origin[0] + dx, origin[1], origin[2] + dz];
-                let below = [feet[0], feet[1] - 1, feet[2]];
-                let (Some(block), Some(ground)) = (level.block(host, feet), level.block(host, below)) else {
-                    continue;
-                };
-                let (Ok(wet), Ok(ground_wet), Ok(ground_air)) = (
-                    host.block_name_in_tag(&block, "minecraft:water"),
-                    host.block_name_in_tag(&ground, "minecraft:water"),
-                    host.block_name_in_tag(&ground, "minecraft:air"),
-                ) else {
-                    continue;
-                };
-                if !wet && !ground_wet && !ground_air {
-                    shore = Some([feet[0] as f64 + 0.5, at[1], feet[2] as f64 + 0.5]);
+                let (block, below) = (ground.block(feet), ground.block([feet[0], feet[1] - 1, feet[2]]));
+                if !block.is_empty() && !wet(&block) && !wet(&below) && !below.ends_with("air") {
+                    shore = Some([f64::from(feet[0]) + 0.5, at[1], f64::from(feet[2]) + 0.5]);
                     break 'rings;
                 }
             }
@@ -574,5 +767,5 @@ fn water_escape(host: &mut dyn Host, id: u32) {
         let length = dx.hypot(dz).max(0.001);
         (dx / length * 0.18, dz / length * 0.18)
     });
-    host.entity_set_velocity(entity, [vx, 0.3, vz]);
+    entity.set_velocity(host, [vx, 0.3, vz]);
 }

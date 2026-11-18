@@ -1,13 +1,15 @@
 //! The vulture's flight (SPECS §6.2), shared by the ridden flight (`Fly`, steered by the rider) and the wild one
 //! (`wild::Soar`, steered by its own AI).
 //!
+//! Both run from the server tick (the library's `body`), which writes back the velocity, heading and pitch they set.
+//!
 //! Flown like a plane: it always moves along its heading, turns towards the wanted heading (banking, drawn by `pose`
 //! from the gap between its body and its head, which looks where it wants to go), noses up or down towards the wanted
 //! pitch, and trades speed for height like a glider.
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use horizon_client::mod_api::{Mob, RandomSource};
+use creature::body::Body;
 
 use crate::sounds;
 
@@ -63,23 +65,25 @@ const HOVER_EASE: f64 = 0.25;
 pub struct Flight {
     /// Speed along the heading, blocks per tick.
     pub speed: f64,
-    /// Its pitch, positive nose down (as `head_pitch`).
+    /// Its pitch, positive nose down (the mob's pitch, drawn by `pose`).
     pub pitch: f32,
+    /// The speed across it set last tick, to tell a wall that stopped it.
+    pub set_across: f64,
 }
 
 impl Flight {
     /// Back on the ground: no momentum, level.
-    pub fn land(&mut self, m: &mut Mob) {
+    pub fn land(&mut self, m: &mut Body) {
         self.speed = 0.0;
         self.pitch = 0.0;
-        m.head_pitch = 0.0;
+        m.pitch = 0.0;
         m.no_gravity = false;
         set_flapping(m.id, false);
     }
 
     /// Hovering on beating wings towards `at` (its feet's place), facing `yaw`: no momentum like a plane's, it eases its
     /// velocity towards the spot, at most `HOVER_SPEED` a tick. For a strike from just above its target.
-    pub fn hover(&mut self, m: &mut Mob, at: [f64; 3], yaw: f32) {
+    pub fn hover(&mut self, m: &mut Body, at: [f64; 3], yaw: f32) {
         m.no_gravity = true;
         let want = [at[0] - m.position.x, at[1] - m.position.y, at[2] - m.position.z];
         let len = (want[0] * want[0] + want[1] * want[1] + want[2] * want[2]).sqrt();
@@ -94,12 +98,12 @@ impl Flight {
         self.speed = m.velocity.x.hypot(m.velocity.z);
         // Body up, wings beating: the pitch eases back to level.
         self.pitch += (0.0 - self.pitch).clamp(-PITCH_RATE, PITCH_RATE);
-        m.head_pitch = self.pitch;
+        m.pitch = self.pitch;
         let gap = wrap(yaw - m.yaw);
         m.yaw += gap.clamp(-MAX_TURN * 2.0, MAX_TURN * 2.0);
         m.body_yaw = m.yaw;
         m.head_yaw = yaw;
-        if m.age.is_multiple_of(6) {
+        if m.age % 6 == 0 {
             let pitch = 0.9 + m.random.next_float() * 0.2;
             sounds::queue(m.id, sounds::FLAP, 0.6, pitch);
         }
@@ -107,7 +111,7 @@ impl Flight {
     }
 
     /// One tick in the air (or taking off): sets its heading, pitch and velocity.
-    pub fn tick(&mut self, m: &mut Mob, c: &Controls) {
+    pub fn tick(&mut self, m: &mut Body, c: &Controls) {
         m.no_gravity = true;
         if m.on_ground {
             self.speed = self.speed.max(STALL);
@@ -127,7 +131,7 @@ impl Flight {
             target = 20.0;
         }
         self.pitch += (target - self.pitch).clamp(-PITCH_RATE, PITCH_RATE);
-        m.head_pitch = self.pitch;
+        m.pitch = self.pitch;
         // Speed: gravity along the slope, then the wings.
         let (sin_pitch, cos_pitch) = f64::from(self.pitch).to_radians().sin_cos();
         self.speed += GRAVITY * sin_pitch;
@@ -144,12 +148,15 @@ impl Flight {
         self.speed = self.speed.clamp(0.0, DIVE_MAX * pace);
         let (s, c_yaw) = f64::from(heading).to_radians().sin_cos();
         let level = self.speed * cos_pitch;
+        self.set_across = level;
         m.velocity.x = -s * level;
         m.velocity.z = c_yaw * level;
         m.velocity.y = -self.speed * sin_pitch;
         let flapping = c.flap || c.boost;
-        // Bumping into something in the air (a tree, a cliff): it climbs over it rather than staying stuck.
-        let blocked = m.horizontal_collision && !m.on_ground;
+        // Bumping into something in the air (a tree, a cliff): it climbs over it rather than staying stuck. A wall is
+        // the speed across it lost since last tick (the engine stopped it).
+        let across = m.velocity.x.hypot(m.velocity.z);
+        let blocked = !m.on_ground && self.set_across > 0.15 && across < self.set_across * 0.3;
         // Descending (pitch down), it sinks at least this fast even slow, so it comes down to land.
         if c.pitch >= DESCENT_PITCH {
             m.velocity.y = m.velocity.y.min(-MIN_DESCENT);
@@ -161,7 +168,7 @@ impl Flight {
             m.velocity.y -= GLIDE_SINK * (1.0 - (self.speed / (CRUISE * pace)).min(1.0)) + GLIDE_SINK / 2.0;
         }
         // One wing beat every 8 ticks while it flaps.
-        if flapping && m.age.is_multiple_of(8) {
+        if flapping && m.age % 8 == 0 {
             let pitch = 0.9 + m.random.next_float() * 0.2;
             sounds::queue(m.id, sounds::FLAP, 0.6, pitch);
         }
@@ -175,8 +182,7 @@ pub fn wrap(degrees: f32) -> f32 {
 }
 
 /// Whether each flying vulture is beating its wings, for `pose` (the render state doesn't carry it). Single player:
-/// the goals and the drawing share the mob's id (multiplayer, v2, will need it sent; workaround for
-/// arismoko/horizon#2740).
+/// the behaviours and the drawing share the mob's id.
 static FLAPPING: Mutex<BTreeMap<u32, bool>> = Mutex::new(BTreeMap::new());
 
 fn set_flapping(id: u32, flapping: bool) {

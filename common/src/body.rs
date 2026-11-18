@@ -66,6 +66,8 @@ pub struct Body {
     pub yaw: f32,
     pub body_yaw: f32,
     pub head_yaw: f32,
+    /// Its pitch (degrees, positive nose down): a flier's, drawn by its renderer (`x_rot`).
+    pub pitch: f32,
     pub on_ground: bool,
     pub in_water: bool,
     pub no_gravity: bool,
@@ -206,7 +208,7 @@ pub fn forget(entity: u32) {
 /// The creature as it is now.
 pub fn read(host: &dyn Host, entity: u32) -> Option<Body> {
     let e = host.entity(entity)?;
-    let [yaw, _] = e.rotation(host).unwrap_or([0.0, 0.0]);
+    let [yaw, pitch] = e.rotation(host).unwrap_or([0.0, 0.0]);
     let head_yaw = e.head_yaw(host).unwrap_or(yaw);
     Some(Body {
         id: entity,
@@ -215,6 +217,7 @@ pub fn read(host: &dyn Host, entity: u32) -> Option<Body> {
         yaw,
         body_yaw: yaw,
         head_yaw,
+        pitch,
         on_ground: e.on_ground(host).unwrap_or(false),
         in_water: e.is_in_water(host).unwrap_or(false),
         no_gravity: e.no_gravity(host).unwrap_or(false),
@@ -288,8 +291,8 @@ fn write(host: &mut dyn ServerHost, before: &Body, after: &Body) {
     if after.velocity != before.velocity {
         e.set_velocity(host, after.velocity.array());
     }
-    if after.yaw != before.yaw || after.body_yaw != before.body_yaw {
-        e.set_rotation(host, after.yaw, 0.0);
+    if after.yaw != before.yaw || after.body_yaw != before.body_yaw || after.pitch != before.pitch {
+        e.set_rotation(host, after.yaw, after.pitch);
     }
     if after.head_yaw != before.head_yaw {
         e.set_head_yaw(host, after.head_yaw);

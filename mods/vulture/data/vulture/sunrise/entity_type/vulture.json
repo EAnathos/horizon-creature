@@ -1,1 +1,18 @@
-{ "template": "minecraft:wandering_trader", "attributes": { "minecraft:movement_speed": 0.3 } }
+{
+  "template": "minecraft:wandering_trader",
+  "attributes": {
+    "minecraft:movement_speed": 0.3
+  },
+  "sounds": {
+    "hurt": "vulture:entity.vulture.hurt",
+    "death": "vulture:entity.vulture.death",
+    "ambient": "none",
+    "step": "none"
+  },
+  "shadow_radius": 0.6,
+  "passenger_attachments": [
+    0.0,
+    0.6,
+    0.0
+  ]
+}

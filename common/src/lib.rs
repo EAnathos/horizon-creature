@@ -40,10 +40,10 @@ pub mod territory;
 
 use mod_api::{
     BreakBlockEvent, BuildCreativeModeTabContentsEvent, ClientHost, EntityInteractEvent, EntityJoinLevelEvent,
-    EntityLeaveLevelEvent, EntitySizeEvent, EntityTickPostEvent, ExplosionDetonateEvent, Flow, Hooks, Host, HostSide,
-    InteractionResult, LevelTickPostEvent, LivingChangeTargetEvent, PlayerLoggedInEvent, RegisterCommandsEvent,
-    Registrar, RegistrationContext, RunModCommandEvent, ScreenMouseButtonPressedPreEvent, ScreenMouseScrolledPreEvent,
-    ScreenRenderPostEvent, ServerHost, TabCompleteEvent,
+    EntityLeaveLevelEvent, EntitySizeEvent, EntityTickListenedEvent, EntityTickPostEvent, ExplosionDetonateEvent, Flow,
+    Hooks, Host, HostSide, InteractionResult, LevelTickPostEvent, LivingChangeTargetEvent, PlayerLoggedInEvent,
+    RegisterCommandsEvent, Registrar, RegistrationContext, RunModCommandEvent, ScreenMouseButtonPressedPreEvent,
+    ScreenMouseScrolledPreEvent, ScreenRenderPostEvent, ServerHost, TabCompleteEvent,
 };
 
 /// The library's items in the guide's Items tab (SPECS §7.2).
@@ -123,6 +123,12 @@ impl Hooks for Creature {
     fn break_block(&self, host: &mut dyn ServerHost, event: &mut BreakBlockEvent<'_>) -> Flow {
         jar::broken(host, event.pos);
         Flow::Continue
+    }
+
+    /// The game tells entities' ticks (`entity_tick_post`) only to a mod that asks: the series' creatures live in them
+    /// (their behaviours, `body`; the bestiary's meetings).
+    fn entity_tick_listened(&self, _: &mut dyn ServerHost, event: &mut EntityTickListenedEvent) {
+        event.listened = true;
     }
 
     fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {

@@ -1,33 +1,23 @@
 //! The vulture's screen and its chests' contents (SPECS §6.1, §6.3).
 //!
-//! Its owner opens it with sneak + right-click (`interaction.rs`, opened on its next tick). It is one of
-//! Horizon's server menus (`Host::open_menu_with_input`), shown as a chest: the top row is the vulture's (its saddle,
-//! sit / follow, a button per chest), then 15 slots per chest that hold items as a chest's do. The contents are saved
-//! in the `vulture:chests` attachment when the screen closes; a chest taken off, the saddle taken off (only without
-//! chests) or the vulture's death gives everything back (to the owner, or on the ground).
-use std::collections::BTreeMap;
-use std::sync::Mutex;
-
-use horizon_client::item_data::encode_components;
-use horizon_client::items::ItemStack;
-use horizon_client::mod_api::{
-    AttachmentCodec, AttachmentError, AttachmentType, Compound, Holder, Host, MenuClickedEvent, MenuInputClosedEvent,
+//! The contents of its chests are saved in the `vulture:chests` attachment (each slot's item as its NBT, read back
+//! with a host: `ItemStack::from_nbt`); its death gives everything back on the ground, with its saddle and chests.
+//!
+//! Its screen (sneak + right-click by its owner: the saddle, sit / follow, its chests' slots) was one of Horizon's
+//! server menus; on Sunrise it becomes a mod menu type, still to port (docs/SUNRISE-PORT.md): until then the click
+//! says so (`ask`).
+use mod_api::{
+    AttachmentCodec, AttachmentError, AttachmentType, Compound, Holder, ItemStack, PlayerRef, Registrar, ServerHost,
     Tag, Text,
 };
 
-use crate::state::{self, Change};
+use crate::state;
 
 /// Slots per chest.
 pub const PER_CHEST: usize = 15;
-const ROW: usize = 9;
-/// The top row's buttons.
-const HARNESS: i32 = 0;
-const SIT: i32 = 2;
-const CHEST_LEFT: i32 = 6;
-const CHEST_RIGHT: i32 = 7;
 
-/// The contents of both chests, 30 slots (the right chest's are the last 15).
-static CHESTS: AttachmentType<Vec<Option<ItemStack>>> = AttachmentType {
+/// The contents of both chests, 30 slots (the right chest's are the last 15), each item's NBT.
+static CHESTS: AttachmentType<Vec<Option<Compound>>> = AttachmentType {
     namespace: "vulture",
     name: "chests",
     default: || vec![None; 2 * PER_CHEST],
@@ -36,24 +26,19 @@ static CHESTS: AttachmentType<Vec<Option<ItemStack>>> = AttachmentType {
     sync: false,
 };
 
-fn stack_nbt(stack: &ItemStack) -> Compound {
-    let mut c = Compound::new();
-    c.insert("id".into(), Tag::String((&*stack.item).into()));
-    c.insert("count".into(), Tag::Int(stack.count as i32));
-    if let Some(components) = encode_components(stack) {
-        c.insert("components".into(), components);
-    }
-    c
+/// From the mod's `register`: its attachments.
+pub fn declare(r: &mut dyn Registrar) {
+    let _ = r.register_attachment_type("vulture:chests", false);
 }
 
 // `&Vec`: the attachment's codec takes `fn(&T)` with `T` its type, a `Vec`.
 #[allow(clippy::ptr_arg)]
-fn encode(items: &Vec<Option<ItemStack>>) -> Result<Compound, AttachmentError> {
+fn encode(items: &Vec<Option<Compound>>) -> Result<Compound, AttachmentError> {
     let list = items
         .iter()
         .enumerate()
         .filter_map(|(k, s)| {
-            let mut c = stack_nbt(s.as_ref()?);
+            let mut c = s.clone()?;
             c.insert("Slot".into(), Tag::Byte(k as i8));
             Some(Tag::Compound(c))
         })
@@ -61,7 +46,7 @@ fn encode(items: &Vec<Option<ItemStack>>) -> Result<Compound, AttachmentError> {
     Ok([("Items".into(), Tag::List(list))].into())
 }
 
-fn decode(data: &Compound) -> Result<Vec<Option<ItemStack>>, AttachmentError> {
+fn decode(data: &Compound) -> Result<Vec<Option<Compound>>, AttachmentError> {
     let mut items = vec![None; 2 * PER_CHEST];
     if let Some(Tag::List(list)) = data.get(&"Items".into()) {
         for tag in list {
@@ -70,179 +55,47 @@ fn decode(data: &Compound) -> Result<Vec<Option<ItemStack>>, AttachmentError> {
                 continue;
             };
             if let Some(cell) = items.get_mut(*slot as usize) {
-                *cell = ItemStack::from_nbt(c);
+                let mut item = c.clone();
+                item.remove(&"Slot".into());
+                *cell = Some(item);
             }
         }
     }
     Ok(items)
 }
 
-/// The screen each player has open: the vulture and the menu's window.
-static OPEN: Mutex<BTreeMap<u128, (u32, i32)>> = Mutex::new(BTreeMap::new());
-
-fn button(item: &str) -> Option<ItemStack> {
-    Some(ItemStack::new(item, 1))
+/// Sneak + right-click on its own vulture (`interaction.rs` checked it is the owner): its screen, not ported yet.
+pub fn ask(host: &mut dyn ServerHost, player: PlayerRef, _: u32) {
+    let _ = player.action_bar(host, Text::translate("message.vulture.screen_unavailable", vec![]));
 }
 
-/// The menu's slots: the top row, then the chests' contents, then panes up to the end of the last row.
-fn layout(saved: &state::Saved, contents: &[Option<ItemStack>]) -> (u8, Vec<Option<ItemStack>>, usize) {
-    let storage = PER_CHEST * usize::from(saved.chests);
-    let rows = 1 + storage.div_ceil(ROW);
-    let mut items = vec![button("minecraft:gray_stained_glass_pane"); rows * ROW];
-    items[HARNESS as usize] = saved.harness.then(|| ItemStack::new(crate::interaction::SADDLE, 1));
-    items[SIT as usize] = button(if saved.sitting {
-        "minecraft:lead"
-    } else {
-        "minecraft:feather"
-    });
-    if saved.chests >= 1 {
-        items[CHEST_LEFT as usize] = button("minecraft:chest");
-    }
-    if saved.chests >= 2 {
-        items[CHEST_RIGHT as usize] = button("minecraft:chest");
-    }
-    for k in 0..storage {
-        items[ROW + k] = contents.get(k).cloned().flatten();
-    }
-    (rows as u8, items, storage)
+/// The item `id` (`minecraft:saddle`), `count` of it.
+fn stack(host: &dyn ServerHost, id: &str, count: u32) -> Option<ItemStack> {
+    host.item_from_snbt(&format!("{{id:\"{id}\",count:{count}}}"))
 }
 
-/// Screens asked for by a click, opened on the vulture's next tick: Horizon refuses a menu while the clicking
-/// player's own action is being handled (workaround for horizon-rust/horizon#13974).
-static ASKED: Mutex<BTreeMap<u32, u128>> = Mutex::new(BTreeMap::new());
-
-/// Sneak + right-click on its own vulture (`interaction.rs` checked it is the owner): its screen, next tick.
-pub fn ask(host: &dyn Host, id: u32) {
-    if let Some(player) = host.acting_player() {
-        ASKED.lock().unwrap().insert(id, player.uuid);
-    }
-}
-
-/// From `entity_tick_post`: opens the screen asked for this vulture.
-pub fn tick(host: &mut dyn Host, id: u32) {
-    let Some(player) = ASKED.lock().unwrap().remove(&id) else {
+/// Its death: its saddle, chests and their contents fall where it died.
+pub fn died(host: &mut dyn ServerHost, id: u32) {
+    let Some(e) = host.entity(id) else {
+        return;
+    };
+    let (Some(at), Some(level)) = (e.position(host), e.level(host)) else {
         return;
     };
     let saved = state::saved(id);
     let contents = CHESTS.get(host, Holder::Entity(id)).unwrap_or_default();
-    let (rows, items, storage) = layout(&saved, &contents);
-    let title = Text::translate("container.vulture.vulture", &[]);
-    // Without chests there is nothing to hold: a menu of buttons only.
-    let window = if storage == 0 {
-        host.open_menu(player, rows, title, items)
-    } else {
-        host.open_menu_with_input(player, rows, title, items, ROW..ROW + storage)
-    };
-    if let Some(window) = window {
-        OPEN.lock().unwrap().insert(player, (id, window));
-    }
-}
-
-/// Gives `stacks` to the player, dropping what doesn't fit at the vulture.
-fn give_back(host: &mut dyn Host, player: u128, dimension: &str, at: [f64; 3], stacks: Vec<ItemStack>) {
-    for stack in stacks {
-        if let Some(rest) = host.give_stack(player, stack) {
-            drop_at(host, dimension, at, &rest);
-        }
-    }
-}
-
-fn drop_at(host: &mut dyn Host, dimension: &str, at: [f64; 3], stack: &ItemStack) {
-    let nbt: Compound = [("Item".into(), Tag::Compound(stack_nbt(stack)))].into();
-    host.summon(dimension, "minecraft:item", at, nbt);
-}
-
-/// Takes out the contents of chest `index` (0 left, 1 right).
-fn empty_chest(host: &mut dyn Host, id: u32, index: usize) -> Vec<ItemStack> {
-    let mut contents = CHESTS.get(host, Holder::Entity(id)).unwrap_or_default();
-    let taken = contents[index * PER_CHEST..(index + 1) * PER_CHEST]
-        .iter_mut()
-        .filter_map(Option::take)
-        .collect();
-    let _ = CHESTS.set(host, Holder::Entity(id), contents);
-    taken
-}
-
-/// A click on the top row.
-pub fn clicked(host: &mut dyn Host, event: &MenuClickedEvent) {
-    let Some((id, window)) = OPEN.lock().unwrap().get(&event.uuid).copied() else {
-        return;
-    };
-    if window != event.window {
-        return;
-    }
-    let saved = state::saved(id);
-    let Some(player) = host.server_players().into_iter().find(|p| p.uuid == event.uuid) else {
-        return;
-    };
-    let (dimension, at) = (player.dimension.clone(), player.position);
-    match event.slot {
-        SIT => state::request(id, Change::ToggleSit),
-        CHEST_LEFT | CHEST_RIGHT if saved.chests > 0 => {
-            // The last chest put on comes off first; what it held goes back with it.
-            let index = usize::from(saved.chests) - 1;
-            let mut stacks = empty_chest(host, id, index);
-            stacks.push(ItemStack::new("minecraft:chest", 1));
-            give_back(host, event.uuid, &dimension, at, stacks);
-            state::request(id, Change::RemoveChest);
-        }
-        HARNESS if saved.harness && saved.chests == 0 => {
-            give_back(
-                host,
-                event.uuid,
-                &dimension,
-                at,
-                vec![ItemStack::new(crate::interaction::SADDLE, 1)],
-            );
-            state::request(id, Change::RemoveHarness);
-        }
-        _ => return,
-    }
-    // The buttons changed what the screen shows: close it, the player opens it again.
-    host.close_menu(event.uuid);
-}
-
-/// The screen closed: what is in the chests' slots is kept.
-pub fn closed(host: &mut dyn Host, event: &mut MenuInputClosedEvent<'_>) {
-    let Some((id, window)) = OPEN.lock().unwrap().remove(&event.uuid) else {
-        return;
-    };
-    if window != event.window {
-        return;
-    }
-    let storage = PER_CHEST * usize::from(state::saved(id).chests);
-    let mut contents = CHESTS.get(host, Holder::Entity(id)).unwrap_or_default();
-    for (k, slot) in event.slots.iter_mut().enumerate().take(storage) {
-        contents[k] = slot.take();
-    }
-    let _ = CHESTS.set(host, Holder::Entity(id), contents);
-}
-
-/// A screen without chests closed (no input slots, so `closed` doesn't hear it).
-pub fn forget(player: u128) {
-    OPEN.lock().unwrap().remove(&player);
-}
-
-/// Its death: its harness, chests and their contents fall where it died.
-pub fn died(host: &mut dyn Host, dimension: &str, id: u32) {
-    let pos = host.entity(id).and_then(|e| host.entity_position(e));
-    let saved = state::saved(id);
-    let Some(at) = pos else {
-        return;
-    };
-    let mut stacks: Vec<ItemStack> = CHESTS
-        .get(host, Holder::Entity(id))
-        .unwrap_or_default()
-        .into_iter()
+    let mut stacks: Vec<ItemStack> = contents
+        .iter()
         .flatten()
+        .filter_map(|c| ItemStack::from_nbt(&*host, c))
         .collect();
     if saved.harness {
-        stacks.push(ItemStack::new(crate::interaction::SADDLE, 1));
+        stacks.extend(stack(&*host, crate::interaction::SADDLE, 1));
     }
     if saved.chests > 0 {
-        stacks.push(ItemStack::new("minecraft:chest", u32::from(saved.chests)));
+        stacks.extend(stack(&*host, "minecraft:chest", u32::from(saved.chests)));
     }
-    for stack in &stacks {
-        drop_at(host, dimension, at, stack);
+    for s in stacks {
+        creature::hand::drop_stack(host, level, at, s);
     }
 }

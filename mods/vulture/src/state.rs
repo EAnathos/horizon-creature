@@ -1,36 +1,30 @@
 //! A vulture's own state (SPECS §5, §6): its owner, whether it sits, its harness and chests.
 //!
-//! It lives on the mob, in `Mob.extra` (`tame`, `owner`, `sitting`, `variant2` = chests, `age`: negative for a
-//! baby, positive for a breeding pause, aged by Horizon as any `AgeableMob`'s), where the goals, the right-click
-//! (`interaction.rs`) and the drawing read it. A wandering trader saves none of those but the age, so it is also
-//! kept in server attachments, saved with the entity: its owner and whether it sits in the library's
-//! `creature:friend` (`creature::friend`, common/SPECS.md §6.2), the rest in `vulture:state` (a save from before held
-//! the owner there too: it is moved over once). The mob and the saves meet here:
+//! It lives here, per vulture (`Shared`), where its behaviours (run from the server tick, the library's `body`), the
+//! right-click (`interaction.rs`) and the drawing read it: tamed or not, its owner, sitting, harness, chests, its age
+//! (negative for a baby, positive for a breeding pause, counted by `sync`), love. It is saved in attachments with the
+//! entity: its owner and whether it sits in the library's `creature:friend` (`creature::friend`, common/SPECS.md
+//! §6.2), the rest in `vulture:state` (a save from before held the owner there too: it is moved over once).
 //!
-//! - every tick, the `NoFall` goal hands the mob's state over (`from_mob`), and applies a state loaded from the save
-//!   once (`to_mob`);
-//! - `entity_tick_post`, with the host, loads the attachment the first time it sees a vulture and writes it back when
-//!   the state changed (`save`).
+//! - every tick, `sync` (the first behaviour) applies a state just loaded and the changes the hooks asked for;
+//! - `entity_tick_post` loads the attachment the first time it sees a vulture and writes it back when the state
+//!   changed (`save`).
 //!
-//! The same bridge carries food (SPECS §4, §5): the hook, which can see the items on the ground, finds the nearest
-//! raw meat for a hungry vulture (`food`); the `Eat` goal walks to it and eats it (`eaten`); the hook then takes one
-//! from the stack.
+//! Food (SPECS §4, §5): the hook, which can see the items on the ground, finds the nearest raw meat for a hungry vulture
+//! (`food`); the `Eat` behaviour walks to it and eats it (`eaten`); the hook then takes one from the stack.
 //!
-//! Single player: the goals and the hooks share the mob's id (multiplayer is v2).
+//! Single player: the behaviours and the hooks share the mob's id.
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use horizon_client::mod_api::{
-    AttachmentCodec, AttachmentError, AttachmentType, Compound, Holder, Host, Mob, RandomSource, Tag,
-};
+use creature::body::Body;
+use mod_api::{AttachmentCodec, AttachmentError, AttachmentType, Compound, Holder, LevelRef, ServerHost, Tag};
 
-/// Each vulture's flight speed share, once rolled or loaded (`Mob` has no field for it).
-static PACES: Mutex<BTreeMap<u32, f32>> = Mutex::new(BTreeMap::new());
-
-fn set_stats(m: &mut Mob, health: f32, pace: f32) {
-    m.attrs.max_health = health;
+fn set_stats(m: &mut Body, current: &mut Saved, health: f32, pace: f32) {
+    m.max_health = health;
     m.health = m.health.min(health);
-    PACES.lock().unwrap().insert(m.id, pace);
+    current.health = health;
+    current.pace = pace;
 }
 
 /// The raw meats it eats from the ground (SPECS §4); a thrown raw chicken may tame it (§5). Cooked meat is ignored.
@@ -51,6 +45,8 @@ pub struct Food {
     pub item: u32,
     pub at: [f64; 3],
     pub taming: bool,
+    /// Who threw it (its entity id), if anyone.
+    pub thrower: Option<u32>,
 }
 
 /// What is saved of a vulture.
@@ -152,6 +148,10 @@ struct Shared {
     scan: u8,
     /// Changes asked by the hooks.
     pending: Vec<Change>,
+    /// Ticks of love left (SPECS §8).
+    love: i32,
+    /// Its stats were rolled or loaded.
+    rolled: bool,
     /// Its dimension, from the tick hook.
     dimension: String,
     /// Whether it may breed now, for a partner's goal.
@@ -190,7 +190,7 @@ pub fn stat(range: (f32, f32), roll: f32) -> f32 {
 
 /// From the breeding goal: a baby of `a` and `b` (SPECS §8): tamed to `a`'s owner; each stat the average of both
 /// parents' and a fresh roll's, like a horse's.
-pub fn breed(a: &Mob, b: u32, rolls: [f32; 2]) {
+pub fn breed(a: &Body, b: u32, rolls: [f32; 2]) {
     {
         let mut bred = BRED.lock().unwrap();
         if bred.contains(&a.id) || bred.contains(&b) {
@@ -200,7 +200,7 @@ pub fn breed(a: &Mob, b: u32, rolls: [f32; 2]) {
         bred.insert(b);
     }
     let other = saved(b);
-    let mine = of(a);
+    let mine = saved(a.id);
     let mix = |x: f32, y: f32, range: (f32, f32), roll: f32| (x + y + stat(range, roll)) / 3.0;
     let baby = Saved {
         owner: mine.owner,
@@ -216,7 +216,7 @@ pub fn breed(a: &Mob, b: u32, rolls: [f32; 2]) {
 }
 
 /// From `entity_tick_post`: summons the babies waiting to be born, with their state.
-pub fn births(host: &mut dyn Host, dimension: &str) {
+pub fn births(host: &mut dyn ServerHost, dimension: &str) {
     let births = std::mem::take(&mut *BIRTHS.lock().unwrap());
     for birth in births {
         if let Some(id) = host.summon(dimension, "vulture:vulture", birth.at, Compound::new()) {
@@ -241,8 +241,10 @@ pub fn pace(id: u32) -> f64 {
 
 static SHARED: Mutex<BTreeMap<u32, Shared>> = Mutex::new(BTreeMap::new());
 
-/// A change the hooks (its screen) ask of the mob, applied by the goal on its next tick.
+/// A change the hooks ask of the vulture, applied on its next tick. Taking the saddle or a chest off is its screen's,
+/// still to port (`screen.rs`).
 #[derive(Clone, Copy, Debug)]
+#[allow(dead_code)]
 pub enum Change {
     ToggleSit,
     PutHarness,
@@ -255,9 +257,8 @@ pub enum Change {
     Grow,
     /// Fed raw meat while hurt: +4 health.
     Heal,
-    /// A lead tied by this player (`Mob.extra.owner`'s form), or taken off: Horizon refuses leads on the wandering
-    /// trader it copies, so the vulture ties them itself; Horizon's lead physics and rope then work as on any mob.
-    Leash([i32; 4]),
+    /// Told it is (not) on a lead now (the right-click tied or took it, natively).
+    Leash,
     Unleash,
 }
 
@@ -291,7 +292,7 @@ pub fn request(id: u32, change: Change) {
         Change::AddChest => shared.current.chests = (shared.current.chests + 1).min(2),
         Change::RemoveChest => shared.current.chests = shared.current.chests.saturating_sub(1),
         Change::InLove => shared.in_love = true,
-        Change::Leash(_) => shared.leashed = true,
+        Change::Leash => shared.leashed = true,
         Change::Unleash => shared.leashed = false,
         Change::Grow | Change::Heal => {}
     }
@@ -308,7 +309,7 @@ pub fn hurt(id: u32) -> bool {
 }
 
 /// What the drawing needs of a vulture, which its render state doesn't carry. Shared through a static, single player
-/// only: `mob_submit` can't read an attachment (workaround for arismoko/horizon#2740).
+/// only (a renderer has no host).
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Look {
     pub harness: bool,
@@ -328,22 +329,19 @@ pub fn look(id: u32) -> Look {
     SHARED.lock().unwrap().get(&id).map_or(Look::default(), |s| s.look)
 }
 
-/// From the `Eat` goal: it is eating now.
-pub fn pecked(m: &Mob) {
+/// From the `Eat` behaviour: it is eating now.
+pub fn pecked(m: &Body) {
     if let Some(s) = SHARED.lock().unwrap().get_mut(&m.id) {
-        s.look.ate_at = m.age;
+        s.look.ate_at = m.age.max(0) as u32;
     }
 }
 
 /// Players who saw a wild vulture eat the raw chicken they threw, for the bestiary (`lib.rs`, `entity_tick_post`).
 static TAMING_SEEN: Mutex<Vec<u128>> = Mutex::new(Vec::new());
 
-/// From the `Eat` goal: `player` (as `Mob.extra.owner` holds it) saw it eat a taming chicken.
-pub fn taming_seen(player: [i32; 4]) {
-    let uuid = player
-        .iter()
-        .fold(0u128, |acc, part| acc << 32 | u128::from(*part as u32));
-    TAMING_SEEN.lock().unwrap().push(uuid);
+/// From the `Eat` behaviour: `player` saw it eat a taming chicken.
+pub fn taming_seen(player: u128) {
+    TAMING_SEEN.lock().unwrap().push(player);
 }
 
 pub fn take_taming_seen() -> Vec<u128> {
@@ -351,24 +349,29 @@ pub fn take_taming_seen() -> Vec<u128> {
 }
 
 /// From the talons (`talons::toggle`): they snap down now.
-pub fn grabbed(m: &Mob) {
+pub fn grabbed(m: &Body) {
     if let Some(s) = SHARED.lock().unwrap().get_mut(&m.id) {
-        s.look.grabbed_at = m.age;
+        s.look.grabbed_at = m.age.max(0) as u32;
     }
 }
 
-/// The mob's state as saved.
-pub fn of(m: &Mob) -> Saved {
-    Saved {
-        owner: if m.extra.tame { m.extra.owner } else { None },
-        sitting: m.extra.sitting,
-        // Not on the mob: Horizon drives a mob whose `saddled` is set as its own saddled mount
-        // (workaround for horizon-rust/horizon#13973).
-        harness: false,
-        chests: m.extra.variant2.min(2),
-        age: m.extra.age,
-        health: m.attrs.max_health,
-        pace: PACES.lock().unwrap().get(&m.id).copied().unwrap_or(0.0),
+/// Changes vulture `id`'s state (from a behaviour: tamed, sitting, love, age).
+pub fn with(id: u32, change: impl FnOnce(&mut Saved)) {
+    let mut map = SHARED.lock().unwrap();
+    let shared = map.entry(id).or_default();
+    change(&mut shared.current);
+}
+
+/// Ticks of love it has left.
+pub fn love(id: u32) -> i32 {
+    SHARED.lock().unwrap().get(&id).map_or(0, |s| s.love)
+}
+
+/// Its love over (it bred).
+pub fn end_love(id: u32) {
+    if let Some(s) = SHARED.lock().unwrap().get_mut(&id) {
+        s.love = 0;
+        s.in_love = false;
     }
 }
 
@@ -389,71 +392,61 @@ fn growth(age: i32) -> f32 {
     }
 }
 
-/// From a goal, every tick: applies a state just loaded, then hands the mob's state over. Whether a baby was
-/// just fed (for its hearts).
-pub fn sync_mob(m: &mut Mob) -> bool {
+/// From its first behaviour, every tick: applies a state just loaded and the changes the hooks asked, counts its age
+/// and love. Whether a baby was just fed (for its hearts). `ridden`, `fighting`: whether it has a rider, a target.
+pub fn sync(m: &mut Body, ridden: bool, fighting: bool) -> bool {
     let mut map = SHARED.lock().unwrap();
     let shared = map.entry(m.id).or_default();
     if let Some(saved) = shared.loaded.take() {
-        m.extra.tame = saved.owner.is_some();
-        m.extra.owner = saved.owner;
-        m.extra.sitting = saved.sitting;
+        let (health, pace) = (saved.health, saved.pace);
         shared.harness = saved.harness;
-        m.extra.variant2 = saved.chests;
-        m.extra.age = saved.age;
-        if saved.pace > 0.0 {
-            set_stats(m, saved.health, saved.pace);
+        shared.current = saved;
+        if pace > 0.0 {
+            set_stats(m, &mut shared.current, health, pace);
+            shared.rolled = true;
         }
     }
     // A vulture seen for the first time (a wild spawn, an egg): its stats are rolled once.
-    if shared.read && shared.loaded.is_none() && PACES.lock().unwrap().get(&m.id).is_none() {
+    if shared.read && !shared.rolled {
         let health = stat(HEALTH, m.random.next_float());
         let pace = stat(PACE, m.random.next_float());
-        set_stats(m, health, pace);
-        m.health = m.attrs.max_health;
+        set_stats(m, &mut shared.current, health, pace);
+        m.health = m.max_health;
+        shared.rolled = true;
+        shared.dirty = true;
     }
-    if m.extra.in_love > 0 {
-        m.extra.in_love -= 1;
+    // Its age: a baby grows towards 0, a breeding pause runs down to 0.
+    let age = &mut shared.current.age;
+    *age -= age.signum();
+    if shared.love > 0 {
+        shared.love -= 1;
     }
-    shared.in_love = m.extra.in_love > 0;
-    shared.leashed = m.extra.leash.is_some();
+    shared.in_love = shared.love > 0;
     if !shared.in_love {
         BRED.lock().unwrap().remove(&m.id);
     }
     let mut fed = false;
     for change in std::mem::take(&mut shared.pending) {
+        let c = &mut shared.current;
         match change {
-            Change::ToggleSit => m.extra.sitting = !m.extra.sitting,
+            Change::ToggleSit => c.sitting = !c.sitting,
             Change::PutHarness => shared.harness = true,
             Change::RemoveHarness => shared.harness = false,
-            Change::AddChest => m.extra.variant2 = (m.extra.variant2 + 1).min(2),
-            Change::RemoveChest => m.extra.variant2 = m.extra.variant2.saturating_sub(1),
-            Change::InLove => m.extra.in_love = LOVE,
+            Change::AddChest => c.chests = (c.chests + 1).min(2),
+            Change::RemoveChest => c.chests = c.chests.saturating_sub(1),
+            Change::InLove => shared.love = LOVE,
             Change::Grow => {
-                m.extra.age = (m.extra.age + GROW).min(-1);
+                c.age = (c.age + GROW).min(-1);
                 fed = true;
             }
-            Change::Heal => m.heal(HEAL),
-            Change::Leash(player) => {
-                m.extra.leash = Some(horizon_client::mobs::leash::Holder::Player);
-                m.extra.leash_player = Some(player);
-            }
-            Change::Unleash => {
-                m.extra.leash = None;
-                m.extra.leash_player = None;
-            }
+            Change::Heal => m.health = (m.health + HEAL).min(m.max_health),
+            Change::Leash => shared.leashed = true,
+            Change::Unleash => shared.leashed = false,
         }
     }
-    // Never a saddled mount for Horizon: it would drive it itself, ignoring the vulture's flight.
-    m.extra.saddled = false;
-    let mut now = of(m);
-    now.harness = shared.harness;
-    // The age alone changes every tick: saved once a minute, and when it grows up.
-    let aged_only = Saved {
-        age: shared.current.age,
-        ..now.clone()
-    } == shared.current;
-    if shared.read && now != shared.current && (!aged_only || now.age % 1200 == 0) {
+    shared.current.harness = shared.harness;
+    let now = shared.current.clone();
+    if now.age.rem_euclid(1200) == 0 {
         shared.dirty = true;
     }
     shared.look = Look {
@@ -461,19 +454,25 @@ pub fn sync_mob(m: &mut Mob) -> bool {
         chests: now.chests,
         growth: growth(now.age),
         sitting: now.sitting && m.on_ground,
-        striking: m.ai.swinging,
+        striking: fighting,
         ate_at: shared.look.ate_at,
         grabbed_at: shared.look.grabbed_at,
     };
-    shared.current = now;
-    shared.hurt = m.health < m.attrs.max_health;
+    shared.hurt = m.health < m.max_health;
     shared.pos = [m.position.x, m.position.y, m.position.z];
     // Wild, it eats whenever it finds meat; tamed, only when hurt (SPECS §6: healing).
-    shared.hungry = m.rider.is_none() && m.ai.target.is_none() && (!m.extra.tame || m.health < m.attrs.max_health);
+    shared.hungry = !ridden && !fighting && (now.owner.is_none() || shared.hurt);
     if !shared.hungry {
         shared.food = None;
     }
     fed
+}
+
+/// Its state's change since it was saved is to be saved (a behaviour tamed it, made it sit...).
+pub fn touch(id: u32) {
+    if let Some(s) = SHARED.lock().unwrap().get_mut(&id) {
+        s.dirty = true;
+    }
 }
 
 /// The meat found for it, if any.
@@ -491,7 +490,7 @@ pub fn eaten(id: u32, food: Food) {
 
 /// From `entity_tick_post` (looking every 10 ticks): takes what it ate from the ground, and finds the nearest raw meat
 /// for a hungry vulture.
-pub fn look_for_food(host: &mut dyn Host, dimension: &str, id: u32) {
+pub fn look_for_food(host: &mut dyn ServerHost, level: LevelRef, id: u32) {
     let (pos, hungry, ate) = {
         let mut map = SHARED.lock().unwrap();
         let Some(s) = map.get_mut(&id) else {
@@ -504,17 +503,30 @@ pub fn look_for_food(host: &mut dyn Host, dimension: &str, id: u32) {
         (s.pos, s.hungry, s.ate.take())
     };
     let r = FOOD_RANGE;
-    let items = host.item_entities(
-        dimension,
-        [pos[0] - r, pos[1] - r, pos[2] - r],
-        [pos[0] + r, pos[1] + r, pos[2] + r],
-    );
-    if let Some(item) = ate
-        && let Some(e) = items.iter().find(|e| e.id == item)
+    let items: Vec<(mod_api::ItemEntityRef, [f64; 3], mod_api::ItemStack)> = level
+        .entities_in(
+            &*host,
+            [pos[0] - r, pos[1] - r, pos[2] - r],
+            [pos[0] + r, pos[1] + r, pos[2] + r],
+        )
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|e| {
+            let item = host.item_entity(e)?;
+            Some((item, e.position(&*host)?, item.stack(&*host)?))
+        })
+        .collect();
+    if let Some(eaten) = ate
+        && let Some((item, _, stack)) = items.iter().find(|(i, _, _)| i.entity().id() == eaten)
     {
-        let mut stack = e.stack.clone();
-        stack.count = stack.count.saturating_sub(1);
-        host.set_item_entity(dimension, item, stack);
+        match stack.clone().shrink(1) {
+            Some(rest) => {
+                let _ = item.set_stack(host, rest);
+            }
+            None => {
+                item.entity().discard(host);
+            }
+        }
     }
     if !hungry {
         return;
@@ -522,31 +534,22 @@ pub fn look_for_food(host: &mut dyn Host, dimension: &str, id: u32) {
     let distance = |at: [f64; 3]| (0..3).map(|k| (at[k] - pos[k]).powi(2)).sum::<f64>();
     let found = items
         .iter()
-        .filter(|e| e.stack.count > 0 && MEATS.contains(&&*e.stack.item))
-        .min_by(|a, b| distance(a.position).total_cmp(&distance(b.position)))
-        .map(|e| Food {
-            item: e.id,
-            at: e.position,
-            taming: &*e.stack.item == TAMING_FOOD,
+        .filter(|(_, _, stack)| MEATS.contains(&creature::hand::id(&*host, stack).as_str()))
+        .min_by(|a, b| distance(a.1).total_cmp(&distance(b.1)))
+        .map(|(item, at, stack)| Food {
+            item: item.entity().id(),
+            at: *at,
+            taming: creature::hand::is(&*host, stack, TAMING_FOOD),
+            thrower: item.owner(&*host).map(|o| o.id()),
         });
     if let Some(s) = SHARED.lock().unwrap().get_mut(&id) {
         s.food = found;
     }
 }
 
-/// Its dimension, as its last tick heard it.
-pub fn dimension(id: u32) -> String {
-    SHARED
-        .lock()
-        .unwrap()
-        .get(&id)
-        .map(|s| s.dimension.clone())
-        .unwrap_or_default()
-}
-
 /// From `entity_tick_post`: reads the saves the first time (moving an old save's owner to the friend), writes them
 /// when the state changed; the owner and sitting go to the library's friend.
-pub fn save(host: &mut dyn Host, dimension: &str, id: u32) {
+pub fn save(host: &mut dyn ServerHost, dimension: &str, id: u32) {
     creature::friend::tick(host, id);
     if !creature::friend::loaded(id) {
         // Not reachable yet (just loaded): read again next tick rather than take it for a new vulture.

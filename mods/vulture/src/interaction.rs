@@ -1,19 +1,18 @@
-//! Right-click on a vulture (SPECS §6), on the server, with the acting player's hand (`interact_entity` hook).
+//! Right-click on a vulture (SPECS §6), on the server, with the clicking hand (`entity_interact` hook, answered on both
+//! sides so the client opens no trading screen).
 //!
-//! It changes the mob through `state::request` (applied by its goal on its next tick), mounts with `Host::mount` (as
-//! `/ride` does, on the server, so its goals see the rider), and always takes the click (no trading screen). Not an
-//! injection into `native_interact_entity`: that one sees a copy of the mob (workaround for horizon-rust/horizon#13972).
+//! It changes the vulture through `state::request` (applied on its next tick) and mounts with
+//! `EntityRef::start_riding`, as `/ride` does.
 //!
 //! Only its owner gets anything from it:
 //! - sneaking: its screen (`screen.rs`);
-//! - holding a lead: tied on (Horizon refuses leads on the trader it copies); on a lead, any click takes it off;
+//! - holding a lead: tied on (`EntityRef::leash_to`), by anyone; on a lead, any click takes it off;
 //! - holding a saddle (vanilla's): puts it on, drawn as a seat and a breast strap (not on a baby); a chest: adds one
 //!   (two at most, saddle needed);
 //! - holding rotten flesh, grown and not resting from breeding: in love for 30 s (SPECS §8);
 //! - holding raw meat: a baby grows a minute older; a hurt vulture heals 4;
 //! - otherwise: mounts it, saddled and grown up; else sit / follow.
-use horizon_client::items::ItemStack;
-use horizon_client::mod_api::{Host, Text};
+use mod_api::{EntityInteractEvent, Hand, PlayerRef, ServerHost, Text};
 
 use crate::state::{self, Change};
 use crate::{screen, sounds};
@@ -29,42 +28,33 @@ const RAW_MEATS: [&str; 5] = [
     "minecraft:rabbit",
 ];
 
-fn uuid_ints(uuid: u128) -> [i32; 4] {
-    [
-        (uuid >> 96) as i32,
-        (uuid >> 64) as i32,
-        (uuid >> 32) as i32,
-        uuid as i32,
-    ]
+/// One of what `player` holds in `hand` used up (none in creative, as vanilla).
+fn take(host: &mut dyn ServerHost, player: PlayerRef, hand: Hand) {
+    creature::hand::use_one(host, player, hand);
 }
 
-/// One `item` from the player's hands (none taken in creative, as vanilla). Whether they had one.
-fn take(host: &mut dyn Host, creative: bool, item: &str) -> bool {
-    creative || host.take_items(item, 1) == 1
-}
-
-pub fn clicked(host: &mut dyn Host, id: u32) {
-    let Some(player) = host.acting_player() else {
+pub fn clicked(host: &mut dyn ServerHost, id: u32, event: &EntityInteractEvent<'_>) {
+    let (Some(player), Some(vulture)) = (host.players().acting_player(), host.entity(id)) else {
         return;
     };
     let saved = state::saved(id);
-    let held = host.held().map(|(item, _, _)| item).unwrap_or_default();
-    let creative = player.game_mode == 1;
+    let held = event.stack.map(|s| creature::hand::id(&*host, s)).unwrap_or_default();
+    let hand = event.hand;
+    let creative = player.has_infinite_materials(&*host).unwrap_or(false);
     // A lead: tied on, as on any animal, wild or tamed, by anyone; on a lead, a click takes it off and gives it back.
-    if state::leashed(id) {
+    if vulture.leash_holder(&*host).is_some() {
+        vulture.detach_leash(host, !creative);
         state::request(id, Change::Unleash);
-        if !creative {
-            let _ = host.give_stack(player.uuid, ItemStack::new("minecraft:lead", 1));
-        }
         return;
     }
     if held == "minecraft:lead" {
-        if take(host, creative, &held) {
-            state::request(id, Change::Leash(uuid_ints(player.uuid)));
+        if vulture.leash_to(host, player.entity()) {
+            take(host, player, hand);
+            state::request(id, Change::Leash);
         }
         return;
     }
-    if saved.owner != Some(uuid_ints(player.uuid)) {
+    if saved.owner != Some(creature::friend::ints(player.uuid())) {
         // Say why nothing happens, holding what only works on one's own vulture.
         if matches!(held.as_str(), SADDLE | "minecraft:chest" | "minecraft:rotten_flesh") {
             let key = if saved.owner.is_some() {
@@ -72,12 +62,12 @@ pub fn clicked(host: &mut dyn Host, id: u32) {
             } else {
                 "message.vulture.not_tamed"
             };
-            host.action_bar(player.uuid, Text::translate(key, &[]));
+            let _ = player.action_bar(host, Text::translate(key, vec![]));
         }
         return;
     }
-    if player.sneaking {
-        screen::ask(host, id);
+    if player.entity().is_shift_key_down(&*host).unwrap_or(false) {
+        screen::ask(host, player, id);
         return;
     }
     let baby = saved.age < 0;
@@ -92,14 +82,13 @@ pub fn clicked(host: &mut dyn Host, id: u32) {
     };
     match change {
         Some(change) => {
-            if take(host, creative, &held) {
-                state::request(id, change);
-                if matches!(change, Change::InLove) {
-                    creature::bestiary::learn(host, player.uuid, crate::KIND, crate::BREED_FACT);
-                }
-                if matches!(change, Change::Heal | Change::Grow | Change::InLove) {
-                    sounds::queue(id, sounds::EAT, 1.0, 1.0);
-                }
+            take(host, player, hand);
+            state::request(id, change);
+            if matches!(change, Change::InLove) {
+                creature::bestiary::learn(host, player.uuid(), crate::KIND, crate::BREED_FACT);
+            }
+            if matches!(change, Change::Heal | Change::Grow | Change::InLove) {
+                sounds::queue(id, sounds::EAT, 1.0, 1.0);
             }
         }
         // An empty hand, or anything else: up on its back, else sit / follow.
@@ -107,7 +96,7 @@ pub fn clicked(host: &mut dyn Host, id: u32) {
             if saved.sitting {
                 state::request(id, Change::ToggleSit);
             }
-            host.mount(player.entity_id as u32, id);
+            let _ = player.entity().start_riding(host, vulture, true);
         }
         None => state::request(id, Change::ToggleSit),
     }

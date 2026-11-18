@@ -3,9 +3,9 @@
 //! `Soar` flies with the same physics as the ridden flight (`flight::Flight`), steered by its own controls: it takes
 //! off now and then, climbs to 18 to 26 blocks above where it left the ground, circles there for 30 to 60 s, then
 //! picks the highest point within 16 blocks (a peak, a tree top, a pillar, `landing_spot`) and glides down onto it. A vulture left in the air (its rider got off) glides down the same way. Fighting
-//! (`DiveAttack`, below, its target from `HurtByTarget`) and riding come first.
-use horizon_client::mobs::goals;
-use horizon_client::mod_api::{Cx, Goal, Mob, RandomSource};
+//! (`DiveAttack`, below, its target from vanilla's `HurtByTarget`, added at join) and riding come first. Both run from
+//! the server tick (the library's `body`).
+use creature::body::{Behaviour, Body, World};
 
 use crate::flight::{CRUISE, Controls, Flight, MAX_CLIMB};
 
@@ -19,7 +19,7 @@ enum Phase {
     Descend,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Soar {
     flight: Flight,
     phase: Phase,
@@ -34,6 +34,7 @@ pub struct Soar {
     circle_for: i32,
     /// Where it lands: the highest point near it when it starts down.
     landing: Option<[f64; 3]>,
+    on: bool,
 }
 
 /// Ticks of descent before it gives up its landing spot, and before it stops flying at all.
@@ -44,30 +45,35 @@ const GIVE_UP: i32 = 1200;
 const LANDING_SEARCH: i32 = 16;
 const LANDING_STEP: i32 = 2;
 
-/// The highest ground within `LANDING_SEARCH` blocks (`Heightmap.Types.WORLD_SURFACE`), where it lands; None in
-/// unloaded ground.
-fn landing_spot(m: &Mob, cx: &Cx) -> Option<[f64; 3]> {
-    let world = cx.w.world;
+/// The highest ground within `LANDING_SEARCH` blocks (the first block from `SCAN_UP` above it down that isn't air),
+/// where it lands; none where nothing is loaded.
+fn landing_spot(m: &Body, cx: &World<'_>) -> Option<[f64; 3]> {
     let (cx0, cz0) = (m.position.x.floor() as i32, m.position.z.floor() as i32);
+    let top0 = m.position.y.floor() as i32 + SCAN_UP;
     let mut best: Option<(i32, i32, i32)> = None;
     for dx in (-LANDING_SEARCH..=LANDING_SEARCH).step_by(LANDING_STEP as usize) {
         for dz in (-LANDING_SEARCH..=LANDING_SEARCH).step_by(LANDING_STEP as usize) {
             let (x, z) = (cx0 + dx, cz0 + dz);
-            let top = world.world_surface(x, z, |s| world.is_air(s));
+            let Some((y, name)) = (top0 - SCAN_DEPTH..=top0)
+                .rev()
+                .map(|y| (y, cx.block([x, y, z])))
+                .find(|(_, name)| !matches!(name.as_str(), "minecraft:air" | "minecraft:cave_air" | ""))
+            else {
+                continue;
+            };
             // Not in a tree top (it gets stuck in the leaves), nor on water or lava.
-            let name =
-                cx.w.registry
-                    .state(world.block(x, top - 1, z))
-                    .map_or("", |s| s.name.as_str());
-            let perch =
-                !cx.w.has_tag("minecraft:leaves", name) && !matches!(name, "minecraft:water" | "minecraft:lava");
-            if perch && top > world.layout().min_y() && best.is_none_or(|b| top > b.1) {
+            let perch = !name.ends_with("leaves") && !matches!(name.as_str(), "minecraft:water" | "minecraft:lava");
+            let top = y + 1;
+            if perch && best.is_none_or(|b| top > b.1) {
                 best = Some((x, top, z));
             }
         }
     }
     best.map(|(x, y, z)| [f64::from(x) + 0.5, f64::from(y), f64::from(z) + 0.5])
 }
+/// How far above and below it the landing spot is looked for (blocks).
+const SCAN_UP: i32 = 8;
+const SCAN_DEPTH: i32 = 48;
 
 impl Soar {
     pub fn new() -> Self {
@@ -81,11 +87,12 @@ impl Soar {
             ticks: 0,
             circle_for: 0,
             landing: None,
+            on: false,
         }
     }
 
     /// The heading that follows the circle, steering back towards its radius.
-    fn circle_yaw(&self, m: &Mob) -> f32 {
+    fn circle_yaw(&self, m: &Body) -> f32 {
         let (dx, dz) = (m.position.x - self.center[0], m.position.z - self.center[1]);
         let dist = (dx * dx + dz * dz).sqrt().max(0.01);
         let (rx, rz) = (dx / dist, dz / dist);
@@ -102,25 +109,38 @@ fn heading_of(x: f64, z: f64) -> f32 {
 }
 
 /// Only a wild vulture soars on its own; a tamed one follows its owner (`tame.rs`).
-fn idle(m: &Mob) -> bool {
-    !m.extra.tame && m.rider.is_none() && m.ai.target.is_none() && m.extra.leash.is_none()
+fn idle(m: &Body, cx: &World<'_>) -> bool {
+    crate::state::saved(m.id).owner.is_none()
+        && crate::ride::of(m.id).is_none()
+        && crate::target(cx, m.id).is_none()
+        && !crate::state::leashed(m.id)
 }
 
-impl Goal for Soar {
-    fn flags(&self) -> u8 {
-        goals::MOVE | goals::LOOK | goals::JUMP
+impl Behaviour for Soar {
+    fn can_use(&mut self, m: &mut Body, cx: &World<'_>) -> bool {
+        let on = if self.on {
+            // Down, or a minute spent trying: it lets itself drop (no fall damage).
+            idle(m, cx) && !(self.phase == Phase::Descend && (m.on_ground && self.ticks > 0 || self.ticks > GIVE_UP))
+        } else {
+            idle(m, cx) && (!m.on_ground || m.random.next_int_bound(TAKE_OFF_CHANCE).unwrap_or(1) == 0)
+        };
+        if on && !self.on {
+            self.start(m, cx);
+        }
+        self.on = on;
+        on
     }
-    fn can_use(&mut self, m: &mut Mob, _: &mut Cx) -> bool {
-        idle(m) && (!m.on_ground || m.random.next_int_bound(TAKE_OFF_CHANCE).unwrap_or(1) == 0)
+    fn stop(&mut self, m: &mut Body, _: &World<'_>) {
+        self.on = false;
+        self.flight.land(m);
     }
-    fn can_continue(&mut self, m: &mut Mob, _: &mut Cx) -> bool {
-        // Down, or a minute spent trying: it lets itself drop (no fall damage).
-        idle(m) && !(self.phase == Phase::Descend && (m.on_ground && self.ticks > 0 || self.ticks > GIVE_UP))
+    fn tick(&mut self, m: &mut Body, cx: &World<'_>) {
+        self.soar(m, cx);
     }
-    fn every_tick(&self) -> bool {
-        true
-    }
-    fn start(&mut self, m: &mut Mob, cx: &mut Cx) {
+}
+
+impl Soar {
+    fn start(&mut self, m: &mut Body, cx: &World<'_>) {
         self.flight = Flight::default();
         self.ticks = 0;
         self.landing = None;
@@ -139,10 +159,7 @@ impl Goal for Soar {
             self.landing = landing_spot(m, cx);
         }
     }
-    fn stop(&mut self, m: &mut Mob, _: &mut Cx) {
-        self.flight.land(m);
-    }
-    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
+    fn soar(&mut self, m: &mut Body, cx: &World<'_>) {
         self.ticks += 1;
         // A spot it can't reach in 20 s (behind a tree, a cliff): it spirals down where it is instead.
         if self.phase == Phase::Descend && self.ticks > ABANDON_SPOT {
@@ -215,9 +232,6 @@ impl Goal for Soar {
         };
         self.flight.tick(m, &controls);
     }
-    fn box_clone(&self) -> Box<dyn Goal> {
-        Box::new(self.clone())
-    }
 }
 
 /// Above its target before diving, and how far from it it starts the dive, in blocks.
@@ -238,48 +252,42 @@ const PULL_AWAY: i32 = 30;
 /// wings about a block over its head, striking with its beak (vanilla's `doHurtTarget`, its 3 damage); after a few
 /// strikes it pulls away and comes back. It never lands during a fight (it used to dive to the target's eyes, touch
 /// down and take off again). Replaces a ground melee attack, a vulture fights on the wing.
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct DiveAttack {
     flight: Flight,
     cooldown: i32,
     away: i32,
     strikes: i32,
+    on: bool,
 }
 
-impl Goal for DiveAttack {
-    fn flags(&self) -> u8 {
-        goals::MOVE | goals::LOOK | goals::JUMP
+impl Behaviour for DiveAttack {
+    fn can_use(&mut self, m: &mut Body, cx: &World<'_>) -> bool {
+        let on = crate::ride::of(m.id).is_none() && crate::target(cx, m.id).is_some();
+        if on && !self.on {
+            self.flight = Flight::default();
+            self.cooldown = 0;
+            self.away = 0;
+            self.strikes = 0;
+        }
+        self.on = on;
+        on
     }
-    fn can_use(&mut self, m: &mut Mob, cx: &mut Cx) -> bool {
-        m.rider.is_none() && m.ai.target.and_then(|t| cx.w.target_info(t)).is_some_and(|t| t.alive)
-    }
-    fn start(&mut self, _: &mut Mob, _: &mut Cx) {
-        self.flight = Flight::default();
-        self.cooldown = 0;
-        self.away = 0;
-        self.strikes = 0;
-    }
-    fn stop(&mut self, m: &mut Mob, _: &mut Cx) {
+    fn stop(&mut self, m: &mut Body, _: &World<'_>) {
+        self.on = false;
         self.flight.land(m);
     }
-    fn every_tick(&self) -> bool {
-        true
-    }
-    fn tick(&mut self, m: &mut Mob, cx: &mut Cx) {
-        let Some(who) = m.ai.target else {
-            return;
-        };
-        let Some(t) = cx.w.target_info(who) else {
+    fn tick(&mut self, m: &mut Body, cx: &World<'_>) {
+        let Some(t) = crate::target(cx, m.id) else {
             return;
         };
         self.cooldown = (self.cooldown - 1).max(0);
         self.away = (self.away - 1).max(0);
-        let (dx, dz) = (t.position.x - m.position.x, t.position.z - m.position.z);
+        let (dx, dz) = (t.at[0] - m.position.x, t.at[2] - m.position.z);
         let flat = (dx * dx + dz * dz).sqrt();
         let reach = (flat * flat + (m.position.y - t.eye_y).powi(2)).sqrt();
         if reach < STRIKE_REACH && self.cooldown == 0 && self.away == 0 {
-            m.swing();
-            horizon_client::mobs::ai::do_hurt_target(m, who, cx);
+            crate::strike(m.id, t.id);
             self.cooldown = STRIKE_EVERY;
             self.strikes += 1;
             if self.strikes >= STRIKES_PER_PASS {
@@ -291,7 +299,7 @@ impl Goal for DiveAttack {
         // Where it hovers: a block over the target's head.
         let hover_y = t.eye_y + HOVER_ABOVE;
         if self.away == 0 && flat < HOVER_FROM {
-            self.flight.hover(m, [t.position.x, hover_y, t.position.z], to_target);
+            self.flight.hover(m, [t.at[0], hover_y, t.at[2]], to_target);
             return;
         }
         let dy = hover_y - m.position.y;
@@ -307,7 +315,7 @@ impl Goal for DiveAttack {
             }
         } else if flat > DIVE_FROM {
             // Closing in, above it.
-            let below = t.position.y + DIVE_ABOVE - m.position.y;
+            let below = t.at[1] + DIVE_ABOVE - m.position.y;
             Controls {
                 yaw: to_target,
                 pitch: (-below * 3.0).clamp(-35.0, 35.0) as f32,
@@ -330,8 +338,5 @@ impl Goal for DiveAttack {
             }
         };
         self.flight.tick(m, &controls);
-    }
-    fn box_clone(&self) -> Box<dyn Goal> {
-        Box::new(self.clone())
     }
 }
