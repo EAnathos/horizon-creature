@@ -1,15 +1,15 @@
 //! The cyclops's eye, its weak spot (SPECS §2): an arrow or a trident that strikes it deals double damage and stuns
 //! the cyclops for `STUN` ticks: it stands dazed, stars about its head, its head lolling (`Stunned`, `tick`).
 //!
-//! The damage hook has no host to ask where the projectile was, so each tick the arrows and tridents near a cyclops
-//! are noted with their velocity (`watch`), and on the hit their path is followed to the cyclops's face: the eye is
-//! struck if it crosses the face within the eye's height and width.
+//! The damage hook can't ask where the projectile was, so each tick the arrows and tridents near a cyclops are noted
+//! with their velocity (`watch`), and on the hit (which names the projectile) its path is followed to the cyclops's
+//! face: the eye is struck if it crosses the face within the eye's height and width.
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Mutex;
 use std::time::Instant;
 
-use horizon_client::mobs::goals;
-use horizon_client::mod_api::{Cx, Goal, Host, LivingIncomingDamageEvent, Mob, ParticleOptions, ParticleType};
+use creature::body::{Behaviour, Body, World};
+use mod_api::{LevelRef, LivingIncomingDamageEvent, ParticleOptions, ServerHost, SoundSource};
 
 const PROJECTILES: [&str; 3] = ["minecraft:arrow", "minecraft:spectral_arrow", "minecraft:trident"];
 const DAMAGE_TYPES: [&str; 2] = ["minecraft:arrow", "minecraft:trident"];
@@ -28,56 +28,70 @@ type Motion = ([f64; 3], [f64; 3]);
 static FLYING: Mutex<BTreeMap<u32, Motion>> = Mutex::new(BTreeMap::new());
 /// Each cyclops's feet and facing (degrees), from its tick.
 static FACING: Mutex<BTreeMap<u32, ([f64; 3], f32)>> = Mutex::new(BTreeMap::new());
-/// Struck in the eye: the stun to start (its goal), the cry to play (its tick), when (the drawing).
+/// Struck in the eye: the stun to start (`Stunned`), the cry to play (its tick), when (the drawing).
 static STRUCK: Mutex<BTreeSet<u32>> = Mutex::new(BTreeSet::new());
 static CRY: Mutex<BTreeSet<u32>> = Mutex::new(BTreeSet::new());
 static DAZED: Mutex<BTreeMap<u32, Instant>> = Mutex::new(BTreeMap::new());
 
 /// From `level_tick_post`: notes the arrows and tridents near a cyclops.
-pub fn watch(host: &mut dyn Host, dimension: &str) {
+pub fn watch(host: &mut dyn ServerHost, level: LevelRef) {
     let cyclopes: Vec<[f64; 3]> = FACING.lock().unwrap().values().map(|(at, _)| *at).collect();
     if cyclopes.is_empty() {
         FLYING.lock().unwrap().clear();
         return;
     }
     let mut flying = BTreeMap::new();
-    for (id, kind, at) in host.level_entities(dimension) {
-        if !PROJECTILES.contains(&kind.as_str()) {
-            continue;
-        }
-        let near = cyclopes
-            .iter()
-            .any(|c| (0..3).map(|k| (c[k] - at[k]).powi(2)).sum::<f64>() < WATCH * WATCH);
-        if let (true, Some(v)) = (near, host.entity(id).and_then(|e| host.entity_velocity(e))) {
-            flying.insert(id, (at, v));
+    for c in cyclopes {
+        let from = [c[0] - WATCH, c[1] - WATCH, c[2] - WATCH];
+        let to = [c[0] + WATCH, c[1] + WATCH, c[2] + WATCH];
+        for e in level.entities_in(&*host, from, to).unwrap_or_default() {
+            let kind = e.kind(&*host).map(|k| k.id(&*host)).unwrap_or_default();
+            if !PROJECTILES.contains(&kind.as_str()) {
+                continue;
+            }
+            if let (Some(at), Some(v)) = (e.position(&*host), e.velocity(&*host)) {
+                flying.insert(e.id(), (at, v));
+            }
         }
     }
     *FLYING.lock().unwrap() = flying;
 }
 
 /// From the cyclops's tick: where it stands and faces, and its stars and cry while dazed.
-pub fn tick(host: &mut dyn Host, entity: u32, at: [f64; 3]) {
-    if let Some(r) = host.entity(entity).and_then(|e| host.entity_rotation(e)) {
+pub fn tick(host: &mut dyn ServerHost, level: LevelRef, entity: u32, at: [f64; 3]) {
+    if let Some(r) = host.entity(entity).and_then(|e| e.rotation(host)) {
         FACING.lock().unwrap().insert(entity, (at, r[0]));
     }
     if CRY.lock().unwrap().remove(&entity) {
-        host.play_sound(
+        level.play_sound(
+            host,
             "cyclops:entity.cyclops.stunned",
             at,
-            creature::sounds::HOSTILE,
+            SoundSource::Hostile,
             1.5,
             1.0,
+            None,
         );
     }
-    if dazed(entity).is_some() {
-        let stars = ParticleOptions::simple(ParticleType::Crit);
-        host.send_particles(&stars, None, [at[0], at[1] + 4.2, at[2]], [0.5, 0.15, 0.5], 0.05, 2);
+    if dazed(entity).is_some()
+        && let Some(k) = creature::particles::key("minecraft:crit")
+    {
+        let stars = ParticleOptions::simple(k);
+        level.send_particles(
+            host,
+            &stars,
+            None,
+            [at[0], at[1] + 4.2, at[2]],
+            [0.5, 0.15, 0.5],
+            0.05,
+            2,
+        );
     }
 }
 
 /// From the mod's `living_incoming_damage`: an arrow or trident that struck the eye deals double and stuns.
 pub fn struck(event: &mut LivingIncomingDamageEvent<'_>) {
-    if event.kind != crate::CYCLOPS || !DAMAGE_TYPES.contains(&event.damage_type) {
+    if event.kind != crate::CYCLOPS || !DAMAGE_TYPES.contains(&event.source.damage_type) {
         return;
     }
     let Ok(cyclops) = u32::try_from(event.entity) else {
@@ -86,9 +100,9 @@ pub fn struck(event: &mut LivingIncomingDamageEvent<'_>) {
     let Some((c, yaw)) = FACING.lock().unwrap().get(&cyclops).copied() else {
         return;
     };
-    // The projectile: by its id, or, as Horizon doesn't name an arrow's yet (0), the nearest one noted.
+    // The projectile: by its id, or, when the hit names none, the nearest one noted.
     let flying = FLYING.lock().unwrap();
-    let projectile = match u32::try_from(event.direct) {
+    let projectile = match u32::try_from(event.source.direct) {
         Ok(id) if id > 0 => flying.get(&id).copied(),
         _ => flying
             .values()
@@ -111,7 +125,8 @@ pub fn struck(event: &mut LivingIncomingDamageEvent<'_>) {
     let t = (FACE - along(rel, forward)) / closing;
     let hit = [rel[0] + v[0] * t, rel[1] + v[1] * t, rel[2] + v[2] * t];
     if (EYE_LOW..=EYE_HIGH).contains(&hit[1]) && along(hit, side).abs() <= EYE_SIDE {
-        event.amount *= 2.0;
+        let doubled = event.container.new_damage() * 2.0;
+        event.container.set_new_damage(doubled);
         STRUCK.lock().unwrap().insert(cyclops);
         CRY.lock().unwrap().insert(cyclops);
         DAZED.lock().unwrap().insert(cyclops, Instant::now());
@@ -140,33 +155,22 @@ pub fn forget(entity: u32) {
 }
 
 /// Dazed: it stands still and does nothing, whatever it was doing.
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct Stunned {
     ticks: i32,
 }
 
-impl Goal for Stunned {
-    fn flags(&self) -> u8 {
-        goals::MOVE | goals::LOOK | goals::JUMP
-    }
-    fn can_use(&mut self, m: &mut Mob, _: &mut Cx) -> bool {
+impl Behaviour for Stunned {
+    fn can_use(&mut self, m: &mut Body, _: &World<'_>) -> bool {
         if STRUCK.lock().unwrap().remove(&m.id) {
             self.ticks = STUN;
-            return true;
         }
-        false
-    }
-    fn can_continue(&mut self, _: &mut Mob, _: &mut Cx) -> bool {
         self.ticks > 0
     }
-    fn every_tick(&self) -> bool {
-        true
-    }
-    fn tick(&mut self, m: &mut Mob, _: &mut Cx) {
+    fn tick(&mut self, m: &mut Body, _: &World<'_>) {
         self.ticks -= 1;
-        m.ai.nav.stop();
-    }
-    fn box_clone(&self) -> Box<dyn Goal> {
-        Box::new(self.clone())
+        m.stop_walking = true;
+        m.velocity.x = 0.0;
+        m.velocity.z = 0.0;
     }
 }

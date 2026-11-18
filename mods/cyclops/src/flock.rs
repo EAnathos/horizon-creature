@@ -1,30 +1,22 @@
 //! Its flock (SPECS §2): the sheep that came with it follow it, and it turns on whoever hurts one of them.
 use super::*;
 
-/// Whom each cyclops is to turn on, for hurting one of its sheep (from `living_incoming_damage`, which has no host): a
-/// mob, or none for the player (Horizon gives a player's hit no attacker id yet).
-pub(crate) static ANGERED: Mutex<BTreeMap<u32, Option<u32>>> = Mutex::new(BTreeMap::new());
+/// Whom each cyclops is to turn on, for hurting one of its sheep (from `living_incoming_damage`, which can't change a
+/// target): the attacker's entity id. Its tick takes it as its target (`anger`).
+pub(crate) static ANGERED: Mutex<BTreeMap<u32, u32>> = Mutex::new(BTreeMap::new());
 
-/// Takes as its target whoever hurt one of its sheep.
-#[derive(Clone, Debug)]
-pub(crate) struct Shepherd;
-
-impl Goal for Shepherd {
-    fn flags(&self) -> u8 {
-        goals::TARGET
-    }
-    fn can_use(&mut self, m: &mut Mob, cx: &mut Cx) -> bool {
-        if let Some(attacker) = ANGERED.lock().unwrap().remove(&m.id) {
-            m.ai.target = Some(match attacker {
-                Some(id) if cx.w.seen(id).is_some() => Who::Mob(id),
-                _ => Who::Player,
-            });
-        }
-        false
-    }
-    fn box_clone(&self) -> Box<dyn Goal> {
-        Box::new(self.clone())
-    }
+/// From the cyclops's tick: whoever hurt one of its sheep becomes its target.
+pub(crate) fn anger(host: &mut dyn ServerHost, cyclops: u32) {
+    let Some(attacker) = ANGERED.lock().unwrap().remove(&cyclops) else {
+        return;
+    };
+    let (Some(m), Some(t)) = (
+        host.entity(cyclops).and_then(|e| host.mob(e)),
+        host.entity(attacker).and_then(|e| host.living(e)),
+    ) else {
+        return;
+    };
+    m.set_target(host, Some(t));
 }
 
 /// Where each cyclops is (from its tick): for the flock and for keeping cyclopes apart.
@@ -44,7 +36,7 @@ pub(crate) const FOLLOW_FROM: f64 = 6.0;
 pub(crate) const SEE_FLOCK: f64 = 16.0;
 pub(crate) static FLOCK_TICKS: Mutex<u32> = Mutex::new(0);
 
-pub(crate) fn flock(host: &mut dyn Host, dimension: &str) {
+pub(crate) fn flock(host: &mut dyn ServerHost, level: LevelRef) {
     {
         let mut t = FLOCK_TICKS.lock().unwrap();
         *t += 1;
@@ -53,7 +45,7 @@ pub(crate) fn flock(host: &mut dyn Host, dimension: &str) {
         }
         *t = 0;
     }
-    let entities = host.level_entities(dimension);
+    let entities = entities_near_cyclopes(&*host, level, FLOCK_RANGE);
     let cyclopes: Vec<(u32, [f64; 3])> = entities
         .iter()
         .filter(|(_, kind, _)| kind == CYCLOPS)
@@ -78,7 +70,7 @@ pub(crate) fn flock(host: &mut dyn Host, dimension: &str) {
         let of_flock = known.unwrap_or_else(|| {
             let tagged = host
                 .entity(*sheep)
-                .and_then(|e| host.entity_tags(e))
+                .and_then(|e| e.tags(&*host))
                 .is_some_and(|tags| tags.iter().any(|t| t == FLOCK_TAG));
             FLOCK.lock().unwrap().insert(*sheep, tagged);
             tagged
@@ -89,17 +81,52 @@ pub(crate) fn flock(host: &mut dyn Host, dimension: &str) {
         }
         SHEPHERD.lock().unwrap().insert(*sheep, shepherd);
         with_flock.insert(shepherd);
-        if distance > FOLLOW_FROM {
-            host.mob_follow(dimension, *sheep, shepherd, 1.0);
+        if distance > FOLLOW_FROM
+            && let Some(&(_, c)) = cyclopes.iter().find(|(id, _)| *id == shepherd)
+        {
+            follow(host, *sheep, c, 1.0);
         }
     }
-    for player in host.server_players().into_iter().filter(|p| p.dimension == dimension) {
+    let players: Vec<_> = host
+        .players()
+        .server_players()
+        .into_iter()
+        .filter(|p| p.level(&*host) == Some(level))
+        .collect();
+    for player in players {
+        let Some(at) = player.entity().position(host) else {
+            continue;
+        };
         let sees = cyclopes.iter().any(|(id, c)| {
-            with_flock.contains(id)
-                && (0..3).map(|k| (c[k] - player.position[k]).powi(2)).sum::<f64>() < SEE_FLOCK * SEE_FLOCK
+            with_flock.contains(id) && (0..3).map(|k| (c[k] - at[k]).powi(2)).sum::<f64>() < SEE_FLOCK * SEE_FLOCK
         });
-        if sees && NOTED.lock().unwrap().insert(player.uuid) {
-            creature::bestiary::learn(host, player.uuid, CYCLOPS, FLOCK_FACT);
+        if sees && NOTED.lock().unwrap().insert(player.uuid()) {
+            creature::bestiary::learn(host, player.uuid(), CYCLOPS, FLOCK_FACT);
         }
+    }
+}
+
+/// The entities within `range` blocks of a cyclops (as their tick knows them, `CYCLOPS_AT`): (id, kind, position).
+pub(crate) fn entities_near_cyclopes(host: &dyn Host, level: LevelRef, range: f64) -> Vec<(u32, String, [f64; 3])> {
+    let mut found = BTreeMap::new();
+    let cyclopes: Vec<[f64; 3]> = CYCLOPS_AT.lock().unwrap().values().copied().collect();
+    for c in cyclopes {
+        let (from, to) = (
+            [c[0] - range, c[1] - 16.0, c[2] - range],
+            [c[0] + range, c[1] + 16.0, c[2] + range],
+        );
+        for e in level.entities_in(host, from, to).unwrap_or_default() {
+            if let (Some(kind), Some(at)) = (e.kind(host), e.position(host)) {
+                found.insert(e.id(), (kind.id(host), at));
+            }
+        }
+    }
+    found.into_iter().map(|(id, (kind, at))| (id, kind, at)).collect()
+}
+
+/// Mob `id` walks to `to` (pathfinding), at `speed` times its own.
+pub(crate) fn follow(host: &mut dyn ServerHost, id: u32, to: [f64; 3], speed: f64) {
+    if let Some(m) = host.entity(id).and_then(|e| host.mob(e)) {
+        m.move_to(host, to, speed);
     }
 }

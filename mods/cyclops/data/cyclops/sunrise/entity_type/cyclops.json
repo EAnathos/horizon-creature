@@ -3,5 +3,12 @@
   "attributes": {
     "minecraft:max_health": 110.0,
     "minecraft:movement_speed": 0.25
-  }
+  },
+  "sounds": {
+    "hurt": "cyclops:entity.cyclops.hurt",
+    "death": "cyclops:entity.cyclops.death",
+    "ambient": "cyclops:entity.cyclops.ambient",
+    "step": "cyclops:entity.cyclops.step"
+  },
+  "shadow_radius": 1.2
 }

@@ -1,10 +1,11 @@
 //! What its blows break (SPECS §2): the club and the boulder tear up the blocks around where they land, without
-//! drops, unless the `mob_griefing` game rule is off. Left alone: blocks that Horizon's players can't break either (bedrock, obsidian, portals, command blocks...),
+//! drops, unless the `mob_griefing` game rule is off. Left alone: blocks that players can't break either (bedrock, obsidian, portals, command blocks...),
 //! liquids, containers (their contents would be lost with no drops) and the library's placed jars (their creature).
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use horizon_client::mod_api::{GameRuleValue, Host, ParticleOptions, ParticleType};
+use creature::territory::Ground;
+use mod_api::{BlockUpdateFlags, GameRuleValue, LevelRef, ParticleOptions, ServerHost};
 
 /// How far from the club's blow it breaks (blocks, a ball) and from the boulder's burst.
 pub const CLUB_RADIUS: i32 = 1;
@@ -59,10 +60,10 @@ pub fn blow(cyclops: u32, at: [f64; 3]) {
 }
 
 /// From the cyclops's tick: its club's last blow breaks its blocks.
-pub fn tick(host: &mut dyn Host, dimension: &str, cyclops: u32) {
+pub fn tick(host: &mut dyn ServerHost, level: LevelRef, cyclops: u32) {
     let at = BLOWS.lock().unwrap().remove(&cyclops);
     if let Some(at) = at {
-        tear(host, dimension, at, CLUB_RADIUS);
+        tear(host, level, at, CLUB_RADIUS);
     }
 }
 
@@ -77,9 +78,8 @@ fn breakable(name: &str) -> bool {
 }
 
 /// Breaks the blocks within `radius` of `at`, with a puff of dust where each one was.
-pub fn tear(host: &mut dyn Host, dimension: &str, at: [f64; 3], radius: i32) {
-    let griefing = host.level(dimension).and_then(|l| l.game_rule(host, "mob_griefing"));
-    if griefing == Some(GameRuleValue::Bool(false)) {
+pub fn tear(host: &mut dyn ServerHost, level: LevelRef, at: [f64; 3], radius: i32) {
+    if matches!(host.game_rule("mob_griefing"), Ok(GameRuleValue::Bool(false))) {
         return;
     }
     let centre = [at[0].floor() as i32, at[1].floor() as i32, at[2].floor() as i32];
@@ -93,38 +93,36 @@ pub fn tear(host: &mut dyn Host, dimension: &str, at: [f64; 3], radius: i32) {
             }
         }
     }
-    creature::jar::spare_from_blast(host, &mut blocks);
-    let blocks: Vec<([i32; 3], String)> = blocks
+    let ground = Ground::new(&*host, level);
+    creature::jar::spare_from_blast(ground, &mut blocks);
+    let blocks: Vec<([i32; 3], mod_api::BlockState)> = blocks
         .into_iter()
-        .map(|pos| (pos, host.block(pos)))
-        .filter(|(_, name)| breakable(name))
+        .filter(|pos| breakable(&ground.block(*pos)))
+        .filter_map(|pos| Some((pos, level.block_state(&*host, pos)?)))
         .collect();
-    if blocks.is_empty() {
-        return;
-    }
-    // One pass over the block states for every name needed (the dust's look) and air.
-    let wanted: BTreeSet<&str> = blocks.iter().map(|(_, name)| name.as_str()).collect();
-    let mut states = BTreeMap::new();
-    let mut air = None;
-    for (id, state) in host.block_states().iter() {
-        if &*state.name == "minecraft:air" {
-            air.get_or_insert(id);
-        } else if wanted.contains(&*state.name) {
-            states.entry(state.name.to_string()).or_insert(id);
-        }
-    }
-    let Some(air) = air else {
+    let (Some(air), Some(dust)) = (
+        host.block_state_id("minecraft:air"),
+        creature::particles::key("minecraft:block"),
+    ) else {
         return;
     };
-    let dust = ParticleOptions::simple(ParticleType::Block);
-    for (pos, name) in blocks {
-        if host.set_block(dimension, pos, air, 3) {
+    let flags = BlockUpdateFlags::NEIGHBORS | BlockUpdateFlags::CLIENTS;
+    for (pos, state) in blocks {
+        if level.set_block(host, pos, air, flags).unwrap_or(false) {
             let middle = [
                 f64::from(pos[0]) + 0.5,
                 f64::from(pos[1]) + 0.5,
                 f64::from(pos[2]) + 0.5,
             ];
-            host.send_particles(&dust, states.get(&name).copied(), middle, [0.3, 0.3, 0.3], 0.05, 6);
+            level.send_particles(
+                host,
+                &ParticleOptions::simple(dust),
+                Some(state),
+                middle,
+                [0.3, 0.3, 0.3],
+                0.05,
+                6,
+            );
         }
     }
 }

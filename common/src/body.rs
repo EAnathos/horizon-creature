@@ -73,6 +73,12 @@ pub struct Body {
     pub fall_distance: f32,
     /// Ticks it has lived (`Entity.tickCount`).
     pub age: i32,
+    /// Asks the engine to walk it there, at this multiplier of its speed (pathfinding, as a goal's `move_to`).
+    pub walk_to: Option<([f64; 3], f64)>,
+    /// Asks the engine to stop the walk it is on.
+    pub stop_walking: bool,
+    /// Asks its head to turn towards this point.
+    pub look_at: Option<[f64; 3]>,
     pub random: Rand,
 }
 
@@ -211,6 +217,9 @@ pub fn read(host: &dyn Host, entity: u32) -> Option<Body> {
         no_gravity: e.no_gravity(host).unwrap_or(false),
         fall_distance: 1.0,
         age: e.tick_count(host).unwrap_or(0),
+        walk_to: None,
+        stop_walking: false,
+        look_at: None,
         random: Rand::new(entity),
     })
 }
@@ -288,5 +297,16 @@ fn write(host: &mut dyn ServerHost, before: &Body, after: &Body) {
     }
     if after.position != before.position {
         e.teleport_to(host, after.position.array(), None);
+    }
+    if let Some(m) = host.mob(e) {
+        if after.stop_walking {
+            m.stop(host);
+        }
+        if let Some((at, speed)) = after.walk_to {
+            m.move_to(host, at, speed);
+        }
+        if let Some(at) = after.look_at {
+            m.look_at(host, at);
+        }
     }
 }

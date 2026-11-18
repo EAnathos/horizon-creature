@@ -62,13 +62,15 @@ impl Moment {
 
 /// A group's rotation this frame: heavy strides, arms swinging, the head looking about, the club's blow, the boulder
 /// lifted and hurled, the head lolling while dazed.
-pub(crate) fn pose(name: &str, mob: &NativeMobRender<'_>, now: &Moment) -> [f32; 3] {
-    let stride = ((mob.walk_position * 0.6662).cos() * 1.4 * mob.walk_speed).to_degrees() * 0.6;
+pub(crate) fn pose(name: &str, mob: Option<&LivingRenderState>, now: &Moment) -> [f32; 3] {
+    let (walk, speed) = mob.map_or((0.0, 0.0), |m| (m.walk_animation_pos, m.walk_animation_speed));
+    let (head_yaw, pitch) = mob.map_or((0.0, 0.0), |m| (m.y_rot, m.x_rot));
+    let stride = ((walk * 0.6662).cos() * 1.4 * speed).to_degrees() * 0.6;
     let blow = now.raised.map_or(0.0, club);
     let hurl = now.lifted.map_or(0.0, hurl);
     let loll = now.dazed.map_or(0.0, |s| (s * 9.0).sin() * 18.0);
     match name {
-        "head" => [mob.pitch + loll.abs() * 0.5, -mob.head_yaw, loll],
+        "head" => [pitch + loll.abs() * 0.5, -head_yaw, loll],
         "leg_left" => [stride, 0.0, 0.0],
         "leg_right" => [-stride, 0.0, 0.0],
         "arm_left" => [-stride * 0.6 + hurl, 0.0, 0.0],
