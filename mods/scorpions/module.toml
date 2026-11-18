@@ -1,7 +1,7 @@
 # Scorpions's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
 id = "scorpions"
 name = "Scorpions"
-status = "in development"
+status = "playable"
 # Its items in the series' creative tab, in order.
 creative = [
   "scorpions:scorpion_spawn_egg",
@@ -11,3 +11,11 @@ creative = [
 ]
 # Its Rust is built on Sunrise's mod_api.
 ported = true
+
+# Its page in Sunrise's registry (`cargo creature release`, docs/PUBLISHING.md): with its manifest's name, authors and
+# licence, and its README as the description.
+[registry]
+summary = "Real-size scorpions in deserts, badlands and caves: they rear up when you come close and sting when hit. Their stinger makes a dagger you throw."
+categories = ["mobs", "equipment", "adventure"]
+tags = ["scorpions", "desert", "poison", "dagger", "insects"]
+icon = "scorpion"

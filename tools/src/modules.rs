@@ -26,6 +26,24 @@ struct File {
     /// is packaged. Goes once every module is ported.
     #[serde(default)]
     ported: bool,
+    /// Its page in Sunrise's registry: a module with one is published (`cargo creature release`).
+    registry: Option<Registry>,
+}
+
+/// A published module's page in Sunrise's registry (sunrise-org/sunrise-mods, `mods/<id>.toml`), besides what its
+/// manifest says (name, authors, licence) and its README (the description).
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Registry {
+    /// One line for the lists, at most 160 characters.
+    pub summary: String,
+    /// 1 to 3 of a mod's categories (`crate::release::CATEGORIES`).
+    pub categories: Vec<String>,
+    /// Up to 10 lowercase tags, each at most 24 characters.
+    #[serde(default)]
+    pub tags: Vec<String>,
+    /// Its icon: one of its models (its picture in `docs/models/`), or a PNG by its path from the repository's root.
+    pub icon: String,
 }
 
 #[derive(Debug)]
@@ -37,6 +55,7 @@ pub struct Module {
     pub creative: Vec<String>,
     pub requires: Vec<String>,
     pub ported: bool,
+    pub registry: Option<Registry>,
     pub dir: PathBuf,
 }
 
@@ -53,6 +72,7 @@ impl Module {
             creative: f.creative,
             requires: f.requires,
             ported: f.ported,
+            registry: f.registry,
             dir: dir.to_path_buf(),
         })
     }

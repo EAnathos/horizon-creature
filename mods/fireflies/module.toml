@@ -6,3 +6,11 @@ status = "playable"
 creative = ["fireflies:firefly_spawn_egg"]
 # Its Rust is built on Sunrise's mod_api.
 ported = true
+
+# Its page in Sunrise's registry (`cargo creature release`, docs/PUBLISHING.md): with its manifest's name, authors and
+# licence, and its README as the description.
+[registry]
+summary = "Fireflies that light up warm nights; kept in a glass jar, they make a soft lantern."
+categories = ["mobs", "decoration"]
+tags = ["fireflies", "insects", "ambient", "light"]
+icon = "firefly"

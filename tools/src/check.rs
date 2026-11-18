@@ -169,6 +169,26 @@ fn module(m: &Module, mods: &[Module], revision: &(String, String), errors: &mut
             versions.join(", ")
         ));
     }
+    // A published module: its registry page as the registry checks it, a changelog for its version, its icon.
+    if let Some(registry) = &m.registry {
+        match crate::release::description(m) {
+            Ok(description) => {
+                for p in crate::release::page_problems(registry, &description) {
+                    push(format!("{}: [registry]: {p}", rel(&m.dir.join("module.toml"))));
+                }
+            }
+            Err(e) => push(e),
+        }
+        if let Some(version) = versions.first()
+            && let Err(e) = crate::release::changelog(m, version)
+        {
+            push(e);
+        }
+        let icon = crate::root().join("target/check-icon.png");
+        if let Err(e) = crate::icon::make(&m.id, &registry.icon, &icon) {
+            push(format!("{}: [registry] icon: {e}", rel(&m.dir.join("module.toml"))));
+        }
+    }
     for r in &m.requires {
         if r == &m.id || !mods.iter().any(|o| &o.id == r) {
             push(format!(

@@ -111,10 +111,14 @@ The whole series shares **one creative tab**, "Sunrise Creatures", owned by the 
 
 ```
 .cargo/config.toml      `cargo creature <command>` alias
-docs/                   series-wide docs: ARCHITECTURE.md (this file), CONVENTIONS.md, SUNRISE-ISSUES.md;
-                        models/ (the models' pictures, generated)
+docs/                   series-wide docs: ARCHITECTURE.md (this file), CONVENTIONS.md, SUNRISE-ISSUES.md,
+                        PUBLISHING.md; models/ (the models' pictures, generated)
+registry/               the published modules' registry entries and icons, as sunrise-mods holds them (written by
+                        `cargo creature release`)
 common/                 the library
-  module.toml           repository metadata for the tools (id, name, status, tab icon, its tab items, `ported`)
+  module.toml           repository metadata for the tools (id, name, status, tab icon, its tab items, `ported`,
+                        its registry page)
+  CHANGELOG.md          its versions' changes (the registry's changelog)
   SPECS.md, README.md
   sunrise-mod.toml      the package (id, version, [native] pins); with Cargo.toml (crate `mod-creature`, reached as
   Cargo.toml, src/      `creature`), src/, assets/creature/, data/creature/ (blocks, items, tab in data/creature/sunrise/)

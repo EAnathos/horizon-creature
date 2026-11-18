@@ -6,3 +6,11 @@ status = "playable"
 creative = ["vulture:vulture_spawn_egg", "vulture:feather", "vulture:raw_vulture", "vulture:cooked_vulture"]
 # Its Rust is built on Sunrise's mod_api.
 ported = true
+
+# Its page in Sunrise's registry (`cargo creature release`, docs/PUBLISHING.md): with its manifest's name, authors and
+# licence, and its README as the description.
+[registry]
+summary = "A desert vulture you tame with raw chicken, saddle and fly like a plane, with two chests and talons to carry a creature."
+categories = ["mobs", "transportation", "adventure"]
+tags = ["vulture", "flying", "mount", "taming", "birds"]
+icon = "vulture"

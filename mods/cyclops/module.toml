@@ -6,3 +6,11 @@ status = "playable"
 creative = ["cyclops:cyclops_spawn_egg", "cyclops:cyclops_eye", "cyclops:club", "cyclops:shepherds_crook"]
 # Its Rust is built on Sunrise's mod_api.
 ported = true
+
+# Its page in Sunrise's registry (`cargo creature release`, docs/PUBLISHING.md): with its manifest's name, authors and
+# licence, and its README as the description.
+[registry]
+summary = "A one-eyed giant shepherd at cave mouths, with its flock, a club that breaks the ground and boulders it throws."
+categories = ["mobs", "adventure"]
+tags = ["cyclops", "giant", "hostile", "boss"]
+icon = "cyclops"

@@ -6,3 +6,11 @@ status = "playable"
 creative = ["worms:worm_spawn_egg"]
 # Its Rust is built on Sunrise's mod_api.
 ported = true
+
+# Its page in Sunrise's registry (`cargo creature release`, docs/PUBLISHING.md): with its manifest's name, authors and
+# licence, and its README as the description.
+[registry]
+summary = "Earthworms that come up in the rain; settle them in your garden and they help your crops grow."
+categories = ["mobs", "food", "game-mechanics"]
+tags = ["worms", "farming", "crops", "garden"]
+icon = "worm"

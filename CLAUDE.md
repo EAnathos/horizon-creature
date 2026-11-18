@@ -53,7 +53,10 @@ only). How the port went is in the history (`git show 2c09384:docs/SUNRISE-PORT.
   browser installed: our native modules never appear there (they are built into the game the instance plays, its
   version a `native-<rev>-<hash>` build; `sunrise-launcher instance list`).
 - Tools are Rust (`tools/`, commands `list`, `tab`, `model`, `preview`, `sounds`, `vanilla`, `pack`, `build`, `check`,
-  `native-check`, `install`; alias in `.cargo/config.toml`; the table in `CONTRIBUTING.md`).
+  `native-check`, `install`, `release`; alias in `.cargo/config.toml`; the table in `CONTRIBUTING.md`).
+- Publishing: each finished module is a project on Sunrise's registry (`[registry]` in its `module.toml`, its README as
+  the page, its `CHANGELOG.md`); `cargo creature release` prepares a version (`registry/` mirrors sunrise-mods' entries).
+  The steps: `docs/PUBLISHING.md`. A published file never changes: a change is a new version.
 - Before committing: rustfmt (tools and `src/`, `rustfmt.toml`), Clippy `-D warnings` on the tools,
   `cargo creature check`, `cargo creature native-check` (Clippy and tests of the ported crates on the pinned SDK); CI
   (`.github/workflows/ci.yml`) runs them and `cargo creature build`.

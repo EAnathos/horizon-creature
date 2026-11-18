@@ -7,6 +7,8 @@ api = "0.2"
 side = "both"
 capabilities = ["registries"]
 license = "MIT"
+homepage = "https://github.com/EAnathos/sunrise-creatures/blob/main/mods/scorpions/README.md"
+issues = "https://github.com/EAnathos/sunrise-creatures/issues"
 
 # The whole series is pinned to the same Sunrise build (docs/SUNRISE-ISSUES.md, "Moving the pin").
 [native]

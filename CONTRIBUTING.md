@@ -8,6 +8,7 @@ How the repository is organised, how to build and test the mods, and the rules a
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): the modules, their dependencies and responsibilities, what goes in the
   library (the rule of two), the creative tab, building, adding a mod.
 - [docs/CONVENTIONS.md](docs/CONVENTIONS.md): ids, translations, specs, code and assets conventions.
+- [docs/PUBLISHING.md](docs/PUBLISHING.md): publishing the series on Sunrise's registry (pages, versions, releases).
 - [docs/SUNRISE-ISSUES.md](docs/SUNRISE-ISSUES.md): the Sunrise issues we raised or follow, their status, and the
   workaround each one left in our code. Keep it up to date.
 - One `SPECS.md` per module, the source of truth for it, its §0 the current status (the library's:
@@ -64,6 +65,7 @@ The modules are **pinned** to one Sunrise build, the same for every module (`[na
 | `cargo creature check` | The repository's consistency: tab, manifests, pins, translations, JSON, generated files, sounds (events, files, subtitles), recipe book advancements, docs |
 | `cargo creature native-check [sdk]` | Clippy and the unit tests on every ported crate against the pinned Sunrise SDK (fetched into `target/sunrise-sdk/`) |
 | `cargo creature install [--instance <name>] [mod...]` | Builds and installs, then runs the instance's native build |
+| `cargo creature release [module...]` | Prepares the published modules' new versions for Sunrise's registry: `target/release/<id>-<version>.smod` and `registry/` ([docs/PUBLISHING.md](docs/PUBLISHING.md)) |
 
 ## Before committing
 

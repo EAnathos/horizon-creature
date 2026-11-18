@@ -67,6 +67,10 @@ pub fn stage(module: &Module) -> crate::Result<PathBuf> {
         }
     }
     copy(&crate::root().join("LICENSE"), &out.join("LICENSE"))?;
+    // A published module's icon, for the game's Mods screen.
+    if let Some(registry) = &module.registry {
+        crate::icon::make(&module.id, &registry.icon, &out.join("icon.png"))?;
+    }
     Ok(out)
 }
 

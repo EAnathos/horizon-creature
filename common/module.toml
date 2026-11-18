@@ -8,3 +8,11 @@ icon = "creature:guide"
 creative = ["creature:guide", "creature:glass_jar"]
 # Its Rust is built on Sunrise's mod_api.
 ported = true
+
+# Its page in Sunrise's registry (`cargo creature release`, docs/PUBLISHING.md): with its manifest's name, authors and
+# licence, and its README as the description.
+[registry]
+summary = "The library of the Sunrise Creatures mods: the creature guide and its bestiary, the glass jar, the series' creative tab. Needed by every mod of the series."
+categories = ["library"]
+tags = ["creatures", "bestiary", "glass-jar", "guide"]
+icon = "common/assets/creature/textures/item/guide.png"
