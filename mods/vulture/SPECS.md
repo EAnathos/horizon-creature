@@ -33,7 +33,7 @@ Done and tested in game (single player). What waits for v2 is in §9.
   to a juvenile to an adult in 20 minutes, faster when fed raw meat. A chick doesn't follow its owner, a juvenile does.
 - **Bestiary page**: the biomes a wild one was met in, "Feed" (raw chicken) and "Breeding" (rotten flesh).
 
-On Sunrise (branch `sunrise`, docs/SUNRISE-PORT.md): all of it ported; tried in game so far: riding and flight,
+On Sunrise (docs/SUNRISE-PORT.md): all of it ported; tried in game so far: riding and flight,
 the screen (sit / follow, a chest taken off, the chests' contents kept). There the screen moves a whole stack across
 with a click (no cursor) until it becomes a mod menu type.
 

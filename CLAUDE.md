@@ -25,8 +25,8 @@ depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and 
 
 ## Sunrise
 
-Horizon became Sunrise. The port is on the `sunrise` branch (main still builds for Horizon): every module runs on
-Sunrise (`ported = true` in a module's `module.toml` turns its code on; a module without it is packaged as content
+Horizon became Sunrise, and the series now builds for Sunrise only (the last Horizon build is commit `e542ff7`): every
+module runs on Sunrise (`ported = true` in a module's `module.toml` turns its code on; a module without it is packaged as content
 only). The plan, what each step taught and what is left: `docs/SUNRISE-PORT.md` (keep it up
 to date).
 

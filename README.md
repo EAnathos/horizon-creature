@@ -1,6 +1,7 @@
 # Sunrise Creatures
 
-Creature mods for [Minecraft Horizon](https://playhorizon.dev), the Rust reimplementation of Minecraft Java 26.3: a
+Creature mods for [Sunrise](https://playsunrise.net), the Rust reimplementation of Minecraft Java 26.3 (formerly
+Horizon): a
 vulture to tame and fly, butterflies and moths, fireflies, earthworms for your garden, a one-eyed giant shepherd and
 shy fairies.
 Install the ones you like: each works alone, with one shared library. The game text is in English and French.
@@ -35,7 +36,7 @@ the "Sunrise Creatures" creative tab, where all the series' items are.
 
 ## Install
 
-1. Get the [Horizon launcher](https://playhorizon.dev).
+1. Get the [Sunrise launcher](https://playsunrise.net).
 2. In the launcher's **Mods** page, install **Sunrise Creatures**, then the creature mods you want.
 3. Press **Play**. These are native mods: the launcher builds the game with them the first time (a few minutes).
 
