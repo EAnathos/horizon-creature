@@ -309,7 +309,7 @@ impl EntityRenderer for Draw {
         let mob = entity.living.as_ref();
         let amount = mob.map_or(1.0, |m| (m.walk_animation_speed * 8.0).clamp(0.15, 1.0));
         draw.push();
-        creature::model::living_pose(draw, mob);
+        creature::model::living_pose(draw, entity);
         draw.scale([SCALE; 3]);
         creature::model::draw_shown(
             draw,

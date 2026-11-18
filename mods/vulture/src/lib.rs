@@ -546,7 +546,7 @@ impl EntityRenderer for Draw {
             (&model::VULTURE, TEXTURE, JUVENILE_SCALE + (1.0 - JUVENILE_SCALE) * t)
         };
         draw.push();
-        creature::model::living_pose(draw, mob);
+        creature::model::living_pose(draw, entity);
         if scale < 1.0 {
             draw.scale([scale; 3]);
         }

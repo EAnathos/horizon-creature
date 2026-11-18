@@ -308,7 +308,7 @@ impl EntityRenderer for Draw {
         let flying = creature::flutter::flying(entity.id) || companion::active(entity.id);
         let bob = if flying { 0.04 * (entity.age * 0.2).sin() } else { 0.0 };
         draw.push();
-        creature::model::living_pose(draw, mob);
+        creature::model::living_pose(draw, entity);
         draw.translate([0.0, bob, 0.0]);
         let pose = |part: &str| pose(part, entity.age, flying);
         creature::model::draw_shown(

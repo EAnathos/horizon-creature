@@ -383,7 +383,7 @@ impl EntityRenderer for Draw {
         let mob = entity.living.as_ref();
         let (id, age, butterfly) = (entity.id, entity.age, self.butterfly);
         draw.push();
-        creature::model::living_pose(draw, mob);
+        creature::model::living_pose(draw, entity);
         draw.scale([SCALE; 3]);
         let tint = creature::model::tint(mob);
         if butterfly {

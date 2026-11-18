@@ -160,7 +160,7 @@ impl EntityRenderer for Draw {
         let texture = if flying && lit(entity.id) { LIT_TEXTURE } else { TEXTURE };
         let shown = |part: &str| flying || !part.starts_with("wing");
         draw.push();
-        creature::model::living_pose(draw, mob);
+        creature::model::living_pose(draw, entity);
         draw.scale([SCALE; 3]);
         let pose = |part: &str| pose(part, entity.age, flying);
         creature::model::draw_shown(

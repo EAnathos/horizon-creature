@@ -309,7 +309,7 @@ impl EntityRenderer for Draw {
         let look = creature::colours::look(entity.id).unwrap_or_default();
         let reared = reared(entity.id);
         draw.push();
-        creature::model::living_pose(draw, mob);
+        creature::model::living_pose(draw, entity);
         draw.scale([SCALE; 3]);
         let pose = |part: &str| pose(part, reared);
         let tint = creature::model::tint(mob);

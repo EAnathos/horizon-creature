@@ -30,11 +30,11 @@ pub fn open_for_player(host: &mut dyn ServerHost, player: u128) {
     send_chunked(host, player, &text);
 }
 
-/// A payload has a size limit: a full `/bestiary unlock all` (every species in every biome) can overflow one packet.
-/// The book is sent in chunks under `CHUNK` bytes, split on line (species) boundaries, each with a flag
+/// A payload's string holds at most 4096 bytes (`PAYLOAD_MAX_STRING_BYTES`): the book is sent in chunks under `CHUNK`
+/// bytes (with the flag byte), split on line (species) boundaries, each with a flag
 /// byte; the client (`received`) accumulates them and opens on the last. (`B` one and only, `S` start, `M` more, `E`
 /// end.)
-const CHUNK: usize = 30000;
+const CHUNK: usize = mod_api::PAYLOAD_MAX_STRING_BYTES - 1;
 fn send_chunked(host: &mut dyn ServerHost, player: u128, text: &str) {
     let mut chunks: Vec<String> = Vec::new();
     let mut cur = String::new();
@@ -192,6 +192,8 @@ const VIEW: [f32; 4] = [MARGIN, 20.0, PAGE - 2.0 * MARGIN, 66.0];
 const ITEM_VIEW_HEIGHT: f32 = 40.0;
 const VIEW_WITH_LOOKS_HEIGHT: f32 = 52.0;
 const VIEW_PITCH: f32 = 22.0;
+/// The height of our creatures' template (`minecraft:wandering_trader`), by which a screen centres them.
+const TEMPLATE_HEIGHT: f32 = 1.95;
 /// One turn of the creature, in milliseconds.
 const SPIN: u128 = 12_000;
 /// The morph swatches at the left page's bottom: a grid of `PER_LINE` a row, `ROWS_SHOWN` rows seen at once (the wheel
@@ -263,19 +265,23 @@ enum Subject {
 fn view(host: &dyn ClientHost, batch: &mut dyn DrawContext, rect: [f32; 4], subject: Subject) {
     let yaw = (millis() % SPIN) as f32 / SPIN as f32 * 360.0;
     match subject {
-        // A vanilla creature drawn itself, as in the world. Ours draw nothing through `DrawContext::entity` at this
-        // pin (their renderers run but nothing shows, docs/SUNRISE-PORT.md): their icon, large, until then.
-        Subject::Creature(species, look) if !crate::mob::is_ours(species.id) => {
+        // A creature drawn itself, as in the world: a vanilla one about 1.4 blocks to the box's two thirds, ours by
+        // their own box (its height, or half its width for a creature seen side on). Sunrise centres a screen's
+        // entity by its type's height, our template's (a trader's), so ours are moved to stand by their own.
+        Subject::Creature(species, look) => {
             colours::set_preview(look);
+            let (extent, offset) = match crate::mob::size_of(species.id) {
+                Some(s) => (s.height.max(s.width / 2.0), (s.height - TEMPLATE_HEIGHT) / 2.0),
+                None => (1.4, 0.0),
+            };
             let view = GuiEntityView::new(
                 [rect[0], rect[1], rect[0] + rect[2], rect[1] + rect[3]],
-                rect[3] * 0.66 / 1.4,
-                0.0,
+                rect[3] * 0.66 / extent,
+                offset,
                 GuiEntityLook::Turned { yaw, pitch: VIEW_PITCH },
             );
             let _ = batch.entity(&GuiEntity::kind(species.id), view);
         }
-        Subject::Creature(species, _) => icon(host, batch, rect, species.icon),
         Subject::Item(item) => icon(host, batch, rect, item),
     }
 }

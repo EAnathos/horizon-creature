@@ -151,9 +151,15 @@ the guide opens the book, which shows the worm's page with the facts just learne
   from `ClientHost::translate`. The bestiary goes to the client as a typed payload (`play_to_client_typed`, a
   `String` chunk), whose handler reaches the client host through `cx.client_host()`. `/bestiary` is a typed command
   (`Command::op`, `run_mod_command`, `CommandSource::Player`).
-- **The book's 3D view** draws a vanilla creature itself (`DrawContext::entity`, `GuiEntity::kind`), which Horizon
-  couldn't. ❓ **Ours draw nothing that way** (the renderer is called, no error, nothing shows; a vanilla cow draws):
-  their icon stands in. To investigate, then report on sunrise-org/sunrise.
+- **The book's 3D view** draws every creature itself (`DrawContext::entity`, `GuiEntity::kind`), which Horizon
+  couldn't. Ours drew nothing at first: at this pin a screen's entity keeps only the faces turned towards the viewer,
+  and the faces our renderers draw there are wound the other way. A creature drawn in a screen has the id `u32::MAX`
+  (`creature::model::IN_A_SCREEN`): `living_pose` mirrors it along z there, which turns its faces back (it shows
+  mirrored, left for right). Sunrise fixed that culling after our pin (`8c00340`, back faces of living models kept):
+  drop the mirror when the pin moves past it. A screen also places an entity by its type's height, our template's
+  (1.95), so the book sizes and centres ours by their own box.
+- **Payload strings** hold at most 4096 bytes (`PAYLOAD_MAX_STRING_BYTES`): the book goes in chunks under it (a full
+  `/bestiary unlock all` showed one species when the chunks were bigger).
 - **Gone**: the creative tab injection (`build_creative_mode_tab_contents` hides the jar), the piston hook, the
   "switched off in Options > Mods" filter (Sunrise's Mods screen has no switch).
 
@@ -213,7 +219,7 @@ spec is still to run. What it taught:
 
 ### Left to port
 
-- Our creatures in a screen (stage 2), mod brewing recipes, each module's "Testing in game" list.
+- Mod brewing recipes, each module's "Testing in game" list.
 
 ## 5. Our workarounds on Sunrise
 

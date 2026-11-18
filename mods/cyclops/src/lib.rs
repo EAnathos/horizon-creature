@@ -168,7 +168,7 @@ impl EntityRenderer for Draw {
         let mob = entity.living.as_ref();
         let now = Moment::of(entity.id);
         draw.push();
-        creature::model::living_pose(draw, mob);
+        creature::model::living_pose(draw, entity);
         let pose = |part: &str| pose(part, mob, &now);
         creature::model::draw_shown(
             draw,

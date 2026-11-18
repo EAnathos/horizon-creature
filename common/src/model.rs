@@ -2,7 +2,7 @@
 //!
 //! `cargo creature model <mod>` converts a Blockbench model into a tree of `Part`s in the mod's own crate; the mod's
 //! `EntityRenderer` draws it with `draw`, giving each group's animation for the frame.
-use mod_api::{BlockEntityDrawContext, CubeFace, LivingRenderState};
+use mod_api::{BlockEntityDrawContext, CubeFace, EntityRenderState, LivingRenderState};
 
 /// No tint.
 pub const WHITE: u32 = 0xFFFFFF;
@@ -27,9 +27,12 @@ pub fn tint(mob: Option<&LivingRenderState>) -> u32 {
 /// Turns the pose the way a living mob faces and scales it by its `minecraft:scale`, as vanilla's
 /// `LivingEntityRenderer.setupRotations` does before the model: Sunrise hands a mod's renderer the pose at the mob's
 /// feet, not turned. Then a dying mob tips over onto its side in its first second. Call before drawing it.
-/// A mob drawn without its living state (in a screen, where Sunrise may give none) faces the viewer.
-pub fn living_pose(draw: &mut dyn BlockEntityDrawContext, mob: Option<&LivingRenderState>) {
-    let Some(mob) = mob else {
+/// A mob drawn without its living state faces the viewer.
+pub fn living_pose(draw: &mut dyn BlockEntityDrawContext, entity: &EntityRenderState) {
+    if entity.id == IN_A_SCREEN {
+        draw.scale([1.0, 1.0, -1.0]);
+    }
+    let Some(mob) = entity.living.as_ref() else {
         return;
     };
     draw.rotate_about([0.0, 1.0, 0.0], 180.0 - mob.body_rot, [0.0, 0.0, 0.0]);
@@ -41,6 +44,9 @@ pub fn living_pose(draw: &mut dyn BlockEntityDrawContext, mob: Option<&LivingRen
         draw.scale([mob.scale; 3]);
     }
 }
+
+/// The id Sunrise gives a creature it draws in a screen (`DrawContext::entity`), made for drawing only.
+pub const IN_A_SCREEN: u32 = u32::MAX;
 
 /// A group of the model: its pivot (texels), its rest rotation (degrees, x then y then z), its cubes and its child
 /// groups.
