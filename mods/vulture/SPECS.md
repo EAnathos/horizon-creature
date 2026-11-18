@@ -33,6 +33,10 @@ Done and tested in game (single player). What waits for v2 is in §9.
   to a juvenile to an adult in 20 minutes, faster when fed raw meat. A chick doesn't follow its owner, a juvenile does.
 - **Bestiary page**: the biomes a wild one was met in, "Feed" (raw chicken) and "Breeding" (rotten flesh).
 
+On Sunrise (branch `sunrise`, docs/SUNRISE-PORT.md): all of it ported; tried in game so far: riding and flight,
+the screen (sit / follow, a chest taken off, the chests' contents kept). There the screen moves a whole stack across
+with a click (no cursor) until it becomes a mod menu type.
+
 Left: tuning (flight numbers, taming odds, speeds, the dive attack) as players report.
 
 ---
@@ -181,7 +185,7 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
 
 - Up to **2 chests**, one on each side, visible on the model. Added by right-clicking with a chest (saddle required).
 - **15 slots per chest**, so 30 in all.
-- **Vulture screen**: saddle slot, "remove left / right chest" buttons ✅ (the contents drop on the ground), a grid of 15
+- **Vulture screen**: saddle slot, "remove left / right chest" buttons ✅ (the chest and its contents go back to the owner), a grid of 15
   or 30 slots, sit/follow button.
 - On death it drops its chests, their contents and its saddle.
 

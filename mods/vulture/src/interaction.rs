@@ -12,7 +12,7 @@
 //! - holding rotten flesh, grown and not resting from breeding: in love for 30 s (SPECS §8);
 //! - holding raw meat: a baby grows a minute older; a hurt vulture heals 4;
 //! - otherwise: mounts it, saddled and grown up; else sit / follow.
-use mod_api::{EntityInteractEvent, Hand, PlayerRef, ServerHost, Text};
+use mod_api::{EntityInteractEvent, Hand, LeashHolder, PlayerRef, ServerHost, Text};
 
 use crate::state::{self, Change};
 use crate::{screen, sounds};
@@ -42,7 +42,10 @@ pub fn clicked(host: &mut dyn ServerHost, id: u32, event: &EntityInteractEvent<'
     let hand = event.hand;
     let creative = player.has_infinite_materials(&*host).unwrap_or(false);
     // A lead: tied on, as on any animal, wild or tamed, by anyone; on a lead, a click takes it off and gives it back.
-    if vulture.leash_holder(&*host).is_some() {
+    if vulture
+        .leash_holder(&*host)
+        .is_some_and(|h| !matches!(h, LeashHolder::Unleashed))
+    {
         vulture.detach_leash(host, !creative);
         state::request(id, Change::Unleash);
         return;
@@ -67,7 +70,7 @@ pub fn clicked(host: &mut dyn ServerHost, id: u32, event: &EntityInteractEvent<'
         return;
     }
     if player.entity().is_shift_key_down(&*host).unwrap_or(false) {
-        screen::ask(host, player, id);
+        screen::ask(player, id);
         return;
     }
     let baby = saved.age < 0;

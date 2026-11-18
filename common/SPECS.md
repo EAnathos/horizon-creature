@@ -226,7 +226,7 @@ Each moves here when a second mod needs it. Until then it stays in the vulture.
 
 | # | System | Today |
 |---|---|---|
-| 6.1 | **Riding and flight**: mount by right-click, **dynamic ridden flight** (steered by the look, banking into arc turns like a plane, vulture/SPECS.md §6.2), dismount, mount hearts (`mount-hud` injection), a saddle | in the vulture; the flight itself (glide, soaring, landing, the wing poses) moves here with the Seagulls (planned, mods/seagulls/SPECS.md §1), riding stays |
+| 6.1 | **Riding and flight**: mount by right-click, **dynamic ridden flight** (steered by the look, banking into arc turns like a plane, vulture/SPECS.md §6.2), dismount, mount hearts (vanilla's on Sunrise; the `mount-hud` injection on Horizon), a saddle | in the vulture; the flight itself (glide, soaring, landing, the wing poses) moves here with the Seagulls (planned, mods/seagulls/SPECS.md §1), riding stays |
 | 6.2 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | **friends** ✅ in the library (`creature::friend`: the friend's UUID and staying, saved on the creature as `creature:friend`, kept in the glass jar), used by the **Fairies** and the **Vulture** (its owner and sitting; a save from before, which held them in `vulture:state`, is moved over once, tested in game); defending, healing food and riding come with the Sporelins, the Seagulls and the Living Flowers (planned) |
 | 6.3 | **Babies and growth**: smaller model, growth time, faster when fed | in the vulture |
 | 6.4 | **Ridden special attack**: a key that makes the mount attack (the vulture's talons) | in the vulture |

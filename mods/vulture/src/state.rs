@@ -241,10 +241,8 @@ pub fn pace(id: u32) -> f64 {
 
 static SHARED: Mutex<BTreeMap<u32, Shared>> = Mutex::new(BTreeMap::new());
 
-/// A change the hooks ask of the vulture, applied on its next tick. Taking the saddle or a chest off is its screen's,
-/// still to port (`screen.rs`).
+/// A change the hooks ask of the vulture, applied on its next tick (taking the saddle or a chest off: its screen's).
 #[derive(Clone, Copy, Debug)]
-#[allow(dead_code)]
 pub enum Change {
     ToggleSit,
     PutHarness,
@@ -429,11 +427,10 @@ pub fn sync(m: &mut Body, ridden: bool, fighting: bool) -> bool {
     for change in std::mem::take(&mut shared.pending) {
         let c = &mut shared.current;
         match change {
-            Change::ToggleSit => c.sitting = !c.sitting,
+            // Already in `current` (`request`).
+            Change::ToggleSit | Change::AddChest | Change::RemoveChest => {}
             Change::PutHarness => shared.harness = true,
             Change::RemoveHarness => shared.harness = false,
-            Change::AddChest => c.chests = (c.chests + 1).min(2),
-            Change::RemoveChest => c.chests = c.chests.saturating_sub(1),
             Change::InLove => shared.love = LOVE,
             Change::Grow => {
                 c.age = (c.age + GROW).min(-1);

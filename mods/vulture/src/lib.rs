@@ -38,8 +38,8 @@ use mod_api::{
     BlockEntityDrawContext, ClientHost, EntityInteractEvent, EntityJoinLevelEvent, EntityMountEvent, EntityRenderState,
     EntityRenderer, EntityTickPostEvent, Flow, GoalSpec, HitHost, Hooks, HostSide, InteractionResult,
     KeyMappingPreEvent, KeyRegistration, LivingDeathEvent, LivingIncomingDamageEvent, LivingRenderState,
-    ParticleOptions, PayloadCodec, PayloadId, PlayerInputEvent, RegisterEntityRenderersEvent, Registrar,
-    RegistrationContext, ServerHost, SoundSource, ToServer,
+    MenuClickedEvent, MenuClosedEvent, ParticleOptions, PayloadCodec, PayloadId, PlayerInputEvent,
+    RegisterEntityRenderersEvent, Registrar, RegistrationContext, ServerHost, SoundSource, ToServer,
 };
 
 pub const KIND: &str = "vulture:vulture";
@@ -667,6 +667,15 @@ impl Hooks for Vulture {
         Flow::Continue
     }
 
+    /// Its screen's clicks (`screen.rs`).
+    fn menu_clicked(&self, host: &mut dyn ServerHost, event: &mut MenuClickedEvent) {
+        screen::clicked(host, event);
+    }
+
+    fn menu_closed(&self, _: &mut dyn ServerHost, event: &mut MenuClosedEvent) {
+        screen::closed(event);
+    }
+
     fn living_death(&self, host: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {
         if event.kind == KIND {
             screen::died(host, event.entity);
@@ -724,6 +733,7 @@ impl Hooks for Vulture {
             }
         }
         talons::carry(host, id);
+        screen::tick(host, id);
         state::births(host, event.dimension);
         for player in state::take_taming_seen() {
             creature::bestiary::learn(host, player, KIND, TAME_FACT);

@@ -87,7 +87,7 @@ registering its species with it at start (`creature::jar::register(...)`, `creat
 the library's, in dependency order. The library publishes plain functions, types and statics; its state is behind
 `Mutex`es, since hooks can be reentrant.
 
-**Mixin injections** (code injected into the game's own functions, `[[native.mixin]]`, such as the vulture's mount hearts) are compiled
+**Mixin injections** (code injected into the game's own functions, `[[native.mixin]]`) are compiled
 into the game, and two mods injecting the same function each add their own copy. An injection that several mods would
 need moves to the library once, with a list of the kinds it applies to that the mods fill in.
 

@@ -25,9 +25,9 @@ depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and 
 
 ## Sunrise
 
-Horizon became Sunrise. The port is on the `sunrise` branch (main still builds for Horizon): the library and worms run
-on Sunrise, the other mods are packaged as content only until their Rust is ported (`ported = true` in a module's
-`module.toml` turns its code on). The plan, what each step taught and what is left: `docs/SUNRISE-PORT.md` (keep it up
+Horizon became Sunrise. The port is on the `sunrise` branch (main still builds for Horizon): every module runs on
+Sunrise (`ported = true` in a module's `module.toml` turns its code on; a module without it is packaged as content
+only). The plan, what each step taught and what is left: `docs/SUNRISE-PORT.md` (keep it up
 to date).
 
 - Launcher `~/Téléchargements/sunrise-launcher-linux-x86_64.AppImage` (also in the app menu), data

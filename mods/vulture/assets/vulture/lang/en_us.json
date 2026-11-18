@@ -19,6 +19,5 @@
   "bestiary.vulture.item.cooked_vulture.burnt": "Dropped by a vulture that burns",
   "bestiary.vulture.item.cooked_vulture.use": "Food, as cooked chicken",
   "key.vulture.talons": "Talons (catch / release)",
-  "key.categories.vulture": "Vulture",
-  "message.vulture.screen_unavailable": "Your vulture's screen is not ready on Sunrise yet"
+  "key.categories.vulture": "Vulture"
 }

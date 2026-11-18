@@ -198,16 +198,21 @@ spec is still to run. What it taught:
   try again with it.
 - Riding: the server `player_input` hook fires in single player and gives the rider's keys; a mob's
   `controlling_passenger` is empty unless vanilla steers it (saddled), so the vulture reads its first passenger.
-  `entity_mount` cancels a dismount while no ground lies under its feet (its `on_ground` flickers when ridden). ❓ A
-  sneak through `sunrise-ctl` dismounts nothing, a pig neither: to try with the keyboard.
+  `entity_mount` cancels a dismount while no ground lies under its feet (its `on_ground` flickers when ridden). The
+  game draws the mount's hearts itself (vanilla's `vehicle_health` for a living vehicle): no HUD code.
+- `EntityRef::leash_holder` answers `Some(LeashHolder::Unleashed)` for a mob without a lead: `is_some()` is no test.
+- The vulture's screen is a chest menu opened from code (`ServerHost::open_menu`), on the vulture's next tick (opened
+  from the click itself it doesn't show). Its clicks reach `menu_clicked` and move nothing by themselves; writing
+  through `ItemPlace` (the cursor, a player's slot) from that hook moves nothing either on this revision, so a click
+  sends a whole stack across (`set_inventory_slot`, `menu_set_items`), with no cursor. ❓ The full chest feel needs a
+  mod menu type (`open_mod_menu` with its own client screen) backed by the vulture's storage
+  (`PlayerRef::back_mod_menu_slots` with `MenuSlotPlace::EntityItems`, an `ENTITY_ITEMS` provider).
+- `sunrise-ctl`'s keys are the keyboard's: this instance binds sneak to E, so `hold e`, not `hold shift`.
 - `install` stages every ported module: the launcher builds all of an instance's native mods together, so installing
   one mod must not drop the others.
 
 ### Left to port
 
-- The vulture's screen (saddle, sit / follow, chests): a mod menu type; until then sneak + right-click says it is
-  not there yet. Its chests' contents are kept and dropped at its death.
-- Its HUD hearts when ridden: `gui_layer_pre` on `vehicle_health`, or a `[[native.mixin]]`.
 - Our creatures in a screen (stage 2), mod brewing recipes, each module's "Testing in game" list.
 
 ## 5. Our workarounds on Sunrise
@@ -223,8 +228,8 @@ Each line of docs/HORIZON-ISSUES.md, as Sunrise stands (book and API of `559fd52
 | arismoko#2740 render state in statics | Synced attachments (`sync: true`) readable on the client through `Host::attachments`; the renderer itself has no host | Keep render state per entity id, filled from synced attachments in a client hook: works in multiplayer |
 | arismoko#2739 rider's sneak / #13972 client-side click | Server `player_input` hook (the `PlayerInput` flags, sneak included) ✅ fires in single player; `entity_mount` can cancel a dismount; the rider is the first passenger | Drop `ride_keys.rs`; the vulture's `Fly` goal reads the rider's input from the server side |
 | #13973 `saddled` steering | Riding is the engine's; no `Mob.extra` field from the API | Harness in an `EntityPartState` |
-| #13974 `open_menu` from a click | ❓ test from `entity_interact` | Open the screen from the click |
-| arismoko#2741 mount hearts | `gui_layer_pre` on `vehicle_health` ❓ heart count | Drop the `mount-hud` injection if the layer hook is enough, else a `[[native.mixin]]` |
+| #13974 `open_menu` from a click | ✅ `ServerHost::open_menu`, but from the click it doesn't show | Opened on the vulture's next tick, as on Horizon |
+| arismoko#2741 mount hearts | ✅ vanilla draws a living vehicle's hearts | `mount-hud` injection dropped |
 | arismoko#4357 `mob_kind` prefix | ❓ check `living_death`'s `kind` on a mod mob | Compare `event.kind` directly |
 | arismoko#3897 off-hand use | ❓ retest | Drop `hand::holds_server_used` if fixed |
 | #13971 left-out mod exits 0 | ❓ retest with `sunrise-launcher native-build` | Keep the `build.log` check as a safety net |

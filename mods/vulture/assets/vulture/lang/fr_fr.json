@@ -19,6 +19,5 @@
   "bestiary.vulture.item.cooked_vulture.burnt": "Lâchée par un vautour qui brûle",
   "bestiary.vulture.item.cooked_vulture.use": "Nourriture, comme le poulet cuit",
   "key.vulture.talons": "Serres (attraper / lâcher)",
-  "key.categories.vulture": "Vautour",
-  "message.vulture.screen_unavailable": "L'écran de votre vautour n'est pas encore prêt sur Sunrise"
+  "key.categories.vulture": "Vautour"
 }
