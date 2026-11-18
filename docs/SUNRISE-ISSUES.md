@@ -18,19 +18,12 @@ workaround removed).
 | [#2671](https://github.com/sunrise-org/sunrise/issues/2671) (ours; follows [#1286](https://github.com/sunrise-org/sunrise/issues/1286)) | From `menu_clicked`, `ItemPlace` reaches neither the clicking player's inventory (`PlayerSlot` by UUID, `MenuSlot` on an inventory slot) nor the cursor: they read and take 0 | open (filed 2026-11-18) | The vulture's screen moves a whole stack across with a click, written with `set_inventory_slot` and `menu_set_items`, no cursor (`mods/vulture/src/screen.rs`, `clicked`) | Pick up, put down and swap with the cursor, as a chest's slots |
 | [#1134](https://github.com/sunrise-org/sunrise/issues/1134) (not ours, we follow it) | `entity_size` isn't asked for a client's copies of entities: there, our creatures keep their template's box (a wandering trader's, 1.95 high) | open | The book centres our creatures by their own box, offset from the template's height (`common/src/bestiary/book.rs`, `TEMPLATE_HEIGHT`) | Drop the offset |
 
-## Fixed upstream, not in our pin
-
-| Fix | What | Our workaround (where) | Drop it when the pin moves past it |
-|---|---|---|---|
-| [`8c00340`](https://github.com/sunrise-org/sunrise/commit/8c00340dbeaf6e0437381dcaa989b18b7bde2639) (2026-11-17) | A screen's entity (`DrawContext::entity`) kept only the faces turned towards the viewer: ours showed nothing | A creature drawn in a screen (id `u32::MAX`) is mirrored along z, which turns its faces back; it shows left for right (`common/src/model.rs`, `living_pose`, `IN_A_SCREEN`) | Drop the mirror and check the book's pages |
-
 ## Limits of our workarounds
 
 | Workaround | Its limits |
 |---|---|
 | Whole stacks across in the vulture's screen (#2671) | No cursor: no splitting a stack, no placing one item, no drag; a click sends as much as fits |
 | The book's offset (#1134) | Reads our box from the library's table (`creature::mob::size_of`), not from the entity |
-| The mirror in a screen (`8c00340`) | Asymmetric details show on the wrong side; it would mirror them again once the pin has the fix |
 
 ## To open (candidates)
 

@@ -192,8 +192,9 @@ const VIEW: [f32; 4] = [MARGIN, 20.0, PAGE - 2.0 * MARGIN, 66.0];
 const ITEM_VIEW_HEIGHT: f32 = 40.0;
 const VIEW_WITH_LOOKS_HEIGHT: f32 = 52.0;
 const VIEW_PITCH: f32 = 22.0;
-/// The height of our creatures' template (`minecraft:wandering_trader`), by which a screen centres them.
-const TEMPLATE_HEIGHT: f32 = 1.95;
+/// How much a vanilla model can stand out of its box (a horse's head, a ghast's tentacles): a sized one is shown this
+/// much smaller.
+const MODEL_MARGIN: f32 = 1.25;
 /// One turn of the creature, in milliseconds.
 const SPIN: u128 = 12_000;
 /// The morph swatches at the left page's bottom: a grid of `PER_LINE` a row, `ROWS_SHOWN` rows seen at once (the wheel
@@ -265,15 +266,20 @@ enum Subject {
 fn view(host: &dyn ClientHost, batch: &mut dyn DrawContext, rect: [f32; 4], subject: Subject) {
     let yaw = (millis() % SPIN) as f32 / SPIN as f32 * 360.0;
     match subject {
-        // A creature drawn itself, as in the world: a vanilla one about 1.4 blocks to the box's two thirds, ours by
-        // their own box (its height, or half its width for a creature seen side on). Sunrise centres a screen's
+        // A creature drawn itself, as in the world: a vanilla one about 1.4 blocks to the box's two thirds (a big one,
+        // `view_size`, by its size), ours by their own box (its height, or half its width for a creature seen side on). Sunrise centres a screen's
         // entity by its type's height, our template's (a trader's: sunrise-org/sunrise#1134), so ours are moved to
         // stand by their own.
         Subject::Creature(species, look) => {
             colours::set_preview(look);
             let (extent, offset) = match crate::mob::size_of(species.id) {
-                Some(s) => (s.height.max(s.width / 2.0), (s.height - TEMPLATE_HEIGHT) / 2.0),
-                None => (1.4, 0.0),
+                Some(s) => (
+                    s.height.max(s.width / 2.0),
+                    (s.height - crate::mob::TEMPLATE_HEIGHT) / 2.0,
+                ),
+                // A vanilla creature stands centred by its own height: only its size changes the scale.
+                None => super::view_size_of(species.id)
+                    .map_or((1.4, 0.0), |[w, h]| ((h.max(w / 2.0) * MODEL_MARGIN).max(1.4), 0.0)),
             };
             let view = GuiEntityView::new(
                 [rect[0], rect[1], rect[0] + rect[2], rect[1] + rect[3]],
@@ -715,9 +721,15 @@ fn draw_creatures(host: &dyn ClientHost, batch: &mut dyn DrawContext, book: &mut
             if k == book.morph {
                 batch.fill([sx - 1.0, sy - 1.0, SWATCH + 2.0, SWATCH + 2.0], PICKED);
             }
-            batch.fill([sx, sy, SWATCH, SWATCH], rgb(m.base));
-            if scheme.patterns.get(m.pattern).is_some_and(|p| p.texture.is_some()) {
-                batch.fill([sx + 3.0, sy + 3.0, SWATCH - 6.0, SWATCH - 6.0], rgb(m.pattern_colour));
+            let pattern = scheme.patterns.get(m.pattern);
+            // A pattern that is a kind of its own has its colour; else the base colour, the pattern's in the middle.
+            if let Some(own) = pattern.and_then(|p| p.swatch) {
+                batch.fill([sx, sy, SWATCH, SWATCH], 0xFF00_0000 | own);
+            } else {
+                batch.fill([sx, sy, SWATCH, SWATCH], rgb(m.base));
+                if pattern.is_some_and(|p| p.texture.is_some()) {
+                    batch.fill([sx + 3.0, sy + 3.0, SWATCH - 6.0, SWATCH - 6.0], rgb(m.pattern_colour));
+                }
             }
         }
         if let Some(m) = morphs.get(book.morph) {

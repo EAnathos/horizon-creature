@@ -84,26 +84,32 @@ static PATTERNS: [Pattern; 6] = [
     Pattern {
         id: "plain",
         texture: None,
+        swatch: None,
     },
     Pattern {
         id: "eyespots",
         texture: Some("butterflies:entity/butterfly/pattern_eyespots"),
+        swatch: None,
     },
     Pattern {
         id: "tips",
         texture: Some("butterflies:entity/butterfly/pattern_tips"),
+        swatch: None,
     },
     Pattern {
         id: "veins",
         texture: Some("butterflies:entity/butterfly/pattern_veins"),
+        swatch: None,
     },
     Pattern {
         id: "dots",
         texture: Some("butterflies:entity/butterfly/pattern_dots"),
+        swatch: None,
     },
     Pattern {
         id: "tails",
         texture: Some("butterflies:entity/butterfly/pattern_tails"),
+        swatch: None,
     },
 ];
 

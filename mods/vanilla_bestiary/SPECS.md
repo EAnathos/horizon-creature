@@ -11,8 +11,8 @@ it fills (§7). Like every module of the series, it needs no other mod.
 
 ## 0. Status
 
-In development: written, and tested in game in single player (meeting wild ones, the spawn egg turning on the page,
-breeding, milk, wool, drops, a spawn egg's creature tagged not wild); the other facts of §3 are still to see in game.
+Done and tested in game in single player: meeting wild ones, each page's creature turning in 3D (the big ones fitted:
+`BIG`, `creature::bestiary::view_size`), its facts, a spawn egg's creature tagged not wild.
 
 - **The creatures** (`src/creatures.rs`): 83 of the 88 with a spawn egg, each with its rarity, where it
   lives besides its natural spawns, and its facts. Left out: the copper and snow golems (built), the happy ghast
@@ -29,8 +29,7 @@ breeding, milk, wool, drops, a spawn egg's creature tagged not wild); the other 
   icon-only facts and facts wrapped onto several lines, Minecraft's creatures listed below a line, the right page
   scrolled with the wheel.
 
-Next: the rest of §4 in game (taming, a bucket, an egg laid, a creeper, a transformation, the scrolling); then the
-library's book tabs (common/SPECS.md §7.1).
+Next: the library's book tabs (common/SPECS.md §7.1).
 
 ## 1. Technical context
 

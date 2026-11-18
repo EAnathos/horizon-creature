@@ -35,9 +35,9 @@ use std::sync::{Arc, Mutex, OnceLock};
 use creature::body::{Behaviour, Body, World};
 use flight::{Controls, Flight};
 use mod_api::{
-    BlockEntityDrawContext, ClientHost, EntityInteractEvent, EntityJoinLevelEvent, EntityMountEvent, EntityRenderState,
-    EntityRenderer, EntityTickPostEvent, Flow, GoalSpec, HitHost, Hooks, HostSide, InteractionResult,
-    KeyMappingPreEvent, KeyRegistration, LivingDeathEvent, LivingIncomingDamageEvent, LivingRenderState,
+    BlockEntityDrawContext, ClientHost, ClientTickPostEvent, EntityInteractEvent, EntityJoinLevelEvent,
+    EntityMountEvent, EntityRenderState, EntityRenderer, EntityTickPostEvent, Flow, GoalSpec, HitHost, Hooks, HostSide,
+    InteractionResult, KeyRegistration, LivingDeathEvent, LivingIncomingDamageEvent, LivingRenderState,
     MenuClickedEvent, MenuClosedEvent, ParticleOptions, PayloadCodec, PayloadId, PlayerInputEvent,
     RegisterEntityRenderersEvent, Registrar, RegistrationContext, ServerHost, SoundSource, ToServer,
 };
@@ -688,20 +688,19 @@ impl Hooks for Vulture {
         Flow::Continue
     }
 
-    /// The talons key (SPECS §6.4), sent to the server, where the ridden vulture takes it.
-    fn key_mapping_pre(&self, host: &mut dyn ClientHost, event: &mut KeyMappingPreEvent<'_>) -> Flow {
-        if event.mapping == talons::KEY
-            && event.pressed
-            && let Some(token) = TALONS.get()
-        {
-            let _ = token.send(
-                host,
-                &TalonsPress {
-                    key: talons::KEY.into(),
-                },
-            );
+    /// The talons key (SPECS §6.4), sent to the server, where the ridden vulture takes it. A mod's own mapping is read
+    /// from its clicks (`consume_click`): `key_mapping_pre` tells only vanilla's.
+    fn client_tick_post(&self, host: &mut dyn ClientHost, _: &mut ClientTickPostEvent) {
+        while host.consume_click("vulture", talons::KEY) {
+            if let Some(token) = TALONS.get() {
+                let _ = token.send(
+                    host,
+                    &TalonsPress {
+                        key: talons::KEY.into(),
+                    },
+                );
+            }
         }
-        Flow::Continue
     }
 
     fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {

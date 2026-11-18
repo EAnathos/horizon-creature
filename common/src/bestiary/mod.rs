@@ -105,6 +105,21 @@ pub fn register(species: &'static Species) {
     }
 }
 
+/// The size of the vanilla creatures much bigger than a block or two (a ghast, the ender dragon), by entity type:
+/// width and height, in blocks.
+static VIEW_SIZES: Mutex<BTreeMap<&'static str, [f32; 2]>> = Mutex::new(BTreeMap::new());
+
+/// From a mod's `register`: vanilla creature `kind` is `width` × `height` blocks, for the book's 3D view to fit it (the
+/// game has no read of a type's size). The series' own creatures give theirs to `crate::mob::ours`.
+pub fn view_size(kind: &'static str, width: f32, height: f32) {
+    VIEW_SIZES.lock().unwrap().insert(kind, [width, height]);
+}
+
+/// The size `view_size` gave `kind`.
+pub(crate) fn view_size_of(kind: &str) -> Option<[f32; 2]> {
+    VIEW_SIZES.lock().unwrap().get(kind).copied()
+}
+
 /// A registered species, by its entity type.
 pub fn species_of(id: &str) -> Option<&'static Species> {
     species(id)

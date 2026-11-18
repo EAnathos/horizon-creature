@@ -85,14 +85,20 @@ static PATTERNS: [Pattern; 3] = [
     Pattern {
         id: "desert",
         texture: Some(TEXTURE[DESERT]),
+        // Its body's colour, for the book's swatch.
+        swatch: Some(0xC9A86A),
     },
     Pattern {
         id: "badlands",
         texture: Some(TEXTURE[BADLANDS]),
+        // Its body's colour, for the book's swatch.
+        swatch: Some(0x8A4529),
     },
     Pattern {
         id: "cave",
         texture: Some(TEXTURE[CAVE]),
+        // Its body's colour, for the book's swatch.
+        swatch: Some(0x2B2D33),
     },
 ];
 static VARIETIES: [Variety; 4] = [

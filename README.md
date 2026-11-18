@@ -1,9 +1,8 @@
 # Sunrise Creatures
 
 Creature mods for [Sunrise](https://playsunrise.net), the Rust reimplementation of Minecraft Java 26.3 (formerly
-Horizon): a
-vulture to tame and fly, butterflies and moths, fireflies, earthworms for your garden, a one-eyed giant shepherd and
-shy fairies.
+Horizon): a vulture to tame and fly, butterflies and moths, fireflies, earthworms for your garden, a one-eyed giant
+shepherd, shy fairies and scorpions; and Minecraft's own creatures in the guide.
 Install the ones you like: each works alone, with one shared library. The game text is in English and French.
 
 | | Mod | What it adds |
@@ -14,6 +13,8 @@ Install the ones you like: each works alone, with one shared library. The game t
 | ![](docs/models/worms-worm-front.png) | [Worms](mods/worms/README.md) | Earthworms you settle in your garden, where they help crops grow |
 | ![](docs/models/cyclops-cyclops-front.png) | [Cyclops](mods/cyclops/README.md) | A one-eyed giant shepherd at cave mouths, with its flock, its club and its boulders |
 | ![](docs/models/fairies-fairy-front.png) | [Fairies](mods/fairies/README.md) | Shy glowing fairies you befriend with glow berries: they circle your head, lighten your step and leave you fairy dust |
+| ![](docs/models/scorpions-scorpion-front.png) | [Scorpions](mods/scorpions/README.md) | Real-size scorpions in the shade of deserts, badlands and caves: they rear up when you come close and sting when hit; their stinger makes a dagger you throw |
+| ![](common/assets/creature/textures/item/guide.png) | [Vanilla Bestiary](mods/vanilla_bestiary/README.md) | Minecraft's own creatures in the creature guide's bestiary, found out as you meet them |
 
 Planned: [Dung Beetles](mods/dung_beetles/README.md), beetles that roll dung balls under the stars and turn worn
 pastures back into grass; [Sporelins](mods/sporelins/README.md), shy mushroom sprites that tend a mushroom patch;
@@ -26,10 +27,6 @@ you;
 [Phasmids](mods/phasmids/README.md), stick and leaf insects hiding in the trees, a game of spotting them;
 [Magma Golem](mods/magma_golem/README.md), a six-block giant of living magma asleep in the Nether, a mini-boss to
 cool with snow.
-
-In development: [Vanilla Bestiary](mods/vanilla_bestiary/README.md), Minecraft's own creatures in the creature guide;
-[Scorpions](mods/scorpions/README.md), real-size scorpions that rear up when you come close and sting when hit (its code
-and content in place, with placeholder textures and sounds to refine).
 
 Every mod needs **[Sunrise Creatures](common/README.md)**, the library: it adds the glass jar, the creature guide and
 the "Sunrise Creatures" creative tab, where all the series' items are.

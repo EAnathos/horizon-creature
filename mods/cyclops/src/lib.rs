@@ -169,6 +169,12 @@ impl EntityRenderer for Draw {
         let now = Moment::of(entity.id);
         draw.push();
         creature::model::living_pose(draw, entity);
+        // Its scale is for its client box only (`creature::mob::scale_client_box`): the model keeps its size, whatever
+        // scale this frame says.
+        let scale = mob.map_or(1.0, |m| m.scale);
+        if scale > 0.0 && scale != 1.0 {
+            draw.scale([1.0 / scale; 3]);
+        }
         let pose = |part: &str| pose(part, mob, &now);
         creature::model::draw_shown(
             draw,
@@ -193,6 +199,7 @@ struct Cyclops;
 impl Hooks for Cyclops {
     fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
         creature::mob::ours(CYCLOPS, SIZE);
+        creature::mob::scale_client_box(CYCLOPS);
         creature::projectile::register(boulder::BOULDER, boulder::SIZE);
         // Their attribute rows (a type only its content file declares has none to add to), with the values the
         // content files set, then the attributes their template (a trader) lacks: the blow's and the boulder's.
@@ -253,6 +260,12 @@ impl Hooks for Cyclops {
         let Some(m) = host.entity(event.entity).and_then(|e| host.mob(e)) else {
             return Flow::Continue;
         };
+        // Its client box as tall as it is (`creature::mob::scale_client_box`): set on each cyclops, a change the
+        // clients are sent (vanilla scales its shadow too: `cyclops.json`'s radius is its own over this scale).
+        if let Some(living) = host.entity(event.entity).and_then(|e| host.living(e)) {
+            let scale = creature::mob::client_box_scale(CYCLOPS);
+            living.set_attribute_base(host, "minecraft:scale", f64::from(scale));
+        }
         m.add_goal(
             host,
             5,

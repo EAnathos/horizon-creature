@@ -197,6 +197,54 @@ fn products_by(kind: &str, how: impl Fn(&How) -> bool) -> Vec<String> {
     })
 }
 
+/// The creatures bigger than the book's view takes by default, as vanilla's `EntityType` sizes them (width, height in blocks): the
+/// book's 3D view fits them (`creature::bestiary::view_size`). The others take its default.
+const BIG: &[(&str, f32, f32)] = &[
+    ("minecraft:ender_dragon", 16.0, 8.0),
+    ("minecraft:ghast", 4.0, 4.0),
+    ("minecraft:wither", 0.9, 3.5),
+    ("minecraft:enderman", 0.6, 2.9),
+    ("minecraft:warden", 0.9, 2.9),
+    ("minecraft:iron_golem", 1.4, 2.7),
+    ("minecraft:creaking", 0.9, 2.7),
+    ("minecraft:wither_skeleton", 0.7, 2.4),
+    ("minecraft:camel", 1.7, 2.375),
+    ("minecraft:ravager", 1.95, 2.2),
+    ("minecraft:elder_guardian", 1.9975, 1.9975),
+    ("minecraft:llama", 0.9, 1.87),
+    ("minecraft:trader_llama", 0.9, 1.87),
+    ("minecraft:sniffer", 1.9, 1.75),
+    ("minecraft:strider", 0.9, 1.7),
+    ("minecraft:horse", 1.3965, 1.6),
+    ("minecraft:skeleton_horse", 1.3965, 1.6),
+    ("minecraft:zombie_horse", 1.3965, 1.6),
+    ("minecraft:donkey", 1.3965, 1.5),
+    ("minecraft:polar_bear", 1.4, 1.4),
+    ("minecraft:hoglin", 1.3965, 1.4),
+    ("minecraft:zoglin", 1.3965, 1.4),
+    ("minecraft:panda", 1.3, 1.25),
+    // Humanoids about two blocks tall, their heads and hats over their boxes.
+    ("minecraft:witch", 0.6, 1.95),
+    ("minecraft:villager", 0.6, 1.95),
+    ("minecraft:zombie_villager", 0.6, 1.95),
+    ("minecraft:wandering_trader", 0.6, 1.95),
+    ("minecraft:pillager", 0.6, 1.95),
+    ("minecraft:vindicator", 0.6, 1.95),
+    ("minecraft:evoker", 0.6, 1.95),
+    ("minecraft:zombie", 0.6, 1.95),
+    ("minecraft:husk", 0.6, 1.95),
+    ("minecraft:drowned", 0.6, 1.95),
+    ("minecraft:skeleton", 0.6, 1.99),
+    ("minecraft:stray", 0.6, 1.99),
+    ("minecraft:bogged", 0.6, 1.99),
+    ("minecraft:piglin", 0.6, 1.95),
+    ("minecraft:piglin_brute", 0.6, 1.95),
+    ("minecraft:zombified_piglin", 0.6, 1.95),
+    ("minecraft:blaze", 0.6, 1.8),
+    ("minecraft:breeze", 0.6, 1.77),
+    ("minecraft:creeper", 0.6, 1.7),
+];
+
 /// In a placed jar a vanilla creature draws nothing (none is caught; the book draws it itself).
 fn no_drawing(_: &mut dyn BlockEntityDrawContext, _: Option<creature::colours::Look>) {}
 
@@ -208,6 +256,9 @@ impl Hooks for VanillaBestiary {
     fn register(&self, _: &mut dyn Registrar, _: &RegistrationContext) {
         for c in CREATURES {
             creature::bestiary::register(Box::leak(Box::new(species(c))));
+        }
+        for &(kind, width, height) in BIG {
+            creature::bestiary::view_size(kind, width, height);
         }
     }
 

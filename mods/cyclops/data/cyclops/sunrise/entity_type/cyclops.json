@@ -10,5 +10,5 @@
     "ambient": "cyclops:entity.cyclops.ambient",
     "step": "cyclops:entity.cyclops.step"
   },
-  "shadow_radius": 1.2
+  "shadow_radius": 0.6
 }

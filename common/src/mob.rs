@@ -38,6 +38,29 @@ pub fn size_of(kind: &str) -> Option<Size> {
     OURS.lock().unwrap().get(kind).copied()
 }
 
+/// Our creatures' template's height (`minecraft:wandering_trader`), which a client keeps for them: `entity_size` isn't
+/// asked for a client's copies (sunrise-org/sunrise#1134).
+pub const TEMPLATE_HEIGHT: f32 = 1.95;
+
+/// The base `minecraft:scale` of a creature much taller than its template, set so a client's box (the template's,
+/// scaled) is as tall as its own: the player's melee and clicks pick it there (sunrise-org/sunrise#1134). Its renderer
+/// divides it back out (`client_box_scale`).
+static CLIENT_SCALE: Mutex<BTreeMap<&'static str, f32>> = Mutex::new(BTreeMap::new());
+
+/// From the mod's `register`, for a creature much taller than its template: the scale each one gets as it joins (the
+/// mod sets `minecraft:scale` on it), its height over the template's. A creature made only for drawing (the book's)
+/// never joins: it keeps the template's size.
+pub fn scale_client_box(kind: &'static str) -> f32 {
+    let scale = size_of(kind).map_or(1.0, |s| s.height / TEMPLATE_HEIGHT);
+    CLIENT_SCALE.lock().unwrap().insert(kind, scale);
+    scale
+}
+
+/// The base scale `scale_client_box` gave `kind`, 1 for the others.
+pub fn client_box_scale(kind: &str) -> f32 {
+    CLIENT_SCALE.lock().unwrap().get(kind).copied().unwrap_or(1.0)
+}
+
 /// Whether `kind` is one of the series' creatures.
 pub fn is_ours(kind: &str) -> bool {
     OURS.lock().unwrap().contains_key(kind)

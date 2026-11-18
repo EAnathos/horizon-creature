@@ -10,11 +10,7 @@ tail arched over its back; leave it be and it backs away. Hit it and it fights b
 
 ## 0. Status
 
-In development: the spec, the model, the code (native and content), and a first pass of textures and sounds. It builds,
-installs and loads in game (its items, the creative tab and the entity are in, checked 2026-11-16); still to balance and
-to replace the placeholder art. The textures are **placeholders** (painted from the model's UVs,
-a colour per body part) and the sounds are **synthesized placeholders** (not the freesound clips `cargo creature
-sounds` cuts, so there is no `assets/sounds.toml`): both are meant to be replaced by real art.
+Done and tested in game (single player): the model, its textures and sounds, the code and the content. Left: balance.
 
 - **The model** (`assets/models/scorpion.bbmodel`, pictures in docs/models/): a carapace with a pair of eyes on top
   and small ones on its front corners, three broad body segments, eight thin legs bent at the knee, two big claws
@@ -30,12 +26,11 @@ sounds` cuts, so there is no `assets/sounds.toml`): both are meant to be replace
   and the content (entity, spawn egg, the venom sac, stinger and scorpion dagger with their recipes and the venom-sac
   brewing, the loot table, the biome spawns, en/fr).
 
-Left to do: **choose the scorpion's morph when using `/summon`** (§3; implement and test); real art to replace the
-placeholder creature textures (the spawn egg and stinger icons were redrawn to the series' style); the synthesized sounds (then, for
-sounds from freesound, add `assets/sounds.toml` and cut them with `cargo creature sounds`); **balance**. To refine: the cave kind by depth rather
-than biome (§2), the pinch's and sting's damage (the wandering-trader template has no `attack_damage` attribute, so
-`do_hurt_target` deals the engine default for both; the sting adds poison), and stinging the player who tries to catch a
-reared scorpion (§6).
+- **Summoning** ✅: a tag names the kind, `/summon scorpions:scorpion ~ ~ ~ {Tags:["cave"]}` (the library's colours,
+  `colours::chosen`); without one it is rolled for its biome.
+
+To refine: the cave kind by depth rather than biome (§2), the pinch's and sting's damage, and stinging the player who
+tries to catch a reared scorpion (§6).
 
 ## 1. Technical context
 
@@ -65,8 +60,8 @@ reared scorpion (§6).
 - 4 health. Neutral: it never starts a fight.
 - **Spawning**: in its biomes, alone or 2 together, on sand, red sand, terracotta, sandstone and stone; the cave
   kind in the dark. Wild ones despawn far from players.
-- **Summoning**: `/summon scorpions:scorpion` must let the player choose its morph (desert, badlands or cave); the
-  selected kind must be saved on the scorpion.
+- **Summoning** ✅: `/summon scorpions:scorpion ~ ~ ~ {Tags:["desert"]}` (or `badlands`, `cave`) chooses its kind,
+  saved on the scorpion as a rolled one is.
 - **Life**: nocturnal. By day it shelters in the shade (under an overhang, beside a dead bush or a cactus, in a
   cave mouth) and keeps still; at dusk it comes out and wanders slowly (the library's small crawlers), its tail low.
   The cave kind is about at any hour.

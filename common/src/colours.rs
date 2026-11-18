@@ -31,6 +31,9 @@ pub struct Colour {
 pub struct Pattern {
     pub id: &'static str,
     pub texture: Option<&'static str>,
+    /// For a pattern that is a whole kind of its own (a scorpion's desert, badlands or cave texture), its colour in
+    /// the book's swatches in place of the look's colours (0xRRGGBB).
+    pub swatch: Option<u32>,
 }
 
 /// How likely each look is in some biomes: weights by index into the scheme's colours and patterns.
@@ -141,12 +144,29 @@ pub fn tick(host: &mut dyn ServerHost, entity: u32, scheme: &Scheme) {
             let biome = at.zip(level).and_then(|(p, level)| {
                 level.biome_at(host, [p[0].floor() as i32, p[1].floor() as i32, p[2].floor() as i32])
             });
-            let look = roll(scheme, biome.as_deref(), &mut Random::new(entity));
+            let mut look = roll(scheme, biome.as_deref(), &mut Random::new(entity));
+            // Summoned with a morph named in its tags (`/summon scorpions:scorpion ~ ~ ~ {Tags:["cave"]}`).
+            let tags = e.and_then(|e| e.tags(host)).unwrap_or_default();
+            chosen(scheme, &tags, &mut look);
             let _ = LOOK.set(host, Holder::Entity(entity), to_saved(scheme, look));
             look
         }
     };
     LOOKS.lock().unwrap().insert(entity, look);
+}
+
+/// The morph a creature's tags name, over the look rolled for it: a whole look (`orange/eyespots/black`, as `key`
+/// writes it), a pattern (`cave`) or a colour (`orange`), by their ids. Tags naming nothing of the scheme are left alone.
+pub fn chosen(scheme: &Scheme, tags: &[String], look: &mut Look) {
+    for tag in tags {
+        if let Some(whole) = from_key(scheme, tag) {
+            *look = whole;
+        } else if let Some(k) = scheme.patterns.iter().position(|p| p.id == tag) {
+            look.pattern = k;
+        } else if let Some(k) = scheme.colours.iter().position(|c| c.id == tag) {
+            look.base = k;
+        }
+    }
 }
 
 /// A look as a short text (`orange/eyespots/black`, its ids), for the bestiary's morphs.
@@ -298,6 +318,60 @@ pub fn draw(
             &all,
             model::multiply(colour(look.pattern_colour), tint),
             PATTERN_INFLATE,
+        );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    static TEST_COLOURS: [Colour; 2] = [
+        Colour {
+            id: "white",
+            rgb: 0xFFFFFF,
+        },
+        Colour {
+            id: "orange",
+            rgb: 0xFF8800,
+        },
+    ];
+    static TEST_PATTERNS: [Pattern; 2] = [
+        Pattern {
+            id: "plain",
+            texture: None,
+            swatch: None,
+        },
+        Pattern {
+            id: "cave",
+            texture: None,
+            swatch: None,
+        },
+    ];
+    static TEST: Scheme = Scheme {
+        colours: &TEST_COLOURS,
+        patterns: &TEST_PATTERNS,
+        base_texture: "test:entity/base",
+        varieties: &[],
+    };
+
+    #[test]
+    fn a_summon_tag_names_the_morph() {
+        let tags = |t: &[&str]| t.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        let mut look = Look::default();
+        chosen(&TEST, &tags(&["cave"]), &mut look);
+        assert_eq!(look.pattern, 1);
+        chosen(&TEST, &tags(&["orange"]), &mut look);
+        assert_eq!(look.base, 1);
+        let mut whole = Look::default();
+        chosen(&TEST, &tags(&["orange/cave/white", "unrelated"]), &mut whole);
+        assert_eq!(
+            whole,
+            Look {
+                base: 1,
+                pattern: 1,
+                pattern_colour: 0
+            }
         );
     }
 }

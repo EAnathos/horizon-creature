@@ -323,8 +323,13 @@ pub struct Look {
     pub grabbed_at: u32,
 }
 
+/// Its look for the drawing; a vulture no tick has seen (the book's, drawn in a screen) is grown up.
 pub fn look(id: u32) -> Look {
-    SHARED.lock().unwrap().get(&id).map_or(Look::default(), |s| s.look)
+    let grown = Look {
+        growth: 1.0,
+        ..Look::default()
+    };
+    SHARED.lock().unwrap().get(&id).map_or(grown, |s| s.look)
 }
 
 /// From the `Eat` behaviour: it is eating now.
