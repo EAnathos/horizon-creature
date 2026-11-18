@@ -4,3 +4,5 @@ name = "Vanilla Bestiary"
 status = "in development"
 # It adds no item.
 creative = []
+# Its Rust is on Sunrise's mod_api (docs/SUNRISE-PORT.md).
+ported = true
