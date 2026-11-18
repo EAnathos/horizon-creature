@@ -84,7 +84,7 @@ struct Released {
 fn release(m: &Module, out: &Path) -> crate::Result<Released> {
     let registry = m.registry.as_ref().ok_or("no [registry]")?;
     let manifest = Manifest::read(m)?;
-    let description = description(m)?;
+    let description = beta(&manifest.version) + &description(m)?;
     let problems = page_problems(registry, &description);
     if !problems.is_empty() {
         return Err(format!("{}: {}", m.id, problems.join("; ")));
@@ -189,6 +189,18 @@ pub fn description(m: &Module) -> crate::Result<String> {
     let dir = m.dir.strip_prefix(crate::root()).unwrap_or(&m.dir).to_path_buf();
     Ok(absolute_links(&body.join("\n"), &dir).trim().to_owned() + "\n")
 }
+
+/// A 0.x version's page opens with this: the series is in beta until 1.0.
+fn beta(version: &str) -> String {
+    if version.starts_with("0.") {
+        BETA.to_owned()
+    } else {
+        String::new()
+    }
+}
+
+const BETA: &str = "> **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are \
+                    welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).\n\n";
 
 /// `markdown` with its relative links (`[x](../../README.md)`) and images (`![](../../docs/models/a.png)`), relative
 /// to `dir` in the repository, made absolute.
@@ -484,6 +496,12 @@ mod tests {
                  [spec]({SOURCE}/blob/main/mods/vulture/SPECS.md), [web](https://x.y)"
             )
         );
+    }
+
+    #[test]
+    fn a_0_x_version_says_it_is_in_beta() {
+        assert!(beta("0.1.0").starts_with("> **Beta.**"));
+        assert!(beta("1.0.0").is_empty());
     }
 
     #[test]

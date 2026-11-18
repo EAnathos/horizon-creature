@@ -10,7 +10,7 @@ ported = true
 # Its page in Sunrise's registry (`cargo creature release`, docs/PUBLISHING.md): with its manifest's name, authors and
 # licence, and its README as the description.
 [registry]
-summary = "Butterflies by day and moths by night, in many colours and patterns; catch them in a jar, and their dust makes confetti."
+summary = "Butterflies by day and moths by night, in many colours and patterns; catch them in a jar."
 categories = ["mobs", "decoration"]
 tags = ["butterflies", "moths", "insects", "ambient"]
 icon = "butterfly"

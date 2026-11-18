@@ -1,9 +1,49 @@
+<p align="center">
+  <img src="docs/media/banner.webp" alt="Sunrise Creatures: a fairy, a worm, a cyclops, a vulture, a scorpion, a firefly, butterflies and a moth at sunrise" width="100%">
+</p>
+
+<p align="center">
+  <a href="#install"><b>Install</b></a> ·
+  <a href="#the-mods"><b>The mods</b></a> ·
+  <a href="#in-the-game"><b>In the game</b></a> ·
+  <a href="CONTRIBUTING.md"><b>Contributing</b></a>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-E2AC52" alt="Licence: MIT"></a>
+  <a href="https://playsunrise.net"><img src="https://img.shields.io/badge/runs%20on-Sunrise%20(Minecraft%2026.3)-F0795A" alt="Runs on Sunrise, Minecraft 26.3"></a>
+  <img src="https://img.shields.io/badge/status-beta-7A6FD0" alt="Status: beta">
+  <img src="https://img.shields.io/badge/language-English%20%C2%B7%20Fran%C3%A7ais-5A9E6F" alt="English and French">
+</p>
+
 # Sunrise Creatures
 
-Creature mods for [Sunrise](https://playsunrise.net), the Rust reimplementation of Minecraft Java 26.3 (formerly
-Horizon): a vulture to tame and fly, butterflies and moths, fireflies, earthworms for your garden, a one-eyed giant
+**Creature mods for [Sunrise](https://playsunrise.net)**, the Rust reimplementation of Minecraft Java 26.3 (formerly
+Horizon). A vulture to tame and fly, butterflies and moths, fireflies, earthworms for your garden, a one-eyed giant
 shepherd, shy fairies and scorpions; and Minecraft's own creatures in the guide.
-Install the ones you like: each works alone, with one shared library. The game text is in English and French.
+
+- **Install the ones you like**: each mod works alone, with one shared library.
+- **Native mods**, written in Rust on Sunrise's mod API, with their own models, animations, sounds and behaviours.
+- **In beta**: played and tested in single player; multiplayer and balance come later.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/media/readme/vulture.webp" alt="A tamed vulture with its saddle and two chests, and a wild one, on a flowery meadow"><br><sub>A tamed vulture, saddled, with its two chests</sub></td>
+    <td width="50%"><img src="docs/media/readme/butterflies.webp" alt="Butterflies of several colours and a moth over a meadow"><br><sub>Butterflies in many colours and patterns</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/media/readme/cyclops.webp" alt="A blue one-eyed cyclops among its sheep"><br><sub>The cyclops and its flock</sub></td>
+    <td width="50%"><img src="docs/media/readme/fairies.webp" alt="Two violet fairies hovering over flowers"><br><sub>Fairies, to befriend with glow berries</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/media/readme/scorpions.webp" alt="A desert, a badlands and a cave scorpion on sand"><br><sub>Scorpions of the desert, the badlands and the caves</sub></td>
+    <td width="50%"><img src="docs/media/readme/bestiary.webp" alt="The creature guide open on the butterfly's page, its morphs below and the species met on the right"><br><sub>The creature guide's bestiary</sub></td>
+  </tr>
+</table>
+
+<sub>In game on Sunrise, HUD hidden.</sub>
+
+## The mods
 
 | | Mod | What it adds |
 |---|---|---|
@@ -16,29 +56,48 @@ Install the ones you like: each works alone, with one shared library. The game t
 | ![](docs/models/scorpions-scorpion-front.png) | [Scorpions](mods/scorpions/README.md) | Real-size scorpions in the shade of deserts, badlands and caves: they rear up when you come close and sting when hit; their stinger makes a dagger you throw |
 | ![](common/assets/creature/textures/item/guide.png) | [Vanilla Bestiary](mods/vanilla_bestiary/README.md) | Minecraft's own creatures in the creature guide's bestiary, found out as you meet them |
 
-Planned: [Dung Beetles](mods/dung_beetles/README.md), beetles that roll dung balls under the stars and turn worn
-pastures back into grass; [Sporelins](mods/sporelins/README.md), shy mushroom sprites that tend a mushroom patch;
-[Seagulls](mods/seagulls/README.md), coastal food thieves that become fishing companions;
-[Living Flowers](mods/living_flowers/README.md), every small and tall vanilla flower come alive, to ambush you or guard
-you;
-[Storm Spirits](mods/storm_spirits/README.md), spirits of living lightning born in storms, whose sparks call lightning;
-[Jellyfish](mods/jellyfish/README.md), stinging jellyfish drifting in blooms, some glowing in the deep;
-[Flying Fish](mods/flying_fish/README.md), shoals that burst out of warm seas and glide over the waves;
-[Phasmids](mods/phasmids/README.md), stick and leaf insects hiding in the trees, a game of spotting them;
-[Magma Golem](mods/magma_golem/README.md), a six-block giant of living magma asleep in the Nether, a mini-boss to
-cool with snow.
-
 Every mod needs **[Sunrise Creatures](common/README.md)**, the library: it adds the glass jar, the creature guide and
 the "Sunrise Creatures" creative tab, where all the series' items are.
 
+<details>
+<summary><b>Planned</b></summary>
+
+- [Dung Beetles](mods/dung_beetles/README.md): beetles that roll dung balls under the stars and turn worn pastures
+  back into grass.
+- [Sporelins](mods/sporelins/README.md): shy mushroom sprites that tend a mushroom patch.
+- [Seagulls](mods/seagulls/README.md): coastal food thieves that become fishing companions.
+- [Living Flowers](mods/living_flowers/README.md): every small and tall vanilla flower come alive, to ambush you or
+  guard you.
+- [Storm Spirits](mods/storm_spirits/README.md): spirits of living lightning born in storms, whose sparks call
+  lightning.
+- [Jellyfish](mods/jellyfish/README.md): stinging jellyfish drifting in blooms, some glowing in the deep.
+- [Flying Fish](mods/flying_fish/README.md): shoals that burst out of warm seas and glide over the waves.
+- [Phasmids](mods/phasmids/README.md): stick and leaf insects hiding in the trees, a game of spotting them.
+- [Magma Golem](mods/magma_golem/README.md): a six-block giant of living magma asleep in the Nether, a mini-boss to
+  cool with snow.
+
+</details>
+
 ## Install
 
-1. Get the [Sunrise launcher](https://playsunrise.net).
-2. In the launcher's **Mods** page, install **Sunrise Creatures**, then the creature mods you want.
-3. Press **Play**. These are native mods: the launcher builds the game with them the first time (a few minutes).
+You need **the Sunrise launcher**, from [playsunrise.net](https://playsunrise.net), and a Minecraft: Java Edition
+account.
 
-Sunrise Creatures is not listed in the launcher yet. Until then, the mods can be built from this repository
-([CONTRIBUTING.md](CONTRIBUTING.md)).
+1. In the launcher's **Mods** page, install **Sunrise Creatures**, then the creature mods you want.
+2. Press **Play**. These are native mods: the launcher builds the game with them the first time (a few minutes).
+
+> [!NOTE]
+> The mods are being submitted to Sunrise's registry. Until they are listed, install them from this repository's
+> [releases](https://github.com/EAnathos/sunrise-creatures/releases), the library first (one release per mod and
+> version, each signed), for example:
+>
+> ```sh
+> sunrise-launcher mods add-github https://github.com/EAnathos/sunrise-creatures/releases/tag/creature-0.1.1 --trust-native-code
+> sunrise-launcher mods add-github https://github.com/EAnathos/sunrise-creatures/releases/tag/vulture-0.1.0 --trust-native-code
+> ```
+>
+> Mods installed this way are marked "Not reviewed by the Sunrise registry". Native mods run with your rights,
+> which is why the launcher asks for `--trust-native-code`.
 
 ## In the game
 
@@ -54,9 +113,13 @@ Sunrise Creatures is not listed in the launcher yet. Until then, the mods can be
 
 Single player only for now; multiplayer comes later for the whole series.
 
+## Build from source
+
+The mods build with the repository's own tools (`cargo creature`, Rust) and Sunrise's `cargo sunrise-mod`:
+[CONTRIBUTING.md](CONTRIBUTING.md) has the setup, the commands and the conventions, and
+[docs/PUBLISHING.md](docs/PUBLISHING.md) how a version is released.
+
 ## Licence
 
 [MIT](LICENSE). The sounds come from [freesound.org](https://freesound.org), under
 [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
-
-Want to help, or build the mods yourself? See [CONTRIBUTING.md](CONTRIBUTING.md).

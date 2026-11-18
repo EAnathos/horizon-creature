@@ -18,7 +18,8 @@ namespaces), nothing hidden.
 - **`sunrise-mod.toml`**: its `name`, `version`, `authors`, `license`, `description`, `homepage` and `issues`, shown by
   the game's Mods screen; the package also carries the icon (`icon.png`, made by `cargo creature pack`).
 - **`README.md`**: its registry page's description (50 to 10,000 characters; its title left out, its links and images
-  made absolute to this repository on GitHub).
+  made absolute to this repository on GitHub). A 0.x version's page opens with a "Beta" line: the series stays in
+  beta until 1.0.
 - **`CHANGELOG.md`**: a section per version (`## 0.1.0`), its changelog in the registry and its GitHub release's notes.
 
 `cargo creature check` holds every published module to these rules (the registry's own), so a page that would be
