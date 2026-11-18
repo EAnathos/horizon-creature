@@ -79,6 +79,9 @@ pub struct Body {
     pub stop_walking: bool,
     /// Asks its head to turn towards this point.
     pub look_at: Option<[f64; 3]>,
+    /// Its health and its maximum (`minecraft:max_health`), both written back when changed.
+    pub health: f32,
+    pub max_health: f32,
     pub random: Rand,
 }
 
@@ -220,6 +223,8 @@ pub fn read(host: &dyn Host, entity: u32) -> Option<Body> {
         walk_to: None,
         stop_walking: false,
         look_at: None,
+        health: host.living(e).and_then(|l| l.health(host)).unwrap_or(1.0),
+        max_health: host.living(e).and_then(|l| l.max_health(host)).unwrap_or(1.0),
         random: Rand::new(entity),
     })
 }
@@ -297,6 +302,14 @@ fn write(host: &mut dyn ServerHost, before: &Body, after: &Body) {
     }
     if after.position != before.position {
         e.teleport_to(host, after.position.array(), None);
+    }
+    if let Some(l) = host.living(e) {
+        if after.max_health != before.max_health {
+            l.set_attribute_base(host, "minecraft:max_health", f64::from(after.max_health));
+        }
+        if after.health != before.health {
+            l.set_health(host, after.health.min(after.max_health));
+        }
     }
     if let Some(m) = host.mob(e) {
         if after.stop_walking {

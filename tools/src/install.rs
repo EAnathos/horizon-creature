@@ -40,6 +40,13 @@ pub fn run(instance: &str, names: &[String]) -> crate::Result {
     if !native {
         return Ok(());
     }
+    // The launcher builds every native mod of the instance at once: the ported modules not asked for go in too, or
+    // the new build would leave them out.
+    for m in crate::modules::mods()?.iter().filter(|m| m.native().is_some()) {
+        if !crate::pack::stage_dir(m).exists() {
+            crate::pack::stage(m)?;
+        }
+    }
     run_in(
         &root,
         &launcher,

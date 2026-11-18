@@ -194,7 +194,24 @@ impl Hooks for Cyclops {
     fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
         creature::mob::ours(CYCLOPS, SIZE);
         creature::projectile::register(boulder::BOULDER, boulder::SIZE);
-        // Its blow and its boulder's: attributes its template (a trader) lacks.
+        // Their attribute rows (a type only its content file declares has none to add to), with the values the
+        // content files set, then the attributes their template (a trader) lacks: the blow's and the boulder's.
+        let _ = r.declare_entity_attributes(
+            "cyclops",
+            "minecraft:wandering_trader",
+            vec![
+                ("minecraft:max_health".into(), 110.0),
+                ("minecraft:movement_speed".into(), 0.25),
+            ],
+        );
+        let _ = r.declare_entity_attributes(
+            "boulder",
+            "minecraft:wandering_trader",
+            vec![
+                ("minecraft:max_health".into(), 1.0),
+                ("minecraft:movement_speed".into(), 0.0),
+            ],
+        );
         let _ = r.modify_entity_attributes(
             CYCLOPS,
             vec![

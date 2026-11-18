@@ -168,14 +168,39 @@ to `target/<id>.smod`; `build` checks each with `cargo sunrise-mod check`; `inst
 `module.toml` says `ported = true` (the library and worms today). Tried: `cargo creature install` puts all nine
 modules in `creature-dev`, which loads them with no refusal.
 
+### Stage 4: the mods (2026-11-18)
+
+Ported to `mod_api`, `ported = true`, Clippy clean, their tests passing, all built together by the launcher and
+tried in game (each summoned, drawn and moving): butterflies, fireflies, fairies, scorpions, the cyclops, the Vanilla
+Bestiary (with the library and worms). Not yet tested further than that: each module's "Testing in game" list in its
+spec is still to run. What it taught:
+
+- `body` grew: the nearest player's eyes, look, held items, creative and spectator; the creature's age, health and
+  max health; requests for engine navigation (`walk_to`, `stop_walking`) and a look target (`look_at`), written back
+  through `MobRef::move_to`, `stop`, `look_at`.
+- A behaviour can't hurt, give effects or change a target: it queues the action, applied from the tick hook (the
+  scorpion's strikes, the cyclops's club and target).
+- Particle keys are handed out at registration only: the library asks for every vanilla particle the series uses
+  (`creature::particles`).
+- Real effects on mobs (`LivingRef::add_effect`): the dagger's venom is Poison, no hand-made timer.
+- Vanilla goal kinds (stroll, look at player, nearest and hurt-by targets) are added with `MobRef::add_goal` when the
+  mob joins, after the library took its template's off (dependency order).
+- A type only its content file declares has no attribute row: `declare_entity_attributes` (with the content file's
+  values) before `modify_entity_attributes` adds what the template lacks, or the game crashes at load.
+- `finalize_spawn` gives the spawn reason (spawn egg, breeding, bucket...) and can tag the mob: the Vanilla Bestiary's
+  "born tame" no longer guesses.
+- `tooltip`, `use_item`, `use_on` are item part methods; `entity_interact` answered on both sides stops the trade
+  screen.
+- `install` stages every ported module: the launcher builds all of an instance's native mods together, so installing
+  one mod must not drop the others.
+
 ### Left to port
 
-The other mods' Rust, each onto the library's new shape (`EntityPart` goals or `body` behaviours, an
-`EntityRenderer`, item parts, the host split), then `ported = true` and a test along its spec's "Testing in game":
-butterflies and fireflies (flutter, colours), fairies (friend, flutter), scorpions (crawl, projectile, enchantment),
-cyclops (projectile), the Vanilla Bestiary (vanilla creatures, now drawable in the book), the vulture last (riding,
-its HUD, its screen: §5). Open points: our creatures in a screen (§4, stage 2), mod brewing recipes, the rider's input
-(§5).
+The vulture (riding, its screen, its HUD, talons, breeding). Its `Mob.extra` bridge (tame, owner, sitting, age, love,
+lead, chests) becomes its own state (it already saves it in attachments); leads are native (`leash_to`); food on the
+ground through `item_entity`; ridden flight from the server `player_input` hook's key flags (❓ in single player) with
+`entity_mount` cancelling a dismount in the air; its HUD hearts through `gui_layer_pre` or a `[[native.mixin]]`. Open
+points: our creatures in a screen (stage 2), mod brewing recipes.
 
 ## 5. Our workarounds on Sunrise
 
