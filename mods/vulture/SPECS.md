@@ -1,6 +1,6 @@
 # Vulture: specification
 
-A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (a Rust reimplementation of Minecraft Java 26.3).
+A mod of the **Sunrise Creatures** series for **Sunrise** (a Rust reimplementation of Minecraft Java 26.3).
 It adds a wild vulture that you tame by throwing raw chicken at it, ride, fit with chests, that catches creatures in its
 talons and breeds.
 
@@ -33,7 +33,7 @@ Done and tested in game (single player). What waits for v2 is in §9.
   to a juvenile to an adult in 20 minutes, faster when fed raw meat. A chick doesn't follow its owner, a juvenile does.
 - **Bestiary page**: the biomes a wild one was met in, "Feed" (raw chicken) and "Breeding" (rotten flesh).
 
-On Sunrise (docs/SUNRISE-PORT.md): all of it ported; tried in game so far: riding and flight,
+On Sunrise: all of it ported; tried in game so far: riding and flight,
 the screen (sit / follow, a chest taken off, the chests' contents kept). There the screen moves a whole stack across
 with a click (no cursor) until it becomes a mod menu type.
 
@@ -275,6 +275,8 @@ Creative, a desert; `cargo creature install vulture` first.
 
 ## 11. Remaining open questions
 
+- ❓ Q29: Sunrise lets a living type copy the tameable `minecraft:wolf`, `cat` or `parrot` (taming, sitting, following,
+  owner saved): move the vulture there, its own taming code shrinking, or keep the trader?
 - ~~Q27: The flight's numbers, the bank and turn limits, and what A / D and S do in the air?~~ The numbers as built, to
   balance in game; A / D steer, S brakes in the air and backs up on the ground (§6.2).
 - ~~Q28: What a passenger in its talons does to its flight?~~ Nothing: no weight (§6.4).

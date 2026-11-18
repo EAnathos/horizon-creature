@@ -1,6 +1,6 @@
 # Living Flowers: specification
 
-A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): flowers that are not quite
+A mod of the **Sunrise Creatures** series for **Sunrise** (Minecraft Java 26.3): flowers that are not quite
 flowers. They stand among the others in a meadow until you come close, then pull up their roots and go for you.
 Befriended with a flower of their kind, one follows you and guards you, and in a flower pot it becomes a living
 decoration that sways and looks at you. **Every small and tall vanilla flower** has its living kind ✅, each with its

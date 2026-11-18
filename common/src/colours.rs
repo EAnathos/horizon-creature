@@ -9,7 +9,7 @@
 //!
 //! The drawing reads the looks from a static map filled on the server's side: single player only, as the vulture's
 //! render state. On Sunrise a synced attachment can reach the client, but a renderer has no host to read it: the map
-//! could be filled from a client hook instead (docs/SUNRISE-PORT.md §5).
+//! could be filled from a client hook instead.
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};

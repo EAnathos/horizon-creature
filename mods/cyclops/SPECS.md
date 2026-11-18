@@ -1,6 +1,6 @@
 # Cyclops: specification
 
-A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): the **cyclops**, a one-eyed
+A mod of the **Sunrise Creatures** series for **Sunrise** (Minecraft Java 26.3): the **cyclops**, a one-eyed
 giant of the mountains that hurls boulders, and whose eye is a rare crafting material ✅.
 
 **Requires** the series' library, Sunrise Creatures (`creature`, [common/SPECS.md](../../common/SPECS.md)).

@@ -10,8 +10,6 @@ How the repository is organised, how to build and test the mods, and the rules a
 - [docs/CONVENTIONS.md](docs/CONVENTIONS.md): ids, translations, specs, code and assets conventions.
 - [docs/SUNRISE-ISSUES.md](docs/SUNRISE-ISSUES.md): the Sunrise issues we raised or follow, their status, and the
   workaround each one left in our code. Keep it up to date.
-- [docs/SUNRISE-PORT.md](docs/SUNRISE-PORT.md): moving the series from Horizon to Sunrise, what changes and in
-  what order.
 - One `SPECS.md` per module, the source of truth for it, its §0 the current status (the library's:
   [common/SPECS.md](common/SPECS.md)).
 

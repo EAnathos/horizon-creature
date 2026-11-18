@@ -1,6 +1,6 @@
 # Seagulls: specification
 
-A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): noisy gulls of beaches and
+A mod of the **Sunrise Creatures** series for **Sunrise** (Minecraft Java 26.3): noisy gulls of beaches and
 harbours that glide along the coast, bob on the waves, follow boats, and snatch food from careless hands. Fed fish,
 one becomes a fishing companion that dives for fish and shows you where to cast.
 

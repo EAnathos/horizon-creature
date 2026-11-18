@@ -22,7 +22,7 @@ struct File {
     /// Other mods of the series this one requires, besides the library (docs/ARCHITECTURE.md §2).
     #[serde(default)]
     requires: Vec<String>,
-    /// Its Rust is on Sunrise's `mod_api` (docs/SUNRISE-PORT.md): built with its content. Until then only its content
+    /// Its Rust is on Sunrise's `mod_api`: built with its content. Until then only its content
     /// is packaged. Goes once every module is ported.
     #[serde(default)]
     ported: bool,

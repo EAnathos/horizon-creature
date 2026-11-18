@@ -1,7 +1,7 @@
 # Architecture
 
 The repository holds a **series of mods** for [Sunrise](https://playsunrise.net) (Minecraft Java 26.3 rewritten in
-Rust, formerly Horizon; the port: [SUNRISE-PORT.md](SUNRISE-PORT.md)), called **Sunrise Creatures**: one mandatory library and independent creature mods that all depend
+Rust, formerly Horizon), called **Sunrise Creatures**: one mandatory library and independent creature mods that all depend
 on it.
 
 ## 1. Modules
@@ -111,8 +111,8 @@ The whole series shares **one creative tab**, "Sunrise Creatures", owned by the 
 
 ```
 .cargo/config.toml      `cargo creature <command>` alias
-docs/                   series-wide docs: ARCHITECTURE.md (this file), CONVENTIONS.md, SUNRISE-ISSUES.md,
-                        SUNRISE-PORT.md; models/ (the models' pictures, generated)
+docs/                   series-wide docs: ARCHITECTURE.md (this file), CONVENTIONS.md, SUNRISE-ISSUES.md;
+                        models/ (the models' pictures, generated)
 common/                 the library
   module.toml           repository metadata for the tools (id, name, status, tab icon, its tab items, `ported`)
   SPECS.md, README.md

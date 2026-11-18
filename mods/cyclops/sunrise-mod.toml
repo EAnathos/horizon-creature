@@ -8,7 +8,7 @@ side = "both"
 capabilities = ["registries"]
 license = "MIT"
 
-# The whole series is pinned to the same Sunrise build (docs/SUNRISE-PORT.md): `cargo sunrise-mod update` moves it.
+# The whole series is pinned to the same Sunrise build (docs/SUNRISE-ISSUES.md, "Moving the pin").
 [native]
 game = "26.3"
 sunrise = "2d8126336e579777eabf9b2fd8b3d476236a04f2"

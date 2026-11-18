@@ -1,6 +1,6 @@
 # Butterflies: specification
 
-A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): butterflies that bring life to
+A mod of the **Sunrise Creatures** series for **Sunrise** (Minecraft Java 26.3): butterflies that bring life to
 flowery places, that you catch in a glass jar and settle where you like. Deliberately small in scope ✅.
 
 **Requires** the series' library, Sunrise Creatures (`creature`, [common/SPECS.md](../../common/SPECS.md)).

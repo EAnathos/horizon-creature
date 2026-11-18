@@ -1,6 +1,6 @@
 # Scorpions: specification
 
-A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): scorpions of real size,
+A mod of the **Sunrise Creatures** series for **Sunrise** (Minecraft Java 26.3): scorpions of real size,
 hiding in the shade of deserts, badlands and caves. Come close and one rears up in a defensive posture, claws open and
 tail arched over its back; leave it be and it backs away. Hit it and it fights back, pinching and stinging with poison.
 
@@ -30,9 +30,8 @@ sounds` cuts, so there is no `assets/sounds.toml`): both are meant to be replace
   and the content (entity, spawn egg, the venom sac, stinger and scorpion dagger with their recipes and the venom-sac
   brewing, the loot table, the biome spawns, en/fr).
 
-Left to do: **choose the scorpion's morph when using `/summon`** (§3; implement and test), and the dagger's **throwing**
-(§5; the Poisonous enchantment and its poison-on-hit are done, throwing is not); real art to replace the placeholder
-creature textures (the spawn egg and stinger icons were redrawn to the series' style); the synthesized sounds (then, for
+Left to do: **choose the scorpion's morph when using `/summon`** (§3; implement and test); real art to replace the
+placeholder creature textures (the spawn egg and stinger icons were redrawn to the series' style); the synthesized sounds (then, for
 sounds from freesound, add `assets/sounds.toml` and cut them with `cargo creature sounds`); **balance**. To refine: the cave kind by depth rather
 than biome (§2), the pinch's and sting's damage (the wandering-trader template has no `attack_damage` attribute, so
 `do_hurt_target` deals the engine default for both; the sting adds poison), and stinging the player who tries to catch a

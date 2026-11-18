@@ -1,6 +1,6 @@
 # Fairies: specification
 
-A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): tiny shy fairies of the
+A mod of the **Sunrise Creatures** series for **Sunrise** (Minecraft Java 26.3): tiny shy fairies of the
 flowery woods and meadows, glowing softly at dusk. Befriended with a sweet treat, a fairy follows you, circling you
 in sparkles, and lightens your step: a gentle speed boost.
 

@@ -1,6 +1,6 @@
 # Worms: specification
 
-A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): small earthworms you find on
+A mod of the **Sunrise Creatures** series for **Sunrise** (Minecraft Java 26.3): small earthworms you find on
 the dirt, carry in a glass jar and settle in your garden, where they stay and slowly make crops grow faster. Simple,
 like Butterflies ✅.
 

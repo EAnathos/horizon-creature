@@ -27,11 +27,12 @@ depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and 
 
 Horizon became Sunrise, and the series now builds for Sunrise only (the last Horizon build is commit `e542ff7`): every
 module runs on Sunrise (`ported = true` in a module's `module.toml` turns its code on; a module without it is packaged as content
-only). The plan, what each step taught and what is left: `docs/SUNRISE-PORT.md` (keep it up
-to date).
+only). How the port went is in the history (`git show 2c09384:docs/SUNRISE-PORT.md`); what it taught is below.
 
 - Launcher `~/Téléchargements/sunrise-launcher-linux-x86_64.AppImage` (also in the app menu), data
-  `~/.local/share/sunrise` (never modify it), instance `creature-dev`. Agent control: start the game with
+  `~/.local/share/sunrise` (never modify it), instance `creature-dev`. The launcher's window reads the instance's
+  version when it opens: restart it after an install, or its Play starts the plain Nightly. `sunrise-ctl`'s keys are
+  the keyboard's: this instance binds sneak to E. Agent control: start the game with
   `sunrise-launcher play --instance creature-dev --world <w> --arg --control`, then `sunrise-ctl` (in
   `~/.local/share/sunrise/launcher/versions/<version>/`): `command`, `screenshot`, `entities`, `interact-entity`...
 - Sources: `../sunrise-src` (sparse checkout of sunrise-org/sunrise: `crates/sunrise-mod-vocab` holds the hook
@@ -72,7 +73,20 @@ to date).
   (`controlling_passenger` is empty unless vanilla steers it); `entity_mount` can cancel a dismount.
 - `EntityRef::leash_holder` answers `Some(LeashHolder::Unleashed)` for a mob without a lead.
 - A payload's string holds at most 4096 bytes (`PAYLOAD_MAX_STRING_BYTES`).
-- More in `docs/SUNRISE-PORT.md` (what each port step taught).
+- Hosts are split by side (`ServerHost`, `ClientHost`, `HostSide`); per-type behaviour is a Part
+  (`r.entity_part`, `r.item_part`: `use_item`, `use_on`, `tooltip`). A renderer has no host: per-entity render state
+  is kept in statics by entity id (single player).
+- A type only its content file declares has no attribute row: `declare_entity_attributes` (with the JSON's values)
+  before `modify_entity_attributes`, or the game crashes at load. Particle keys are handed out at registration only
+  (`creature::particles`). `finalize_spawn` gives a mob's spawn reason.
+- `entity_interact` runs on both sides: answer on the client too, or the trader's screen opens.
+- A client keeps our creatures at their template's size (sunrise-org/sunrise#1134): a creature much taller gets a
+  client box through `minecraft:scale` (`creature::mob::scale_client_box`, the cyclops).
+- A creature drawn in a screen (`DrawContext::entity`) has the id `u32::MAX` (`creature::model::IN_A_SCREEN`).
+- A mod's own key is read with `ClientHost::consume_click` (from `client_tick_post`): `key_mapping_pre` tells only
+  vanilla's mappings. Drawn text needs an alpha byte in its colour (`0xFF......`).
+- A chest menu opened from code (`ServerHost::open_menu`) moves nothing on a click: the mod does
+  (sunrise-org/sunrise#2671).
 
 ## Sunrise workarounds
 

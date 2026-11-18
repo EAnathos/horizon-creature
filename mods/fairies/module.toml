@@ -4,5 +4,5 @@ name = "Fairies"
 status = "playable"
 # Its items in the series' creative tab, in order.
 creative = ["fairies:fairy_spawn_egg", "fairies:fairy_dust"]
-# Its Rust is on Sunrise's mod_api (docs/SUNRISE-PORT.md).
+# Its Rust is built on Sunrise's mod_api.
 ported = true

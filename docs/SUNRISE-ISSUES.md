@@ -52,5 +52,5 @@ Found, not filed: check the tracker and the newest Nightly first.
 ## Horizon
 
 The issues we raised on Horizon (horizon-rust/horizon and the arismoko/horizon fork) and their workarounds ended with
-the move to Sunrise: each one is answered or gone (docs/SUNRISE-PORT.md §5). The old page:
-`git show e542ff7:docs/HORIZON-ISSUES.md`.
+the move to Sunrise: each one is answered or gone (the port's notes: `git show 2c09384:docs/SUNRISE-PORT.md`, §5).
+The old page: `git show e542ff7:docs/HORIZON-ISSUES.md`.

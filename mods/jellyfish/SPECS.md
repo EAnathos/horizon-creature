@@ -1,6 +1,6 @@
 # Jellyfish: specification
 
-A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): jellyfish drifting in blooms
+A mod of the **Sunrise Creatures** series for **Sunrise** (Minecraft Java 26.3): jellyfish drifting in blooms
 through the oceans, pulsing slowly, trailing long tentacles that sting what brushes them. Some glow in the deep at
 night.
 

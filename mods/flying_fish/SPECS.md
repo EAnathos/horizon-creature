@@ -1,6 +1,6 @@
 # Flying Fish: specification
 
-A mod of the **Sunrise Creatures** series for **Minecraft Horizon** (Minecraft Java 26.3): shoals of flying fish in warm
+A mod of the **Sunrise Creatures** series for **Sunrise** (Minecraft Java 26.3): shoals of flying fish in warm
 seas that burst out of the water and glide over the waves on their wing-like fins, to flee a dolphin, a boat or a
 swooping seagull.
 
