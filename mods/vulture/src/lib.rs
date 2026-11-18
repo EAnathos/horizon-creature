@@ -45,6 +45,8 @@ use mod_api::{
 pub const KIND: &str = "vulture:vulture";
 /// Its hitbox and eye height, in blocks (SPECS §4); its rider sits on its harness (its entity type's
 /// `passenger_attachments`).
+/// How tall its model stands, for the book's 3D view (its box is lower: the rider sits on its back).
+const VIEW_HEIGHT: f32 = 1.4;
 const SIZE: creature::mob::Size = creature::mob::Size {
     width: 1.2,
     height: 1.0,
@@ -573,6 +575,8 @@ static TALONS: OnceLock<ToServer<TalonsPress>> = OnceLock::new();
 impl Hooks for Vulture {
     fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
         creature::mob::ours(KIND, SIZE);
+        // Its model stands taller than its box (its neck, its folded wings): the book shows it by that.
+        creature::bestiary::view_size(KIND, SIZE.width, VIEW_HEIGHT);
         let _ = r.register_attachment_type("vulture:state", false);
         screen::declare(r);
         creature::bestiary::register(&BESTIARY);

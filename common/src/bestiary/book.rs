@@ -272,9 +272,11 @@ fn view(host: &dyn ClientHost, batch: &mut dyn DrawContext, rect: [f32; 4], subj
         // stand by their own.
         Subject::Creature(species, look) => {
             colours::set_preview(look);
+            // A model bigger than its box (`view_size`) is shown by its own size.
+            let shown = super::view_size_of(species.id).map(|[w, h]| h.max(w / 2.0) * MODEL_MARGIN);
             let (extent, offset) = match crate::mob::size_of(species.id) {
                 Some(s) => (
-                    s.height.max(s.width / 2.0),
+                    shown.unwrap_or(s.height.max(s.width / 2.0)),
                     (s.height - crate::mob::TEMPLATE_HEIGHT) / 2.0,
                 ),
                 // A vanilla creature stands centred by its own height: only its size changes the scale.
@@ -287,7 +289,10 @@ fn view(host: &dyn ClientHost, batch: &mut dyn DrawContext, rect: [f32; 4], subj
                 offset,
                 GuiEntityLook::Turned { yaw, pitch: VIEW_PITCH },
             );
-            let _ = batch.entity(&GuiEntity::kind(species.id), view);
+            // One the game won't draw in a screen shows its icon.
+            if batch.entity(&GuiEntity::kind(species.id), view).is_err() {
+                icon(host, batch, rect, species.icon);
+            }
         }
         Subject::Item(item) => icon(host, batch, rect, item),
     }

@@ -27,8 +27,13 @@ pub fn tint(mob: Option<&LivingRenderState>) -> u32 {
 /// Turns the pose the way a living mob faces and scales it by its `minecraft:scale`, as vanilla's
 /// `LivingEntityRenderer.setupRotations` does before the model (our models face the other way): Sunrise hands a mod's renderer the pose at the mob's
 /// feet, not turned. Then a dying mob tips over onto its side in its first second. Call before drawing it.
-/// A mob drawn without its living state faces the viewer.
+/// A mob drawn without its living state faces the viewer. In a screen (`IN_A_SCREEN`) its faces are not lit as in the
+/// world: the screen lights them itself, and lit twice an underside comes out black. A spin of nothing does that
+/// (a spinning part keeps its colour, the shader lights it).
 pub fn living_pose(draw: &mut dyn BlockEntityDrawContext, entity: &EntityRenderState) {
+    if entity.id == IN_A_SCREEN {
+        draw.spin([0.0, 1.0, 0.0], [0.0; 3], 0.0, 0.0);
+    }
     let Some(mob) = entity.living.as_ref() else {
         return;
     };
