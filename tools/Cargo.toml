@@ -19,7 +19,7 @@ serde = { version = "1.0.229", features = ["derive"] }
 # Decodes the models' embedded textures and writes their pictures (`cargo creature preview`).
 png = "0.18"
 # The released files' SHA-256, for their registry entries (`cargo creature release`).
-sha2 = "0.10"
+sha2 = "0.11"
 # Signs the released files with the series' key, its password asked once per run (`cargo creature release`).
 minisign = "0.10"
 # The page screenshots: the README's WebP panels written as JPEGs, as the registry takes them (`cargo creature pages`).
