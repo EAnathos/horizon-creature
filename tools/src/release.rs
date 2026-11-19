@@ -4,8 +4,8 @@
 //! For each one, `cargo creature release [module...]`:
 //! - builds and checks its package (`build::module`) and copies it to `target/release/<id>-<version>.smod`, a version
 //!   that is new (a published file never changes: a version already in its entry with another file is refused);
-//! - signs it with minisign when the series has a key (`registry/minisign.pub`, the secret key's path in
-//!   `$SUNRISE_MODS_KEY`), as `<file>.minisig`;
+//! - signs it when the series has a key (`registry/minisign.pub`, the secret key's path in `$SUNRISE_MODS_KEY`), as
+//!   `<file>.minisig` (minisign's format): the key's password is asked once, at the start of the run (`Signer`);
 //! - writes its icon to `registry/icons/<id>.png` (`icon.rs`) and its entry to `registry/mods/<id>.toml`: its page
 //!   (the manifest's name, authors and licence, `[registry]`'s summary, categories and tags, its README as the
 //!   description) and its versions, the new one first with its changelog (its `CHANGELOG.md`'s section for it);
@@ -63,9 +63,10 @@ pub fn run(names: &[String]) -> crate::Result {
     }
     let out = crate::root().join("target/release");
     std::fs::create_dir_all(&out).map_err(|e| format!("{}: {e}", out.display()))?;
+    let signer = Signer::unlock()?;
     let mut released = Vec::new();
     for m in &chosen {
-        released.push(release(m, &out)?);
+        released.push(release(m, &out, signer.as_ref())?);
     }
     println!("\n{}", next_steps(&released));
     Ok(())
@@ -81,7 +82,7 @@ struct Released {
     notes: PathBuf,
 }
 
-fn release(m: &Module, out: &Path) -> crate::Result<Released> {
+fn release(m: &Module, out: &Path, signer: Option<&Signer>) -> crate::Result<Released> {
     let registry = m.registry.as_ref().ok_or("no [registry]")?;
     let manifest = Manifest::read(m)?;
     // Its links and images at the version's tag, which never moves (the registry's review asked for it).
@@ -110,7 +111,10 @@ fn release(m: &Module, out: &Path) -> crate::Result<Released> {
             ));
         }
     } else {
-        let (key, signature) = sign(&file)?;
+        let (key, signature) = match signer {
+            Some(s) => (Some(s.key.clone()), Some(s.sign(&file)?)),
+            None => (None, None),
+        };
         versions.insert(
             0,
             Version {
@@ -337,25 +341,61 @@ impl Version {
 
 /// Signs `file` with the series' minisign key when it has one: its public key (`registry/minisign.pub`) and the
 /// signature's text. None without a public key.
-fn sign(file: &Path) -> crate::Result<(Option<String>, Option<String>)> {
-    let public = crate::root().join("registry/minisign.pub");
-    if !public.is_file() {
-        return Ok((None, None));
+/// The series' signing key, unlocked once per run: its public key (as `registry/minisign.pub` holds it) and its secret
+/// key, read from `$SUNRISE_MODS_KEY` and decrypted with the password asked once, in the terminal.
+struct Signer {
+    public: minisign::PublicKey,
+    key: String,
+    secret: minisign::SecretKey,
+}
+
+impl Signer {
+    /// None when the series has no public key (`registry/minisign.pub`): its files go unsigned.
+    fn unlock() -> crate::Result<Option<Signer>> {
+        let path = crate::root().join("registry/minisign.pub");
+        if !path.is_file() {
+            return Ok(None);
+        }
+        let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+        let key = text
+            .lines()
+            .find(|l| !l.starts_with("untrusted comment:") && !l.trim().is_empty())
+            .ok_or("registry/minisign.pub holds no key")?
+            .trim()
+            .to_owned();
+        let public = minisign::PublicKey::from_base64(&key).map_err(|e| format!("registry/minisign.pub: {e}"))?;
+        let secret_path = std::env::var("SUNRISE_MODS_KEY")
+            .map_err(|_| "the series signs its files: set $SUNRISE_MODS_KEY to the minisign secret key's path")?;
+        // No password given: minisign asks for it in the terminal, once for the whole run.
+        let secret = minisign::SecretKey::from_file(&secret_path, None)
+            .map_err(|e| format!("{secret_path}: {e} (a wrong password?)"))?;
+        Ok(Some(Signer { public, key, secret }))
     }
-    let key = std::fs::read_to_string(&public)
-        .map_err(|e| format!("{}: {e}", public.display()))?
-        .lines()
-        .find(|l| !l.starts_with("untrusted comment:") && !l.trim().is_empty())
-        .ok_or("registry/minisign.pub holds no key")?
-        .trim()
-        .to_owned();
-    let secret = std::env::var("SUNRISE_MODS_KEY")
-        .map_err(|_| "the series signs its files: set $SUNRISE_MODS_KEY to the minisign secret key's path")?;
-    let path = file.to_string_lossy().into_owned();
-    crate::install::run_in(&crate::root(), "minisign", &["-S", "-s", &secret, "-m", &path])?;
-    let sig = PathBuf::from(format!("{path}.minisig"));
-    let signature = std::fs::read_to_string(&sig).map_err(|e| format!("{}: {e}", sig.display()))?;
-    Ok((Some(key), Some(signature)))
+
+    /// `file`'s signature (its `.minisig`, written beside it), as the `minisign` command makes it.
+    fn sign(&self, file: &Path) -> crate::Result<String> {
+        let data = std::fs::File::open(file).map_err(|e| format!("{}: {e}", file.display()))?;
+        let name = file
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let unix = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.as_secs());
+        let trusted = format!("timestamp:{unix}\tfile:{name}\thashed");
+        let signature = minisign::sign(
+            Some(&self.public),
+            &self.secret,
+            data,
+            Some(&trusted),
+            Some("signature from minisign secret key"),
+        )
+        .map_err(|e| format!("{}: {e}", file.display()))?
+        .into_string();
+        let sig = PathBuf::from(format!("{}.minisig", file.display()));
+        std::fs::write(&sig, &signature).map_err(|e| format!("{}: {e}", sig.display()))?;
+        Ok(signature)
+    }
 }
 
 /// The registry entry (sunrise-mods' `mods/<id>.toml`).

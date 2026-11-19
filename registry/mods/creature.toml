@@ -5,7 +5,7 @@ summary = "The library of the Sunrise Creatures mods: the creature guide and its
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-The library every mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/main/README.md) series needs. It adds no creature of its own, but what
+The library every mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.2.0/README.md) series needs. It adds no creature of its own, but what
 the creatures share:
 
 - **The creature guide**, given to every player the first time they join a world. Right-click it to open the
@@ -19,7 +19,7 @@ the creatures share:
 - **The "Sunrise Creatures" creative tab**, with every item of the series.
 - Monsters leave the series' creatures alone.
 
-For developers: [SPECS.md](https://github.com/EAnathos/sunrise-creatures/blob/main/common/SPECS.md) and [CONTRIBUTING.md](https://github.com/EAnathos/sunrise-creatures/blob/main/CONTRIBUTING.md).
+For developers: [SPECS.md](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.2.0/common/SPECS.md) and [CONTRIBUTING.md](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.2.0/CONTRIBUTING.md).
 """
 authors = ["EAnathos"]
 owners = ["EAnathos"]
@@ -29,6 +29,27 @@ icon = "icons/creature.png"
 categories = ["library"]
 tags = ["creatures", "bestiary", "glass-jar", "guide"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.2.0"
+published = "2026-11-19"
+game = "26.3"
+file = "creature-0.2.0.smod"
+sha256 = "516c93204463e4a267501e32d82caf95178c15f6114bfe9e9786d787526d03ea"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw64uiEnNp1sNGLTxBLiY9vmgmubbOWy2zW89E9M2s84+Vr8jUVJ1xWZwPGJKPOacfN+iUyh/kcQId9rOmIFRP9AI=
+trusted comment: timestamp:1795112599	file:creature-0.2.0.smod	hashed
+nYJxvodpozWKUtUxJwpydVIiNh9TTD1SEQlq2GCGxmq/x181enTMN0vUrVvBp0E0f2W4DffNdp/JerJ306nyBg==
+"""
+changelog = """
+- Built for Sunrise's 2026-11-19 Nightly (520fc48); the mods built on it need this version (`^0.2`).
+- The lights of glowing creatures (fireflies, fairies, storm spirits) share the game's 8 fairly: the creatures
+  nearest a player get them, instead of one mod taking every slot.
+- Fighting back is the library's (`creature::anger`), shared by the scorpions and the storm spirits; with
+  `give_effect`, `nearest_player` and `distance`.
+- The glass jar places each creature itself (`Species::draw_scale`, `draw_lift`).
+"""
 
 [[versions]]
 version = "0.1.1"

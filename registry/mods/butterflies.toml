@@ -5,9 +5,9 @@ summary = "Butterflies by day and moths by night, in many colours and patterns; 
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/main/docs/models/butterflies-butterfly-front.png) ![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/main/docs/models/butterflies-moth-front.png)
+![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/butterflies-0.1.1/docs/models/butterflies-butterfly-front.png) ![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/butterflies-0.1.1/docs/models/butterflies-moth-front.png)
 
-A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/main/README.md) series: butterflies by day and moths by night, in many colours and
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/butterflies-0.1.1/README.md) series: butterflies by day and moths by night, in many colours and
 patterns. **Requires** Sunrise Creatures, the series' library.
 
 ## Finding them
@@ -36,6 +36,22 @@ icon = "icons/butterflies.png"
 categories = ["mobs", "decoration"]
 tags = ["butterflies", "moths", "insects", "ambient"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.1"
+published = "2026-11-19"
+game = "26.3"
+file = "butterflies-0.1.1.smod"
+sha256 = "cd1a98fe501cac83ed072b4742dded52300d66e5504a271d9469242ed74dd37a"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw6xc/jwJHbVIk3ZGKJKmcNoZ2xW9dJdmS2QI2i7zpIVxCKcFsc6xwaecOSeJdfcEbn3Q+c7IEpcEYEO/Q0fcPPQk=
+trusted comment: timestamp:1795112609	file:butterflies-0.1.1.smod	hashed
+LL7BNcbskq5mpG4oP6L2SlmjlQHRn7d8DRq77YOMeSJxQOhdguAaTTw64WvrUIxkua1BzRa2RUBQsdQs/C2RCg==
+"""
+changelog = """
+- Built for Sunrise's 2026-11-19 Nightly and Sunrise Creatures 0.2.
+"""
 
 [[versions]]
 version = "0.1.0"

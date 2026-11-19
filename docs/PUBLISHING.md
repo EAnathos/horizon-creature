@@ -36,8 +36,8 @@ refused fails before release.
    checks it as the registry does (`cargo sunrise-mod check`), names it `target/release/<id>-<version>.smod`, signs it
    if the series has a key (below), and writes its entry `registry/mods/<id>.toml` (the new version first, the old ones
    kept) and its icon `registry/icons/<id>.png`. A version already published with another file is refused. Signing
-   asks the key's password once per file: a wrong one stops the run, which goes on with
-   `cargo creature release <the modules left>` (those signed already are kept). Commit `registry/` with the version.
+   asks the key's password once, at the start of the run (a wrong one stops it before anything is built); the
+   modules already signed are kept, so a stopped run goes on with `cargo creature release` again. Commit `registry/` with the version.
 4. **GitHub release.** One release of this repository per module version, tag `<id>-<version>`, the `.smod` (and its
    `.minisig`) as its asset, marked a pre-release while the series is in beta (0.x): the command prints each
    `gh release create` line (add `--prerelease`).
