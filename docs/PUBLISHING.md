@@ -79,6 +79,7 @@ reads.
 | Version | What | Registry |
 |---|---|---|
 | library 0.1.1, the eight mods 0.1.0 (2026-11-18) | First releases, signed; GitHub releases `<id>-<version>` (pre-releases) | [sunrise-org/sunrise-mods#10](https://github.com/sunrise-org/sunrise-mods/pull/10), merged 2026-11-18; the collection [#13](https://github.com/sunrise-org/sunrise-mods/pull/13), made by the registry's maintainers |
+| library 0.2.0, Vulture 0.2.0, Storm Spirits 0.1.0 (new), the other mods 0.1.1 (2026-11-19) | Sunrise's 2026-11-19 Nightly, the vulture's screen, Storm Spirits; signed (one password per run) | [sunrise-org/sunrise-mods#19](https://github.com/sunrise-org/sunrise-mods/pull/19), in review; Storm Spirits joins the collection once listed |
 
 ## Signing (recommended)
 
