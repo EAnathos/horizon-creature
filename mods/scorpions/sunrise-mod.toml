@@ -1,6 +1,6 @@
 id = "scorpions"
 name = "Scorpions"
-version = "0.1.0"
+version = "0.1.1"
 description = "Real-size scorpions of deserts, badlands and caves (in progress). Needs Sunrise Creatures."
 authors = ["EAnathos"]
 api = "0.2"
@@ -18,4 +18,4 @@ mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
 
 # The series' library, reached as the `creature` crate (common/SPECS.md).
 [dependencies]
-creature = "^0.1"
+creature = "^0.2"

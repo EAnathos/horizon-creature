@@ -10,7 +10,7 @@ several creature mods share, and the series' single creative tab. It adds no cre
 Everything below works and was tested in game, single player, unless said otherwise.
 
 - **The library itself**: a content half (`creature.hmod`) and a native half (`creature.hnmod`, crate `mod-creature`)
-  that every mod reaches as the `creature` crate (`[dependencies] creature = "^0.1"`).
+  that every mod reaches as the `creature` crate (`[dependencies] creature = "^0.2"`).
 - **Model drawing** (§3.1), **mob sounds** (§3.2), **the creative tab** (§3.3), **monsters sparing our creatures**
   (§3.4), **the small fliers' flight and spawning** (§3.5, by day, at night or at any hour) and **friends** (§6.2, the
   Fairies' and the vulture's owner).

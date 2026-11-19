@@ -6,3 +6,11 @@ status = "playable"
 creative = ["storm_spirits:storm_spirit_spawn_egg", "storm_spirits:spark"]
 # Its Rust is built on Sunrise's mod_api.
 ported = true
+
+# Its page in Sunrise's registry (`cargo creature release`, docs/PUBLISHING.md): with its manifest's name, authors and
+# licence, and its README as the description.
+[registry]
+summary = "Spirits of living lightning born in thunderstorms: they shock whoever hits them, and their sparks call lightning where you aim."
+categories = ["mobs", "magic"]
+tags = ["storm", "lightning", "spirit", "neutral"]
+icon = "storm_spirit"

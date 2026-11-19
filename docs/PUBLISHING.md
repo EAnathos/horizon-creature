@@ -28,7 +28,7 @@ refused fails before release.
 ## Releasing a version
 
 1. **Version.** Raise `version` in the module's `sunrise-mod.toml` and `Cargo.toml` (semver: a mod's
-   `[dependencies] creature = "^0.1"` follows the library's), and write its `CHANGELOG.md` section. A published file
+   `[dependencies] creature = "^0.2"` follows the library's), and write its `CHANGELOG.md` section. A published file
    never changes: any change, even one byte, is a new version.
 2. **Check.** `cargo creature check` and `cargo creature native-check`, and try the module in game
    (`cargo creature install`).
