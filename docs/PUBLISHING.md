@@ -17,8 +17,12 @@ namespaces), nothing hidden.
   without the table is not published (the planned mods).
 - **`sunrise-mod.toml`**: its `name`, `version`, `authors`, `license`, `description`, `homepage` and `issues`, shown by
   the game's Mods screen; the package also carries the icon (`icon.png`, made by `cargo creature pack`).
-- **`README.md`**: its registry page's description (50 to 10,000 characters; its title left out, its links and images
-  made absolute to this repository on GitHub). A 0.x version's page opens with a "Beta" line: the series stays in
+- **`README.md`**: its registry page's description (50 to 10,000 characters; its title left out, its links made
+  absolute to this repository on GitHub at the version's tag). The registry's pages show no image in their text (an
+  image comes out as `![](...)`), so image lines are left out: the pictures are the screenshots below.
+- **`[registry] screenshots`**: up to 8 pictures for the page, by their paths (PNG, JPEG, or a WebP the tool turns into
+  a JPEG), written to `registry/screenshots/<id>/`: the in-game panel of the README when there is one, then the
+  models' pictures. A 0.x version's page opens with a "Beta" line: the series stays in
   beta until 1.0.
 - **`CHANGELOG.md`**: a section per version (`## 0.1.0`), its changelog in the registry and its GitHub release's notes.
 
@@ -93,6 +97,13 @@ minisign -G -p registry/minisign.pub -s ~/.minisign/sunrise-mods.key
 (`~/.minisign/sunrise-mods.key`) and its password stay private and backed up (never in the repository): without them,
 no version of these projects can be published again. From then on `cargo creature release` signs every file: set `SUNRISE_MODS_KEY` to the secret key's path.
 Every version of a project with a key must be signed, by the same key.
+
+## Changing a page
+
+A page (its text, icon, screenshots, summary, categories, tags) belongs to the project, not to a version: it changes
+without a new version. `cargo creature pages [module...]` writes the published modules' entries again from their
+README and `module.toml`, every version as it is, then a pull request to sunrise-mods carries them as for a release
+(no file to stage). The README inside a released package doesn't change: the next version takes the new one.
 
 ## Updates and takedowns
 

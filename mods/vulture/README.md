@@ -3,7 +3,7 @@
 ![](../../docs/models/vulture-vulture-front.png)
 
 A mod of the [Sunrise Creatures](../../README.md) series: a desert vulture you tame with raw chicken, saddle and fly like
-a plane, with two chests and talons. **Requires** Sunrise Creatures, the series' library.
+a plane, with two chests and talons. **Requires** [Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Finding one
 

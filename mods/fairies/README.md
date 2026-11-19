@@ -3,7 +3,7 @@
 ![](../../docs/models/fairies-fairy-front.png)
 
 A mod of the [Sunrise Creatures](../../README.md) series: tiny shy fairies of the flowery woods and meadows, glowing a
-soft violet. **Requires** Sunrise Creatures, the series' library.
+soft violet. **Requires** [Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Finding them
 

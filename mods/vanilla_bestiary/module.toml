@@ -14,3 +14,4 @@ summary = "Minecraft's own creatures in the creature guide's bestiary: where you
 categories = ["game-mechanics", "utility"]
 tags = ["bestiary", "guide", "vanilla", "creatures"]
 icon = "common/assets/creature/textures/item/guide.png"
+screenshots = ["docs/media/readme/bestiary.webp"]

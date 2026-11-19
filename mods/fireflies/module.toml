@@ -14,3 +14,4 @@ summary = "Fireflies that light up warm nights; kept in a glass jar, they make a
 categories = ["mobs", "decoration"]
 tags = ["fireflies", "insects", "ambient", "light"]
 icon = "firefly"
+screenshots = ["docs/models/fireflies-firefly-front.png", "docs/models/fireflies-firefly-back.png"]

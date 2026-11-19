@@ -3,7 +3,7 @@
 ![](../../docs/models/storm_spirits-storm_spirit-front.png)
 
 A mod of the [Sunrise Creatures](../../README.md) series: spirits of living lightning, born in storms. **Requires**
-Sunrise Creatures, the series' library.
+[Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Finding them
 

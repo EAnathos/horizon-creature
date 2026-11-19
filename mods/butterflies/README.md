@@ -3,7 +3,7 @@
 ![](../../docs/models/butterflies-butterfly-front.png) ![](../../docs/models/butterflies-moth-front.png)
 
 A mod of the [Sunrise Creatures](../../README.md) series: butterflies by day and moths by night, in many colours and
-patterns. **Requires** Sunrise Creatures, the series' library.
+patterns. **Requires** [Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Finding them
 

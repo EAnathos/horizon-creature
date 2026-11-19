@@ -14,3 +14,4 @@ summary = "Earthworms that come up in the rain; settle them in your garden and t
 categories = ["mobs", "food", "game-mechanics"]
 tags = ["worms", "farming", "crops", "garden"]
 icon = "worm"
+screenshots = ["docs/models/worms-worm-front.png", "docs/models/worms-worm-back.png"]

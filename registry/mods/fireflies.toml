@@ -5,16 +5,14 @@ summary = "Fireflies that light up warm nights; kept in a glass jar, they make a
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/fireflies-0.1.1/docs/models/fireflies-firefly-front.png)
-
-A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/fireflies-0.1.1/README.md) series: fireflies that light up the night. **Requires** Horizon
-Creature, the series' library.
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/fireflies-0.1.1/README.md) series: fireflies that light up the night. **Requires** [Sunrise
+Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Finding them
 
 At night, near swamps, rivers, plains, meadows and forests, fireflies drift low and slowly in small groups, their
-lanterns pulsing yellow-green. By day they rest on the ground. In creative: the spawn egg (creative tab "Horizon
-Creature").
+lanterns pulsing yellow-green. By day they rest on the ground. In creative: the spawn egg (creative tab "Sunrise
+Creatures").
 
 ## Jars
 

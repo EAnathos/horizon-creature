@@ -14,3 +14,8 @@ summary = "A desert vulture you tame with raw chicken, saddle and fly like a pla
 categories = ["mobs", "transportation", "adventure"]
 tags = ["vulture", "flying", "mount", "taming", "birds"]
 icon = "vulture"
+screenshots = [
+  "docs/media/readme/vulture.webp",
+  "docs/models/vulture-vulture-front.png",
+  "docs/models/vulture-vulture-back.png",
+]

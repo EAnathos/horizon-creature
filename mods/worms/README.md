@@ -3,7 +3,7 @@
 ![](../../docs/models/worms-worm-front.png)
 
 A mod of the [Sunrise Creatures](../../README.md) series: earthworms you settle in your garden, where they help crops
-grow. **Requires** Sunrise Creatures, the series' library.
+grow. **Requires** [Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Finding them
 

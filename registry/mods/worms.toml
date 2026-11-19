@@ -5,10 +5,8 @@ summary = "Earthworms that come up in the rain; settle them in your garden and t
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/worms-0.1.1/docs/models/worms-worm-front.png)
-
 A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/worms-0.1.1/README.md) series: earthworms you settle in your garden, where they help crops
-grow. **Requires** Sunrise Creatures, the series' library.
+grow. **Requires** [Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Finding them
 

@@ -5,10 +5,8 @@ summary = "Shy glowing fairies you befriend with glow berries: they circle your 
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/fairies-0.1.1/docs/models/fairies-fairy-front.png)
-
 A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/fairies-0.1.1/README.md) series: tiny shy fairies of the flowery woods and meadows, glowing a
-soft violet. **Requires** Sunrise Creatures, the series' library.
+soft violet. **Requires** [Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Finding them
 
@@ -33,8 +31,8 @@ Right-click it to make it **stay** where it is, again to have it **follow** you.
 
 ## Fairy dust
 
-Your fairy's gift. It will brew a **Potion of Swiftness** (awkward potion + fairy dust) with the next Horizon update the
-series moves to.
+Your fairy's gift. It brews a **Potion of Swiftness** in a brewing stand, in place of sugar (awkward potion + fairy
+dust).
 
 ## Jars
 

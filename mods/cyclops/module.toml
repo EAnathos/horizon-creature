@@ -14,3 +14,8 @@ summary = "A one-eyed giant shepherd at cave mouths, with its flock, a club that
 categories = ["mobs", "adventure"]
 tags = ["cyclops", "giant", "hostile", "boss"]
 icon = "cyclops"
+screenshots = [
+  "docs/media/readme/cyclops.webp",
+  "docs/models/cyclops-cyclops-front.png",
+  "docs/models/cyclops-cyclops-back.png",
+]

@@ -16,3 +16,4 @@ summary = "The library of the Sunrise Creatures mods: the creature guide and its
 categories = ["library"]
 tags = ["creatures", "bestiary", "glass-jar", "guide"]
 icon = "common/assets/creature/textures/item/guide.png"
+screenshots = ["docs/media/readme/bestiary.webp"]

@@ -3,7 +3,7 @@
 ![](../../docs/models/cyclops-cyclops-front.png)
 
 A mod of the [Sunrise Creatures](../../README.md) series: a one-eyed giant shepherd, four blocks tall, who lives at the
-mouths of caves with his flock. **Requires** Sunrise Creatures, the series' library.
+mouths of caves with his flock. **Requires** [Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Meeting one
 

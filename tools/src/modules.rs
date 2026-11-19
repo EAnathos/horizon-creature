@@ -60,6 +60,10 @@ pub struct Registry {
     pub tags: Vec<String>,
     /// Its icon: one of its models (its picture in `docs/models/`), or a PNG by its path from the repository's root.
     pub icon: String,
+    /// Up to 8 pictures for its page, by their paths from the repository's root (PNG, JPEG, or WebP made a JPEG):
+    /// the registry shows them; a page's text shows no image.
+    #[serde(default)]
+    pub screenshots: Vec<String>,
 }
 
 #[derive(Debug)]

@@ -12,6 +12,7 @@
 //! cargo creature native-check [sdk]           # compiles the ported crates (clippy, tests) on the pinned Sunrise SDK
 //! cargo creature vanilla [jar]               # Minecraft's own data -> the Vanilla Bestiary's game_data.rs
 //! cargo creature release [module...]         # the published modules (default: all) -> target/release/, registry/
+//! cargo creature pages [module...]           # their registry pages again (text, icon, screenshots), same versions
 //! cargo creature install [--instance <name>] [mod...]
 //!                                             # builds the library and the mods (default: all), installs them in the
 //!                                             # instance (default creature-dev), runs the launcher's native build
@@ -50,7 +51,7 @@ pub type Result<T = ()> = std::result::Result<T, String>;
 
 const USAGE: &str = "usage: cargo creature list | tab | model <mod> [model] | preview | sounds <mod> [folder] | pack <module> \
                      | build [mod...] | check | native-check [sdk] | vanilla [jar] \
-                     | release [module...] | install [--instance <name>] [mod...]";
+                     | release [module...] | pages [module...] | install [--instance <name>] [mod...]";
 
 fn list() -> Result {
     let all: Vec<_> = std::iter::once(modules::library()?).chain(modules::mods()?).collect();
@@ -109,6 +110,7 @@ fn main() -> ExitCode {
             .and_then(|m| pack::run(&m).map(|_| ())),
         Some("build") => build::run(&args[1..]),
         Some("release") => release::run(&args[1..]),
+        Some("pages") => release::pages(&args[1..]),
         Some("check") => check::run(),
         Some("native-check") => native_check::run(arg(1)),
         Some("vanilla") => vanilla::run(arg(1)),

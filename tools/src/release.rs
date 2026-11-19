@@ -132,6 +132,7 @@ fn release(m: &Module, out: &Path, signer: Option<&Signer>) -> crate::Result<Rel
             &registry.icon,
             &crate::root().join(format!("registry/icons/{}.png", m.id)),
         )?;
+        screenshots(m, registry)?;
         let entry = entry(m, &manifest, registry, &description, key.as_deref(), &versions);
         if let Some(parent) = entry_path.parent() {
             std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
@@ -192,8 +193,116 @@ pub fn description(m: &Module, rev: &str) -> crate::Result<String> {
         .lines()
         .skip_while(|l| l.starts_with("# ") || l.trim().is_empty())
         .collect();
+    // The registry's pages show no image in their text (`![](...)` comes out as it is): the pictures are its
+    // screenshots instead (`[registry] screenshots`).
+    let body: Vec<&str> = body.into_iter().filter(|l| !is_image(l)).collect();
+    let text = body.join("\n").replace("\n\n\n", "\n\n");
     let dir = m.dir.strip_prefix(crate::root()).unwrap_or(&m.dir).to_path_buf();
-    Ok(absolute_links(&body.join("\n"), &dir, rev).trim().to_owned() + "\n")
+    Ok(absolute_links(&text, &dir, rev).trim().to_owned() + "\n")
+}
+
+/// A line made only of images (`![alt](path)`, one or more).
+fn is_image(line: &str) -> bool {
+    let mut rest = line.trim();
+    if rest.is_empty() {
+        return false;
+    }
+    while !rest.is_empty() {
+        let Some(after) = rest.strip_prefix("![") else {
+            return false;
+        };
+        let Some(close) = after.find("](") else {
+            return false;
+        };
+        let Some(end) = after[close..].find(')') else {
+            return false;
+        };
+        rest = after[close + end + 1..].trim_start();
+    }
+    true
+}
+
+/// Most pictures a page shows.
+const SCREENSHOTS: usize = 8;
+
+/// The module's page pictures, written to `registry/screenshots/<id>/` as `<n>-<name>.png|.jpg` in the order listed
+/// (what was there before is removed).
+fn screenshots(m: &Module, registry: &Registry) -> crate::Result {
+    let dir = crate::root().join(format!("registry/screenshots/{}", m.id));
+    if dir.exists() {
+        std::fs::remove_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    }
+    if registry.screenshots.is_empty() {
+        return Ok(());
+    }
+    if registry.screenshots.len() > SCREENSHOTS {
+        return Err(format!("{}: at most {SCREENSHOTS} screenshots", m.id));
+    }
+    std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    for (k, path) in registry.screenshots.iter().enumerate() {
+        let from = crate::root().join(path);
+        let stem = from
+            .file_stem()
+            .map(|s| s.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let ext = from
+            .extension()
+            .map(|s| s.to_string_lossy().to_lowercase())
+            .unwrap_or_default();
+        let fail = |e: String| format!("{}: {e}", from.display());
+        match ext.as_str() {
+            "png" | "jpg" => {
+                let to = dir.join(format!("{}-{stem}.{ext}", k + 1));
+                std::fs::copy(&from, &to).map_err(|e| fail(e.to_string()))?;
+            }
+            "webp" => {
+                let to = dir.join(format!("{}-{stem}.jpg", k + 1));
+                let picture = image::open(&from).map_err(|e| fail(e.to_string()))?.to_rgb8();
+                picture.save(&to).map_err(|e| fail(e.to_string()))?;
+            }
+            _ => return Err(fail("a screenshot is a PNG, a JPEG or a WebP".into())),
+        }
+    }
+    Ok(())
+}
+
+/// `cargo creature pages [module...]`: the published modules' pages in `registry/` (their text from the README, icon
+/// and screenshots) written again, their versions left as they are: a page changes without a new version.
+pub fn pages(names: &[String]) -> crate::Result {
+    for m in std::iter::once(modules::library()?).chain(modules::mods()?) {
+        let Some(registry) = m.registry.as_ref() else {
+            continue;
+        };
+        if !names.is_empty() && !names.contains(&m.id) {
+            continue;
+        }
+        let entry_path = crate::root().join(format!("registry/mods/{}.toml", m.id));
+        let versions = Version::read_all(&entry_path)?;
+        let Some(latest) = versions.first() else {
+            println!("{}: not published yet", m.id);
+            continue;
+        };
+        let text = std::fs::read_to_string(&entry_path).map_err(|e| format!("{}: {e}", entry_path.display()))?;
+        let t: toml::Table = toml::from_str(&text).map_err(|e| format!("{}: {e}", entry_path.display()))?;
+        let key = t.get("key").and_then(|k| k.as_str());
+        let manifest = Manifest::read(&m)?;
+        let tag = format!("{}-{}", m.id, latest.version);
+        let description = beta(&latest.version) + &description(&m, &tag)?;
+        let problems = page_problems(registry, &description);
+        if !problems.is_empty() {
+            return Err(format!("{}: {}", m.id, problems.join("; ")));
+        }
+        crate::icon::make(
+            &m.id,
+            &registry.icon,
+            &crate::root().join(format!("registry/icons/{}.png", m.id)),
+        )?;
+        screenshots(&m, registry)?;
+        let entry = entry(&m, &manifest, registry, &description, key, &versions);
+        std::fs::write(&entry_path, entry).map_err(|e| format!("{}: {e}", entry_path.display()))?;
+        println!("{}: page written ({} screenshots)", m.id, registry.screenshots.len());
+    }
+    Ok(())
 }
 
 /// A 0.x version's page opens with this: the series is in beta until 1.0.
@@ -542,6 +651,9 @@ mod tests {
     #[test]
     fn a_0_x_version_says_it_is_in_beta() {
         assert!(beta("0.1.0").starts_with("> **Beta.**"));
+        assert!(is_image("![](a.png) ![](b.png)"));
+        assert!(!is_image("A [link](x) and ![](a.png)"));
+        assert!(!is_image(""));
         assert!(beta("1.0.0").is_empty());
     }
 
@@ -565,6 +677,7 @@ mod tests {
             categories: vec!["mobs".into(), "bloom".into()],
             tags: vec!["Vulture".into()],
             icon: "vulture".into(),
+            screenshots: Vec::new(),
         };
         let problems = page_problems(&r, "short");
         assert_eq!(problems.len(), 3, "{problems:?}");

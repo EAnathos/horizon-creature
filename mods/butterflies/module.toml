@@ -14,6 +14,11 @@ summary = "Butterflies by day and moths by night, in many colours and patterns; 
 categories = ["mobs", "decoration"]
 tags = ["butterflies", "moths", "insects", "ambient"]
 icon = "butterfly"
+screenshots = [
+  "docs/media/readme/butterflies.webp",
+  "docs/models/butterflies-butterfly-front.png",
+  "docs/models/butterflies-moth-front.png",
+]
 
 # Its butterfly's pictures in a morph of its own (the model's texture is greyscale: the game tints it, colours.rs).
 [preview.butterfly]

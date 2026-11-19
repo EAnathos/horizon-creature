@@ -5,17 +5,15 @@ summary = "Butterflies by day and moths by night, in many colours and patterns; 
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/butterflies-0.1.1/docs/models/butterflies-butterfly-front.png) ![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/butterflies-0.1.1/docs/models/butterflies-moth-front.png)
-
 A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/butterflies-0.1.1/README.md) series: butterflies by day and moths by night, in many colours and
-patterns. **Requires** Sunrise Creatures, the series' library.
+patterns. **Requires** [Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Finding them
 
 Butterflies flutter by day, in fair weather, in flower forests, meadows, plains, forests, birch forests, cherry groves
 and jungles, landing on flowers. Moths come out at night in forests, taigas, plains and meadows, and circle around
-torches and lanterns. Both fly off when you sprint at them. In creative: their spawn eggs (creative tab "Horizon
-Creature").
+torches and lanterns. Both fly off when you sprint at them. In creative: their spawn eggs (creative tab "Sunrise
+Creatures").
 
 Each butterfly has its own look: a colour (white, lemon, orange, red, sky blue, violet, brown, black) and a pattern
 (plain, eye spots, wing tips, veins, dots, tails) in a second colour, some likelier in some biomes. The bestiary keeps

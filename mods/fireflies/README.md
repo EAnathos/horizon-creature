@@ -2,8 +2,8 @@
 
 ![](../../docs/models/fireflies-firefly-front.png)
 
-A mod of the [Sunrise Creatures](../../README.md) series: fireflies that light up the night. **Requires** Sunrise
-Creatures, the series' library.
+A mod of the [Sunrise Creatures](../../README.md) series: fireflies that light up the night. **Requires** [Sunrise
+Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Finding them
 
