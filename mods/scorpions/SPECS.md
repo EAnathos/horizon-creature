@@ -85,7 +85,7 @@ scorpion glow), "Jar" (caught one in a jar), "Settled" (settled one in a sandy p
 ## 5. Items ✅
 
 - **Venom sac** (`scorpions:venom_sac`) ✅: a small amber sac. Uses ✅: brewed in an awkward potion it makes a potion
-  of Poison, as a spider eye does (if Horizon lets a mod add a brewing recipe, to check when implementing); 8 arrows
+  of Poison, as a spider eye does (`data/scorpions/recipe/brewing/`); 8 arrows
   around a venom sac craft 8 arrows of Poison (vanilla's tipped arrows).
 - **Stinger** (`scorpions:stinger`) ✅: the hooked stinger. Use ✅: with a stick, crafts a **scorpion dagger**
   (`scorpions:scorpion_dagger`): a quick, light blade (3 damage, faster than a sword), 64 uses. It carries the

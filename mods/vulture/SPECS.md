@@ -45,33 +45,33 @@ Left: tuning (flight numbers, taming odds, speeds, the dive attack) as players r
 
 ## 1. Technical context
 
-- **Format**: a Horizon native mod = a content mod (items, recipes, loot, textures, sounds, entity type in JSON)
-  + Rust code built into Horizon (`horizon-mixin.toml`, `native_*` hooks). Tool: `cargo horizon-mod`.
-- **Toolchain**: the Rust the Horizon launcher pins.
+- **Format**: a Sunrise native mod (`sunrise-mod.toml`): content (items, recipes, loot, textures, sounds, the entity type
+  in JSON) and Rust code built into the game by the launcher, on `sunrise-mod-api`. Tools: `cargo sunrise-mod`, the
+  series' `cargo creature`.
+- **Toolchain**: the Rust the pinned Sunrise SDK names (`target/sunrise-sdk/sdk.json`).
 - **Target**: game 26.3, on the series' pinned Sunrise revision (docs/SUNRISE-ISSUES.md).
 - **Mod id**: `vulture` (ids kept from before the series, so test worlds still load).
-- **Dependency** ✅: the library `creature` (`[dependencies] creature = "^0.1"` in `native/horizon-mixin.toml`). Entity `vulture:vulture`, items `vulture:feather`, `vulture:raw_vulture`,
-  `vulture:cooked_vulture` (the saddle is vanilla's).
+- **Dependency** ✅: the library `creature` (`[dependencies] creature = "^0.2"` in `sunrise-mod.toml`). Entity
+  `vulture:vulture`, items `vulture:feather`, `vulture:raw_vulture`, `vulture:cooked_vulture` (the saddle is vanilla's).
 - **Multiplayer** ✅: v1 = single player. LAN and the dedicated server come in v2 (for a LAN guest, their own client
   moves the mount, which needs its own work), but server logic is kept apart from rendering from the start.
 - **Languages** ✅: everything in the repository is in English; the game text is translated (`en_us`, `fr_fr`).
 
-### 1.1 What the Horizon API allows today (read in Horizon's `docs/mods.md` and `docs/native-mods.md`)
+### 1.1 How Sunrise's API gives it what it needs
 
-| Need | Available | Notes |
-|---|---|---|
-| New living entity type | ✅ tested in game | Only by copying a **zombie, villager or wandering trader**. `vulture:vulture` (wandering trader) works: `/summon`, egg, saving. |
-| Custom AI | ✅ | `register_goals`: we clear the base model's (wandering trader's) goals and add ours |
-| Custom model and texture | ✅ tested in game | `native_mob_submit`: we draw our cubes (`native_draw_cube`, pose stack, pivots) with `vulture:entity/...` textures |
-| Per-entity saved data | ✅ | Server attachments on `Holder::Entity(id)`: the owner and sitting in the library's `creature:friend`, the stats, harness, chests and age in `vulture:state` |
-| Right-click on the entity | ✅ | `native_interact_entity` |
-| Taming event | ✅ | `native_entity_tame` (vanilla only, to check) |
-| Nearby items on the ground | ✅ | API 42 (position, stack, pickup delay) |
-| Mod sounds | ✅ | `assets/vulture/sounds.json` + `.ogg`, played by `Host::play_sound` (Horizon always prefixes mob sounds with `minecraft:`) |
-| Inventory screen | ✅ | Mod menu types (1 to 256 slots) |
-| Natural spawning | ✅ | `add_spawns` by biome |
-| **Riding a mod entity and flying it** | ✅ | `/ride` accepts any mob; Horizon copies the rider's keys into `Mob.rider` (forward, strafe, jump, sprint), which a goal reads to set the speed. Internal fields: Horizon revision pinned. Right-click → mount: `Host::mount` from the server's `interact_entity` hook. No cheats needed. |
-| Carrying an entity (talons) | ✅ | Teleported under the vulture every tick (`talons.rs`). |
+| Need | How |
+|---|---|
+| New living entity type | Only by copying a **zombie, villager or wandering trader**: `vulture:vulture` copies the wandering trader (`/summon`, egg, saving). |
+| Its behaviour | The library takes the trader's goals off when it joins; the vulture is moved by hand from `entity_tick_post` (the library's `body`: flight, sitting, the dive, eating, mating). |
+| Its model and texture | Its own `EntityRenderer`, drawing its cubes with the library's `model` and `vulture:entity/...` textures. |
+| Per-entity saved data | Attachments on `Holder::Entity(id)`: the owner and sitting in the library's `creature:friend`, the stats, harness, chests and age in `vulture:state`, the chests' contents in `vulture:chests`. |
+| Right-click on it | `entity_interact`, answered on both sides (or the trader's screen opens). |
+| Taming | Its own: raw chicken thrown near it (`tame.rs`), the items around read with `LevelRef::entities_in`. |
+| Its sounds | `assets/vulture/sounds.json` and `.ogg` files, the hurt and death in its entity type, the rest played by the library's `sounds`. |
+| Its screen | A chest menu opened from code (`open_menu`), whose clicks the mod makes (`screen.rs`), the cursor through `MenuRef::cursor`. |
+| Natural spawning | A biome modifier (`data/vulture/neoforge/biome_modifier/`). |
+| **Riding it and flying it** | Right-click mounts its owner (`EntityRef::start_riding`, as `/ride` does); the rider's keys come from the server's `player_input` hook, the rider is the mount's first passenger, and `entity_mount` keeps a dismount from happening mid-air. |
+| Carrying a creature (talons) | Teleported under the vulture every tick (`talons.rs`). |
 
 ---
 
@@ -112,7 +112,7 @@ Variant names are simple colour names ✅, so players need not know the species.
 
 | Property | Value |
 |---|---|
-| Size (hitbox) | ~1.2 × 1.0 blocks; visual wingspan ~4.5 blocks in flight (§7.1). Horizon gives a mod mob its template's size (the trader's 0.6 × 1.95): we try overriding it at spawn, else we keep the trader's ✅ |
+| Size (hitbox) | ~1.2 × 1.0 blocks; visual wingspan ~4.5 blocks in flight (§7.1). The library gives it its own box on the server (`creature::mob::ours`); a client keeps the trader's 0.6 × 1.95 (sunrise-org/sunrise#1134) ✅ |
 | Behaviour ✅ | **Neutral and retaliates**: attacks whoever hits it (3 damage), and nearby vultures join in, like wolves/llamas |
 | Biomes ✅ | Desert, badlands, savanna; groups of 1–3 |
 | Wild flight | Slow circles high up, lands on high points |
@@ -177,8 +177,8 @@ by **looking** where it should go ✅ and sets its height with **Space and sneak
 - The look's pitch does nothing (the camera is free): height is Space and sneak.
 - On the ground: a slow walk (W, A, D), **S backs it up** at less than half that pace ✅ (like a big flier stepping
   back), Space takes off, sneak gets off.
-- Horizon gets a rider off on sneak before any mod hears of it: the `ride-keys` injection (`ride_keys.rs`) keeps them
-  on in the air.
+- Sneak would get a rider off: in the air the dismount is cancelled (`entity_mount`, `ride.rs`'s `keep_seated`), so it
+  descends instead.
 - ✅ Chests **do not weigh** on its flight. ✅ **No thermals.**
 - Starting numbers ✅, to balance in game (blocks per tick): cruise 0.55 × its speed stat (× 2 ridden), dive up to 1.0 (× 2 ridden), slowest 0.18 before a stall,
   glide sink 0.04 when level, take-off climb 0.4, descent at least 0.2.

@@ -12,7 +12,7 @@ use std::path::PathBuf;
 
 use serde_json::Value;
 
-/// The Minecraft version of the series' Horizon pin (docs/CONVENTIONS.md).
+/// The Minecraft version of the series' Sunrise pin (docs/SUNRISE-ISSUES.md).
 const VERSION: &str = "26.3";
 const OUT: &str = "mods/vanilla_bestiary/src/game_data.rs";
 

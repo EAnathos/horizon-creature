@@ -91,7 +91,7 @@ files as an artifact.
 
 Dependabot (`.github/dependabot.yml`) opens weekly pull requests for the CI's actions (all in one) and the tools' Rust
 dependencies (minor and patch updates in one, each major one apart); CI checks them like any other. The native crates
-are left out: Horizon, their only dependency, is pinned for the whole series and moved by hand.
+are left out: Sunrise, their only dependency, is pinned for the whole series and moved by hand.
 
 ## Rules of the series
 

@@ -32,8 +32,8 @@ library's lobbed projectiles (common/SPECS.md §3.9) moved from the Cyclops with
   (§3.4), the creature guide's pages (§7), and, moved from the Cyclops with this mod (rule of two), **the lobbed
   projectile** (the cyclops's boulder: lifted, thrown on an arc, breaking blocks where it lands or not;
   common/SPECS.md §3.9) ✅.
-- It copies the wandering trader (goals only), a box of 3 × 6 blocks ✅ (6 blocks tall). Horizon: the boss bar
-  (`Host::boss_bar`, shown to the players within 48 blocks).
+- It copies the wandering trader (goals only), a box of 3 × 6 blocks ✅ (6 blocks tall). Sunrise: the boss bar
+  (`create_boss_bar`, shown to the players within 48 blocks).
 - Its own sounds (grinding rock, a deep rumble, the hiss of lava) from freesound, CC0, cut by `cargo creature sounds`.
 
 ## 2. The magma golem ✅

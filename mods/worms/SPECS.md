@@ -32,8 +32,8 @@ Left: chickens pecking worms (§2), planned with the Dung Beetles.
   `creature:glass_jar`, the same jar as the butterflies' ✅ (library §4.1).
 - Uses from the library: model drawing and sounds (§3.1, §3.2), **glass jar and territories** (§4, which this mod
   switches on; rule "garden"), hitbox size (§3.4).
-- The worm copies the wandering trader (goals only) with a tiny hitbox. Crop growth: Horizon's random tick hook
-  (`native_random_tick`) or a bonus growth tick from the worm itself ✅ (the worm's own tick).
+- The worm copies the wandering trader (goals only) with a tiny hitbox. Crop growth: a growth stage from the worm's own
+  tick ✅ (`tend`).
 
 ## 2. The worm ✅
 

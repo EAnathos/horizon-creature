@@ -34,8 +34,8 @@ crawlers and the chickens' pecking (common/SPECS.md §3.6, §3.7), and the pastu
 - The beetle copies the wandering trader (goals only) with a tiny hitbox, like the worm.
 - **The ball is drawn with the beetle** ✅: a part of its model, growing as it is shaped and turning as it rolls, not an
   entity of its own (no physics, nothing to save apart, no stray balls left in the world).
-- The dung ball in a composter: through Horizon's compostables data map if a content mod can add to it, else the
-  library's block interaction hook (to check when implementing).
+- The dung ball in a composter: through Sunrise's `compost_item` hook (its chance in `ItemsHost::item_compost_chance`;
+  to check when implementing).
 
 ## 2. The dung beetle ✅
 

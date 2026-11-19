@@ -93,7 +93,7 @@ pub fn run() -> crate::Result {
     Err(format!("{} problems", errors.len()))
 }
 
-/// A manifest's `[native]` pins: the Sunrise commit and the horizon-mixins commit.
+/// A manifest's `[native]` pins: the Sunrise commit and the mixins commit.
 fn native_pins(t: &toml::Table) -> Option<(String, String)> {
     let native = t.get("native")?;
     Some((

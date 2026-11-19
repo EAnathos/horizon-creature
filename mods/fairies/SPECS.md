@@ -27,7 +27,7 @@ Built and tested in game (single player).
 - **Befriended**: it circles its friend's head, leaving faint sparkles; right-click makes it stay where it is or
   follow again. Its friend has **Speed I** while it follows within 8 blocks. Once a day it leaves a pinch of fairy dust
   at their feet. It comes to them at once past 24 blocks, never despawns, and its friend's blows can't hurt it (nor a
-  player's arrow or trident: Horizon doesn't say whose).
+  player's arrow or trident: the damage doesn't say whose).
 - **Glass jar** (§5): caught as the other creatures (a befriended one only by its friend), still befriended once let
   out, its name kept; released on a flower it settles there; on display, a jar that glows (light 7, as fireflies).
 - **Fairy dust** (§6): brews (awkward potion + fairy dust = Swiftness, `data/fairies/recipe/brewing/`).
@@ -35,7 +35,6 @@ Built and tested in game (single player).
 - **Sounds**: its own, from CC0 freesound recordings (`assets/sounds.toml`): wings at take-off, a chime or a tiny laugh
   now and then, hurt, vanishing, the sparkle of a new friendship and of a gift. English and French subtitles.
 
-Left: the Swiftness potion, with the next Horizon pin.
 
 ## 1. Technical context
 

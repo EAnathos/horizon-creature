@@ -15,7 +15,7 @@
 //!   and lands on them.
 //!
 //! **Spawning** (`spawns`): small fliers come out near players, as vanilla's ambient bats do, rather than through
-//! Horizon's natural spawning alone, whose creature cap the farm animals fill (it adds creatures only every 400
+//! The game's natural spawning alone, whose creature cap the farm animals fill (it adds creatures only every 400
 //! ticks): every `SPAWN_EVERY` ticks, for each player and each kind registered, one chance in its `chance` while fewer
 //! than its `cap` are within `SPAWN_NEAR` blocks, a group comes out `SPAWN_MIN` to `SPAWN_MAX` blocks away, over the
 //! ground, in one of its biomes, at its hours. Wild ones far from players despawn (`tick_post`), so they come and go.

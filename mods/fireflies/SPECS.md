@@ -70,4 +70,4 @@ Creative, a swamp or a plains at night; `cargo creature install fireflies` first
 
 - ~~Q1: Settled fireflies?~~ The flower patch rule, as butterflies.
 - ~~Q2: The jar's light?~~ Light 7, steady.
-- ~~Q3: Light while flying?~~ No world light: a full-bright lantern and Horizon's visual light (seen, lights nothing).
+- ~~Q3: Light while flying?~~ No world light: a full-bright lantern and a seen-only light (the library's lights, common/SPECS.md §3.11).

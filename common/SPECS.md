@@ -9,8 +9,8 @@ several creature mods share, and the series' single creative tab. It adds no cre
 
 Everything below works and was tested in game, single player, unless said otherwise.
 
-- **The library itself**: a content half (`creature.hmod`) and a native half (`creature.hnmod`, crate `mod-creature`)
-  that every mod reaches as the `creature` crate (`[dependencies] creature = "^0.2"`).
+- **The library itself**: one native package (`creature.smod`: its content and the crate `mod-creature`) that every mod
+  reaches as the `creature` crate (`[dependencies] creature = "^0.2"`).
 - **Model drawing** (§3.1), **mob sounds** (§3.2), **the creative tab** (§3.3), **monsters sparing our creatures**
   (§3.4), **the small fliers' flight and spawning** (§3.5, by day, at night or at any hour) and **friends** (§6.2, the
   Fairies' and the vulture's owner).
@@ -45,23 +45,17 @@ stay in the vulture until a second mod needs them, except friends (§6.2), share
   e.g. the glass jar (§4). The same goes for optional content between mods: a recipe that uses another mod's item when
   it is installed and a vanilla item otherwise is two conditional recipes, never a requirement.
 - A system moved here keeps working for the mod it came from, in the same commit.
-- **Each mod has its row in Options > Mods** ✅ (`creature::list_mod`, from its `mods` hook): without it Horizon lists
-  only the mod's content half, which a world must be left to switch (it adds items and creatures), and whose switch
-  leaves the mod's code running. The row stands for both halves: switched off, the mod's hooks stop at once, and the
-  library hides its pages (`creature::on`: a species' or an item's mod, Minecraft's creatures the Vanilla Bestiary's;
-  they come back, as saved, when it is on again); its content follows on the next start. The library itself has no
-  such row: every mod needs it.
 
 ## 2. Technical context
 
 - **Mod id / namespace**: `creature`. Name: "Sunrise Creatures".
-- **Native half**: a trait mod with an `[api]` crate (`mod-creature`), which the mods reach as the `creature` crate.
-  Its `hooks()` runs before theirs (dependency order), so a mod registers its species from its own `hooks()`. It
-  publishes functions, types and statics; shared state is behind `Mutex`es.
-- **Content half**: the series' tab, shared blocks and items (`creature:glass_jar`, `creature:guide`, the jar blocks), their recipes
+- **Its code**: the crate `mod-creature` (`#[mod_api::sunrise_mod]` on its `Hooks`), which the mods reach as the
+  `creature` crate. The game runs its hooks before theirs (dependency order), so a mod registers its species from its
+  own `register` hook. It publishes functions, types and statics; shared state is behind `Mutex`es.
+- **Its content**: the series' tab, shared blocks and items (`creature:glass_jar`, `creature:guide`, the jar blocks), their recipes
   (conditional when a feature depends on a mod), textures and translations (`en_us`, `fr_fr`).
-- **Pinned** to the series' Horizon revision (docs/CONVENTIONS.md). Version `0.1.0`; a breaking API change bumps the
-  minor version while in `0.x`.
+- **Pinned** to the series' Sunrise revision (docs/SUNRISE-ISSUES.md). Version `0.2.0`; a breaking API change bumps
+  the minor version while in `0.x`, and the mods' `[dependencies] creature` with it.
 
 ## 3. Systems in place
 
@@ -75,7 +69,7 @@ stay in the vulture until a second mod needs them, except friends (§6.2), share
 
 ### 3.2 Mob sounds (`creature::sounds`) ✅
 
-- Our mobs copy a vanilla mob whose sounds they must not play, and Horizon prefixes mob sounds with `minecraft:`. The mod
+- Our mobs copy a vanilla mob whose sounds they must not play, and the game prefixes a mob's sounds with `minecraft:`. The mod
   mutes its mob and the library plays the mod's own sounds with `Host::play_sound`.
 - `queue(mob, sound, volume, pitch)` from goals; `tick_post(host, event, voice, source)` from the mod's
   `entity_tick_post`: plays the queue, and the `Voice`'s hurt and death sounds by watching the mob's health.
@@ -109,7 +103,7 @@ by day, by night or at any hour but in the rain. A mod gives a `Kind` (its `Hour
 flowers, an optional take-off sound played at each take-off) and calls `register` (size, muted, the flight goal), `tick_post` (territory, despawning far from players)
 and `gone`; `steer` flies one toward a point (a fairy following its friend).
 
-**Spawning** ✅ (`spawns`): Horizon's natural spawning adds creatures only every 400 ticks, under a cap the farm animals
+**Spawning** ✅ (`spawns`): the game's natural spawning adds creatures only every 400 ticks, under a cap the farm animals
 fill, so small fliers would only appear with new chunks and be gone once their players left. A mod registers a
 `Spawning` (kind, biomes, group size, cap near a player, chance); every 10 s, for each player, one chance in its
 `chance` while fewer than its `cap` are within 48 blocks, a group comes out 16 to 40 blocks away over the ground, in one
@@ -160,7 +154,7 @@ Golem** (planned, its magma glob, mods/magma_golem/SPECS.md §2).
 ### 3.10 Water creatures (`creature::aquatic`), planned ✅
 
 The life in water of jellyfish and flying fish, which copy the land-living wandering trader: breathing in water and not
-in air (Horizon's `native_living_breathe`), no gravity in water, **beached** out of it (it can't swim, flops now and
+in air (Sunrise's `living_breathe` hook), no gravity in water, **beached** out of it (it can't swim, flops now and
 then, dries out after the mod's delay and dies, dropping as usual), and **the bucket**: a water bucket used on one
 catches it as vanilla's fish, into the mod's bucket item, keeping its kind and name, and lets it out where the bucket is
 emptied; a caught one never despawns. A mod gives its kinds, its bucket item and its drying delay. Users: **Jellyfish**
@@ -195,7 +189,7 @@ condition and the tab injection). The jar is the library's ✅ and is **active o
 - **Catch** ✅: right-click a catchable creature with an empty jar → a **filled jar** holding it (its colours, pattern and
   name are kept).
 - **One jar for every creature** ✅: a filled jar is the same `creature:glass_jar`, carrying the creature it holds as
-  item data (a registered component, Horizon's `native_component_types`): its kind, colours, pattern and name. No mod
+  item data (`minecraft:custom_data`, its `creature` compound): its kind, colours, pattern and name. No mod
   has a jar item of its own. Its name says what is inside ("Glass Jar of Butterfly" ✅), and its icon shows the
   creature behind the glass: the mod registers the icon of a jar holding it ✅. Filled jars don't stack ✅.
 - Catching and releasing are the library's. A mod registers its catchable kinds:
@@ -275,7 +269,7 @@ A book about the series' creatures, given to every player.
   spawns in, every fact, every look its varieties can roll; `/bestiary unlock all` does it for every species;
   `/bestiary reset` forgets everything. The chat completes the species' ids.
 - **Fixed** (was: after `/bestiary unlock all` the Creature Guide no longer opened): the book's data (every species,
-  biome, fact and morph the player has met) is one custom payload, which overflowed Horizon's `u16`/32767-byte limit
+  biome, fact and morph the player has met) is one custom payload, which overflowed the then payload limit (32767 bytes; Sunrise's is 4096 per string)
   once all 92 species were unlocked and was silently dropped, so the book never opened. It is now sent in chunks under
   the limit, split on species boundaries, and the client opens on the last chunk (`book.rs`, `send_chunked`). Tested in
   game: `/bestiary unlock all` then the guide opens, and `/bestiary reset` then it opens.
@@ -314,7 +308,7 @@ What each item of the series is for, so a player knows how to make it and what t
 - Each mod registers its items' pages (`creature::bestiary::register_item`, `creature::items::ItemPage`) ✅: the item,
   the creatures that drop it, what else gives it and its uses, as language keys with icons. The glass jar's page shows
   only with a mod that uses the jar.
-- **The recipes are the modules' own files** ✅: Horizon gives a trait mod only custom recipe types at our pin, so
+- **The recipes are the modules' own files** ✅: Horizon gave a mod only custom recipe types, so
   `cargo creature tab` reads every module's `data/<id>/recipe/` into the library's `recipes.rs` (the series' tags
   expanded, Minecraft's drawn by an item of theirs), and `cargo creature check` fails when it is out of date. A page
   can't show a recipe the game doesn't have.

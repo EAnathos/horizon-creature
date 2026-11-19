@@ -12,7 +12,7 @@ Rules shared by every module of the Sunrise Creatures series ([ARCHITECTURE.md](
 
 - A module's mod id is its folder name, `[a-z0-9_]`, plural for a family of creatures (`butterflies`, `worms`) and
   singular for one species (`vulture`). The library is `creature`.
-- A module only declares content in **its own namespace** (Horizon refuses two mods owning one namespace). Shared things
+- A module only declares content in **its own namespace** (the game refuses two mods owning one namespace). Shared things
   live in `creature:`, species things in the mod's namespace: `creature:glass_jar`, `cyclops:cyclops_eye`.
 - Names: `<species>` for an entity (`vulture:vulture`, `cyclops:cyclops`), `<species>_spawn_egg`, `<species>_egg`
   for a real egg, `<thing>` for an item. Entity texture paths: `<id>:entity/<species>/<variant>`.
@@ -33,10 +33,10 @@ Rules shared by every module of the Sunrise Creatures series ([ARCHITECTURE.md](
 
 ## Code
 
-- Native code follows the vulture's style: module docs (`//!`) explain the mechanism and link the spec section, Horizon
-  internals that are relied on are named. Rust 1.99.1 (pinned by the launcher), edition 2024.
-- A native crate may only use crates in Horizon's `Cargo.lock`. The tools (`tools/`) are a separate crate with their own
-  lock.
+- Native code follows the vulture's style: module docs (`//!`) explain the mechanism and link the spec section, Sunrise
+  internals that are relied on are named, with the issue of any workaround (docs/SUNRISE-ISSUES.md). Rust 1.99.1 (pinned by the launcher), edition 2024.
+- A native crate depends only on `sunrise-mod-api` (the pinned SDK) and, for a mod, the library (`creature`). The tools
+  (`tools/`) are a separate crate with their own lock.
 - Server logic stays apart from rendering (multiplayer comes later).
 - A mixin injection's helper file holds exactly one private function, named `<mod>_<injection id>` (helpers it
   needs go inside it); the launcher leaves the whole mod out otherwise, which `cargo creature install` reports.
@@ -56,15 +56,15 @@ cargo fmt --manifest-path tools/Cargo.toml                                   # f
 find common mods -path '*/src/*' -not -path '*/.sunrise/*' -name '*.rs' -print0 | xargs -0 rustfmt --edition 2024   # format the modules' code
 cargo clippy --manifest-path tools/Cargo.toml --all-targets -- -D warnings   # lint the tools
 cargo creature check                                                         # the repository's consistency
+cargo creature native-check                                                  # Clippy and tests of the modules' crates
 ```
 
 - **rustfmt** with `rustfmt.toml` (edition 2024, 120 columns, as the rest of the repository). Generated models carry
   `#[rustfmt::skip]`.
-- **Clippy** with warnings as errors, on the tools. The native crates can't be compiled outside the launcher (they need
-  Horizon's lock file and the `creature` crate the launcher injects), so they are formatted in CI but compiled only by
-  `cargo creature install`: run it before pushing native changes.
+- **Clippy** with warnings as errors, on the tools and, with `cargo creature native-check`, on the modules' crates
+  against the pinned SDK (with their tests). `cargo creature install` builds them into the game.
 - **`cargo creature check`**: the shared tab is up to date, manifests carry the module's id and one version, every pin
-  is the series' Horizon revision, mods depend on the library and on what they require, tab items exist, JSON parses,
+  is the series' Sunrise revision, mods depend on the library and on what they require, tab items exist, JSON parses,
   `en_us` and `fr_fr` have the same keys, no em dash in the docs.
 - CI then builds every module (`cargo creature build`) and keeps the `.smod` files as an artifact.
 

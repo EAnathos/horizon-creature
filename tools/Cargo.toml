@@ -25,5 +25,5 @@ minisign = "0.10"
 # The page screenshots: the README's WebP panels written as JPEGs, as the registry takes them (`cargo creature pages`).
 image = { version = "0.25", default-features = false, features = ["webp", "jpeg"] }
 
-# Not part of any workspace: `native/api` is built by the Horizon launcher, against Horizon's own lock file.
+# Not part of any workspace: the modules' crates are built by the Sunrise launcher (and `cargo creature native-check`).
 [workspace]

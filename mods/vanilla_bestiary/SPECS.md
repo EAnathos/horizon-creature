@@ -53,7 +53,7 @@ Next: the library's book tabs (common/SPECS.md §7.1).
   Ender Dragon's and the Wither's included).
 - Not the creatures a player makes: the copper and snow golems, the happy ghast, the mule ✅.
 - Met as the series' creatures are: a wild one within a few blocks, in one of its biomes (one hatched from a spawn egg,
-  bred or tamed doesn't count as wild ✅; one made by `/summon` does, as Horizon doesn't say).
+  bred or tamed doesn't count as wild ✅; one made by `/summon` does ✅).
 
 ## 3. Facts ✅
 
@@ -67,7 +67,7 @@ What a player finds out about each, in play, each a word and an item icon on its
 - **Special**: one per creature where it has one (a creeper explodes, an enderman takes blocks, a piglin trades for
   gold, a villager's trades, a goat rams).
 
-Found through Horizon's hooks; a fact whose event a mod can't see at our pin is left out until it can ✅:
+Found through the game's hooks; a fact whose event a mod can't see at our pin is left out until it can ✅:
 
 | Fact | Hook | Who learns it |
 | --- | --- | --- |
@@ -98,10 +98,10 @@ word.
 
 ## 5. Out of scope for v1
 
-- The 3D view of vanilla creatures (§1), creatures of other mods, a list of everything still to meet.
+- Creatures of other mods, a list of everything still to meet.
 
 ## 6. Open questions
 
 - ~~Q1: Which creatures?~~ Every one that spawns on its own, bosses included (§2).
 - ~~Q2: Which facts?~~ Breeding, taming, products, drops and one special fact each (§3).
-- ~~Q3: Without a 3D view?~~ Its spawn egg, large, until Horizon can draw a vanilla mob in a scene (§1).
+- ~~Q3: Without a 3D view?~~ The book draws the vanilla creature itself (`DrawContext::entity`, §1).

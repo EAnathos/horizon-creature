@@ -27,8 +27,8 @@ Next: the code, on Sunrise.
 - Uses from the library: model drawing and sounds (§3.1, §3.2), hitbox size (§3.4), monsters sparing it (§3.4), the
   creature guide's pages and morphs (§7), and water creatures (§3.10, planned, shared with the Flying Fish: breathing
   in water, beached, the bucket).
-- It copies the wandering trader (goals only), with a box of 0.7 × 0.9 blocks ✅, spawned without gravity. Horizon:
-  `native_living_breathe` (API 144) lets it breathe in water and not in air (through the library, §3.10).
+- It copies the wandering trader (goals only), with a box of 0.7 × 0.9 blocks ✅, spawned without gravity. Sunrise:
+  the `living_breathe` hook lets it breathe in water and not in air (through the library, §3.10).
 - Its own sounds (a soft pulse, a wet slap on land) from freesound, CC0, cut by `cargo creature sounds`.
 
 ## 2. Kinds ✅

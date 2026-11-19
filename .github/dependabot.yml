@@ -1,8 +1,8 @@
 # Dependabot: weekly pull requests for the CI's actions and the tools' Rust dependencies (CONTRIBUTING.md).
 #
-# The native crates (`common/native/api`, `mods/*/native/api`) are left out on purpose: their only dependency is
-# Horizon itself, pinned to one revision for the whole series (docs/CONVENTIONS.md) and moved by hand, all modules and
-# the CI's HORIZON_REV at once.
+# The modules' crates (`common/Cargo.toml`, `mods/*/Cargo.toml`) are left out on purpose: their only dependency is
+# Sunrise itself, pinned to one revision for the whole series (docs/SUNRISE-ISSUES.md, "Moving the pin") and moved by
+# hand, all modules and the CI's SUNRISE_REV at once.
 version: 2
 updates:
   - package-ecosystem: github-actions
