@@ -228,12 +228,9 @@ const JAR_FACTS: &[creature::bestiary::Fact] = &[
     },
 ];
 
-/// The bestiary's 3D view: the model at rest, scaled to about a block across; the butterfly in the morph picked, its
+/// Its drawing in a placed jar: the model at rest, scaled to about a block across; the butterfly in the morph picked, its
 /// wings a little open.
 fn butterfly_view(draw: &mut dyn BlockEntityDrawContext, look: Option<creature::colours::Look>) {
-    draw.push();
-    draw.translate([0.5, 0.1, 0.5]);
-    draw.scale([BOOK_SCALE; 3]);
     let open = |part: &str| match part {
         "wing_left" => [0.0, 0.0, 20.0],
         "wing_right" => [0.0, 0.0, -20.0],
@@ -248,15 +245,10 @@ fn butterfly_view(draw: &mut dyn BlockEntityDrawContext, look: Option<creature::
         &open,
         creature::model::WHITE,
     );
-    draw.pop();
 }
 
 fn moth_view(draw: &mut dyn BlockEntityDrawContext, _: Option<creature::colours::Look>) {
-    draw.push();
-    draw.translate([0.5, 0.1, 0.5]);
-    draw.scale([BOOK_SCALE; 3]);
     creature::model::draw(draw, &model_moth::MOTH, MOTH_TEXTURE, &|_| [0.0; 3]);
-    draw.pop();
 }
 const BOOK_SCALE: f32 = 1.2;
 
@@ -274,6 +266,8 @@ static BESTIARY: [creature::bestiary::Species; 2] = [
         scheme: Some(&SCHEME),
         rarity: creature::bestiary::Rarity::Common,
         draw: butterfly_view,
+        draw_scale: BOOK_SCALE,
+        draw_lift: 0.1,
     },
     creature::bestiary::Species {
         id: MOTH,
@@ -284,6 +278,8 @@ static BESTIARY: [creature::bestiary::Species; 2] = [
         scheme: None,
         rarity: creature::bestiary::Rarity::Common,
         draw: moth_view,
+        draw_scale: BOOK_SCALE,
+        draw_lift: 0.1,
     },
 ];
 

@@ -12,7 +12,7 @@
 use std::collections::BTreeSet;
 use std::sync::Mutex;
 
-use creature::body::{Behaviour, Body, World};
+use creature::body::{Behaviour, Body, World, distance};
 
 /// Its friend further than this (blocks): it comes to them at once (the mod's tick teleports it).
 pub const TELEPORT: f64 = 24.0;
@@ -62,10 +62,6 @@ pub struct Fairy {
     mode: Option<Mode>,
     /// Ticks in the current mode.
     ticks: i32,
-}
-
-fn distance(a: [f64; 3], b: [f64; 3]) -> f64 {
-    (0..3).map(|k| (a[k] - b[k]).powi(2)).sum::<f64>().sqrt()
 }
 
 fn here(m: &Body) -> [f64; 3] {

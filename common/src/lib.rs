@@ -26,6 +26,7 @@ pub mod colours;
 pub mod crawl;
 pub mod flutter;
 pub mod friend;
+pub mod glow;
 mod guide;
 pub mod hand;
 pub mod items;
@@ -43,7 +44,7 @@ use mod_api::{
     EntityLeaveLevelEvent, EntitySizeEvent, EntityTickListenedEvent, EntityTickPostEvent, ExplosionDetonateEvent, Flow,
     Hooks, Host, HostSide, InteractionResult, LevelTickPostEvent, LivingChangeTargetEvent, PlayerLoggedInEvent,
     RegisterCommandsEvent, Registrar, RegistrationContext, RunModCommandEvent, ScreenMouseButtonPressedPreEvent,
-    ScreenMouseScrolledPreEvent, ScreenRenderPostEvent, ServerHost, TabCompleteEvent,
+    ScreenMouseScrolledPreEvent, ScreenRenderPostEvent, ServerHost, TabCompleteEvent, VisualsEvent,
 };
 
 /// The library's items in the guide's Items tab (SPECS §7.2).
@@ -139,6 +140,7 @@ impl Hooks for Creature {
 
     fn entity_leave_level(&self, _: &mut dyn ServerHost, event: &mut EntityLeaveLevelEvent<'_>) {
         bestiary::forget(event.entity);
+        glow::dim(event.entity);
     }
 
     /// Small fliers come out near players.
@@ -172,6 +174,11 @@ impl Hooks for Creature {
 
     fn tab_complete(&self, _: &mut dyn ServerHost, event: &mut TabCompleteEvent<'_>) {
         bestiary::complete(event);
+    }
+
+    /// The glowing creatures' lights (`glow`).
+    fn visuals(&self, _: &dyn ClientHost, event: &mut VisualsEvent<'_>) {
+        glow::visuals(event);
     }
 
     fn screen_render_post(&self, host: &dyn ClientHost, event: &mut ScreenRenderPostEvent<'_>) {

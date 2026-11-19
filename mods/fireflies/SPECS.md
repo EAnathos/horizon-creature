@@ -16,7 +16,8 @@ Done and tested in game (single player).
   `assets/models/firefly.bbmodel`. It flies with the library's small fliers (common/SPECS.md §3.5): at night, slow,
   low, long drifts; by day it rests on the ground.
 - **Its lantern** pulses on its own rhythm (lit about a second out of three): a full-bright texture (`emissive`) and a
-  soft yellow-green light around up to 8 lit fireflies (`visuals`, lighting nothing in the world).
+  soft yellow-green light around the lit fireflies flying (seen only, lighting nothing in the world: the library's
+  lights, common/SPECS.md §3.11).
 - **Spawning**: swamps, mangroves, rivers, plains, meadows, forests, birch and flower forests, 3 to 6 together, at
   night near players (the library's small fliers' spawning, common/SPECS.md §3.5).
 - **Glass jar** (common/SPECS.md §4): caught and released; released on a flower it settles there; a jar of fireflies on

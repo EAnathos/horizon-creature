@@ -102,7 +102,7 @@ pub fn hits(host: &dyn Host, level: LevelRef, at: [f64; 3], kind: &str, thrower:
     let near = |p: [f64; 3]| {
         // From the projectile to the middle of a body about a block tall standing at `p`.
         let mid = [p[0], p[1] + 0.6, p[2]];
-        (0..3).map(|k| (mid[k] - at[k]).powi(2)).sum::<f64>().sqrt() < reach + 0.4
+        crate::body::distance(mid, at) < reach + 0.4
     };
     let r = reach + 2.0;
     let from = [at[0] - r, at[1] - r, at[2] - r];

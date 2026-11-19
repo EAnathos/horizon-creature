@@ -7,16 +7,15 @@
 //! in the library's glass jar, released on a flower it settles there; a jar of fireflies on display gives light.
 mod model_firefly;
 
-use std::collections::BTreeMap;
-use std::sync::{Arc, Mutex};
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use creature::bestiary::{Fact, Species};
 use creature::jar::Catchable;
 use mod_api::{
-    BlockEntityDrawContext, ClientHost, ColoredLight, EmissiveEvent, EntityInteractEvent, EntityRenderState,
-    EntityRenderer, EntityTickPostEvent, Flow, Hooks, HostSide, InteractionResult, LivingDeathEvent,
-    RegisterEntityRenderersEvent, Registrar, RegistrationContext, ServerHost, VisualsEvent,
+    BlockEntityDrawContext, ClientHost, EmissiveEvent, EntityInteractEvent, EntityRenderState, EntityRenderer,
+    EntityTickPostEvent, Flow, Hooks, HostSide, InteractionResult, LivingDeathEvent, RegisterEntityRenderersEvent,
+    Registrar, RegistrationContext, ServerHost,
 };
 
 pub const FIREFLY: &str = "fireflies:firefly";
@@ -84,13 +83,12 @@ static BESTIARY: Species = Species {
     scheme: None,
     rarity: creature::bestiary::Rarity::Uncommon,
     draw: book_view,
+    draw_scale: BOOK_SCALE,
+    draw_lift: 0.1,
 };
 
-/// The bestiary's 3D view: lit, its wings folded, about a block across.
+/// Its drawing in a placed jar: lit, its wings folded, about a block across.
 fn book_view(draw: &mut dyn BlockEntityDrawContext, _: Option<creature::colours::Look>) {
-    draw.push();
-    draw.translate([0.5, 0.1, 0.5]);
-    draw.scale([BOOK_SCALE; 3]);
     let folded = |part: &str| !part.starts_with("wing");
     creature::model::draw_shown(
         draw,
@@ -100,7 +98,6 @@ fn book_view(draw: &mut dyn BlockEntityDrawContext, _: Option<creature::colours:
         &folded,
         creature::model::WHITE,
     );
-    draw.pop();
 }
 const BOOK_SCALE: f32 = 1.6;
 
@@ -113,14 +110,14 @@ fn lit(id: u32) -> bool {
     (millis + u128::from(id.wrapping_mul(911))) % period < 900
 }
 
-/// Where the flying fireflies are, for their visual lights (the client's `visuals` has no positions of its own): kept
-/// by the server's tick, read by the drawing (single player).
-static FLYING_AT: Mutex<BTreeMap<u32, ([f64; 3], Instant)>> = Mutex::new(BTreeMap::new());
-/// At most this many visual lights (a mod's budget is 8), their colour, reach and strength.
-const LIGHTS: usize = 8;
-const LIGHT_RGB: u32 = 0xD6FF6E;
-const LIGHT_RADIUS: f32 = 3.0;
-const LIGHT_INTENSITY: f32 = 0.8;
+/// The yellow-green light around a lit firefly flying (seen only, it lights nothing in the world).
+static LIGHT: creature::glow::Light = creature::glow::Light {
+    rgb: 0xD6FF6E,
+    radius: 3.0,
+    intensity: 0.8,
+    lift: 0.1,
+    shown: lit,
+};
 
 /// They come out near players at night, in small groups (the library's spawning: SPECS §2).
 static SPAWNING: creature::flutter::Spawning = creature::flutter::Spawning {
@@ -202,10 +199,10 @@ impl Hooks for Fireflies {
             creature::flutter::tick_post(host, event.dimension, event.kind, event.entity, || {
                 vec![Box::new(creature::flutter::Flutter::new(&FLIGHT))]
             });
-            if creature::flutter::flying(event.entity)
-                && let Some(at) = host.entity(event.entity).and_then(|e| e.position(host))
-            {
-                FLYING_AT.lock().unwrap().insert(event.entity, (at, Instant::now()));
+            if creature::flutter::flying(event.entity) {
+                creature::glow::shine(host, event.dimension, event.entity, LIGHT);
+            } else {
+                creature::glow::dim(event.entity);
             }
         });
     }
@@ -213,7 +210,7 @@ impl Hooks for Fireflies {
     fn living_death(&self, _: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {
         if event.kind == FIREFLY {
             creature::flutter::gone(event.entity);
-            FLYING_AT.lock().unwrap().remove(&event.entity);
+            creature::glow::dim(event.entity);
         }
         Flow::Continue
     }
@@ -221,18 +218,6 @@ impl Hooks for Fireflies {
     /// The lit texture's lantern is full-bright.
     fn emissive(&self, _: &dyn ClientHost, event: &mut EmissiveEvent<'_>) {
         event.layers.push((LIT_TEXTURE, GLOW));
-    }
-
-    /// A soft yellow-green light around the lit fireflies flying (seen only, it lights nothing in the world).
-    fn visuals(&self, _: &dyn ClientHost, event: &mut VisualsEvent<'_>) {
-        let mut at = FLYING_AT.lock().unwrap();
-        at.retain(|_, (_, seen)| seen.elapsed().as_secs() < 2);
-        for (_, (p, _)) in at.iter().filter(|(id, _)| lit(**id)).take(LIGHTS) {
-            let at = [p[0], p[1] + 0.1, p[2]];
-            event
-                .lights
-                .push(ColoredLight::new(at, LIGHT_RGB, LIGHT_RADIUS, LIGHT_INTENSITY));
-        }
     }
 }
 

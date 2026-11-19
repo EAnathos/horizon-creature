@@ -83,14 +83,13 @@ static BESTIARY: creature::bestiary::Species = creature::bestiary::Species {
     scheme: None,
     rarity: creature::bestiary::Rarity::Uncommon,
     draw: book_view,
+    draw_scale: BOOK_SCALE,
+    draw_lift: 0.0,
 };
 
-/// The vulture in the bestiary's 3D view: its model as built (wings spread), without harness or chests, scaled to about
+/// The vulture in a placed jar: its model as built (wings spread), without harness or chests, scaled to about
 /// a block across.
 fn book_view(draw: &mut dyn BlockEntityDrawContext, _: Option<creature::colours::Look>) {
-    draw.push();
-    draw.translate([0.5, 0.0, 0.5]);
-    draw.scale([BOOK_SCALE; 3]);
     let worn = |part: &str| !matches!(part, "harness" | "chest_left" | "chest_right");
     creature::model::draw_shown(
         draw,
@@ -100,7 +99,6 @@ fn book_view(draw: &mut dyn BlockEntityDrawContext, _: Option<creature::colours:
         &worn,
         creature::model::WHITE,
     );
-    draw.pop();
 }
 const BOOK_SCALE: f32 = 0.33;
 /// Learnt once a vulture ate a raw chicken the player threw, and once the player fed one rotten flesh.

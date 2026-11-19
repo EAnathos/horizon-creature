@@ -69,7 +69,7 @@ pub fn tick(host: &mut dyn ServerHost, level: LevelRef) {
     for (animal, at) in animals {
         let Some((player_at, distance)) = shepherds
             .iter()
-            .map(|&(p, _)| (p, (0..3).map(|k| (p[k] - at[k]).powi(2)).sum::<f64>().sqrt()))
+            .map(|&(p, _)| (p, creature::body::distance(p, at)))
             .min_by(|a, b| a.1.total_cmp(&b.1))
         else {
             continue;

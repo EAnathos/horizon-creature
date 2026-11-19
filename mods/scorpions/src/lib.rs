@@ -188,6 +188,8 @@ static BESTIARY: Species = Species {
     scheme: Some(&SCHEME),
     rarity: Rarity::Uncommon,
     draw: book_view,
+    draw_scale: BOOK_SCALE,
+    draw_lift: 0.0,
 };
 
 /// Bestiary facts learnt from the scorpion's own behaviour (the jar's two are the library's).
@@ -195,11 +197,8 @@ pub const POSTURE_FACT: &str = "posture";
 pub const STUNG_FACT: &str = "stung";
 pub const GLOW_FACT: &str = "glow";
 
-/// The bestiary's 3D view: at rest, scaled to about a block, in the morph picked.
+/// Its drawing in a placed jar: at rest, scaled to about a block, in the morph picked.
 fn book_view(draw: &mut dyn BlockEntityDrawContext, look: Option<Look>) {
-    draw.push();
-    draw.translate([0.5, 0.0, 0.5]);
-    draw.scale([BOOK_SCALE; 3]);
     let look = look.unwrap_or_default();
     creature::colours::draw(
         draw,
@@ -209,7 +208,6 @@ fn book_view(draw: &mut dyn BlockEntityDrawContext, look: Option<Look>) {
         &|_| [0.0; 3],
         creature::model::WHITE,
     );
-    draw.pop();
 }
 const BOOK_SCALE: f32 = 2.4;
 

@@ -8,7 +8,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Mutex;
 use std::time::Instant;
 
-use creature::body::{Behaviour, Body, World};
+use creature::body::{Behaviour, Body, World, distance};
 use mod_api::{LevelRef, LivingIncomingDamageEvent, ParticleOptions, ServerHost, SoundSource};
 
 const PROJECTILES: [&str; 3] = ["minecraft:arrow", "minecraft:spectral_arrow", "minecraft:trident"];
@@ -131,10 +131,6 @@ pub fn struck(event: &mut LivingIncomingDamageEvent<'_>) {
         CRY.lock().unwrap().insert(cyclops);
         DAZED.lock().unwrap().insert(cyclops, Instant::now());
     }
-}
-
-fn distance(a: [f64; 3], b: [f64; 3]) -> f64 {
-    (0..3).map(|k| (a[k] - b[k]).powi(2)).sum::<f64>().sqrt()
 }
 
 /// Seconds since cyclops `entity` was struck in the eye, while it is dazed.

@@ -62,15 +62,13 @@ static BESTIARY: Species = Species {
     scheme: None,
     rarity: creature::bestiary::Rarity::Common,
     draw: jar_view,
+    draw_scale: JAR_SCALE,
+    draw_lift: 0.05,
 };
 
 /// Drawn in a placed jar: curled a little, about a block across.
 fn jar_view(draw: &mut dyn BlockEntityDrawContext, _: Option<creature::colours::Look>) {
-    draw.push();
-    draw.translate([0.5, 0.05, 0.5]);
-    draw.scale([JAR_SCALE; 3]);
     creature::model::draw(draw, &model_worm::WORM, TEXTURE, &|part| wiggle(part, 0.0, 1.0));
-    draw.pop();
 }
 const JAR_SCALE: f32 = 1.5;
 

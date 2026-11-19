@@ -21,6 +21,7 @@ Everything below works and was tested in game, single player, unless said otherw
   installed, and the catch/release/display/name/TNT/piston behavior, are confirmed. The **sand** rule (§4.2, for
   Scorpions) is coded but not yet exercised in game.
 - **Colours and patterns** (§5), used by the butterflies.
+- **Glowing creatures' lights** (§3.11, `creature::glow`): the fireflies' and the fairies' lights, sharing the game's 8.
 - **Mob helpers** (`creature::mob`): `ours` (muted, own box, own goals, spared), `resize`, `Muted`, `despawn_far` (small
   wild creatures far from players, as vanilla's ambient mobs).
 - **The item in hand** (`creature::hand`): items whose right-click only the server's hooks handle (the jar, the guide,
@@ -161,6 +162,14 @@ then, dries out after the mod's delay and dies, dropping as usual), and **the bu
 catches it as vanilla's fish, into the mod's bucket item, keeping its kind and name, and lets it out where the bucket is
 emptied; a caught one never despawns. A mod gives its kinds, its bucket item and its drying delay. Users: **Jellyfish**
 (mods/jellyfish/SPECS.md §3, §5) and **Flying Fish** (mods/flying_fish/SPECS.md §3, §5).
+
+### 3.11 Lights of glowing creatures (`creature::glow`) ✅
+
+A soft coloured light around a glowing creature, seen only (it lights nothing in the world). The game draws at most 8
+such lights from every mod together, within 32 blocks of the player: the library hands them out, to the creatures
+nearest a player. A mod gives each creature's light (colour, reach, strength, height, whether it shines now) from its
+server tick. Users: **Fireflies** (the lit lanterns) and **Fairies** (their night light, wider around one following its
+friend).
 
 ## 4. Glass jar and territories ✅
 

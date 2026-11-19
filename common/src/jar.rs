@@ -512,7 +512,7 @@ pub fn declare(r: &mut dyn Registrar) {
     let _ = r.block_entity_part(&kind, JarEntity);
 }
 
-/// Draws the creature inside a placed jar, small, in the middle, with the species' own drawing (its bestiary 3D view).
+/// Draws the creature inside a placed jar, small, in the middle, with the species' own drawing.
 fn draw_inside(nbt: &Compound, draw: &mut dyn BlockEntityDrawContext) {
     let Some(Held { kind, look, .. }) = held_in(nbt) else {
         return;
@@ -526,7 +526,8 @@ fn draw_inside(nbt: &Compound, draw: &mut dyn BlockEntityDrawContext) {
     draw.push();
     draw.translate([0.5, 0.06, 0.5]);
     draw.scale([INSIDE; 3]);
-    draw.translate([-0.5, 0.0, -0.5]);
+    draw.translate([0.0, species.draw_lift, 0.0]);
+    draw.scale([species.draw_scale; 3]);
     (species.draw)(draw, look);
     draw.pop();
 }

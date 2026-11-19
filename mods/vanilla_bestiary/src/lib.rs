@@ -120,6 +120,8 @@ fn species(c: &'static Creature) -> Species {
         scheme: None,
         rarity: c.rarity,
         draw: no_drawing,
+        draw_scale: 1.0,
+        draw_lift: 0.0,
     }
 }
 

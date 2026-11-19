@@ -38,6 +38,11 @@ impl Vec3 {
     }
 }
 
+/// The distance between two points, in blocks.
+pub fn distance(a: [f64; 3], b: [f64; 3]) -> f64 {
+    (0..3).map(|k| (a[k] - b[k]).powi(2)).sum::<f64>().sqrt()
+}
+
 /// A creature's own random numbers, kept from tick to tick.
 #[derive(Clone, Debug)]
 pub struct Rand(Random);

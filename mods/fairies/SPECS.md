@@ -14,7 +14,8 @@ Built and tested in game (single player).
 
 - **The fairy** (`fairies:fairy`, spawn egg): a copy of the wandering trader, box 0.4 × 0.8, 4 health, drawn
   full-bright with its own model (`assets/models/fairy.bbmodel`), its wings beating, its arms swaying, its hem
-  turning, a soft violet light around it (seen only, lighting nothing), wider around one following its friend.
+  turning, a soft violet light around it (seen only, lighting nothing: the library's lights, common/SPECS.md §3.11),
+  wider around one following its friend.
 - **Wild** (§2): it flits between flowers with the library's small fliers' flight, day and night, resting in the rain.
   **Shy**: a player within 4 blocks who isn't sneaking (and holds no berries), or running within 8, scares it off.
   Spawning: flower forests, meadows, cherry groves and birch forests, 2 to 4 together, rarely, near players (the

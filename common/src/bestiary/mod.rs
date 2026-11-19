@@ -62,9 +62,13 @@ pub struct Species {
     pub scheme: Option<&'static Scheme>,
     /// How rare it is, shown on its page (indicative: how often a player comes across one).
     pub rarity: Rarity,
-    /// Draws it in the book's 3D view, standing on the block's floor, centred on the block, about a block across (the
-    /// mod scales its model to fit), in `look` when it has looks.
+    /// Draws its model in a placed jar, in `look` when it has looks: at the origin, the jar placing it (`draw_scale`,
+    /// `draw_lift`).
     pub draw: fn(&mut dyn BlockEntityDrawContext, Option<Look>),
+    /// Its model's scale to stand about a block across, and how high above the floor it stands (in blocks, before the
+    /// jar's own shrinking).
+    pub draw_scale: f32,
+    pub draw_lift: f32,
 }
 
 /// How rare a species is, as its page shows it (in vanilla's rarity colours, darkened for the paper).

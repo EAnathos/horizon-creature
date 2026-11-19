@@ -88,15 +88,13 @@ static BESTIARY: Species = Species {
     scheme: None,
     rarity: creature::bestiary::Rarity::Rare,
     draw: book_view,
+    draw_scale: BOOK_SCALE,
+    draw_lift: 0.0,
 };
 
-/// The bestiary's 3D view: standing, its whole height in the view.
+/// Its drawing in a placed jar: standing, its whole height in the view.
 fn book_view(draw: &mut dyn BlockEntityDrawContext, _: Option<creature::colours::Look>) {
-    draw.push();
-    draw.translate([0.5, 0.0, 0.5]);
-    draw.scale([BOOK_SCALE; 3]);
     creature::model::draw(draw, &model::CYCLOPS, TEXTURE, &|_| [0.0; 3]);
-    draw.pop();
 }
 const BOOK_SCALE: f32 = 0.22;
 

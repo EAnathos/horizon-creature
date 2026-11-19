@@ -12,18 +12,17 @@ mod model_fairy;
 
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
 
 use creature::bestiary::{Fact, Species};
 use creature::friend::Friend;
 use creature::jar::Catchable;
 use creature::particles::key;
 use mod_api::{
-    ActiveEffect, AttachmentCodec, AttachmentError, AttachmentType, BlockEntityDrawContext, ClientHost, ColoredLight,
-    Compound, EmissiveEvent, EntityInteractEvent, EntityRenderState, EntityRenderer, EntityTickPostEvent, Flow,
-    HitHost, Holder, Hooks, HostSide, InteractionResult, ItemStack, LevelRef, LivingDeathEvent,
-    LivingIncomingDamageEvent, ParticleOptions, PlayerRef, RegisterEntityRenderersEvent, Registrar,
-    RegistrationContext, ServerHost, SoundSource, Tag, Text, VisualsEvent,
+    ActiveEffect, AttachmentCodec, AttachmentError, AttachmentType, BlockEntityDrawContext, ClientHost, Compound,
+    EmissiveEvent, EntityInteractEvent, EntityRenderState, EntityRenderer, EntityTickPostEvent, Flow, HitHost, Holder,
+    Hooks, HostSide, InteractionResult, ItemStack, LevelRef, LivingDeathEvent, LivingIncomingDamageEvent,
+    ParticleOptions, PlayerRef, RegisterEntityRenderersEvent, Registrar, RegistrationContext, ServerHost, SoundSource,
+    Tag, Text,
 };
 
 pub const FAIRY: &str = "fairies:fairy";
@@ -93,15 +92,13 @@ static BESTIARY: Species = Species {
     scheme: None,
     rarity: creature::bestiary::Rarity::Rare,
     draw: book_view,
+    draw_scale: BOOK_SCALE,
+    draw_lift: 0.0,
 };
 
-/// The bestiary's 3D view: hovering, its wings open, about a block tall.
+/// Its drawing in a placed jar: hovering, its wings open, about a block tall.
 fn book_view(draw: &mut dyn BlockEntityDrawContext, _: Option<creature::colours::Look>) {
-    draw.push();
-    draw.translate([0.5, 0.0, 0.5]);
-    draw.scale([BOOK_SCALE; 3]);
     creature::model::draw(draw, &model_fairy::FAIRY, TEXTURE, &|_| [0.0; 3]);
-    draw.pop();
 }
 const BOOK_SCALE: f32 = 1.2;
 
@@ -115,20 +112,15 @@ const _: () = assert!(
     "the speed is renewed before it lapses"
 );
 /// Its night light (SPECS §3), seen only: violet, wider around a fairy following its friend.
-const LIGHTS: usize = 8;
-const LIGHT_RGB: u32 = 0xC9A2FF;
-const LIGHT_RADIUS: (f32, f32) = (3.0, 8.0);
-const LIGHT_INTENSITY: f32 = 0.7;
+static LIGHT: creature::glow::Light = creature::glow::Light {
+    rgb: 0xC9A2FF,
+    radius: 3.0,
+    intensity: 0.7,
+    lift: 0.4,
+    shown: |_| true,
+};
+const FOLLOWING_RADIUS: f32 = 8.0;
 
-/// Where each fairy is and whether it follows its friend, for its light (the client's `visuals` has no positions of
-/// its own): kept by the server's tick, read by the drawing (single player).
-static AT: Mutex<BTreeMap<u32, Seen>> = Mutex::new(BTreeMap::new());
-
-struct Seen {
-    at: [f64; 3],
-    following: bool,
-    when: Instant,
-}
 /// Ticks seen per fairy, for what it does now and then.
 static TICKS: Mutex<BTreeMap<u32, u32>> = Mutex::new(BTreeMap::new());
 
@@ -273,7 +265,7 @@ fn befriended(host: &mut dyn ServerHost, level: LevelRef, fairy: u32, at: [f64; 
     let Some(position) = player.entity().position(host) else {
         return;
     };
-    let near = (0..3).map(|k| (position[k] - at[k]).powi(2)).sum::<f64>().sqrt() < BOOST_REACH;
+    let near = creature::body::distance(position, at) < BOOST_REACH;
     if friend.staying || !near {
         return;
     }
@@ -438,7 +430,7 @@ impl Hooks for Fairies {
                 if !f.staying
                     && let Some(p) = player.filter(|p| p.level(&*host) == Some(level))
                     && let Some(pos) = p.entity().position(host)
-                    && (0..3).map(|k| (pos[k] - at[k]).powi(2)).sum::<f64>().sqrt() > companion::TELEPORT
+                    && creature::body::distance(pos, at) > companion::TELEPORT
                 {
                     let near = [pos[0], pos[1] + 2.0, pos[2]];
                     e.teleport_to(host, near, None);
@@ -450,14 +442,8 @@ impl Hooks for Fairies {
                 }
             }
             let following = friend.is_some_and(|f| !f.staying);
-            AT.lock().unwrap().insert(
-                fairy,
-                Seen {
-                    at,
-                    following,
-                    when: Instant::now(),
-                },
-            );
+            let radius = if following { FOLLOWING_RADIUS } else { LIGHT.radius };
+            creature::glow::shine(host, event.dimension, fairy, creature::glow::Light { radius, ..LIGHT });
         });
     }
 
@@ -474,7 +460,7 @@ impl Hooks for Fairies {
         creature::flutter::gone(event.entity);
         creature::friend::forget(event.entity);
         companion::forget(event.entity);
-        AT.lock().unwrap().remove(&event.entity);
+        creature::glow::dim(event.entity);
         TICKS.lock().unwrap().remove(&event.entity);
         FRIEND_IDS.lock().unwrap().remove(&event.entity);
         Flow::Continue
@@ -483,26 +469,6 @@ impl Hooks for Fairies {
     /// It glows: its whole texture is full-bright.
     fn emissive(&self, _: &dyn ClientHost, event: &mut EmissiveEvent<'_>) {
         event.layers.push((TEXTURE, TEXTURE));
-    }
-
-    /// A soft violet light around each fairy (seen only, it lights nothing in the world), wider around one following
-    /// its friend: its night light.
-    fn visuals(&self, _: &dyn ClientHost, event: &mut VisualsEvent<'_>) {
-        let mut at = AT.lock().unwrap();
-        at.retain(|_, seen| seen.when.elapsed().as_secs() < 2);
-        let mut lights: Vec<&Seen> = at.values().collect();
-        // The ones following first: their light matters most.
-        lights.sort_by_key(|seen| !seen.following);
-        for seen in lights.into_iter().take(LIGHTS) {
-            let p = seen.at;
-            let radius = if seen.following { LIGHT_RADIUS.1 } else { LIGHT_RADIUS.0 };
-            event.lights.push(ColoredLight::new(
-                [p[0], p[1] + 0.4, p[2]],
-                LIGHT_RGB,
-                radius,
-                LIGHT_INTENSITY,
-            ));
-        }
     }
 }
 

@@ -126,6 +126,17 @@ pub fn spared(entity: &str, target: &str) -> bool {
     is_ours(target) && !is_ours(entity)
 }
 
+/// How far the nearest player in level `dimension` is from `at`, in blocks (`f64::MAX` with none there).
+pub fn nearest_player(host: &dyn ServerHost, dimension: &str, at: [f64; 3]) -> f64 {
+    host.players()
+        .server_players()
+        .into_iter()
+        .filter(|p| p.dimension(host).is_some_and(|d| d.to_string() == dimension))
+        .filter_map(|p| p.entity().position(host))
+        .map(|p| crate::body::distance(p, at))
+        .fold(f64::MAX, f64::min)
+}
+
 /// Despawning, as vanilla's `Mob.checkDespawn` for ambient creatures: gone at once with no player within `GONE`
 /// blocks, and one chance in `CHANCE` a tick with none within `NEAR`.
 const GONE: f64 = 128.0;
@@ -144,14 +155,7 @@ pub fn despawn_far(host: &mut dyn ServerHost, dimension: &str, entity: u32, keep
     let Some(at) = e.position(host) else {
         return false;
     };
-    let nearest = host
-        .players()
-        .server_players()
-        .into_iter()
-        .filter(|p| p.dimension(host).is_some_and(|d| d.to_string() == dimension))
-        .filter_map(|p| p.entity().position(host))
-        .map(|p| (0..3).map(|k| (p[k] - at[k]).powi(2)).sum::<f64>().sqrt())
-        .fold(f64::MAX, f64::min);
+    let nearest = nearest_player(&*host, dimension, at);
     let gone = nearest > GONE || (nearest > NEAR && Random::new(entity).next().is_multiple_of(CHANCE));
     if !gone {
         return false;
