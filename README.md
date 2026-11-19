@@ -83,21 +83,13 @@ the "Sunrise Creatures" creative tab, where all the series' items are.
 You need **the Sunrise launcher**, from [playsunrise.net](https://playsunrise.net), and a Minecraft: Java Edition
 account.
 
-1. In the launcher's **Mods** page, install **Sunrise Creatures**, then the creature mods you want.
+1. In the launcher's **Mods** page, find **Sunrise Creatures**: the collection installs every creature at once, or
+   pick the ones you like (the library comes with them). Also at
+   [playsunrise.net/mods](https://playsunrise.net/mods).
 2. Press **Play**. These are native mods: the launcher builds the game with them the first time (a few minutes).
 
-> [!NOTE]
-> The mods are being submitted to Sunrise's registry. Until they are listed, install them from this repository's
-> [releases](https://github.com/EAnathos/sunrise-creatures/releases), the library first (one release per mod and
-> version, each signed), for example:
->
-> ```sh
-> sunrise-launcher mods add-github https://github.com/EAnathos/sunrise-creatures/releases/tag/creature-0.1.1 --trust-native-code
-> sunrise-launcher mods add-github https://github.com/EAnathos/sunrise-creatures/releases/tag/vulture-0.1.0 --trust-native-code
-> ```
->
-> Mods installed this way are marked "Not reviewed by the Sunrise registry". Native mods run with your rights,
-> which is why the launcher asks for `--trust-native-code`.
+Each version is also a [release of this repository](https://github.com/EAnathos/sunrise-creatures/releases), signed:
+`sunrise-launcher mods add-github <release link> --trust-native-code` installs one from there.
 
 ## In the game
 

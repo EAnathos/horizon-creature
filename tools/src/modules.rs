@@ -28,6 +28,22 @@ struct File {
     ported: bool,
     /// Its page in Sunrise's registry: a module with one is published (`cargo creature release`).
     registry: Option<Registry>,
+    /// The look its models' pictures are drawn in, by model (`cargo creature preview`).
+    #[serde(default)]
+    preview: std::collections::BTreeMap<String, Look>,
+}
+
+/// The look a model's pictures are drawn in, for a model the game colours itself (a greyscale texture tinted by a
+/// morph, `creature::colours`): its base colour and, over it, a pattern texture in its own colour.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Look {
+    /// The base colour the texture is multiplied by, `#rrggbb`.
+    pub tint: String,
+    /// A pattern texture over the base, by its path from the module's root.
+    pub pattern: Option<String>,
+    /// The pattern's colour, `#rrggbb` (white by default).
+    pub pattern_tint: Option<String>,
 }
 
 /// A published module's page in Sunrise's registry (sunrise-org/sunrise-mods, `mods/<id>.toml`), besides what its
@@ -56,6 +72,7 @@ pub struct Module {
     pub requires: Vec<String>,
     pub ported: bool,
     pub registry: Option<Registry>,
+    pub preview: std::collections::BTreeMap<String, Look>,
     pub dir: PathBuf,
 }
 
@@ -73,6 +90,7 @@ impl Module {
             requires: f.requires,
             ported: f.ported,
             registry: f.registry,
+            preview: f.preview,
             dir: dir.to_path_buf(),
         })
     }

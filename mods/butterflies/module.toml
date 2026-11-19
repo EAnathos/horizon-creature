@@ -14,3 +14,9 @@ summary = "Butterflies by day and moths by night, in many colours and patterns; 
 categories = ["mobs", "decoration"]
 tags = ["butterflies", "moths", "insects", "ambient"]
 icon = "butterfly"
+
+# Its butterfly's pictures in a morph of its own (the model's texture is greyscale: the game tints it, colours.rs).
+[preview.butterfly]
+tint = "#ee8a2a"
+pattern = "assets/butterflies/textures/entity/butterfly/pattern_eyespots.png"
+pattern_tint = "#2a2624"

@@ -104,6 +104,8 @@ Each one is marked in the code with its issue and listed, with its limits and wh
   `.mcp.json` (Blockbench must be open). `.bbmodel` files in `mods/<mod>/sources/models/`; `cargo creature model <mod>`
   turns `<mod>.bbmodel` into the mod's `src/model.rs`; `cargo creature preview` redraws every model's
   pictures in `docs/models/`, shown by the READMEs and specs (run it after changing a model; `cargo creature check` fails when either is stale).
+  A model the game colours itself (a greyscale texture tinted by a morph: the butterfly) is pictured in the look its
+  `module.toml`'s `[preview.<model>]` gives (a tint, a pattern texture and its tint).
   The `.bbmodel` files and the PNG icons are the sources: no script generates them.
 - Sounds: `cargo creature sounds <mod>` cuts a mod's `.ogg` files from freesound downloads as its
   `sources/sounds.toml` says.

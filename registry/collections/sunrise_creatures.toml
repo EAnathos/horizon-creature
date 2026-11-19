@@ -1,0 +1,25 @@
+id = "sunrise_creatures"
+name = "Sunrise Creatures"
+summary = "New creatures for your world, from fireflies and butterflies to a cyclops, with a guide book that fills in as you meet them."
+description = """
+A family of creature mods by EAnathos that are made to be played together.
+
+Each mod adds one kind of creature, and they share a creature guide: a book you get when you first join a world, whose
+bestiary gains a page for every creature you come across. Some creatures can be caught in a glass jar and released
+where you want them.
+
+Pick the creatures you want. The Sunrise Creatures library is always installed, because every creature needs it.
+"""
+owners = ["EAnathos"]
+icon = "icons/sunrise_creatures.png"
+members = [
+  { id = "creature" },
+  { id = "butterflies" },
+  { id = "cyclops" },
+  { id = "fairies" },
+  { id = "fireflies" },
+  { id = "scorpions" },
+  { id = "vulture" },
+  { id = "worms" },
+  { id = "vanilla_bestiary" },
+]

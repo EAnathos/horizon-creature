@@ -59,14 +59,26 @@ refused fails before release.
    Sunrise's modding book still warns against submitting code mods (a note from when the mod API was the fork's); the
    registry's own README takes native mods, and lists some: go by the registry.
 
-The library goes first: every mod requires it (`[dependencies] creature`), and a player installs it with them (the
-registry lists no dependencies; the game refuses a mod without its library and says why).
+The library goes first: every mod requires it (`[dependencies] creature`). The registry reads that from the package
+(each version's `requires` in its index), and the launcher installs the library with any of the mods.
+
+A page's links and images point at the version's tag (`<id>-<version>`), which never moves, not at `main`: the
+registry's review asked for it (the 0.1.x pages still point at `main`).
+
+## The collection
+
+The registry shows the series as one card too, the collection `sunrise_creatures` (its `collections/<id>.toml`, owned
+by EAnathos, mirrored in `registry/collections/`): a player installs all its members at once, or picks some. It is no
+package: each member keeps its own entry, versions and updates. A new published module joins it with a pull request
+adding its id to `members` (after the module itself is listed); owning both, the review marks it routine. The
+collection's own page (name, summary, description, icon, defaults, member order) changes by a pull request a reviewer
+reads.
 
 ## Published
 
 | Version | What | Registry |
 |---|---|---|
-| library 0.1.1, the eight mods 0.1.0 (2026-11-18) | First releases, signed; GitHub releases `<id>-<version>` (pre-releases) | [sunrise-org/sunrise-mods#10](https://github.com/sunrise-org/sunrise-mods/pull/10), in review |
+| library 0.1.1, the eight mods 0.1.0 (2026-11-18) | First releases, signed; GitHub releases `<id>-<version>` (pre-releases) | [sunrise-org/sunrise-mods#10](https://github.com/sunrise-org/sunrise-mods/pull/10), merged 2026-11-18; the collection [#13](https://github.com/sunrise-org/sunrise-mods/pull/13), made by the registry's maintainers |
 
 ## Signing (recommended)
 

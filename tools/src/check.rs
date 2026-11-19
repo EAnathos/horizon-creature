@@ -171,7 +171,7 @@ fn module(m: &Module, mods: &[Module], revision: &(String, String), errors: &mut
     }
     // A published module: its registry page as the registry checks it, a changelog for its version, its icon.
     if let Some(registry) = &m.registry {
-        match crate::release::description(m) {
+        match crate::release::description(m, "main") {
             Ok(description) => {
                 for p in crate::release::page_problems(registry, &description) {
                     push(format!("{}: [registry]: {p}", rel(&m.dir.join("module.toml"))));

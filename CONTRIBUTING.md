@@ -57,7 +57,7 @@ The modules are **pinned** to one Sunrise build, the same for every module (`[na
 | `cargo creature list` | The library and the mods, with their status |
 | `cargo creature tab` | Writes the series' creative tab from the modules' `module.toml`, and the library's recipe table (`recipes.rs`, for the guide's Items tab) from their recipe files |
 | `cargo creature model <mod> [model]` | Converts a Blockbench model (`sources/models/`) into Rust (`src/model.rs`, or `model_<model>.rs`) |
-| `cargo creature preview` | Redraws every model's pictures in `docs/models/` (shown by the READMEs and specs) |
+| `cargo creature preview` | Redraws every model's pictures in `docs/models/` (shown by the READMEs and specs), a tinted one in its `module.toml`'s `[preview.<model>]` look |
 | `cargo creature sounds <mod> [folder]` | Cuts a mod's `.ogg` files from freesound downloads (default `sounds-src/`, any sample rate), as its `sources/sounds.toml` says |
 | `cargo creature vanilla [jar]` | Writes the Vanilla Bestiary's `game_data.rs` from Minecraft's jar (default: the launcher's 26.3): natural spawns, drops, breeding foods |
 | `cargo creature pack <module>` | Stages a module's package in `target/stage/` and zips it into `target/<id>.smod` |

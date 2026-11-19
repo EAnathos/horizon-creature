@@ -21,8 +21,8 @@ use crate::modules::{self, Module, Registry};
 
 /// The repository the entries name as the source.
 pub const SOURCE: &str = "https://github.com/EAnathos/sunrise-creatures";
-/// Its files, for the README's images on a registry page.
-const RAW: &str = "https://raw.githubusercontent.com/EAnathos/sunrise-creatures/main";
+/// Its files, for the README's images on a registry page (followed by a revision: a tag).
+const RAW: &str = "https://raw.githubusercontent.com/EAnathos/sunrise-creatures";
 /// The GitHub logins allowed to publish updates.
 const OWNERS: &[&str] = &["EAnathos"];
 /// The Minecraft version.
@@ -84,7 +84,9 @@ struct Released {
 fn release(m: &Module, out: &Path) -> crate::Result<Released> {
     let registry = m.registry.as_ref().ok_or("no [registry]")?;
     let manifest = Manifest::read(m)?;
-    let description = beta(&manifest.version) + &description(m)?;
+    // Its links and images at the version's tag, which never moves (the registry's review asked for it).
+    let tag = format!("{}-{}", m.id, manifest.version);
+    let description = beta(&manifest.version) + &description(m, &tag)?;
     let problems = page_problems(registry, &description);
     if !problems.is_empty() {
         return Err(format!("{}: {}", m.id, problems.join("; ")));
@@ -178,8 +180,8 @@ impl Manifest {
 }
 
 /// The module's README as its registry page's description: its title left out (the page shows the name), its links
-/// and images made absolute (to the repository on GitHub).
-pub fn description(m: &Module) -> crate::Result<String> {
+/// and images made absolute (to the repository on GitHub, at revision `rev`: the version's tag).
+pub fn description(m: &Module, rev: &str) -> crate::Result<String> {
     let path = m.dir.join("README.md");
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     let body: Vec<&str> = text
@@ -187,7 +189,7 @@ pub fn description(m: &Module) -> crate::Result<String> {
         .skip_while(|l| l.starts_with("# ") || l.trim().is_empty())
         .collect();
     let dir = m.dir.strip_prefix(crate::root()).unwrap_or(&m.dir).to_path_buf();
-    Ok(absolute_links(&body.join("\n"), &dir).trim().to_owned() + "\n")
+    Ok(absolute_links(&body.join("\n"), &dir, rev).trim().to_owned() + "\n")
 }
 
 /// A 0.x version's page opens with this: the series is in beta until 1.0.
@@ -203,8 +205,8 @@ const BETA: &str = "> **Beta.** Played and tested in single player; multiplayer 
                     welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).\n\n";
 
 /// `markdown` with its relative links (`[x](../../README.md)`) and images (`![](../../docs/models/a.png)`), relative
-/// to `dir` in the repository, made absolute.
-fn absolute_links(markdown: &str, dir: &Path) -> String {
+/// to `dir` in the repository, made absolute at revision `rev`.
+fn absolute_links(markdown: &str, dir: &Path, rev: &str) -> String {
     let mut out = String::new();
     let mut rest = markdown;
     while let Some(at) = rest.find("](") {
@@ -218,9 +220,9 @@ fn absolute_links(markdown: &str, dir: &Path) -> String {
         } else {
             let path = normalise(&dir.join(target));
             let base = if image {
-                RAW.to_owned()
+                format!("{RAW}/{rev}")
             } else {
-                format!("{SOURCE}/blob/main")
+                format!("{SOURCE}/blob/{rev}")
             };
             out.push_str(&format!("{base}/{path}"));
         }
@@ -487,12 +489,12 @@ mod tests {
     #[test]
     fn a_readme_s_relative_links_and_images_become_absolute() {
         let md = "![](../../docs/models/v-front.png) [series](../../README.md), [spec](SPECS.md), [web](https://x.y)";
-        let out = absolute_links(md, Path::new("mods/vulture"));
+        let out = absolute_links(md, Path::new("mods/vulture"), "vulture-0.2.0");
         assert_eq!(
             out,
             format!(
-                "![]({RAW}/docs/models/v-front.png) [series]({SOURCE}/blob/main/README.md), \
-                 [spec]({SOURCE}/blob/main/mods/vulture/SPECS.md), [web](https://x.y)"
+                "![]({RAW}/vulture-0.2.0/docs/models/v-front.png) [series]({SOURCE}/blob/vulture-0.2.0/README.md), \
+                 [spec]({SOURCE}/blob/vulture-0.2.0/mods/vulture/SPECS.md), [web](https://x.y)"
             )
         );
     }

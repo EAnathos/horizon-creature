@@ -113,7 +113,7 @@ pub fn run() -> crate::Result {
         models.sort();
         for path in models {
             let name = path.file_stem().and_then(|s| s.to_str()).unwrap_or("model").to_owned();
-            let (cubes, _) = picture(&path, &out, &m.id, &name)?;
+            let (cubes, _) = picture(&path, &out, &m, &name)?;
             let source = path.strip_prefix(&root).unwrap_or(&path).display().to_string();
             println!("{}: {cubes} cubes", source);
         }
@@ -122,10 +122,14 @@ pub fn run() -> crate::Result {
 }
 
 /// Draws one model's two views. Its cube count and texture size.
-fn picture(path: &Path, out: &Path, module: &str, name: &str) -> crate::Result<(usize, (usize, usize))> {
+fn picture(path: &Path, out: &Path, m: &crate::modules::Module, name: &str) -> crate::Result<(usize, (usize, usize))> {
+    let module = m.id.as_str();
     let text = std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
     let model: Value = serde_json::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?;
-    let texture = texture(&model).map_err(|e| format!("{}: {e}", path.display()))?;
+    let mut texture = texture(&model).map_err(|e| format!("{}: {e}", path.display()))?;
+    if let Some(look) = m.preview.get(name) {
+        coloured(&mut texture, look, &m.dir)?;
+    }
     // UVs are in the project's resolution; the texture may be bigger.
     let res = |key: &str, size: usize| size as f64 / model["resolution"][key].as_f64().unwrap_or(size as f64);
     let (su, sv) = (res("width", texture.width), res("height", texture.height));
@@ -348,13 +352,56 @@ fn triangle(p: [[f64; 3]; 3], uv: [[f64; 2]; 3], light: f64, texture: &Texture, 
     }
 }
 
+/// `texture` in `look`, as the game colours it: multiplied by the base colour, then the pattern texture (same layout),
+/// multiplied by its own colour, over it.
+fn coloured(texture: &mut Texture, look: &crate::modules::Look, dir: &Path) -> crate::Result {
+    let tint = rgb(&look.tint)?;
+    for px in texture.rgba.chunks_mut(4) {
+        for k in 0..3 {
+            px[k] = (u16::from(px[k]) * u16::from(tint[k]) / 255) as u8;
+        }
+    }
+    let Some(pattern) = &look.pattern else {
+        return Ok(());
+    };
+    let path = dir.join(pattern);
+    let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let over = decode(&bytes).map_err(|e| format!("{}: {e}", path.display()))?;
+    if (over.width, over.height) != (texture.width, texture.height) {
+        return Err(format!("{}: not the model texture's size", path.display()));
+    }
+    let tint = rgb(look.pattern_tint.as_deref().unwrap_or("#ffffff"))?;
+    for (px, o) in texture.rgba.chunks_mut(4).zip(over.rgba.chunks(4)) {
+        if o[3] >= 128 {
+            for k in 0..3 {
+                px[k] = (u16::from(o[k]) * u16::from(tint[k]) / 255) as u8;
+            }
+        }
+    }
+    Ok(())
+}
+
+/// `#rrggbb` as its three bytes.
+fn rgb(text: &str) -> crate::Result<[u8; 3]> {
+    let hex = text
+        .strip_prefix('#')
+        .filter(|h| h.len() == 6)
+        .ok_or(format!("{text}: not #rrggbb"))?;
+    let byte = |k: usize| u8::from_str_radix(&hex[k..k + 2], 16).map_err(|e| format!("{text}: {e}"));
+    Ok([byte(0)?, byte(2)?, byte(4)?])
+}
+
 /// The model's first texture, embedded in it as a PNG data URI.
 fn texture(model: &Value) -> Result<Texture, String> {
     let source = model["textures"][0]["source"].as_str().ok_or("no embedded texture")?;
     let data = source
         .strip_prefix("data:image/png;base64,")
         .ok_or("the texture is not an embedded PNG")?;
-    let bytes = base64(data)?;
+    decode(&base64(data)?)
+}
+
+/// A PNG's pixels, as RGBA.
+fn decode(bytes: &[u8]) -> Result<Texture, String> {
     let mut decoder = png::Decoder::new(std::io::Cursor::new(bytes));
     decoder.set_transformations(png::Transformations::normalize_to_color8() | png::Transformations::ALPHA);
     let mut reader = decoder.read_info().map_err(|e| e.to_string())?;
