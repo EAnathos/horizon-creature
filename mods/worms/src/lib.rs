@@ -360,19 +360,21 @@ impl Hooks for Worms {
         }
     }
 
-    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
-        if event.kind != WORM {
-            return;
-        }
-        creature::sounds::play_queued(host, event.entity, SoundSource::Neutral);
-        territory::tick(host, event.entity);
-        tend(host, event.entity);
-        if let Some(at) = host.entity(event.entity).and_then(|e| e.position(host)) {
-            WORMS_AT.lock().unwrap().insert(event.entity, at);
-        }
-        if creature::mob::despawn_far(host, event.dimension, event.entity, territory::settled(event.entity)) {
-            forget(event.entity);
-        }
+    fn entity_tick_post(&self, host: HostSide, event: &mut EntityTickPostEvent<'_>) {
+        creature::mob::each_ticked(host, event, |host, event| {
+            if event.kind != WORM {
+                return;
+            }
+            creature::sounds::play_queued(host, event.entity, SoundSource::Neutral);
+            territory::tick(host, event.entity);
+            tend(host, event.entity);
+            if let Some(at) = host.entity(event.entity).and_then(|e| e.position(host)) {
+                WORMS_AT.lock().unwrap().insert(event.entity, at);
+            }
+            if creature::mob::despawn_far(host, event.dimension, event.entity, territory::settled(event.entity)) {
+                forget(event.entity);
+            }
+        });
     }
 
     fn living_death(&self, _: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {

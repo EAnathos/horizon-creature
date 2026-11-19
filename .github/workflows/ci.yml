@@ -18,7 +18,7 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   # The series' pinned Sunrise build (every sunrise-mod.toml's [native] sunrise; `cargo creature check` enforces it).
-  SUNRISE_REV: 2d8126336e579777eabf9b2fd8b3d476236a04f2
+  SUNRISE_REV: 520fc4882de3abb8ecd8b98293f4d7263bc88181
 
 jobs:
   lint:

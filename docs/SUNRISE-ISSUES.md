@@ -5,8 +5,8 @@ our code (marked there with its issue). Update this page when an issue moves, an
 (below). Issues go to [sunrise-org/sunrise](https://github.com/sunrise-org/sunrise/issues): search it first, open
 and closed, and file only with a clean repro and the pinned revision.
 
-Our pin: Nightly `nightly-2026-11-17-2d81263`, source `2d8126336e` (every `sunrise-mod.toml`'s `[native]` pins and
-CI's `SUNRISE_REV`). Last checked: 2026-11-18.
+Our pin: source `520fc4882d` (a 2026-11-19 Nightly, the first with #2671's fix) (every `sunrise-mod.toml`'s `[native]` pins and
+CI's `SUNRISE_REV`). Last checked: 2026-11-19.
 
 Status: **to open** (found, not filed), **open**, **fixed upstream** (merged, not yet in our pin), **done** (in our pin,
 workaround removed).
@@ -15,7 +15,7 @@ workaround removed).
 
 | Issue | What | Status | Our workaround (where) | Drop it when fixed |
 |---|---|---|---|---|
-| [#2671](https://github.com/sunrise-org/sunrise/issues/2671) (ours; follows [#1286](https://github.com/sunrise-org/sunrise/issues/1286)) | From `menu_clicked`, `ItemPlace` reaches neither the clicking player's inventory (`PlayerSlot` by UUID, `MenuSlot` on an inventory slot) nor the cursor: they read and take 0 | open (filed 2026-11-18) | The vulture's screen moves a whole stack across with a click, written with `set_inventory_slot` and `menu_set_items`, no cursor (`mods/vulture/src/screen.rs`, `clicked`) | Pick up, put down and swap with the cursor, as a chest's slots |
+| [#2671](https://github.com/sunrise-org/sunrise/issues/2671) (ours; follows [#1286](https://github.com/sunrise-org/sunrise/issues/1286)) | From `menu_clicked`, `ItemPlace` reaches neither the clicking player's inventory (`PlayerSlot` by UUID, `MenuSlot` on an inventory slot) nor the cursor: they read and take 0 | fixed in our pin (c4b93b1, closed 2026-11-19), workaround still in place | The vulture's screen moves a whole stack across with a click, written with `set_inventory_slot` and `menu_set_items`, no cursor (`mods/vulture/src/screen.rs`, `clicked`) | Pick up, put down and swap with the cursor, as a chest's slots |
 | [#1134](https://github.com/sunrise-org/sunrise/issues/1134) (not ours, we follow it) | `entity_size` isn't asked for a client's copies of entities: there, our creatures keep their template's box (a wandering trader's, 1.95 high) | open | The book centres our creatures by their own box, offset from the template's height (`common/src/bestiary/book.rs`, `TEMPLATE_HEIGHT`) | Drop the offset |
 
 ## Limits of our workarounds

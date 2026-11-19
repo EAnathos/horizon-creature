@@ -441,20 +441,22 @@ impl Hooks for Butterflies {
         ours(event.kind).then_some(InteractionResult::Consume)
     }
 
-    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
-        if event.kind == BUTTERFLY {
-            creature::colours::tick(host, event.entity, &SCHEME);
-        }
-        if ours(event.kind) {
-            let flight = if event.kind == MOTH {
-                &MOTH_FLIGHT
-            } else {
-                &BUTTERFLY_FLIGHT
-            };
-            creature::flutter::tick_post(host, event.dimension, event.kind, event.entity, || {
-                vec![Box::new(creature::flutter::Flutter::new(flight))]
-            });
-        }
+    fn entity_tick_post(&self, host: HostSide, event: &mut EntityTickPostEvent<'_>) {
+        creature::mob::each_ticked(host, event, |host, event| {
+            if event.kind == BUTTERFLY {
+                creature::colours::tick(host, event.entity, &SCHEME);
+            }
+            if ours(event.kind) {
+                let flight = if event.kind == MOTH {
+                    &MOTH_FLIGHT
+                } else {
+                    &BUTTERFLY_FLIGHT
+                };
+                creature::flutter::tick_post(host, event.dimension, event.kind, event.entity, || {
+                    vec![Box::new(creature::flutter::Flutter::new(flight))]
+                });
+            }
+        });
     }
 
     fn living_death(&self, _: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {

@@ -396,67 +396,69 @@ impl Hooks for Fairies {
         if by_friend { Flow::Cancel } else { Flow::Continue }
     }
 
-    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
-        if event.kind != FAIRY {
-            return;
-        }
-        let fairy = event.entity;
-        creature::friend::tick(host, fairy);
-        creature::flutter::tick_post(host, event.dimension, event.kind, fairy, || {
-            vec![
-                Box::new(companion::Fairy::default()),
-                Box::new(creature::flutter::Flutter::new(&FLIGHT)),
-            ]
-        });
-        let Some(e) = host.entity(fairy) else {
-            return;
-        };
-        let (Some(at), Some(level)) = (e.position(host), e.level(host)) else {
-            return;
-        };
-        if creature::colours::Random::new(fairy)
-            .next()
-            .is_multiple_of(AMBIENT_CHANCE)
-        {
-            level.play_sound(host, AMBIENT, at, SoundSource::Neutral, 0.7, 1.0, None);
-        }
-        let ticks = {
-            let mut all = TICKS.lock().unwrap();
-            let t = all.entry(fairy).or_default();
-            *t = t.wrapping_add(1);
-            *t
-        };
-        let friend = creature::friend::of(fairy);
-        if let Some(f) = friend {
-            let player = friend_player(host, f);
-            if let Some(p) = player {
-                FRIEND_IDS.lock().unwrap().insert(fairy, p.entity().id());
+    fn entity_tick_post(&self, host: HostSide, event: &mut EntityTickPostEvent<'_>) {
+        creature::mob::each_ticked(host, event, |host, event| {
+            if event.kind != FAIRY {
+                return;
             }
-            befriended(host, level, fairy, at, f, ticks);
-            // A friend more than `companion::TELEPORT` blocks away: it comes to them at once.
-            if !f.staying
-                && let Some(p) = player.filter(|p| p.level(&*host) == Some(level))
-                && let Some(pos) = p.entity().position(host)
-                && (0..3).map(|k| (pos[k] - at[k]).powi(2)).sum::<f64>().sqrt() > companion::TELEPORT
+            let fairy = event.entity;
+            creature::friend::tick(host, fairy);
+            creature::flutter::tick_post(host, event.dimension, event.kind, fairy, || {
+                vec![
+                    Box::new(companion::Fairy::default()),
+                    Box::new(creature::flutter::Flutter::new(&FLIGHT)),
+                ]
+            });
+            let Some(e) = host.entity(fairy) else {
+                return;
+            };
+            let (Some(at), Some(level)) = (e.position(host), e.level(host)) else {
+                return;
+            };
+            if creature::colours::Random::new(fairy)
+                .next()
+                .is_multiple_of(AMBIENT_CHANCE)
             {
-                let near = [pos[0], pos[1] + 2.0, pos[2]];
-                e.teleport_to(host, near, None);
-                sparkles(host, level, near, 10);
+                level.play_sound(host, AMBIENT, at, SoundSource::Neutral, 0.7, 1.0, None);
             }
-            // A faint trail of sparkles as it follows.
-            if !f.staying && ticks.is_multiple_of(8) {
-                sparkles(host, level, [at[0], at[1] + 0.4, at[2]], 1);
+            let ticks = {
+                let mut all = TICKS.lock().unwrap();
+                let t = all.entry(fairy).or_default();
+                *t = t.wrapping_add(1);
+                *t
+            };
+            let friend = creature::friend::of(fairy);
+            if let Some(f) = friend {
+                let player = friend_player(host, f);
+                if let Some(p) = player {
+                    FRIEND_IDS.lock().unwrap().insert(fairy, p.entity().id());
+                }
+                befriended(host, level, fairy, at, f, ticks);
+                // A friend more than `companion::TELEPORT` blocks away: it comes to them at once.
+                if !f.staying
+                    && let Some(p) = player.filter(|p| p.level(&*host) == Some(level))
+                    && let Some(pos) = p.entity().position(host)
+                    && (0..3).map(|k| (pos[k] - at[k]).powi(2)).sum::<f64>().sqrt() > companion::TELEPORT
+                {
+                    let near = [pos[0], pos[1] + 2.0, pos[2]];
+                    e.teleport_to(host, near, None);
+                    sparkles(host, level, near, 10);
+                }
+                // A faint trail of sparkles as it follows.
+                if !f.staying && ticks.is_multiple_of(8) {
+                    sparkles(host, level, [at[0], at[1] + 0.4, at[2]], 1);
+                }
             }
-        }
-        let following = friend.is_some_and(|f| !f.staying);
-        AT.lock().unwrap().insert(
-            fairy,
-            Seen {
-                at,
-                following,
-                when: Instant::now(),
-            },
-        );
+            let following = friend.is_some_and(|f| !f.staying);
+            AT.lock().unwrap().insert(
+                fairy,
+                Seen {
+                    at,
+                    following,
+                    when: Instant::now(),
+                },
+            );
+        });
     }
 
     /// Killed, it vanishes in a puff of sparkles (it drops nothing: fairies are not loot).

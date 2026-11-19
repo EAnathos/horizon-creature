@@ -127,12 +127,14 @@ impl Hooks for Creature {
 
     /// The game tells entities' ticks (`entity_tick_post`) only to a mod that asks: the series' creatures live in them
     /// (their behaviours, `body`; the bestiary's meetings).
-    fn entity_tick_listened(&self, _: &mut dyn ServerHost, event: &mut EntityTickListenedEvent) {
-        event.listened = true;
+    fn entity_tick_listened(&self, host: HostSide, event: &mut EntityTickListenedEvent) {
+        event.listened |= matches!(host, HostSide::Server(_));
     }
 
-    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
-        bestiary::tick(host, event.dimension, event.entity, event.kind);
+    fn entity_tick_post(&self, host: HostSide, event: &mut EntityTickPostEvent<'_>) {
+        mob::each_ticked(host, event, |host, event| {
+            bestiary::tick(host, event.dimension, event.entity, event.kind);
+        });
     }
 
     fn entity_leave_level(&self, _: &mut dyn ServerHost, event: &mut EntityLeaveLevelEvent<'_>) {

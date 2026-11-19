@@ -47,11 +47,14 @@ pub fn run(sdk: Option<&str>) -> crate::Result {
     run_in(&ws, "cargo", &["test", "--workspace"])
 }
 
-/// The pinned SDK, in `target/sunrise-sdk/`: when missing, fetched by `cargo sunrise-mod check` in the library's
-/// staged package (the check itself may fail, on a target we don't build: only the fetch matters).
+/// The pinned SDK, in `target/sunrise-sdk/`: when missing or built from another commit than the library's pin,
+/// fetched by `cargo sunrise-mod check` in the library's staged package (the check itself may fail, on a target we
+/// don't build: only the fetch matters).
 fn fetch(library: &Module) -> crate::Result<std::path::PathBuf> {
     let sdk = crate::root().join("target/sunrise-sdk");
-    if sdk.join("api").is_dir() {
+    let manifest = std::fs::read_to_string(library.dir.join("sunrise-mod.toml")).unwrap_or_default();
+    let pin = crate::pack::toml_value(&manifest, "sunrise");
+    if sdk.join("api").is_dir() && pin.is_some() && sdk_commit(&sdk) == pin {
         return Ok(sdk);
     }
     let stage = crate::pack::stage(library)?;
@@ -65,6 +68,12 @@ fn fetch(library: &Module) -> crate::Result<std::path::PathBuf> {
     }
     std::fs::rename(&fetched, &sdk).map_err(|e| format!("{}: {e}", sdk.display()))?;
     Ok(sdk)
+}
+
+/// The Sunrise commit an SDK was built from (its `sdk.json`'s `build.commit`).
+fn sdk_commit(sdk: &Path) -> Option<String> {
+    let json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(sdk.join("sdk.json")).ok()?).ok()?;
+    Some(json["build"]["commit"].as_str()?.to_owned())
 }
 
 /// `target/native-check/<id>/Cargo.toml`: the module's crate, by its sources, on the SDK's API at `api`.

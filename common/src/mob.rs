@@ -8,7 +8,7 @@
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use mod_api::{EntitySizeEvent, Host, MobRef, ServerHost, Tag};
+use mod_api::{EntitySizeEvent, EntityTickPostEvent, Host, HostSide, MobRef, ServerHost, Tag};
 
 use crate::colours::Random;
 
@@ -18,6 +18,35 @@ pub struct Size {
     pub width: f32,
     pub height: f32,
     pub eye_height: f32,
+}
+
+/// One entity `entity_tick_post` tells: the level it ticked in, its ID and its type.
+pub struct Ticked<'a> {
+    pub dimension: &'a str,
+    pub entity: u32,
+    pub kind: &'a str,
+}
+
+/// From a mod's `entity_tick_post`: `tick` for each entity the server tells, one at a time (the game tells them in
+/// batches, on both sides; the series' creatures live on the server, so a client's are left alone).
+pub fn each_ticked(
+    host: HostSide,
+    event: &EntityTickPostEvent<'_>,
+    mut tick: impl FnMut(&mut dyn ServerHost, &Ticked<'_>),
+) {
+    let HostSide::Server(host) = host else {
+        return;
+    };
+    for (&entity, &kind) in event.entities.iter().zip(event.kinds) {
+        tick(
+            host,
+            &Ticked {
+                dimension: event.dimension,
+                entity,
+                kind,
+            },
+        );
+    }
 }
 
 /// The series' creatures by entity type, with their size.

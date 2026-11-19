@@ -353,37 +353,39 @@ impl Hooks for Cyclops {
         eye::watch(host, level);
     }
 
-    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
-        if event.kind != CYCLOPS && event.kind != boulder::BOULDER {
-            return;
-        }
-        let Some(e) = host.entity(event.entity) else {
-            return;
-        };
-        let Some(level) = e.level(host) else {
-            return;
-        };
-        if peaceful(&*host, level) {
-            e.discard(host);
-            return;
-        }
-        if event.kind == boulder::BOULDER {
-            boulder::tick(host, event.entity);
-            return;
-        }
-        let id = event.entity;
-        if let Some(at) = e.position(host) {
-            CYCLOPS_AT.lock().unwrap().insert(id, at);
-            eye::tick(host, level, id, at);
-        }
-        creature::body::tick(host, id, || {
-            vec![Box::new(eye::Stunned::default()), Box::new(Smash::default())]
+    fn entity_tick_post(&self, host: HostSide, event: &mut EntityTickPostEvent<'_>) {
+        creature::mob::each_ticked(host, event, |host, event| {
+            if event.kind != CYCLOPS && event.kind != boulder::BOULDER {
+                return;
+            }
+            let Some(e) = host.entity(event.entity) else {
+                return;
+            };
+            let Some(level) = e.level(host) else {
+                return;
+            };
+            if peaceful(&*host, level) {
+                e.discard(host);
+                return;
+            }
+            if event.kind == boulder::BOULDER {
+                boulder::tick(host, event.entity);
+                return;
+            }
+            let id = event.entity;
+            if let Some(at) = e.position(host) {
+                CYCLOPS_AT.lock().unwrap().insert(id, at);
+                eye::tick(host, level, id, at);
+            }
+            creature::body::tick(host, id, || {
+                vec![Box::new(eye::Stunned::default()), Box::new(Smash::default())]
+            });
+            fight::apply(host, id);
+            anger(host, id);
+            smash::tick(host, level, id);
+            boulder::launch(host, event.dimension);
+            creature::sounds::play_queued(host, id, SoundSource::Hostile);
         });
-        fight::apply(host, id);
-        anger(host, id);
-        smash::tick(host, level, id);
-        boulder::launch(host, event.dimension);
-        creature::sounds::play_queued(host, id, SoundSource::Hostile);
     }
 
     fn living_death(&self, _: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {

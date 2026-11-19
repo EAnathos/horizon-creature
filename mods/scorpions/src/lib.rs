@@ -369,26 +369,28 @@ impl Hooks for Scorpions {
         (event.kind == SCORPION || event.kind == dagger::THROWN).then_some(InteractionResult::Consume)
     }
 
-    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
-        poison_dagger_hits(host);
-        if event.kind == dagger::THROWN {
-            dagger::tick(host, event.entity);
-            return;
-        }
-        if event.kind != SCORPION {
-            return;
-        }
-        let id = event.entity;
-        creature::body::tick(host, id, || {
-            vec![Box::new(fight::Fight::default()), Box::new(posture::Posture::default())]
+    fn entity_tick_post(&self, host: HostSide, event: &mut EntityTickPostEvent<'_>) {
+        creature::mob::each_ticked(host, event, |host, event| {
+            poison_dagger_hits(host);
+            if event.kind == dagger::THROWN {
+                dagger::tick(host, event.entity);
+                return;
+            }
+            if event.kind != SCORPION {
+                return;
+            }
+            let id = event.entity;
+            creature::body::tick(host, id, || {
+                vec![Box::new(fight::Fight::default()), Box::new(posture::Posture::default())]
+            });
+            apply_strikes(host, id);
+            creature::colours::tick(host, id, &SCHEME);
+            creature::sounds::play_queued(host, id, SoundSource::Hostile);
+            territory::tick(host, id);
+            if creature::mob::despawn_far(host, event.dimension, id, territory::settled(id)) {
+                forget(id);
+            }
         });
-        apply_strikes(host, id);
-        creature::colours::tick(host, id, &SCHEME);
-        creature::sounds::play_queued(host, id, SoundSource::Hostile);
-        territory::tick(host, id);
-        if creature::mob::despawn_far(host, event.dimension, id, territory::settled(id)) {
-            forget(id);
-        }
     }
 
     fn living_death(&self, _: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {

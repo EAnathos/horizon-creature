@@ -194,18 +194,20 @@ impl Hooks for Fireflies {
         (event.kind == FIREFLY).then_some(InteractionResult::Consume)
     }
 
-    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
-        if event.kind != FIREFLY {
-            return;
-        }
-        creature::flutter::tick_post(host, event.dimension, event.kind, event.entity, || {
-            vec![Box::new(creature::flutter::Flutter::new(&FLIGHT))]
+    fn entity_tick_post(&self, host: HostSide, event: &mut EntityTickPostEvent<'_>) {
+        creature::mob::each_ticked(host, event, |host, event| {
+            if event.kind != FIREFLY {
+                return;
+            }
+            creature::flutter::tick_post(host, event.dimension, event.kind, event.entity, || {
+                vec![Box::new(creature::flutter::Flutter::new(&FLIGHT))]
+            });
+            if creature::flutter::flying(event.entity)
+                && let Some(at) = host.entity(event.entity).and_then(|e| e.position(host))
+            {
+                FLYING_AT.lock().unwrap().insert(event.entity, (at, Instant::now()));
+            }
         });
-        if creature::flutter::flying(event.entity)
-            && let Some(at) = host.entity(event.entity).and_then(|e| e.position(host))
-        {
-            FLYING_AT.lock().unwrap().insert(event.entity, (at, Instant::now()));
-        }
     }
 
     fn living_death(&self, _: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {

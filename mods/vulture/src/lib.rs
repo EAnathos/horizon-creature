@@ -707,39 +707,41 @@ impl Hooks for Vulture {
         }
     }
 
-    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
-        if event.kind != KIND {
-            return;
-        }
-        let id = event.entity;
-        water_escape(host, id);
-        ride::read(&*host, id);
-        creature::body::tick(host, id, || {
-            vec![
-                Box::new(Sync),
-                Box::new(Fly::default()),
-                Box::new(tame::Sit),
-                Box::new(wild::DiveAttack::default()),
-                Box::new(tame::Mate::default()),
-                Box::new(tame::Eat::default()),
-                Box::new(tame::FollowOwner::default()),
-                Box::new(wild::Soar::new()),
-            ]
-        });
-        apply(host, id);
-        creature::sounds::play_queued(host, id, SoundSource::Neutral);
-        state::save(host, event.dimension, id);
-        if let Some(e) = host.entity(id) {
-            FLYING.lock().unwrap().insert(id, !e.on_ground(host).unwrap_or(true));
-            if let Some(level) = e.level(host) {
-                state::look_for_food(host, level, id);
+    fn entity_tick_post(&self, host: HostSide, event: &mut EntityTickPostEvent<'_>) {
+        creature::mob::each_ticked(host, event, |host, event| {
+            if event.kind != KIND {
+                return;
             }
-        }
-        talons::carry(host, id);
-        state::births(host, event.dimension);
-        for player in state::take_taming_seen() {
-            creature::bestiary::learn(host, player, KIND, TAME_FACT);
-        }
+            let id = event.entity;
+            water_escape(host, id);
+            ride::read(&*host, id);
+            creature::body::tick(host, id, || {
+                vec![
+                    Box::new(Sync),
+                    Box::new(Fly::default()),
+                    Box::new(tame::Sit),
+                    Box::new(wild::DiveAttack::default()),
+                    Box::new(tame::Mate::default()),
+                    Box::new(tame::Eat::default()),
+                    Box::new(tame::FollowOwner::default()),
+                    Box::new(wild::Soar::new()),
+                ]
+            });
+            apply(host, id);
+            creature::sounds::play_queued(host, id, SoundSource::Neutral);
+            state::save(host, event.dimension, id);
+            if let Some(e) = host.entity(id) {
+                FLYING.lock().unwrap().insert(id, !e.on_ground(host).unwrap_or(true));
+                if let Some(level) = e.level(host) {
+                    state::look_for_food(host, level, id);
+                }
+            }
+            talons::carry(host, id);
+            state::births(host, event.dimension);
+            for player in state::take_taming_seen() {
+                creature::bestiary::learn(host, player, KIND, TAME_FACT);
+            }
+        });
     }
 }
 

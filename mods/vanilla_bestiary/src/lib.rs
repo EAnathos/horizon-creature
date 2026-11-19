@@ -367,16 +367,18 @@ impl Hooks for VanillaBestiary {
     }
 
     /// Where the creepers are, for `explosion_prime`.
-    fn entity_tick_post(&self, host: &mut dyn ServerHost, event: &mut EntityTickPostEvent<'_>) {
-        if event.kind != "minecraft:creeper" {
-            return;
-        }
-        if let Some(at) = host.entity(event.entity).and_then(|e| e.position(host)) {
-            CREEPERS
-                .lock()
-                .unwrap()
-                .insert(event.entity, (at, event.dimension.to_owned()));
-        }
+    fn entity_tick_post(&self, host: HostSide, event: &mut EntityTickPostEvent<'_>) {
+        creature::mob::each_ticked(host, event, |host, event| {
+            if event.kind != "minecraft:creeper" {
+                return;
+            }
+            if let Some(at) = host.entity(event.entity).and_then(|e| e.position(host)) {
+                CREEPERS
+                    .lock()
+                    .unwrap()
+                    .insert(event.entity, (at, event.dimension.to_owned()));
+            }
+        });
     }
 
     /// An explosion where a creeper stood: the players near saw it blow up.
