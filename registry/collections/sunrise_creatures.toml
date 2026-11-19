@@ -21,5 +21,6 @@ members = [
   { id = "scorpions" },
   { id = "vulture" },
   { id = "worms" },
+  { id = "storm_spirits" },
   { id = "vanilla_bestiary" },
 ]

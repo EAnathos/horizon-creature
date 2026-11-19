@@ -2,14 +2,14 @@
 
 ![](../../docs/models/fireflies-firefly-front.png)
 
-A mod of the [Sunrise Creatures](../../README.md) series: fireflies that light up the night. **Requires** Horizon
-Creature, the series' library.
+A mod of the [Sunrise Creatures](../../README.md) series: fireflies that light up the night. **Requires** Sunrise
+Creatures, the series' library.
 
 ## Finding them
 
 At night, near swamps, rivers, plains, meadows and forests, fireflies drift low and slowly in small groups, their
-lanterns pulsing yellow-green. By day they rest on the ground. In creative: the spawn egg (creative tab "Horizon
-Creature").
+lanterns pulsing yellow-green. By day they rest on the ground. In creative: the spawn egg (creative tab "Sunrise
+Creatures").
 
 ## Jars
 

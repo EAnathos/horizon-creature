@@ -28,8 +28,8 @@ Right-click it to make it **stay** where it is, again to have it **follow** you.
 
 ## Fairy dust
 
-Your fairy's gift. It will brew a **Potion of Swiftness** (awkward potion + fairy dust) with the next Horizon update the
-series moves to.
+Your fairy's gift. It brews a **Potion of Swiftness** in a brewing stand, in place of sugar (awkward potion + fairy
+dust).
 
 ## Jars
 
