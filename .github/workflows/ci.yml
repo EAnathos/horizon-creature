@@ -64,7 +64,8 @@ jobs:
           key: cargo-sunrise-mod-${{ runner.os }}-${{ env.SUNRISE_REV }}
       - name: Install cargo-sunrise-mod
         if: steps.sunrise-mod.outputs.cache-hit != 'true'
-        run: cargo install --locked --git https://github.com/sunrise-org/sunrise --rev "$SUNRISE_REV" cargo-sunrise-mod
+        # --force: rust-cache restores ~/.cargo/bin, with the build of an older pin.
+        run: cargo install --force --locked --git https://github.com/sunrise-org/sunrise --rev "$SUNRISE_REV" cargo-sunrise-mod
       - name: Clippy and tests on the ported crates
         run: cargo creature native-check
 
@@ -86,7 +87,8 @@ jobs:
           key: cargo-sunrise-mod-${{ runner.os }}-${{ env.SUNRISE_REV }}
       - name: Install cargo-sunrise-mod
         if: steps.sunrise-mod.outputs.cache-hit != 'true'
-        run: cargo install --locked --git https://github.com/sunrise-org/sunrise --rev "$SUNRISE_REV" cargo-sunrise-mod
+        # --force: rust-cache restores ~/.cargo/bin, with the build of an older pin.
+        run: cargo install --force --locked --git https://github.com/sunrise-org/sunrise --rev "$SUNRISE_REV" cargo-sunrise-mod
       - name: Build the packages (.smod)
         run: cargo creature build
       - uses: actions/upload-artifact@v7
