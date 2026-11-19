@@ -52,6 +52,7 @@ source = "https://github.com/EAnathos/sunrise-creatures"
 icon = "icons/fairies.png"
 categories = ["mobs", "magic"]
 tags = ["fairies", "companion", "pets", "magic"]
+screenshots = ["screenshots/fairies/1-fairies.jpg", "screenshots/fairies/2-fairies-fairy-front.png", "screenshots/fairies/3-fairies-fairy-back.png"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
 
 [[versions]]

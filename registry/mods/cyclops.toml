@@ -34,6 +34,7 @@ source = "https://github.com/EAnathos/sunrise-creatures"
 icon = "icons/cyclops.png"
 categories = ["mobs", "adventure"]
 tags = ["cyclops", "giant", "hostile", "boss"]
+screenshots = ["screenshots/cyclops/1-cyclops.jpg", "screenshots/cyclops/2-cyclops-cyclops-front.png", "screenshots/cyclops/3-cyclops-cyclops-back.png"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
 
 [[versions]]

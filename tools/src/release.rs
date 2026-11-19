@@ -132,8 +132,8 @@ fn release(m: &Module, out: &Path, signer: Option<&Signer>) -> crate::Result<Rel
             &registry.icon,
             &crate::root().join(format!("registry/icons/{}.png", m.id)),
         )?;
-        screenshots(m, registry)?;
-        let entry = entry(m, &manifest, registry, &description, key.as_deref(), &versions);
+        let shots = screenshots(m, registry)?;
+        let entry = entry(m, &manifest, registry, &description, key.as_deref(), &shots, &versions);
         if let Some(parent) = entry_path.parent() {
             std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
         }
@@ -226,19 +226,20 @@ fn is_image(line: &str) -> bool {
 const SCREENSHOTS: usize = 8;
 
 /// The module's page pictures, written to `registry/screenshots/<id>/` as `<n>-<name>.png|.jpg` in the order listed
-/// (what was there before is removed).
-fn screenshots(m: &Module, registry: &Registry) -> crate::Result {
+/// (what was there before is removed): their paths in the registry, for the entry's `screenshots`.
+fn screenshots(m: &Module, registry: &Registry) -> crate::Result<Vec<String>> {
     let dir = crate::root().join(format!("registry/screenshots/{}", m.id));
     if dir.exists() {
         std::fs::remove_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     }
     if registry.screenshots.is_empty() {
-        return Ok(());
+        return Ok(Vec::new());
     }
     if registry.screenshots.len() > SCREENSHOTS {
         return Err(format!("{}: at most {SCREENSHOTS} screenshots", m.id));
     }
     std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    let mut written = Vec::new();
     for (k, path) in registry.screenshots.iter().enumerate() {
         let from = crate::root().join(path);
         let stem = from
@@ -252,18 +253,23 @@ fn screenshots(m: &Module, registry: &Registry) -> crate::Result {
         let fail = |e: String| format!("{}: {e}", from.display());
         match ext.as_str() {
             "png" | "jpg" => {
-                let to = dir.join(format!("{}-{stem}.{ext}", k + 1));
-                std::fs::copy(&from, &to).map_err(|e| fail(e.to_string()))?;
+                let name = format!("{}-{stem}.{ext}", k + 1);
+                std::fs::copy(&from, dir.join(&name)).map_err(|e| fail(e.to_string()))?;
+                written.push(name);
             }
             "webp" => {
-                let to = dir.join(format!("{}-{stem}.jpg", k + 1));
+                let name = format!("{}-{stem}.jpg", k + 1);
                 let picture = image::open(&from).map_err(|e| fail(e.to_string()))?.to_rgb8();
-                picture.save(&to).map_err(|e| fail(e.to_string()))?;
+                picture.save(dir.join(&name)).map_err(|e| fail(e.to_string()))?;
+                written.push(name);
             }
             _ => return Err(fail("a screenshot is a PNG, a JPEG or a WebP".into())),
         }
     }
-    Ok(())
+    Ok(written
+        .into_iter()
+        .map(|n| format!("screenshots/{}/{n}", m.id))
+        .collect())
 }
 
 /// `cargo creature pages [module...]`: the published modules' pages in `registry/` (their text from the README, icon
@@ -297,8 +303,8 @@ pub fn pages(names: &[String]) -> crate::Result {
             &registry.icon,
             &crate::root().join(format!("registry/icons/{}.png", m.id)),
         )?;
-        screenshots(&m, registry)?;
-        let entry = entry(&m, &manifest, registry, &description, key, &versions);
+        let shots = screenshots(&m, registry)?;
+        let entry = entry(&m, &manifest, registry, &description, key, &shots, &versions);
         std::fs::write(&entry_path, entry).map_err(|e| format!("{}: {e}", entry_path.display()))?;
         println!("{}: page written ({} screenshots)", m.id, registry.screenshots.len());
     }
@@ -514,6 +520,7 @@ fn entry(
     r: &Registry,
     description: &str,
     key: Option<&str>,
+    screenshots: &[String],
     versions: &[Version],
 ) -> String {
     let list = |items: &[String]| {
@@ -534,6 +541,9 @@ fn entry(
     out.push_str(&format!("icon = {}\n", basic(&format!("icons/{}.png", m.id))));
     out.push_str(&format!("categories = {}\n", list(&r.categories)));
     out.push_str(&format!("tags = {}\n", list(&r.tags)));
+    if !screenshots.is_empty() {
+        out.push_str(&format!("screenshots = {}\n", list(screenshots)));
+    }
     if let Some(key) = key {
         out.push_str(&format!("key = {}\n", basic(key)));
     }

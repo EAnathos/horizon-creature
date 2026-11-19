@@ -20,6 +20,7 @@ source = "https://github.com/EAnathos/sunrise-creatures"
 icon = "icons/vanilla_bestiary.png"
 categories = ["game-mechanics", "utility"]
 tags = ["bestiary", "guide", "vanilla", "creatures"]
+screenshots = ["screenshots/vanilla_bestiary/1-bestiary.jpg"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
 
 [[versions]]

@@ -33,6 +33,7 @@ source = "https://github.com/EAnathos/sunrise-creatures"
 icon = "icons/butterflies.png"
 categories = ["mobs", "decoration"]
 tags = ["butterflies", "moths", "insects", "ambient"]
+screenshots = ["screenshots/butterflies/1-butterflies.jpg", "screenshots/butterflies/2-butterflies-butterfly-front.png", "screenshots/butterflies/3-butterflies-moth-front.png"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
 
 [[versions]]

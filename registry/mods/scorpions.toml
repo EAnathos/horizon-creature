@@ -20,6 +20,7 @@ source = "https://github.com/EAnathos/sunrise-creatures"
 icon = "icons/scorpions.png"
 categories = ["mobs", "equipment", "adventure"]
 tags = ["scorpions", "desert", "poison", "dagger", "insects"]
+screenshots = ["screenshots/scorpions/1-scorpions.jpg", "screenshots/scorpions/2-scorpions-scorpion-front.png", "screenshots/scorpions/3-scorpions-scorpion-back.png"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
 
 [[versions]]

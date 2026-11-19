@@ -59,6 +59,7 @@ source = "https://github.com/EAnathos/sunrise-creatures"
 icon = "icons/vulture.png"
 categories = ["mobs", "transportation", "adventure"]
 tags = ["vulture", "flying", "mount", "taming", "birds"]
+screenshots = ["screenshots/vulture/1-vulture.jpg", "screenshots/vulture/2-vulture-vulture-front.png", "screenshots/vulture/3-vulture-vulture-back.png"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
 
 [[versions]]

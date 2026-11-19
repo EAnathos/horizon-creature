@@ -26,6 +26,7 @@ source = "https://github.com/EAnathos/sunrise-creatures"
 icon = "icons/fireflies.png"
 categories = ["mobs", "decoration"]
 tags = ["fireflies", "insects", "ambient", "light"]
+screenshots = ["screenshots/fireflies/1-fireflies-firefly-front.png", "screenshots/fireflies/2-fireflies-firefly-back.png"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
 
 [[versions]]

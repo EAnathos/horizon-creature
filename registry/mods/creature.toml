@@ -28,6 +28,7 @@ source = "https://github.com/EAnathos/sunrise-creatures"
 icon = "icons/creature.png"
 categories = ["library"]
 tags = ["creatures", "bestiary", "glass-jar", "guide"]
+screenshots = ["screenshots/creature/1-bestiary.jpg"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
 
 [[versions]]

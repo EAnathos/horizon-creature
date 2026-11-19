@@ -26,6 +26,7 @@ source = "https://github.com/EAnathos/sunrise-creatures"
 icon = "icons/worms.png"
 categories = ["mobs", "food", "game-mechanics"]
 tags = ["worms", "farming", "crops", "garden"]
+screenshots = ["screenshots/worms/1-worms-worm-front.png", "screenshots/worms/2-worms-worm-back.png"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
 
 [[versions]]
