@@ -2,11 +2,13 @@
 //!
 //! Its owner opens it with sneak + right-click (`interaction.rs`). It is a chest menu a mod opens (`open_menu`): the
 //! top row is the vulture's (its saddle, sit / follow, a button per chest), then 15 slots per chest. Such a menu
-//! moves nothing by itself: its clicks (`clicked`) are the screen's. A click (left, right or with shift) on a stack
-//! sends it across, from a chest to the inventory or back, as much of it as fits; other clicks (a drag, a number key)
-//! do nothing. Items can't go on the cursor: writing to a player's slots or cursor through `ItemPlace` from the click
-//! hook moves nothing on this revision (sunrise-org/sunrise#2671), so the stacks are written directly
-//! (`set_inventory_slot`, `menu_set_items`).
+//! moves nothing by itself: its clicks (`clicked`) are the screen's, as a chest's slots: a click picks a stack up onto
+//! the cursor, puts it down or swaps them (a right-click takes half, puts one), a shift-click sends a stack across,
+//! from a chest to the inventory or back, a click outside the window throws the cursor's stack (one with a
+//! right-click). Other clicks (a drag, a double-click, a number key) do nothing. The chests' and the inventory's stacks
+//! are written directly (`set_contents`, `set_inventory_slot`, `menu_set_items`), the cursor's through its place
+//! (`MenuRef::cursor`, in a transaction). A client only learns of a cursor it changed itself: after a throw the
+//! screen opens again in place, which puts what is left on the cursor back in the inventory.
 //!
 //! The contents of its chests are saved in the `vulture:chests` attachment after each click (each slot's item as its
 //! NBT, read back with a host: `ItemStack::from_nbt`); a chest taken off, the saddle taken off (only without chests)
@@ -15,8 +17,8 @@ use std::collections::BTreeMap;
 use std::sync::Mutex;
 
 use mod_api::{
-    AttachmentCodec, AttachmentError, AttachmentType, Compound, Holder, ItemStack, MenuClickedEvent, MenuClosedEvent,
-    MenuReplace, PlayerRef, Registrar, ServerHost, Tag, Text,
+    AttachmentCodec, AttachmentError, AttachmentType, Compound, Holder, HostTransaction, ItemResource, ItemStack,
+    MenuClickedEvent, MenuClosedEvent, MenuRef, MenuReplace, PlayerRef, Registrar, ServerHost, Tag, Text,
 };
 
 use crate::state::{self, Change};
@@ -31,9 +33,10 @@ const CHEST_LEFT: usize = 6;
 const CHEST_RIGHT: usize = 7;
 /// The player's inventory after the menu's own slots: 27 slots and the hotbar's 9.
 const INVENTORY: usize = 36;
-/// Vanilla's click types (`ClickType`): a click and a shift-click.
+/// Vanilla's click types (`ClickType`): a click and a shift-click; the slot number of a click outside the window.
 const PICKUP: i32 = 0;
 const QUICK_MOVE: i32 = 1;
+const OUTSIDE: i32 = -999;
 
 /// The contents of both chests, 30 slots (the right chest's are the last 15), each item's NBT.
 static CHESTS: AttachmentType<Vec<Option<Compound>>> = AttachmentType {
@@ -146,10 +149,10 @@ fn set_contents(host: &mut dyn ServerHost, id: u32, items: &[Option<ItemStack>])
 
 /// Sneak + right-click on its own vulture (`interaction.rs` checked it is the owner): its screen.
 pub fn ask(host: &mut dyn ServerHost, player: PlayerRef, id: u32) {
-    open(host, player.uuid(), id, MenuReplace::CloseFirst);
+    open_screen(host, player.uuid(), id, MenuReplace::CloseFirst);
 }
 
-fn open(host: &mut dyn ServerHost, uuid: u128, id: u32, replace: MenuReplace) {
+fn open_screen(host: &mut dyn ServerHost, uuid: u128, id: u32, replace: MenuReplace) {
     let saved = state::saved(id);
     let contents = contents(host, id);
     let (rows, items) = layout(&*host, &saved, &contents);
@@ -175,21 +178,20 @@ pub fn closed(event: &MenuClosedEvent) {
     }
 }
 
-/// From the `menu_clicked` hook: a button of the top row, or a click on the chests' or the inventory's slots.
+/// From the `menu_clicked` hook: a button of the top row, or a click on the chests' or the inventory's slots, as a
+/// chest's: a click picks a stack up, puts the cursor's down, or swaps them (a right-click picks up half, puts down
+/// one); a shift-click sends a stack across; a click outside the window drops the cursor's stack (one with a
+/// right-click).
 pub fn clicked(host: &mut dyn ServerHost, event: &MenuClickedEvent) {
     let Some(open) = OPEN.lock().unwrap().get(&event.uuid).copied() else {
-        return;
-    };
-    let Ok(slot) = usize::try_from(event.slot) else {
         return;
     };
     if open.window != event.window || !matches!(event.mode, PICKUP | QUICK_MOVE) {
         return;
     }
-    if slot < ROW {
-        button(host, event.uuid, open, slot);
+    let Some(menu) = host.menu(event.uuid, event.window) else {
         return;
-    }
+    };
     let Some(player) = host
         .players()
         .server_players()
@@ -198,6 +200,21 @@ pub fn clicked(host: &mut dyn ServerHost, event: &MenuClickedEvent) {
     else {
         return;
     };
+    let right = event.button == 1;
+    if event.slot == OUTSIDE {
+        if event.mode == PICKUP && drop_cursor(host, player, menu, right) {
+            // The client isn't told of a cursor it didn't change itself: the screen opens again in place.
+            open_screen(host, event.uuid, open.vulture, MenuReplace::InPlace);
+        }
+        return;
+    }
+    let Ok(slot) = usize::try_from(event.slot) else {
+        return;
+    };
+    if slot < ROW {
+        button(host, event.uuid, open, slot);
+        return;
+    }
     let rows = 1 + open.storage.div_ceil(ROW);
     let mut chests = contents(host, open.vulture);
     chests.resize(2 * PER_CHEST, None);
@@ -208,23 +225,44 @@ pub fn clicked(host: &mut dyn ServerHost, event: &MenuClickedEvent) {
         }
     }
     let before = inventory.clone();
-    // Vanilla's order for a stack leaving a chest: the hotbar from its end, then the inventory from its end.
-    let to_inventory: Vec<usize> = (0..9).rev().chain((9..INVENTORY).rev()).collect();
-    let to_chests: Vec<usize> = (0..open.storage).collect();
-    if let Some(k) = (ROW..ROW + open.storage).contains(&slot).then(|| slot - ROW) {
-        let Some(stack) = chests[k].take() else {
+    // Where the click is: a chest's slot, or one of the inventory's (the menu shows its 27 slots, then the hotbar).
+    let chest = (ROW..ROW + open.storage).contains(&slot).then(|| slot - ROW);
+    let held = slot
+        .checked_sub(rows * ROW)
+        .filter(|&k| k < INVENTORY)
+        .map(|k| if k < 27 { 9 + k } else { k - 27 });
+    if event.mode == QUICK_MOVE {
+        // Vanilla's order for a stack leaving a chest: the hotbar from its end, then the inventory from its end.
+        let to_inventory: Vec<usize> = (0..9).rev().chain((9..INVENTORY).rev()).collect();
+        let to_chests: Vec<usize> = (0..open.storage).collect();
+        if let Some(k) = chest {
+            let Some(stack) = chests[k].take() else {
+                return;
+            };
+            chests[k] = transfer(&*host, stack, &mut inventory, &to_inventory);
+        } else if let Some(k) = held {
+            let Some(stack) = inventory[k].take() else {
+                return;
+            };
+            inventory[k] = transfer(&*host, stack, &mut chests, &to_chests);
+        } else {
             return;
-        };
-        chests[k] = transfer(&*host, stack, &mut inventory, &to_inventory);
-    } else if let Some(k) = slot.checked_sub(rows * ROW).filter(|&k| k < INVENTORY) {
-        // The menu shows the inventory's 27 slots, then the hotbar.
-        let k = if k < 27 { 9 + k } else { k - 27 };
-        let Some(stack) = inventory[k].take() else {
-            return;
-        };
-        inventory[k] = transfer(&*host, stack, &mut chests, &to_chests);
+        }
     } else {
-        return;
+        let cell = match (chest, held) {
+            (Some(k), _) => &mut chests[k],
+            (_, Some(k)) => &mut inventory[k],
+            _ => return,
+        };
+        let cursor = menu.cursor().stack(host);
+        let (cursor_now, slot_now) = pick(&*host, cursor.clone(), cell.take(), right);
+        let same = |a: &Option<ItemStack>, b: &Option<ItemStack>| {
+            a.as_ref().map(|s| (s.item(), s.count())) == b.as_ref().map(|s| (s.item(), s.count()))
+        };
+        if !same(&cursor, &cursor_now) && !set_cursor(host, menu, cursor.as_ref(), cursor_now.as_ref()) {
+            return;
+        }
+        *cell = slot_now;
     }
     for (k, (now, was)) in inventory.iter().zip(&before).enumerate() {
         if now.as_ref().map(|s| (s.item(), s.count())) != was.as_ref().map(|s| (s.item(), s.count())) {
@@ -234,6 +272,80 @@ pub fn clicked(host: &mut dyn ServerHost, event: &MenuClickedEvent) {
     set_contents(host, open.vulture, &chests);
     let (_, items) = layout(&*host, &state::saved(open.vulture), &chests);
     let _ = host.menu_set_items(event.uuid, open.window, items);
+}
+
+/// A click (`right` or left) on a slot holding `slot`, with `cursor` on the cursor, as vanilla's
+/// `AbstractContainerMenu.doClick` for a plain slot: what the cursor and the slot hold after it.
+fn pick(
+    host: &dyn ServerHost,
+    cursor: Option<ItemStack>,
+    slot: Option<ItemStack>,
+    right: bool,
+) -> (Option<ItemStack>, Option<ItemStack>) {
+    let with = |s: &ItemStack, n: u32| {
+        let mut s = s.clone();
+        (n > 0 && s.set_count(n).is_ok()).then_some(s)
+    };
+    match (cursor, slot) {
+        (None, None) => (None, None),
+        // Picking up: all of it, or half (the larger half) with a right-click.
+        (None, Some(s)) => {
+            let n = if right { s.count().div_ceil(2) } else { s.count() };
+            (with(&s, n), with(&s, s.count() - n))
+        }
+        // Putting down: all of it, or one with a right-click.
+        (Some(c), None) => {
+            let max = host.max_stack_size(c.item()).unwrap_or(64);
+            let n = if right { 1 } else { c.count().min(max) };
+            (with(&c, c.count() - n), with(&c, n))
+        }
+        (Some(c), Some(s)) if s.is_stackable_with(&c) => {
+            let max = host.max_stack_size(c.item()).unwrap_or(64);
+            let room = max.saturating_sub(s.count());
+            let n = if right { room.min(1) } else { room.min(c.count()) };
+            (with(&c, c.count() - n), with(&s, s.count() + n))
+        }
+        // Another item: they swap.
+        (Some(c), Some(s)) => (Some(s), Some(c)),
+    }
+}
+
+/// Puts `now` on `menu`'s cursor in place of `was`, in one transaction: whether it took.
+fn set_cursor(host: &mut dyn ServerHost, menu: MenuRef, was: Option<&ItemStack>, now: Option<&ItemStack>) -> bool {
+    host.transaction(|host, tx| {
+        let cursor = menu.cursor();
+        if let Some(old) = was
+            && cursor.extract(host, tx, &ItemResource::of(old), old.count()) != old.count()
+        {
+            return Err(());
+        }
+        if let Some(new) = now
+            && cursor.insert(host, tx, &ItemResource::of(new), new.count()) != new.count()
+        {
+            return Err(());
+        }
+        Ok(())
+    })
+    .is_ok()
+}
+
+/// A click outside the window: the cursor's stack is thrown, or one of it with a right-click. Whether it was.
+fn drop_cursor(host: &mut dyn ServerHost, player: PlayerRef, menu: MenuRef, right: bool) -> bool {
+    let Some(stack) = menu.cursor().stack(host) else {
+        return false;
+    };
+    let n = if right { 1 } else { stack.count() };
+    let mut thrown = stack.clone();
+    if thrown.set_count(n).is_err() {
+        return false;
+    }
+    let mut left = stack.clone();
+    let rest = (stack.count() > n && left.set_count(stack.count() - n).is_ok()).then_some(left);
+    let dropped = set_cursor(host, menu, Some(&stack), rest.as_ref());
+    if dropped {
+        let _ = player.drop_stack(host, thrown, true);
+    }
+    dropped
 }
 
 /// Puts `stack` into `to`'s slots in `order`, those holding the same item first, then empty ones: what doesn't fit.
@@ -303,7 +415,7 @@ fn button(host: &mut dyn ServerHost, uuid: u128, screen: Open, slot: usize) {
         }
         _ => return,
     }
-    open(host, uuid, id, MenuReplace::InPlace);
+    open_screen(host, uuid, id, MenuReplace::InPlace);
 }
 
 /// The item `id` (`minecraft:saddle`), `count` of it.

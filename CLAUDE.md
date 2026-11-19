@@ -35,6 +35,8 @@ only). How the port went is in the history (`git show 2c09384:docs/SUNRISE-PORT.
   the keyboard's: this instance binds sneak to E. Agent control: start the game with
   `sunrise-launcher play --instance creature-dev --world <w> --arg --control`, then `sunrise-ctl` (in
   `~/.local/share/sunrise/launcher/versions/<version>/`): `command`, `screenshot`, `entities`, `interact-entity`...
+- `creature-dev` and its worlds (`port-test`) are for tests only: killing, destroying or losing anything there is
+  fine (creatures, the player, the inventory). Nothing in them needs restoring after a test.
 - Sources: `../sunrise-src` (sparse checkout of sunrise-org/sunrise: `crates/sunrise-mod-vocab` holds the hook
   declarations with their docs, `docs/modding/src` the modding book). The pinned SDK: `target/sunrise-sdk/`
   (fetched by `cargo creature native-check`; `surface.json` lists the whole API).
@@ -89,8 +91,9 @@ only). How the port went is in the history (`git show 2c09384:docs/SUNRISE-PORT.
 - A creature drawn in a screen (`DrawContext::entity`) has the id `u32::MAX` (`creature::model::IN_A_SCREEN`).
 - A mod's own key is read with `ClientHost::consume_click` (from `client_tick_post`): `key_mapping_pre` tells only
   vanilla's mappings. Drawn text needs an alpha byte in its colour (`0xFF......`).
-- A chest menu opened from code (`ServerHost::open_menu`) moves nothing on a click: the mod does
-  (sunrise-org/sunrise#2671).
+- A chest menu opened from code (`ServerHost::open_menu`) moves nothing on a click: the mod does, the cursor through
+  `MenuRef::cursor` in a transaction (the vulture's screen). A cursor the mod changes reaches the client only with its
+  next click (`docs/SUNRISE-ISSUES.md`).
 
 ## Sunrise workarounds
 
