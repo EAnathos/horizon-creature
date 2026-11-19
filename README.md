@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/media/banner.webp" alt="Sunrise Creatures: a fairy, a worm, a cyclops, a vulture, a scorpion, a firefly, butterflies and a moth at sunrise" width="100%">
+  <img src="docs/media/banner.webp" alt="Sunrise Creatures at sunrise: the vulture, butterflies, a moth, a firefly, a worm, the cyclops, a fairy and a scorpion, with the creatures to come (a magma golem, a dung beetle, a sporelin, a living flower, a stick insect, a seagull, a flying fish, a jellyfish, a storm spirit)" width="100%">
 </p>
 
 <p align="center">

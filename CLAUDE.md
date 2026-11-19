@@ -57,8 +57,10 @@ only). How the port went is in the history (`git show 2c09384:docs/SUNRISE-PORT.
 - Publishing: each finished module is a project on Sunrise's registry (`[registry]` in its `module.toml`, its README as
   the page, its `CHANGELOG.md`); `cargo creature release` prepares a version (`registry/` mirrors sunrise-mods' entries).
   The steps: `docs/PUBLISHING.md`. A published file never changes: a change is a new version.
-- The README's banner and panels (`docs/media/`) are hand-made: in-game captures (HUD hidden) and a banner composed
-  from the model pictures. Nothing regenerates them.
+- The README's panels (`docs/media/readme/`) are in-game captures (HUD hidden): nothing regenerates them. Its banner
+  (`docs/media/banner.webp`) shows every creature of the series, done or planned, from the model pictures:
+  `python3 docs/media/banner.py` draws it. **Each new model goes in the banner** (its line in that script's `items`,
+  one model per mod: a single flower for the Living Flowers), then run the script.
 - Before committing: rustfmt (tools and `src/`, `rustfmt.toml`), Clippy `-D warnings` on the tools,
   `cargo creature check`, `cargo creature native-check` (Clippy and tests of the ported crates on the pinned SDK); CI
   (`.github/workflows/ci.yml`) runs them and `cargo creature build`.
