@@ -1,6 +1,8 @@
 # Storm Spirits's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
 id = "storm_spirits"
 name = "Storm Spirits"
-status = "planned"
-# Its items in the series' creative tab, in order (none until implementation starts).
-creative = []
+status = "playable"
+# Its items in the series' creative tab, in order.
+creative = ["storm_spirits:storm_spirit_spawn_egg", "storm_spirits:spark"]
+# Its Rust is built on Sunrise's mod_api.
+ported = true

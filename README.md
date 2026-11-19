@@ -20,7 +20,7 @@
 
 **Creature mods for [Sunrise](https://playsunrise.net)**, the Rust reimplementation of Minecraft Java 26.3 (formerly
 Horizon). A vulture to tame and fly, butterflies and moths, fireflies, earthworms for your garden, a one-eyed giant
-shepherd, shy fairies and scorpions; and Minecraft's own creatures in the guide.
+shepherd, shy fairies, scorpions and spirits of living lightning; and Minecraft's own creatures in the guide.
 
 - **Install the ones you like**: each mod works alone, with one shared library.
 - **Native mods**, written in Rust on Sunrise's mod API, with their own models, animations, sounds and behaviours.
@@ -54,6 +54,7 @@ shepherd, shy fairies and scorpions; and Minecraft's own creatures in the guide.
 | ![](docs/models/cyclops-cyclops-front.png) | [Cyclops](mods/cyclops/README.md) | A one-eyed giant shepherd at cave mouths, with its flock, its club and its boulders |
 | ![](docs/models/fairies-fairy-front.png) | [Fairies](mods/fairies/README.md) | Shy glowing fairies you befriend with glow berries: they circle your head, lighten your step and leave you fairy dust |
 | ![](docs/models/scorpions-scorpion-front.png) | [Scorpions](mods/scorpions/README.md) | Real-size scorpions in the shade of deserts, badlands and caves: they rear up when you come close and sting when hit; their stinger makes a dagger you throw |
+| ![](docs/models/storm_spirits-storm_spirit-front.png) | [Storm Spirits](mods/storm_spirits/README.md) | Spirits of living lightning born in thunderstorms: they zap whoever hits them, and their sparks call lightning where you aim |
 | ![](common/assets/creature/textures/item/guide.png) | [Vanilla Bestiary](mods/vanilla_bestiary/README.md) | Minecraft's own creatures in the creature guide's bestiary, found out as you meet them |
 
 Every mod needs **[Sunrise Creatures](common/README.md)**, the library: it adds the glass jar, the creature guide and
@@ -68,8 +69,6 @@ the "Sunrise Creatures" creative tab, where all the series' items are.
 - [Seagulls](mods/seagulls/README.md): coastal food thieves that become fishing companions.
 - [Living Flowers](mods/living_flowers/README.md): every small and tall vanilla flower come alive, to ambush you or
   guard you.
-- [Storm Spirits](mods/storm_spirits/README.md): spirits of living lightning born in storms, whose sparks call
-  lightning.
 - [Jellyfish](mods/jellyfish/README.md): stinging jellyfish drifting in blooms, some glowing in the deep.
 - [Flying Fish](mods/flying_fish/README.md): shoals that burst out of warm seas and glide over the waves.
 - [Phasmids](mods/phasmids/README.md): stick and leaf insects hiding in the trees, a game of spotting them.

@@ -21,9 +21,12 @@ Everything below works and was tested in game, single player, unless said otherw
   installed, and the catch/release/display/name/TNT/piston behavior, are confirmed. The **sand** rule (§4.2, for
   Scorpions) is coded but not yet exercised in game.
 - **Colours and patterns** (§5), used by the butterflies.
-- **Glowing creatures' lights** (§3.11, `creature::glow`): the fireflies' and the fairies' lights, sharing the game's 8.
+- **Glowing creatures' lights** (§3.11, `creature::glow`): the fireflies', the fairies' and the storm spirits' lights,
+  sharing the game's 8.
+- **Fighting back** (§3.12, `creature::anger`): the scorpions and the storm spirits.
 - **Mob helpers** (`creature::mob`): `ours` (muted, own box, own goals, spared), `resize`, `Muted`, `despawn_far` (small
-  wild creatures far from players, as vanilla's ambient mobs).
+  wild creatures far from players, as vanilla's ambient mobs), `nearest_player`, `give_effect` (an effect on a mob or a
+  player).
 - **The item in hand** (`creature::hand`): items whose right-click only the server's hooks handle (the jar, the guide,
   the mods' throwables) skip the off hand's turn, and `use_one` uses one up.
 - **Creature guide book and bestiary** (§7).
@@ -168,8 +171,15 @@ emptied; a caught one never despawns. A mod gives its kinds, its bucket item and
 A soft coloured light around a glowing creature, seen only (it lights nothing in the world). The game draws at most 8
 such lights from every mod together, within 32 blocks of the player: the library hands them out, to the creatures
 nearest a player. A mod gives each creature's light (colour, reach, strength, height, whether it shines now) from its
-server tick. Users: **Fireflies** (the lit lanterns) and **Fairies** (their night light, wider around one following its
-friend).
+server tick. Users: **Fireflies** (the lit lanterns), **Fairies** (their night light, wider around one following its
+friend) and **Storm Spirits**.
+
+### 3.12 Fighting back (`creature::anger`) ✅
+
+A creature of a kind that fights back, hit, takes whoever hit it as its target (the library's damage hook notes them),
+until it lets them go: dead, gone from its level, a creative player or out of the mod's reach. The mod's own behaviour
+does the fighting, from `pursued`. Users: **Scorpions** (a pinch or a sting) and **Storm Spirits** (a dash and a
+shock).
 
 ## 4. Glass jar and territories ✅
 

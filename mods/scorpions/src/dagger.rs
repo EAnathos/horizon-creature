@@ -74,7 +74,7 @@ static STUCK: Mutex<BTreeMap<u32, Stuck>> = Mutex::new(BTreeMap::new());
 
 /// Poisons `target` (a mob's or a player's id) with the dagger's venom.
 pub fn poison(host: &mut dyn ServerHost, target: u32) {
-    crate::poison(host, target, "minecraft:poison", POISON);
+    creature::mob::give_effect(host, target, "minecraft:poison", POISON);
 }
 
 /// The dagger's item key, to draw it (a renderer has no host to look it up).

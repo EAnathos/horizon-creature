@@ -1,0 +1,11 @@
+{
+  "template": "minecraft:prismarine_crystals",
+  "max_stack_size": 16,
+  "rarity": "uncommon",
+  "components": {
+    "minecraft:item_model": "storm_spirits:spark",
+    "minecraft:item_name": {
+      "translate": "item.storm_spirits.spark"
+    }
+  }
+}

@@ -20,6 +20,7 @@
 //! - `bestiary`: the book's pages, what each player met and found out (SPECS §7).
 //! - `particles`: the vanilla particles the mods send, their keys asked for at registration.
 //! - `items`: the book's Items tab, a page per item of the series, with the recipes of `recipes.rs` (SPECS §7.2).
+pub mod anger;
 pub mod bestiary;
 pub mod body;
 pub mod colours;
@@ -42,9 +43,10 @@ pub mod territory;
 use mod_api::{
     BreakBlockEvent, BuildCreativeModeTabContentsEvent, ClientHost, EntityInteractEvent, EntityJoinLevelEvent,
     EntityLeaveLevelEvent, EntitySizeEvent, EntityTickListenedEvent, EntityTickPostEvent, ExplosionDetonateEvent, Flow,
-    Hooks, Host, HostSide, InteractionResult, LevelTickPostEvent, LivingChangeTargetEvent, PlayerLoggedInEvent,
-    RegisterCommandsEvent, Registrar, RegistrationContext, RunModCommandEvent, ScreenMouseButtonPressedPreEvent,
-    ScreenMouseScrolledPreEvent, ScreenRenderPostEvent, ServerHost, TabCompleteEvent, VisualsEvent,
+    HitHost, Hooks, Host, HostSide, InteractionResult, LevelTickPostEvent, LivingChangeTargetEvent,
+    LivingIncomingDamageEvent, PlayerLoggedInEvent, RegisterCommandsEvent, Registrar, RegistrationContext,
+    RunModCommandEvent, ScreenMouseButtonPressedPreEvent, ScreenMouseScrolledPreEvent, ScreenRenderPostEvent,
+    ServerHost, TabCompleteEvent, VisualsEvent,
 };
 
 /// The library's items in the guide's Items tab (SPECS §7.2).
@@ -141,6 +143,7 @@ impl Hooks for Creature {
     fn entity_leave_level(&self, _: &mut dyn ServerHost, event: &mut EntityLeaveLevelEvent<'_>) {
         bestiary::forget(event.entity);
         glow::dim(event.entity);
+        anger::forget(event.entity);
     }
 
     /// Small fliers come out near players.
@@ -174,6 +177,14 @@ impl Hooks for Creature {
 
     fn tab_complete(&self, _: &mut dyn ServerHost, event: &mut TabCompleteEvent<'_>) {
         bestiary::complete(event);
+    }
+
+    /// A creature that fights back takes whoever hit it as its target (`anger`).
+    fn living_incoming_damage(&self, _: &mut dyn HitHost, event: &mut LivingIncomingDamageEvent<'_>) -> Flow {
+        if let (Ok(entity), Ok(by)) = (u32::try_from(event.entity), u32::try_from(event.source.causing)) {
+            anger::hit(event.kind, entity, by);
+        }
+        Flow::Continue
     }
 
     /// The glowing creatures' lights (`glow`).

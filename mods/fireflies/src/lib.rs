@@ -3,7 +3,7 @@
 //! A firefly is a copy of the wandering trader (its behaviour is all goals) with a tiny box, flying with the library's
 //! `flutter`: out at night, drifting slowly and low, resting on the ground by day. It is drawn with its own model
 //! (`model_firefly.rs`, from `sources/models/firefly.bbmodel`): its lantern pulses on its own rhythm (`lit`), lit with
-//! a texture whose lantern is full-bright (`emissive`) and a soft visual light around it (`visuals`, up to 8). Caught
+//! a texture whose lantern is full-bright (`emissive`) and a soft light around it (the library's `glow`). Caught
 //! in the library's glass jar, released on a flower it settles there; a jar of fireflies on display gives light.
 mod model_firefly;
 

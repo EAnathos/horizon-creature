@@ -358,7 +358,7 @@ pub fn players_near(host: &dyn ServerHost, dimension: &str, at: [f64; 3]) -> Vec
         .filter(|p| {
             p.entity()
                 .position(host)
-                .is_some_and(|q| (0..3).map(|k| (q[k] - at[k]).powi(2)).sum::<f64>() <= MEET * MEET)
+                .is_some_and(|q| crate::body::distance(q, at) <= MEET)
         })
         .map(|p| p.uuid())
         .collect()

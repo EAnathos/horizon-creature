@@ -7,6 +7,7 @@
     "fairies:fairy_spawn_egg",
     "fireflies:firefly_spawn_egg",
     "scorpions:scorpion_spawn_egg",
+    "storm_spirits:storm_spirit_spawn_egg",
     "vulture:vulture_spawn_egg",
     "worms:worm_spawn_egg",
     "creature:guide",
@@ -20,6 +21,7 @@
     "scorpions:venom_sac",
     "scorpions:stinger",
     "scorpions:scorpion_dagger",
+    "storm_spirits:spark",
     "vulture:feather",
     "vulture:raw_vulture",
     "vulture:cooked_vulture"

@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:wandering_trader_spawn_egg",
+  "components": {
+    "minecraft:item_model": "storm_spirits:storm_spirit_spawn_egg",
+    "minecraft:item_name": {
+      "translate": "item.storm_spirits.storm_spirit_spawn_egg"
+    }
+  }
+}

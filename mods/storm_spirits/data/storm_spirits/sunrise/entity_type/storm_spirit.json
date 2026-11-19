@@ -1,0 +1,14 @@
+{
+  "template": "minecraft:wandering_trader",
+  "attributes": {
+    "minecraft:max_health": 20.0,
+    "minecraft:movement_speed": 0.3
+  },
+  "sounds": {
+    "hurt": "minecraft:entity.breeze.hurt",
+    "death": "minecraft:entity.breeze.death",
+    "ambient": "none",
+    "step": "none"
+  },
+  "shadow_radius": 0.0
+}

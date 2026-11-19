@@ -1,0 +1,9 @@
+{
+  "entity.storm_spirits.storm_spirit": "Storm Spirit",
+  "item.storm_spirits.storm_spirit_spawn_egg": "Storm Spirit Spawn Egg",
+  "item.storm_spirits.spark": "Spark",
+  "bestiary.storm_spirits.born": "Born of lightning",
+  "bestiary.storm_spirits.shock": "Shock",
+  "bestiary.storm_spirits.bolt": "Bolt",
+  "bestiary.storm_spirits.item.spark.use": "Use: a lightning bolt on the block you aim at, up to 32 blocks away"
+}

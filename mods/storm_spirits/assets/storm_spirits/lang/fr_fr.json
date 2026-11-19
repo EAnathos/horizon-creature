@@ -1,0 +1,9 @@
+{
+  "entity.storm_spirits.storm_spirit": "Esprit de l'orage",
+  "item.storm_spirits.storm_spirit_spawn_egg": "Œuf d'apparition d'esprit de l'orage",
+  "item.storm_spirits.spark": "Étincelle",
+  "bestiary.storm_spirits.born": "Né de la foudre",
+  "bestiary.storm_spirits.shock": "Décharge",
+  "bestiary.storm_spirits.bolt": "Éclair",
+  "bestiary.storm_spirits.item.spark.use": "Utiliser : un éclair sur le bloc visé, jusqu'à 32 blocs"
+}

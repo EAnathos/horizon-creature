@@ -28,10 +28,9 @@ use creature::colours::{Colour, Look, Pattern, Scheme, Variety};
 use creature::jar::Catchable;
 use creature::territory::{self, Rule};
 use mod_api::{
-    ActiveEffect, BlockEntityDrawContext, ClientHost, EmissiveEvent, EntityInteractEvent, EntityPart,
-    EntityRenderState, EntityRenderer, EntityTickPostEvent, Flow, HitHost, Hooks, HostSide, InteractionResult,
-    LivingDeathEvent, LivingIncomingDamageEvent, RegisterEntityRenderersEvent, Registrar, RegistrationContext,
-    ServerHost, SoundSource,
+    BlockEntityDrawContext, ClientHost, EmissiveEvent, EntityInteractEvent, EntityPart, EntityRenderState,
+    EntityRenderer, EntityTickPostEvent, Flow, HitHost, Hooks, HostSide, InteractionResult, LivingDeathEvent,
+    LivingIncomingDamageEvent, RegisterEntityRenderersEvent, Registrar, RegistrationContext, ServerHost, SoundSource,
 };
 
 pub const SCORPION: &str = "scorpions:scorpion";
@@ -273,20 +272,12 @@ fn apply_strikes(host: &mut dyn ServerHost, scorpion: u32) {
         t.hurt(host, "minecraft:mob_attack", STRIKE_DAMAGE, Some(me), Some(me));
         if let Some(kind) = sting {
             let (poison_ticks, nausea) = if kind == CAVE { (160, 80) } else { (100, 0) };
-            poison(host, target, "minecraft:poison", poison_ticks);
+            creature::mob::give_effect(host, target, "minecraft:poison", poison_ticks);
             if nausea > 0 {
-                poison(host, target, "minecraft:nausea", nausea);
+                creature::mob::give_effect(host, target, "minecraft:nausea", nausea);
             }
         }
     }
-}
-
-/// Gives `target` (a mob or a player) effect `id` for `duration` ticks.
-pub(crate) fn poison(host: &mut dyn ServerHost, target: u32, id: &str, duration: i32) {
-    let (Some(effect), Some(living)) = (host.effect_key(id), host.entity(target).and_then(|e| host.living(e))) else {
-        return;
-    };
-    living.add_effect(host, &ActiveEffect::new(effect, duration, 0, false, true, true));
 }
 
 /// Its goals: crawling about, unless it rears up or fights (its `body` behaviours, `busy`).
@@ -301,7 +292,7 @@ impl EntityPart for Goals {
 
 /// Whether a scorpion rears up or fights now (its crawl waits).
 fn busy(id: u32) -> bool {
-    reared(id) || fight::target(id).is_some()
+    reared(id) || creature::anger::target(id).is_some()
 }
 
 /// Its own model in its kind's look, reared or not.
@@ -330,6 +321,7 @@ struct Scorpions;
 impl Hooks for Scorpions {
     fn register(&self, r: &mut dyn Registrar, _: &RegistrationContext) {
         creature::mob::ours(SCORPION, SIZE);
+        creature::anger::register(SCORPION);
         creature::projectile::register(dagger::THROWN, dagger::SIZE);
         r.entity_part(SCORPION, Goals);
         let dagger = r.item_key(dagger::DAGGER);
@@ -349,11 +341,6 @@ impl Hooks for Scorpions {
         let Ok(entity) = u32::try_from(event.entity) else {
             return Flow::Continue;
         };
-        if event.kind == SCORPION
-            && let Ok(by) = u32::try_from(event.source.causing)
-        {
-            fight::provoke(entity, by);
-        }
         if event.source.damage_type == "minecraft:player_attack"
             && let Some(weapon) = event.weapon
         {
@@ -435,7 +422,6 @@ const CRAWL_CFG: creature::crawl::Cfg = creature::crawl::Cfg {
 fn forget(entity: u32) {
     territory::forget(entity);
     creature::body::forget(entity);
-    fight::forget(entity);
     MOODS.lock().unwrap().remove(&entity);
 }
 

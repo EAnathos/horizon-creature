@@ -8,7 +8,7 @@
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use mod_api::{EntitySizeEvent, EntityTickPostEvent, Host, HostSide, MobRef, ServerHost, Tag};
+use mod_api::{ActiveEffect, EntitySizeEvent, EntityTickPostEvent, Host, HostSide, MobRef, ServerHost, Tag};
 
 use crate::colours::Random;
 
@@ -124,6 +124,14 @@ pub fn clear_template_goals(host: &mut dyn ServerHost, mob: MobRef) {
 /// `living_change_target`, which cancels the change. Our own creatures may still target each other.
 pub fn spared(entity: &str, target: &str) -> bool {
     is_ours(target) && !is_ours(entity)
+}
+
+/// Gives `target` (a mob or a player) effect `id` (`minecraft:poison`) for `ticks`.
+pub fn give_effect(host: &mut dyn ServerHost, target: u32, id: &str, ticks: i32) {
+    let (Some(effect), Some(living)) = (host.effect_key(id), host.entity(target).and_then(|e| host.living(e))) else {
+        return;
+    };
+    living.add_effect(host, &ActiveEffect::new(effect, ticks, 0, false, true, true));
 }
 
 /// How far the nearest player in level `dimension` is from `at`, in blocks (`f64::MAX` with none there).

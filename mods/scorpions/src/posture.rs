@@ -47,7 +47,7 @@ impl Behaviour for Posture {
                 POSTURE
             }
         };
-        let on = crate::fight::target(m.id).is_none() && threat(m, cx).is_some_and(|(d, s)| d < reach(s));
+        let on = creature::anger::target(m.id).is_none() && threat(m, cx).is_some_and(|(d, s)| d < reach(s));
         if self.active && !on {
             set_reared(m.id, false);
         }
