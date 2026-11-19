@@ -2,13 +2,12 @@
 //!
 //! Its owner opens it with sneak + right-click (`interaction.rs`). It is a chest menu a mod opens (`open_menu`): the
 //! top row is the vulture's (its saddle, sit / follow, a button per chest), then 15 slots per chest. Such a menu
-//! moves nothing by itself: its clicks (`clicked`) are the screen's, as a chest's slots: a click picks a stack up onto
-//! the cursor, puts it down or swaps them (a right-click takes half, puts one), a shift-click sends a stack across,
-//! from a chest to the inventory or back, a click outside the window throws the cursor's stack (one with a
-//! right-click). Other clicks (a drag, a double-click, a number key) do nothing. The chests' and the inventory's stacks
-//! are written directly (`set_contents`, `set_inventory_slot`, `menu_set_items`), the cursor's through its place
-//! (`MenuRef::cursor`, in a transaction). A client only learns of a cursor it changed itself: after a throw the
-//! screen opens again in place, which puts what is left on the cursor back in the inventory.
+//! moves nothing by itself: its clicks (`clicked`) are the screen's, each of vanilla's as a chest's slots take it: a
+//! click, a shift-click, a number key or the off hand's, Q, a double-click, a drag, a creative middle-click, a click
+//! outside the window. The chests' and the inventory's stacks are written directly (`Grid`: `set_contents`,
+//! `set_inventory_slot`, `menu_set_items`), the cursor's through its place (`MenuRef::cursor`, in a transaction). A
+//! client only learns of a cursor it changed itself: after a throw from the cursor the screen opens again in place,
+//! which puts what is left on the cursor back in the inventory.
 //!
 //! The contents of its chests are saved in the `vulture:chests` attachment after each click (each slot's item as its
 //! NBT, read back with a host: `ItemStack::from_nbt`); a chest taken off, the saddle taken off (only without chests)
@@ -17,7 +16,7 @@ use std::collections::BTreeMap;
 use std::sync::Mutex;
 
 use mod_api::{
-    AttachmentCodec, AttachmentError, AttachmentType, Compound, Holder, HostTransaction, ItemResource, ItemStack,
+    AttachmentCodec, AttachmentError, AttachmentType, Compound, Hand, Holder, HostTransaction, ItemResource, ItemStack,
     MenuClickedEvent, MenuClosedEvent, MenuRef, MenuReplace, PlayerRef, Registrar, ServerHost, Tag, Text,
 };
 
@@ -179,14 +178,17 @@ pub fn closed(event: &MenuClosedEvent) {
 }
 
 /// From the `menu_clicked` hook: a button of the top row, or a click on the chests' or the inventory's slots, as a
-/// chest's: a click picks a stack up, puts the cursor's down, or swaps them (a right-click picks up half, puts down
-/// one); a shift-click sends a stack across; a click outside the window drops the cursor's stack (one with a
-/// right-click).
+/// chest's (vanilla's `AbstractContainerMenu.doClick`): a click picks a stack up, puts the cursor's down or swaps them
+/// (a right-click picks up half, puts down one); a shift-click sends a stack across; a number key (or the off hand's)
+/// swaps a slot with that hotbar slot; Q throws one of a slot's stack (all of it with control); a double-click gathers
+/// the same item onto the cursor; a drag spreads the cursor's stack over the slots crossed (evenly, or one each with
+/// the right button; a full stack each with the middle one in creative, as a middle-click picks a full stack up); a
+/// click outside the window throws the cursor's stack (one with a right-click).
 pub fn clicked(host: &mut dyn ServerHost, event: &MenuClickedEvent) {
     let Some(open) = OPEN.lock().unwrap().get(&event.uuid).copied() else {
         return;
     };
-    if open.window != event.window || !matches!(event.mode, PICKUP | QUICK_MOVE) {
+    if open.window != event.window {
         return;
     }
     let Some(menu) = host.menu(event.uuid, event.window) else {
@@ -200,7 +202,21 @@ pub fn clicked(host: &mut dyn ServerHost, event: &MenuClickedEvent) {
     else {
         return;
     };
+    // Its chests went with it (`died`): its screen closes, and nothing goes into them.
+    let alive = host
+        .entity(open.vulture)
+        .and_then(|e| host.living(e))
+        .and_then(|l| l.alive(&*host))
+        .unwrap_or(false);
+    if !alive {
+        host.close_menu(event.uuid);
+        return;
+    }
     let right = event.button == 1;
+    if event.mode == QUICK_CRAFT {
+        drag(host, player, menu, open, event);
+        return;
+    }
     if event.slot == OUTSIDE {
         if event.mode == PICKUP && drop_cursor(host, player, menu, right) {
             // The client isn't told of a cursor it didn't change itself: the screen opens again in place.
@@ -212,66 +228,299 @@ pub fn clicked(host: &mut dyn ServerHost, event: &MenuClickedEvent) {
         return;
     };
     if slot < ROW {
-        button(host, event.uuid, open, slot);
+        if matches!(event.mode, PICKUP | QUICK_MOVE) {
+            button(host, event.uuid, open, slot);
+        }
         return;
     }
+    let Some(cell) = cell(open, slot) else {
+        return;
+    };
+    let mut grid = Grid::read(host, player, open);
+    let cursor = menu.cursor().stack(host);
+    let creative = player.has_infinite_materials(&*host).unwrap_or(false);
+    let cursor_now = match event.mode {
+        PICKUP => {
+            let (cursor_now, slot_now) = pick(&*host, cursor.clone(), grid.at(cell).take(), right);
+            *grid.at(cell) = slot_now;
+            cursor_now
+        }
+        QUICK_MOVE => {
+            quick_move(&*host, &mut grid, open, cell);
+            cursor.clone()
+        }
+        SWAP => {
+            swap(host, player, &mut grid, cell, event.button);
+            cursor.clone()
+        }
+        THROW if cursor.is_none() => {
+            throw(host, player, &mut grid, cell, event.button == 1);
+            None
+        }
+        CLONE if creative && cursor.is_none() => grid.at(cell).clone().map(|s| full(&*host, s)),
+        PICKUP_ALL => cursor.clone().map(|c| gather(&*host, &mut grid, open, c)),
+        _ => return,
+    };
+    if !same(&cursor, &cursor_now) && !set_cursor(host, menu, cursor.as_ref(), cursor_now.as_ref()) {
+        return;
+    }
+    grid.write(host, player, open);
+}
+
+/// Vanilla's click types (`ClickType`) after a click and a shift-click, and the off hand's button for a swap (F).
+const SWAP: i32 = 2;
+const CLONE: i32 = 3;
+const THROW: i32 = 4;
+const QUICK_CRAFT: i32 = 5;
+const PICKUP_ALL: i32 = 6;
+const OFF_HAND: i32 = 40;
+
+/// A slot of the screen that holds items: one of the chests' (0 to 29), or the inventory's (0 to 8 the hotbar).
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Cell {
+    Chest(usize),
+    Inventory(usize),
+}
+
+/// The cell behind menu slot `slot`: the chests' slots follow the top row, then the menu shows the inventory's 27
+/// slots, then the hotbar.
+fn cell(open: Open, slot: usize) -> Option<Cell> {
     let rows = 1 + open.storage.div_ceil(ROW);
-    let mut chests = contents(host, open.vulture);
-    chests.resize(2 * PER_CHEST, None);
-    let mut inventory: Vec<Option<ItemStack>> = vec![None; INVENTORY];
-    for (k, s) in player.inventory_slots(&*host).unwrap_or_default() {
-        if let Some(cell) = inventory.get_mut(k as usize) {
-            *cell = Some(s);
+    if (ROW..ROW + open.storage).contains(&slot) {
+        return Some(Cell::Chest(slot - ROW));
+    }
+    let k = slot.checked_sub(rows * ROW).filter(|&k| k < INVENTORY)?;
+    Some(Cell::Inventory(if k < 27 { 9 + k } else { k - 27 }))
+}
+
+/// Every cell, in the menu's order (the chests, then the inventory as shown).
+fn cells(open: Open) -> Vec<Cell> {
+    let chests = (0..open.storage).map(Cell::Chest);
+    chests.chain((9..INVENTORY).chain(0..9).map(Cell::Inventory)).collect()
+}
+
+/// The chests' and the inventory's stacks while a click changes them.
+struct Grid {
+    chests: Vec<Option<ItemStack>>,
+    inventory: Vec<Option<ItemStack>>,
+    before: Vec<Option<ItemStack>>,
+}
+
+impl Grid {
+    fn read(host: &mut dyn ServerHost, player: PlayerRef, open: Open) -> Grid {
+        let mut chests = contents(host, open.vulture);
+        chests.resize(2 * PER_CHEST, None);
+        let mut inventory: Vec<Option<ItemStack>> = vec![None; INVENTORY];
+        for (k, s) in player.inventory_slots(&*host).unwrap_or_default() {
+            if let Some(cell) = inventory.get_mut(k as usize) {
+                *cell = Some(s);
+            }
+        }
+        let before = inventory.clone();
+        Grid {
+            chests,
+            inventory,
+            before,
         }
     }
-    let before = inventory.clone();
-    // Where the click is: a chest's slot, or one of the inventory's (the menu shows its 27 slots, then the hotbar).
-    let chest = (ROW..ROW + open.storage).contains(&slot).then(|| slot - ROW);
-    let held = slot
-        .checked_sub(rows * ROW)
-        .filter(|&k| k < INVENTORY)
-        .map(|k| if k < 27 { 9 + k } else { k - 27 });
-    if event.mode == QUICK_MOVE {
+
+    fn at(&mut self, cell: Cell) -> &mut Option<ItemStack> {
+        match cell {
+            Cell::Chest(k) => &mut self.chests[k],
+            Cell::Inventory(k) => &mut self.inventory[k],
+        }
+    }
+
+    /// The inventory's changed slots written to the player, the chests saved, the menu's slots sent again.
+    fn write(&self, host: &mut dyn ServerHost, player: PlayerRef, open: Open) {
+        for (k, (now, was)) in self.inventory.iter().zip(&self.before).enumerate() {
+            if !same(now, was) {
+                let _ = player.set_inventory_slot(host, k as u32, now.clone());
+            }
+        }
+        set_contents(host, open.vulture, &self.chests);
+        let (_, items) = layout(&*host, &state::saved(open.vulture), &self.chests);
+        let _ = host.menu_set_items(player.uuid(), open.window, items);
+    }
+}
+
+/// The same item and count (or both empty).
+fn same(a: &Option<ItemStack>, b: &Option<ItemStack>) -> bool {
+    a.as_ref().map(|s| (s.item(), s.count())) == b.as_ref().map(|s| (s.item(), s.count()))
+}
+
+/// `stack`, `n` of it (none for 0).
+fn with(stack: &ItemStack, n: u32) -> Option<ItemStack> {
+    let mut s = stack.clone();
+    (n > 0 && s.set_count(n).is_ok()).then_some(s)
+}
+
+fn max_of(host: &dyn ServerHost, stack: &ItemStack) -> u32 {
+    host.max_stack_size(stack.item()).unwrap_or(64)
+}
+
+/// A full stack of `stack`'s item.
+fn full(host: &dyn ServerHost, stack: ItemStack) -> ItemStack {
+    let max = max_of(host, &stack);
+    with(&stack, max).unwrap_or(stack)
+}
+
+/// A shift-click: the stack sent across, from a chest to the inventory or back, as much as fits.
+fn quick_move(host: &dyn ServerHost, grid: &mut Grid, open: Open, cell: Cell) {
+    let Some(stack) = grid.at(cell).take() else {
+        return;
+    };
+    let rest = match cell {
         // Vanilla's order for a stack leaving a chest: the hotbar from its end, then the inventory from its end.
-        let to_inventory: Vec<usize> = (0..9).rev().chain((9..INVENTORY).rev()).collect();
-        let to_chests: Vec<usize> = (0..open.storage).collect();
-        if let Some(k) = chest {
-            let Some(stack) = chests[k].take() else {
-                return;
-            };
-            chests[k] = transfer(&*host, stack, &mut inventory, &to_inventory);
-        } else if let Some(k) = held {
-            let Some(stack) = inventory[k].take() else {
-                return;
-            };
-            inventory[k] = transfer(&*host, stack, &mut chests, &to_chests);
+        Cell::Chest(_) => {
+            let order: Vec<usize> = (0..9).rev().chain((9..INVENTORY).rev()).collect();
+            transfer(host, stack, &mut grid.inventory, &order)
+        }
+        Cell::Inventory(_) => {
+            let order: Vec<usize> = (0..open.storage).collect();
+            transfer(host, stack, &mut grid.chests, &order)
+        }
+    };
+    *grid.at(cell) = rest;
+}
+
+/// A number key (`button` 0 to 8) or the off hand's key over `cell`: the two stacks swap.
+fn swap(host: &mut dyn ServerHost, player: PlayerRef, grid: &mut Grid, cell: Cell, button: i32) {
+    if button == OFF_HAND {
+        let off = creature::hand::held(&*host, player, Hand::Off);
+        let here = grid.at(cell).take();
+        if creature::hand::set_held(host, player, Hand::Off, here.clone()) {
+            *grid.at(cell) = off;
         } else {
-            return;
+            *grid.at(cell) = here;
         }
+        return;
+    }
+    let Some(k) = usize::try_from(button).ok().filter(|&k| k < 9) else {
+        return;
+    };
+    let hotbar = Cell::Inventory(k);
+    if hotbar != cell {
+        let a = grid.at(cell).take();
+        let b = std::mem::replace(grid.at(hotbar), a);
+        *grid.at(cell) = b;
+    }
+}
+
+/// Q over `cell`: one of its stack thrown, or all of it.
+fn throw(host: &mut dyn ServerHost, player: PlayerRef, grid: &mut Grid, cell: Cell, all: bool) {
+    let Some(stack) = grid.at(cell).take() else {
+        return;
+    };
+    let n = if all { stack.count() } else { 1 };
+    *grid.at(cell) = with(&stack, stack.count() - n);
+    if let Some(thrown) = with(&stack, n) {
+        let _ = player.drop_stack(host, thrown, true);
+    }
+}
+
+/// A double-click with `cursor` held: the same item gathered onto it from every slot, the slots that aren't full first,
+/// up to a full stack. What the cursor holds after.
+fn gather(host: &dyn ServerHost, grid: &mut Grid, open: Open, cursor: ItemStack) -> ItemStack {
+    let max = max_of(host, &cursor);
+    let mut count = cursor.count();
+    for full_too in [false, true] {
+        for cell in cells(open) {
+            if count >= max {
+                break;
+            }
+            let Some(s) = grid.at(cell).clone().filter(|s| s.is_stackable_with(&cursor)) else {
+                continue;
+            };
+            if !full_too && s.count() >= max {
+                continue;
+            }
+            let n = s.count().min(max - count);
+            count += n;
+            *grid.at(cell) = with(&s, s.count() - n);
+        }
+    }
+    with(&cursor, count).unwrap_or(cursor)
+}
+
+/// A drag in progress per player: its kind (0 evenly, 1 one each, 2 a full stack each) and the slots it crossed.
+static DRAGS: Mutex<BTreeMap<u128, (i32, Vec<usize>)>> = Mutex::new(BTreeMap::new());
+
+/// A drag (`QUICK_CRAFT`): it starts (the button's stage 0), crosses slots (1) and ends (2), when the cursor's stack is
+/// spread over the slots crossed that are empty or hold the same item, as vanilla's `getQuickCraftPlaceCount`: evenly,
+/// one each, or a full stack each (creative only); what is left stays on the cursor. A drag over one slot is a click.
+fn drag(host: &mut dyn ServerHost, player: PlayerRef, menu: MenuRef, open: Open, event: &MenuClickedEvent) {
+    let (stage, kind) = (event.button & 3, (event.button >> 2) & 3);
+    let mut drags = DRAGS.lock().unwrap();
+    match stage {
+        0 => {
+            drags.insert(event.uuid, (kind, Vec::new()));
+        }
+        1 => {
+            if let (Some((k, slots)), Ok(slot)) = (drags.get_mut(&event.uuid), usize::try_from(event.slot))
+                && *k == kind
+                && cell(open, slot).is_some()
+                && !slots.contains(&slot)
+            {
+                slots.push(slot);
+            }
+        }
+        _ => {
+            let Some((k, slots)) = drags.remove(&event.uuid).filter(|d| d.0 == kind) else {
+                return;
+            };
+            drop(drags);
+            spread(host, player, menu, open, k, &slots);
+        }
+    }
+}
+
+/// The end of a drag of kind `kind` over `slots`.
+fn spread(host: &mut dyn ServerHost, player: PlayerRef, menu: MenuRef, open: Open, kind: i32, slots: &[usize]) {
+    let Some(cursor) = menu.cursor().stack(host) else {
+        return;
+    };
+    let creative = player.has_infinite_materials(&*host).unwrap_or(false);
+    if kind == 2 && !creative {
+        return;
+    }
+    let mut grid = Grid::read(host, player, open);
+    let mut cells: Vec<Cell> = slots
+        .iter()
+        .filter_map(|&s| cell(open, s))
+        .filter(|&c| grid.at(c).as_ref().is_none_or(|s| s.is_stackable_with(&cursor)))
+        .collect();
+    if kind == 0 {
+        cells.truncate(cursor.count() as usize);
+    }
+    let cursor_now = if let [one] = cells[..] {
+        let (cursor_now, slot_now) = pick(&*host, Some(cursor.clone()), grid.at(one).take(), kind == 1);
+        *grid.at(one) = slot_now;
+        cursor_now
+    } else if cells.is_empty() {
+        return;
     } else {
-        let cell = match (chest, held) {
-            (Some(k), _) => &mut chests[k],
-            (_, Some(k)) => &mut inventory[k],
-            _ => return,
+        let max = max_of(&*host, &cursor);
+        let each = match kind {
+            0 => cursor.count() / cells.len() as u32,
+            1 => 1,
+            _ => max,
         };
-        let cursor = menu.cursor().stack(host);
-        let (cursor_now, slot_now) = pick(&*host, cursor.clone(), cell.take(), right);
-        let same = |a: &Option<ItemStack>, b: &Option<ItemStack>| {
-            a.as_ref().map(|s| (s.item(), s.count())) == b.as_ref().map(|s| (s.item(), s.count()))
-        };
-        if !same(&cursor, &cursor_now) && !set_cursor(host, menu, cursor.as_ref(), cursor_now.as_ref()) {
-            return;
+        let mut left = cursor.count();
+        for c in cells {
+            let here = grid.at(c).as_ref().map_or(0, |s| s.count());
+            let now = (here + each).min(max);
+            if kind != 2 {
+                left -= now - here;
+            }
+            *grid.at(c) = with(&cursor, now);
         }
-        *cell = slot_now;
+        with(&cursor, left)
+    };
+    if !same(&Some(cursor.clone()), &cursor_now) && !set_cursor(host, menu, Some(&cursor), cursor_now.as_ref()) {
+        return;
     }
-    for (k, (now, was)) in inventory.iter().zip(&before).enumerate() {
-        if now.as_ref().map(|s| (s.item(), s.count())) != was.as_ref().map(|s| (s.item(), s.count())) {
-            let _ = player.set_inventory_slot(host, k as u32, now.clone());
-        }
-    }
-    set_contents(host, open.vulture, &chests);
-    let (_, items) = layout(&*host, &state::saved(open.vulture), &chests);
-    let _ = host.menu_set_items(event.uuid, open.window, items);
+    grid.write(host, player, open);
 }
 
 /// A click (`right` or left) on a slot holding `slot`, with `cursor` on the cursor, as vanilla's
@@ -282,10 +531,6 @@ fn pick(
     slot: Option<ItemStack>,
     right: bool,
 ) -> (Option<ItemStack>, Option<ItemStack>) {
-    let with = |s: &ItemStack, n: u32| {
-        let mut s = s.clone();
-        (n > 0 && s.set_count(n).is_ok()).then_some(s)
-    };
     match (cursor, slot) {
         (None, None) => (None, None),
         // Picking up: all of it, or half (the larger half) with a right-click.
@@ -423,8 +668,18 @@ fn stack(host: &dyn ServerHost, id: &str, count: u32) -> Option<ItemStack> {
     host.item_from_snbt(&format!("{{id:\"{id}\",count:{count}}}"))
 }
 
-/// Its death: its saddle, chests and their contents fall where it died.
+/// Its death: its screen closes for whoever has it open, its saddle, chests and their contents fall where it died.
 pub fn died(host: &mut dyn ServerHost, id: u32) {
+    let viewers: Vec<u128> = OPEN
+        .lock()
+        .unwrap()
+        .iter()
+        .filter(|(_, o)| o.vulture == id)
+        .map(|(uuid, _)| *uuid)
+        .collect();
+    for uuid in viewers {
+        host.close_menu(uuid);
+    }
     let Some(e) = host.entity(id) else {
         return;
     };

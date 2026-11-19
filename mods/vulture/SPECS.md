@@ -34,8 +34,10 @@ Done and tested in game (single player). What waits for v2 is in §9.
 - **Bestiary page**: the biomes a wild one was met in, "Feed" (raw chicken) and "Breeding" (rotten flesh).
 
 On Sunrise: all of it ported and tried in game (riding and flight, talons, the screen, taming, breeding). The
-screen's slots work as a chest's, the cursor included (pick up, put down, half and one with a right-click, swap,
-shift-click, throw outside the window); dragging across slots, double-click and number keys don't.
+screen's slots work as a chest's, with every click vanilla's chests take: pick up, put down, half and one with a
+right-click, swap, shift-click, number keys and the off hand's key, the drop key (one, or the stack with control),
+double-click to gather, dragging (evenly, one each, a full stack each in creative), the creative middle-click, a
+throw outside the window. The screen closes when the vulture dies.
 
 Left: tuning (flight numbers, taming odds, speeds, the dive attack) as players report.
 
