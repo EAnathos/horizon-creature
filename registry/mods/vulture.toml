@@ -5,9 +5,9 @@ summary = "A desert vulture you tame with raw chicken, saddle and fly like a pla
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/main/docs/models/vulture-vulture-front.png)
+![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/vulture-0.2.0/docs/models/vulture-vulture-front.png)
 
-A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/main/README.md) series: a desert vulture you tame with raw chicken, saddle and fly like
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/vulture-0.2.0/README.md) series: a desert vulture you tame with raw chicken, saddle and fly like
 a plane, with two chests and talons. **Requires** Sunrise Creatures, the series' library.
 
 ## Finding one
@@ -62,6 +62,26 @@ icon = "icons/vulture.png"
 categories = ["mobs", "transportation", "adventure"]
 tags = ["vulture", "flying", "mount", "taming", "birds"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.2.0"
+published = "2026-11-19"
+game = "26.3"
+file = "vulture-0.2.0.smod"
+sha256 = "39e8001f33b4f83f181d921ba486ecb8d3602c0c6734da76966b4f255a7a91a8"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw6/ZNSuZAAGYWNvrxx4wWdiKkwnpwOMTqFJcFK5HqtebW8BGSJiFb8Uo+C2cLu9eTyFnUGS65//qjmmVZXfB31Qw=
+trusted comment: timestamp:1795112823	file:vulture-0.2.0.smod	hashed
+hbYBTAwrZx7E9odUqmHIp1US8Zvxq6QrOjscuVRsT6eTzEpcjxcwWrBMBRSuDlOmpKd45ObiJlwUM0FSP3yECg==
+"""
+changelog = """
+- Its screen works as a chest's: pick up, put down, half and one with a right-click, swap, shift-click, number keys
+  and the off hand's key, the drop key, double-click to gather, dragging, the creative middle-click, throwing outside
+  the window. Before, a click moved a whole stack across, with no cursor.
+- Its screen closes when the vulture dies.
+- Built for Sunrise's 2026-11-19 Nightly and Sunrise Creatures 0.2.
+"""
 
 [[versions]]
 version = "0.1.0"

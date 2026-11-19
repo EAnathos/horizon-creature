@@ -5,15 +5,15 @@ summary = "Real-size scorpions in deserts, badlands and caves: they rear up when
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/main/docs/models/scorpions-scorpion-front.png)
+![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/scorpions-0.1.1/docs/models/scorpions-scorpion-front.png)
 
-A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/main/README.md) series: scorpions of real size hiding in the shade
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/scorpions-0.1.1/README.md) series: scorpions of real size hiding in the shade
 of deserts, badlands and caves, where some glow cyan in the dark. Come close and one rears up, claws open and tail
 arched; hit it and it fights back with its claws and a poisoned sting. Its venom makes poison potions and arrows, its
 stinger a dagger, and a glass jar makes it a terrarium pet. **Requires** Sunrise Creatures, the series' library.
 
 `/summon scorpions:scorpion ~ ~ ~ {Tags:["cave"]}` makes one of a kind (`desert`, `badlands` or `cave`). The design is
-in [SPECS.md](https://github.com/EAnathos/sunrise-creatures/blob/main/mods/scorpions/SPECS.md).
+in [SPECS.md](https://github.com/EAnathos/sunrise-creatures/blob/scorpions-0.1.1/mods/scorpions/SPECS.md).
 """
 authors = ["EAnathos"]
 owners = ["EAnathos"]
@@ -23,6 +23,22 @@ icon = "icons/scorpions.png"
 categories = ["mobs", "equipment", "adventure"]
 tags = ["scorpions", "desert", "poison", "dagger", "insects"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.1"
+published = "2026-11-19"
+game = "26.3"
+file = "scorpions-0.1.1.smod"
+sha256 = "b72ca156998d229ad4b4ad30d0d0aac078982967e30a07f38246ee3488827f04"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw60YUdoAooX1YfHYGaYjsRGP1oix/HJkTEOX52ksO52F0tZ8tQaZqJTSPgg45zyeGehLDlJSd60tJeK3cCI35Hw4=
+trusted comment: timestamp:1795112822	file:scorpions-0.1.1.smod	hashed
+vMz3YoI05q1OmFvBoquTjaxdnFrr9EcnaXm+U9uvTQpXCAgfpjTzzTBQEG8GKLbiRwRcHO5cuz/8ljLmUZDkBQ==
+"""
+changelog = """
+- Built for Sunrise's 2026-11-19 Nightly and Sunrise Creatures 0.2.
+"""
 
 [[versions]]
 version = "0.1.0"

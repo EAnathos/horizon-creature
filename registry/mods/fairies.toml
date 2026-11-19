@@ -5,9 +5,9 @@ summary = "Shy glowing fairies you befriend with glow berries: they circle your 
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/main/docs/models/fairies-fairy-front.png)
+![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/fairies-0.1.1/docs/models/fairies-fairy-front.png)
 
-A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/main/README.md) series: tiny shy fairies of the flowery woods and meadows, glowing a
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/fairies-0.1.1/README.md) series: tiny shy fairies of the flowery woods and meadows, glowing a
 soft violet. **Requires** Sunrise Creatures, the series' library.
 
 ## Finding them
@@ -55,6 +55,24 @@ icon = "icons/fairies.png"
 categories = ["mobs", "magic"]
 tags = ["fairies", "companion", "pets", "magic"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.1"
+published = "2026-11-19"
+game = "26.3"
+file = "fairies-0.1.1.smod"
+sha256 = "e0acd4bd3a1e03335cb7c587db91afb514686a9b51eee9a0d3c542b11c6a4a78"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw61ze2QfjPnk91uS66JEpw99mQe9PyX8us4Off/9YKtDAJLYKwsogr8jGttuJttqaJmFL2arPMKnE5fUwD4oxDg4=
+trusted comment: timestamp:1795112822	file:fairies-0.1.1.smod	hashed
+UTOqfDces3fg8VKSMKeuqFPA+ZTjpptPUvDFt36ERONVgLkw9eKfp6bgGoX56S5uGehNzN1ux2pAx9BmSd43Ag==
+"""
+changelog = """
+- Their night light comes from the library: with fireflies or storm spirits about, the lights go to the creatures
+  nearest you.
+- Built for Sunrise's 2026-11-19 Nightly and Sunrise Creatures 0.2.
+"""
 
 [[versions]]
 version = "0.1.0"

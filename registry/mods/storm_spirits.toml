@@ -1,0 +1,55 @@
+id = "storm_spirits"
+kind = "native-mod"
+name = "Storm Spirits"
+summary = "Spirits of living lightning born in thunderstorms: they shock whoever hits them, and their sparks call lightning where you aim."
+description = """
+> **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
+
+![](https://raw.githubusercontent.com/EAnathos/sunrise-creatures/storm_spirits-0.1.0/docs/models/storm_spirits-storm_spirit-front.png)
+
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/storm_spirits-0.1.0/README.md) series: spirits of living lightning, born in storms. **Requires**
+Sunrise Creatures, the series' library.
+
+## Finding them
+
+In a thunderstorm, now and then a spirit appears where lightning strikes, in any biome, with a crackle of sparks. It
+floats 1 to 4 blocks above the ground or the water, glowing blue, in short jerky dashes. When the storm ends it fades
+within a few minutes. Only weather lightning gives birth to one: not a trident's, nor a command's. In creative: the
+spawn egg (creative tab "Sunrise Creatures").
+
+## Shocks
+
+A spirit leaves you alone, but hit it and it dashes at you and zaps you (3 damage and a moment of Slowness), then
+keeps away and comes back to zap you again every few seconds, until it loses you. Anything that touches it gets a
+small zap. Lightning and fire don't hurt it.
+
+## Sparks
+
+A spirit drops 1 to 3 **sparks** (more with Looting). Right-click a spark to call a lightning bolt down on the block
+you aim at, up to 32 blocks away, in any weather and any dimension: the spark is used up, with 2 seconds before the
+next.
+"""
+authors = ["EAnathos"]
+owners = ["EAnathos"]
+license = "MIT"
+source = "https://github.com/EAnathos/sunrise-creatures"
+icon = "icons/storm_spirits.png"
+categories = ["mobs", "magic"]
+tags = ["storm", "lightning", "spirit", "neutral"]
+key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-19"
+game = "26.3"
+file = "storm_spirits-0.1.0.smod"
+sha256 = "cd00e23b56b5403d144b36d683efb08beb0e4f385674f64f3322e7f7e5a95e2c"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw6y29lwAY/eRu3jJI52mp4AujJlgfZjSapdQGUyx5cjJh8GBD/6gXSx3XouB3ki8vbCQIIrKcckeljKZdLLW2Zwk=
+trusted comment: timestamp:1795112822	file:storm_spirits-0.1.0.smod	hashed
+Yxtxlhnp1y6ZklJpg7ARgYLvPPd3Y1BYoj6WkbvEgvRfRDxag9Qis5cPF0+v6yxs4K1eXaMrP6WnCS3QMU3mDw==
+"""
+changelog = """
+- First release on Sunrise: the storm spirit, born of weather lightning, and its spark.
+"""
