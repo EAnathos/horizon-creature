@@ -89,6 +89,16 @@ jobs:
         if: steps.sunrise-mod.outputs.cache-hit != 'true'
         # --force: rust-cache restores ~/.cargo/bin, with the build of an older pin.
         run: cargo install --force --locked --git https://github.com/sunrise-org/sunrise --rev "$SUNRISE_REV" cargo-sunrise-mod
+      # Writes each package's uses.json (tools/src/pack.rs, `uses`).
+      - name: Cache sunrise-stage
+        id: sunrise-stage
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/bin/sunrise-stage
+          key: sunrise-stage-${{ runner.os }}-${{ env.SUNRISE_REV }}
+      - name: Install sunrise-stage
+        if: steps.sunrise-stage.outputs.cache-hit != 'true'
+        run: cargo install --force --locked --git https://github.com/sunrise-org/sunrise --rev "$SUNRISE_REV" sunrise-mod-api-gen --bin sunrise-stage
       - name: Build the packages (.smod)
         run: cargo creature build
       - uses: actions/upload-artifact@v7

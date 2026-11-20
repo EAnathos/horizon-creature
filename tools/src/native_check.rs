@@ -50,7 +50,7 @@ pub fn run(sdk: Option<&str>) -> crate::Result {
 /// The pinned SDK, in `target/sunrise-sdk/`: when missing or built from another commit than the library's pin,
 /// fetched by `cargo sunrise-mod check` in the library's staged package (the check itself may fail, on a target we
 /// don't build: only the fetch matters).
-fn fetch(library: &Module) -> crate::Result<std::path::PathBuf> {
+pub fn fetch(library: &Module) -> crate::Result<std::path::PathBuf> {
     let sdk = crate::root().join("target/sunrise-sdk");
     let manifest = std::fs::read_to_string(library.dir.join("sunrise-mod.toml")).unwrap_or_default();
     let pin = crate::pack::toml_value(&manifest, "sunrise");

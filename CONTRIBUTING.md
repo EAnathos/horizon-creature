@@ -32,10 +32,14 @@ the models' pictures (`docs/models/`). Never edit them by hand.
 ## Build and test
 
 You need the [Sunrise launcher](https://playsunrise.net) (signed in, with a test instance, here `creature-dev`; any
-name works with `--instance`), Rust, `cargo sunrise-mod` and ffmpeg to remake the sounds.
+name works with `--instance`), Rust, `cargo sunrise-mod` and `sunrise-stage` at the series' pinned Sunrise revision
+(CI's `SUNRISE_REV`: packaging writes each package's `uses.json` with `sunrise-stage`, and the pinned
+`cargo sunrise-mod` refuses a package without it), and ffmpeg to remake the sounds.
 
 ```sh
-cargo install --locked --git https://github.com/sunrise-org/sunrise cargo-sunrise-mod
+REV=94256510f74e6843754e0a93fd9e4da7e45b1056   # .github/workflows/ci.yml, SUNRISE_REV
+cargo install --locked --git https://github.com/sunrise-org/sunrise --rev $REV cargo-sunrise-mod
+cargo install --locked --git https://github.com/sunrise-org/sunrise --rev $REV sunrise-mod-api-gen --bin sunrise-stage
 cargo creature install                                   # the library and every mod, in creature-dev
 cargo creature install vulture --instance my-instance    # one mod (with the library and what it requires)
 ```

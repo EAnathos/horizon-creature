@@ -43,7 +43,8 @@ Found, not filed: check the tracker and the newest Nightly first.
 1. Pick the Nightly (`sunrise-launcher versions`) and its commit: the newest, or the first with a fix we wait for
    (`git log <old>..<new>` in the Sunrise sources). `cargo sunrise-mod update --sunrise <commit>` in a module moves its
    pin and lists the API items it uses that changed.
-2. Set the commit in every `sunrise-mod.toml` (`[native]`) and CI's `SUNRISE_REV`; `cargo creature native-check`
+2. Set the commit in every `sunrise-mod.toml` (`[native]`), CI's `SUNRISE_REV` and CONTRIBUTING's `REV`, and install
+   `cargo-sunrise-mod` and `sunrise-stage` at it (CONTRIBUTING.md); `cargo creature native-check`
    fetches the new SDK by itself (it compares `target/sunrise-sdk/sdk.json` with the library's pin).
 3. Install that Nightly and keep the instance on it (`sunrise-launcher install <nightly>`,
    `sunrise-launcher instance version creature-dev <nightly>`), or `cargo creature install` refuses the mods.

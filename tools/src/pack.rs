@@ -18,9 +18,12 @@ pub struct Packed {
     pub smod: PathBuf,
 }
 
-/// Stages and zips the module.
+/// Stages and zips the module (with its uses list when it has code).
 pub fn run(module: &Module) -> crate::Result<Packed> {
     let stage = stage(module)?;
+    if module.native().is_some() {
+        uses(&stage)?;
+    }
     let smod = crate::root().join(format!("target/{}.smod", module.id));
     zip_dir(&stage, &smod)?;
     println!("{}", smod.display());
@@ -72,6 +75,35 @@ pub fn stage(module: &Module) -> crate::Result<PathBuf> {
         crate::icon::make(&module.id, &registry.icon, &out.join("icon.png"))?;
     }
     Ok(out)
+}
+
+/// A package with code lists what it uses of the pinned build's API (`uses.json`, as `cargo sunrise-mod build` packs
+/// it): without the list, the checks hold the package to its pinned build alone and refuse it. Written by Sunrise's
+/// `sunrise-stage uses` from the pinned SDK's surface, which reads the source without compiling it (`build` compiles
+/// the mod alone, and a mod's dependency on the library can't be found there).
+fn uses(stage: &Path) -> crate::Result {
+    let sdk = crate::native_check::fetch(&crate::modules::library()?)?;
+    let manifest = std::fs::read_to_string(stage.join("sunrise-mod.toml")).map_err(|e| e.to_string())?;
+    let pin = toml_value(&manifest, "sunrise").ok_or("sunrise-mod.toml has no [native] sunrise pin")?;
+    let surface = sdk.join("surface.json");
+    let out = stage.join("uses.json");
+    let run = std::process::Command::new("sunrise-stage")
+        .arg("uses")
+        .arg(&surface)
+        .arg(stage)
+        .arg("--json")
+        .arg(&out)
+        .args(["--made-for", &pin])
+        .output()
+        .map_err(|e| format!("sunrise-stage: {e} (install it: CONTRIBUTING.md)"))?;
+    if !run.status.success() {
+        return Err(format!(
+            "sunrise-stage uses {}: {}",
+            stage.display(),
+            String::from_utf8_lossy(&run.stderr).trim()
+        ));
+    }
+    Ok(())
 }
 
 /// The manifest without its `[native]` table: a module packaged as content only.
