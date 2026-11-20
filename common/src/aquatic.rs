@@ -31,9 +31,11 @@ pub struct Aquatic {
 }
 
 /// Where and how a water creature spawns: in groups of `group`, `depth` blocks under the surface, up to `cap` near a
-/// player, one try in `chance` every `SPAWN_EVERY` ticks.
+/// player, one try in `chance` every `SPAWN_EVERY` ticks. A kind with looks (`scheme`) spawns in groups of one look,
+/// rolled for the group's biome (a bloom of one kind of jellyfish).
 pub struct Spawning {
     pub kind: &'static str,
+    pub scheme: Option<&'static colours::Scheme>,
     pub biomes: &'static [&'static str],
     pub group: (u32, u32),
     pub cap: usize,
@@ -365,12 +367,21 @@ pub(crate) fn spawn(host: &mut dyn ServerHost, level: LevelRef) {
             if ground.block([bx, y.floor() as i32, bz]) != "minecraft:water" {
                 continue;
             }
-            if !level
+            let Some(biome) = level
                 .biome_at(&*host, [bx, y.floor() as i32, bz])
-                .is_some_and(|b| s.biomes.contains(&b.as_str()))
-            {
+                .filter(|b| s.biomes.contains(&b.as_str()))
+            else {
                 continue;
-            }
+            };
+            // One look for the whole group, named in each one's tags (`colours::chosen`).
+            let tags: Vec<Tag> = s
+                .scheme
+                .map(|scheme| {
+                    let mut random = colours::Random::new(seed ^ bx as u32 ^ (bz as u32).rotate_left(16));
+                    let look = colours::roll(scheme, Some(&biome), &mut random);
+                    vec![Tag::String(colours::key(scheme, look).as_str().into())]
+                })
+                .unwrap_or_default();
             let count = s.group.0 + (float() * f64::from(s.group.1 - s.group.0 + 1)) as u32;
             for _ in 0..count.min(s.group.1) {
                 let at = [
@@ -380,7 +391,11 @@ pub(crate) fn spawn(host: &mut dyn ServerHost, level: LevelRef) {
                 ];
                 let block = at.map(|k| k.floor() as i32);
                 if Ground::new(&*host, level).block(block) == "minecraft:water" {
-                    let _ = host.summon(&dimension, s.kind, at, Compound::new());
+                    let mut nbt = Compound::new();
+                    if !tags.is_empty() {
+                        nbt.insert("Tags".into(), Tag::List(tags.clone()));
+                    }
+                    let _ = host.summon(&dimension, s.kind, at, nbt);
                 }
             }
         }

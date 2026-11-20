@@ -19,7 +19,8 @@ In creative: the spawn egg (creative tab "Sunrise Creatures").
 
 ## Stings
 
-Touch one and it stings, at most once a second. A boat keeps you safe, and so does a turtle shell.
+Touch one and it stings, at most once a second. A boat keeps you safe, and so does a turtle shell. Sea turtles hunt
+them: a turtle nearby swims to a jellyfish and eats it.
 
 ## Buckets and jelly
 

@@ -24,7 +24,8 @@ Everything below works and was tested in game, single player, unless said otherw
 - **Glowing creatures' lights** (§3.11, `creature::glow`): the fireflies', the fairies' and the storm spirits' lights,
   sharing the game's 8.
 - **Fighting back** (§3.12, `creature::anger`): the scorpions and the storm spirits.
-- **Water creatures** (§3.10, `creature::aquatic`) and **touches** (§3.13, `creature::touch`): the jellyfish (and the
+- **Water creatures** (§3.10, `creature::aquatic`), **touches** (§3.13, `creature::touch`) and **hunters** (§3.7,
+  `creature::prey`, the sea turtles; chickens, dolphins and seagulls come with their mods): the jellyfish (and the
   storm spirits' touch).
 - **Mob helpers** (`creature::mob`): `ours` (muted, own box, own goals, spared), `resize`, `Muted`, `despawn_far` (small
   wild creatures far from players, as vanilla's ambient mobs), `nearest_player`, `player_of`, `give_effect` (an effect
@@ -123,7 +124,7 @@ one crawls only over its area (its mod's territory rule). Users: **Worms** (in p
 beetle's walking toward a target (backwards), and **climbing** for phasmids (up the sides of logs and leaves and on
 their top, never coming down on its own).
 
-### 3.7 Hunters eat small creatures (`creature::prey`), planned ✅
+### 3.7 Hunters eat small creatures (`creature::prey`) ✅
 
 A hunter that sees one of its prey within its range goes over and eats it: the creature is gone (no drop), wild or
 settled. A mod registers its kinds as prey of a hunter, a vanilla mob or **another mod's** (by its entity id): a hunter
@@ -132,7 +133,8 @@ bucket.
 
 - **Chickens** peck small creatures within 6 blocks, so a player keeps chickens out of a garden or a pasture. Users:
   **Worms**, **Dung Beetles** (mods/dung_beetles/SPECS.md §2).
-- **Sea turtles** swim to jellyfish within 8 blocks and eat them. User: **Jellyfish** (mods/jellyfish/SPECS.md §3).
+- **Sea turtles** swim to jellyfish within 8 blocks and eat them ✅ (the hunter sent with `MobRef::move_to`). User:
+  **Jellyfish** (mods/jellyfish/SPECS.md §3).
 - **Dolphins** chase flying fish within 12 blocks and eat them; the fish flee by gliding. User: **Flying Fish**
   (mods/flying_fish/SPECS.md §3).
 - **Seagulls** (a mod's hunter) swoop on gliding flying fish within 16 blocks and snatch them in the air, when both
@@ -166,7 +168,8 @@ The life in water of jellyfish and flying fish, which copy the land-living wande
   one let out is tagged `creature.kept` and never despawns (`mob::despawn_far`).
 - **Spawning** (`spawns`): groups under the surface of their biomes' water, out of sight of the players, under a cap.
 
-A mod gives its kind, its bucket item and its drying delay (`Aquatic`), and how it spawns (`Spawning`). Users:
+A mod gives its kind, its bucket item and its drying delay (`Aquatic`), and how it spawns (`Spawning`: a kind with looks
+spawns in groups of one look, rolled once for the group's biome). Users:
 **Jellyfish** (mods/jellyfish/SPECS.md §3, §5) and **Flying Fish** (planned, mods/flying_fish/SPECS.md §3, §5).
 
 ### 3.11 Lights of glowing creatures (`creature::glow`) ✅

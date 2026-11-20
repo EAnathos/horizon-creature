@@ -133,6 +133,7 @@ static AQUATIC: Aquatic = Aquatic {
 /// Blooms of 3 to 8 in its oceans, 2 to 6 blocks under the surface (SPECS §3).
 static SPAWNING: Spawning = Spawning {
     kind: KIND,
+    scheme: Some(&SCHEME),
     biomes: BIOMES,
     group: (3, 8),
     cap: 10,
@@ -143,6 +144,18 @@ static SPAWNING: Spawning = Spawning {
 const BLOOM_FACT: &str = "bloom";
 const STING_FACT: &str = "sting";
 const GLOW_FACT: &str = "glow";
+const TURTLE_FACT: &str = "turtle";
+
+/// Sea turtles eat them (SPECS §3): one within 8 blocks swims to it.
+static PREY: creature::prey::Prey = creature::prey::Prey {
+    kind: KIND,
+    hunters: &[creature::prey::Hunter {
+        kind: "minecraft:turtle",
+        range: 8.0,
+        speed: 1.5,
+    }],
+    fact: Some(TURTLE_FACT),
+};
 
 /// Its page (SPECS §4): met as its kinds (morphs), its facts shown as they are learnt.
 static BESTIARY: Species = Species {
@@ -164,6 +177,11 @@ static BESTIARY: Species = Species {
             id: GLOW_FACT,
             item: GLOW_JELLY,
             key: "bestiary.jellyfish.glow",
+        },
+        Fact {
+            id: TURTLE_FACT,
+            item: "minecraft:turtle_scute",
+            key: "bestiary.jellyfish.turtle",
         },
         Fact {
             id: creature::aquatic::BUCKET_FACT,
@@ -268,6 +286,10 @@ fn sting(host: &mut dyn ServerHost, id: u32, target: u32) {
 /// From `entity_tick_post`, for each jellyfish: its life in water, its look, its stings, its light, the facts seen,
 /// and despawning far from players.
 fn tick(host: &mut dyn ServerHost, dimension: &str, id: u32) {
+    if creature::prey::tick(host, dimension, id, KIND) {
+        forget(id);
+        return;
+    }
     let wet = creature::aquatic::tick(host, id, KIND);
     creature::colours::tick(host, id, &SCHEME);
     let glows = kind(id) == GLOW;
@@ -406,6 +428,7 @@ impl Hooks for Jellyfish {
         creature::mob::ours(KIND, SIZE);
         creature::aquatic::register(&AQUATIC);
         creature::aquatic::spawns(&SPAWNING);
+        creature::prey::register(&PREY);
         let bucket = r.item_key(BUCKET);
         r.item_part(bucket, creature::aquatic::Bucket);
         creature::bestiary::register(&BESTIARY);

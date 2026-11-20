@@ -36,6 +36,7 @@ pub mod jar;
 pub mod mob;
 pub mod model;
 pub mod particles;
+pub mod prey;
 pub mod projectile;
 mod recipes;
 pub mod sounds;
@@ -147,6 +148,7 @@ impl Hooks for Creature {
         glow::dim(event.entity);
         anger::forget(event.entity);
         touch::forget(event.entity);
+        prey::forget(event.entity);
         aquatic::forget(event.entity);
     }
 

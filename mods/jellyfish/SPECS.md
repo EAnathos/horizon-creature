@@ -22,11 +22,11 @@ Playable, tested in game (single player): everything below works, unless marked 
   never despawning). Blooms of 3 to 8 spawn in its oceans.
 - **Stings** (§3, through the library's touches, common/SPECS.md §3.13), boats and turtle shells protecting; the glow
   jelly's light and full-bright glow; its drops and items (§5).
-- ❓ **One kind per bloom**: a bloom's jellies roll their kind one by one, so a warm ocean's bloom mixes moon jellies
-  and sea nettles.
-- ❓ **Turtles eating them** (§3) waits for the library's prey (common/SPECS.md §3.7).
-- ❓ **Sounds**: vanilla's for now (a squid's hurt and death, the bucket's fish sounds), until its own.
-- ❓ The glow jelly in a deep ocean at night is not yet seen in game (the code is the other kinds').
+- **Blooms of one kind**: the kind is rolled once for a bloom, by its biome.
+- **Turtles eat them** (§3, the library's hunters, common/SPECS.md §3.7): a sea turtle within 8 blocks swims to one
+  and eats it ("Turtle" fact).
+- **The glow jelly**, seen in a deep ocean at night: drawn full-bright, its light around it.
+- ❓ **Sounds**: vanilla's for now (a squid's hurt and death, the bucket's fish sounds), until its own from freesound.
 
 ## 1. Technical context
 
