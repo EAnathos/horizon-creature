@@ -20,9 +20,14 @@ pub struct Packed {
 
 /// Stages and zips the module (with its uses list when it has code).
 pub fn run(module: &Module) -> crate::Result<Packed> {
+    // The SDK first: fetching it may stage the library and leave its build there, so the package is staged after.
+    let sdk = match module.native() {
+        Some(_) => Some(crate::native_check::fetch(&crate::modules::library()?)?),
+        None => None,
+    };
     let stage = stage(module)?;
-    if module.native().is_some() {
-        uses(&stage)?;
+    if let Some(sdk) = &sdk {
+        uses(&stage, sdk)?;
     }
     let smod = crate::root().join(format!("target/{}.smod", module.id));
     zip_dir(&stage, &smod)?;
@@ -81,8 +86,7 @@ pub fn stage(module: &Module) -> crate::Result<PathBuf> {
 /// it): without the list, the checks hold the package to its pinned build alone and refuse it. Written by Sunrise's
 /// `sunrise-stage uses` from the pinned SDK's surface, which reads the source without compiling it (`build` compiles
 /// the mod alone, and a mod's dependency on the library can't be found there).
-fn uses(stage: &Path) -> crate::Result {
-    let sdk = crate::native_check::fetch(&crate::modules::library()?)?;
+fn uses(stage: &Path, sdk: &Path) -> crate::Result {
     let manifest = std::fs::read_to_string(stage.join("sunrise-mod.toml")).map_err(|e| e.to_string())?;
     let pin = toml_value(&manifest, "sunrise").ok_or("sunrise-mod.toml has no [native] sunrise pin")?;
     let surface = sdk.join("surface.json");
