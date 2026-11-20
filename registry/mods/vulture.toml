@@ -5,7 +5,7 @@ summary = "A desert vulture you tame with raw chicken, saddle and fly like a pla
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/vulture-0.2.0/README.md) series: a desert vulture you tame with raw chicken, saddle and fly like
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/vulture-0.2.1/README.md) series: a desert vulture you tame with raw chicken, saddle and fly like
 a plane, with two chests and talons. **Requires** [Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Finding one
@@ -61,6 +61,22 @@ categories = ["mobs", "transportation", "adventure"]
 tags = ["vulture", "flying", "mount", "taming", "birds"]
 screenshots = ["screenshots/vulture/1-vulture.jpg", "screenshots/vulture/2-vulture-vulture-front.png", "screenshots/vulture/3-vulture-vulture-back.png"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.2.1"
+published = "2026-11-20"
+game = "26.3"
+file = "vulture-0.2.1.smod"
+sha256 = "00b4eaeb1a22422c51b50cd586daca9f6417a80646abdf6d80ff9d919dad8439"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw6yvR22xQpQ2sz+iEPpC4wxa/vej+yo+UAIImq9YaUbDDje24s64/XoNN/J+ZoLunGlN1rNcxqZTuD2J5Ve63+wI=
+trusted comment: timestamp:1795206979	file:vulture-0.2.1.smod	hashed
+MAKyWzLAJUmOx4afgYwZTxaCGxb4zcA4ulnVogV6BykHLJ6UzVwsVHhz8ttXZa+mYPL741Fn0dNTv/ipvoVZCA==
+"""
+changelog = """
+- Built for Sunrise's 2026-11-20 Nightly (9425651) and Sunrise Creatures 0.3; the package lists what it uses of the game's API (`uses.json`).
+"""
 
 [[versions]]
 version = "0.2.0"

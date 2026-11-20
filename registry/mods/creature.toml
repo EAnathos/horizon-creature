@@ -5,7 +5,7 @@ summary = "The library of the Sunrise Creatures mods: the creature guide and its
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-The library every mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.2.0/README.md) series needs. It adds no creature of its own, but what
+The library every mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.3.0/README.md) series needs. It adds no creature of its own, but what
 the creatures share:
 
 - **The creature guide**, given to every player the first time they join a world. Right-click it to open the
@@ -19,7 +19,7 @@ the creatures share:
 - **The "Sunrise Creatures" creative tab**, with every item of the series.
 - Monsters leave the series' creatures alone.
 
-For developers: [SPECS.md](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.2.0/common/SPECS.md) and [CONTRIBUTING.md](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.2.0/CONTRIBUTING.md).
+For developers: [SPECS.md](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.3.0/common/SPECS.md) and [CONTRIBUTING.md](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.3.0/CONTRIBUTING.md).
 """
 authors = ["EAnathos"]
 owners = ["EAnathos"]
@@ -30,6 +30,29 @@ categories = ["library"]
 tags = ["creatures", "bestiary", "glass-jar", "guide"]
 screenshots = ["screenshots/creature/1-bestiary.jpg"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.3.0"
+published = "2026-11-20"
+game = "26.3"
+file = "creature-0.3.0.smod"
+sha256 = "637c365ad01fab5d7ddcefa19f9eb0b543c2657357b8905ddcb2e5e6fd942334"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw63LLTETR6JsO3mOsQKS3SmENbbD/xx5Y4O9UAro6t8voeZVeN7nRjE46etPXQPqG6jY/zyaxlpCq6IH3zEWKnAw=
+trusted comment: timestamp:1795206976	file:creature-0.3.0.smod	hashed
+b0VQXd9equFOzkyomyhoGvXiTx2kWGKnH0FVSBPGuFQoSxsJ25203ul1RZSxCeQ6oIq6Hni587P3UNcqElxTAg==
+"""
+changelog = """
+- Built for Sunrise's 2026-11-20 Nightly (9425651); the mods built on it need this version (`^0.3`). Each package
+  lists what it uses of the game's API (`uses.json`).
+- Water creatures (`creature::aquatic`): they never drown and don't float to the surface, are beached out of water
+  (flopping, drying out), caught in a water bucket into their mod's bucket and let out again, kept for good, and spawn
+  in groups of one look under the water of their biomes.
+- Touches (`creature::touch`): what touches a creature is hurt by it at most once every so many ticks.
+- Hunters (`creature::prey`): a hunter within range goes for its prey and eats it (sea turtles and jellyfish).
+- `mob::player_of`; the creative tab edits its contents through the game's new edit handle.
+"""
 
 [[versions]]
 version = "0.2.0"

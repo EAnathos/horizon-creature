@@ -5,7 +5,7 @@ summary = "Fireflies that light up warm nights; kept in a glass jar, they make a
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/fireflies-0.1.1/README.md) series: fireflies that light up the night. **Requires** [Sunrise
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/fireflies-0.1.2/README.md) series: fireflies that light up the night. **Requires** [Sunrise
 Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Finding them
@@ -28,6 +28,22 @@ categories = ["mobs", "decoration"]
 tags = ["fireflies", "insects", "ambient", "light"]
 screenshots = ["screenshots/fireflies/1-fireflies-firefly-front.png", "screenshots/fireflies/2-fireflies-firefly-back.png"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.2"
+published = "2026-11-20"
+game = "26.3"
+file = "fireflies-0.1.2.smod"
+sha256 = "5ab8a0820c295a8eb58a7b9649bda266dd3584b5f45dc54ca2906807515e10bf"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw6yJ1AJvXQAP5ZjXrntP5c0Q6S/I2b8zFqeX+p4pB6bNfwl3E0AqmB32IlEz3jlg0VRmI0FZNB9zUGJfHWxuFJgs=
+trusted comment: timestamp:1795206977	file:fireflies-0.1.2.smod	hashed
+s7h/ZLDRkmBRchZlu11O7NcuewlSMpivrMVB/EBfOFpMds93lt/VvP8wiYlOFTR3RPGU1M51p+lcAfb9fH6aBQ==
+"""
+changelog = """
+- Built for Sunrise's 2026-11-20 Nightly (9425651) and Sunrise Creatures 0.3; the package lists what it uses of the game's API (`uses.json`).
+"""
 
 [[versions]]
 version = "0.1.1"

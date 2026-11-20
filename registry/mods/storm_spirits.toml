@@ -5,7 +5,7 @@ summary = "Spirits of living lightning born in thunderstorms: they shock whoever
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/storm_spirits-0.1.0/README.md) series: spirits of living lightning, born in storms. **Requires**
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/storm_spirits-0.2.0/README.md) series: spirits of living lightning, born in storms. **Requires**
 [Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Finding them
@@ -17,9 +17,10 @@ spawn egg (creative tab "Sunrise Creatures").
 
 ## Shocks
 
-A spirit leaves you alone, but hit it and it dashes at you and zaps you (3 damage and a moment of Slowness), then
-keeps away and comes back to zap you again every few seconds, until it loses you. Anything that touches it gets a
-small zap. Lightning and fire don't hurt it.
+A spirit leaves you alone, but hit it and it dashes at you and zaps you (6 damage and a moment of Slowness), then
+keeps away and comes back to zap you again every few seconds, until it loses you. Meanwhile it calls lightning down on
+you every few seconds: when sparks crackle over your head, move. Anything that touches it gets a zap. It has 60
+health, and lightning and fire don't hurt it.
 
 ## Sparks
 
@@ -36,6 +37,25 @@ categories = ["mobs", "magic"]
 tags = ["storm", "lightning", "spirit", "neutral"]
 screenshots = ["screenshots/storm_spirits/1-storm_spirits-storm_spirit-front.png", "screenshots/storm_spirits/2-storm_spirits-storm_spirit-back.png"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.2.0"
+published = "2026-11-20"
+game = "26.3"
+file = "storm_spirits-0.2.0.smod"
+sha256 = "671e2bba464479c3dca23321c1c60342fac4a3ac5714985829a7d996d8c96d14"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw6xksWXjPoCGMMAJruwwcSF9WOhV7DzEnnoAX95tdHV+JqpQZ3NGf3/glawAs8hPIrNuvQrt1h+KjXwyj4Ju3qgI=
+trusted comment: timestamp:1795206978	file:storm_spirits-0.2.0.smod	hashed
+r3oh/ej/REtfAZoQ73YF8bwCkX68NQpYAn3gbUV+Yjc6EpLzOA2Dd7lLTykgasQ4DtzSehCeJtsc23JAHbQNBQ==
+"""
+changelog = """
+- Hit, it calls lightning down on you every few seconds (sparks over your head first, a second before the bolt).
+- Tougher: 60 health (was 20), and its shock and touch hurt twice as much (6 and 2).
+- Its own sounds: zaps, the buzz of its dashes, a crackle at its birth and fading, sparks before a bolt.
+- Built for Sunrise's 2026-11-20 Nightly and Sunrise Creatures 0.3.
+"""
 
 [[versions]]
 version = "0.1.0"

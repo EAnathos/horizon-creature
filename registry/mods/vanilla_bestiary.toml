@@ -5,13 +5,13 @@ summary = "Minecraft's own creatures in the creature guide's bestiary: where you
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-An add-on of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/vanilla_bestiary-0.1.1/README.md) series: Minecraft's own creatures get pages in
+An add-on of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/vanilla_bestiary-0.1.2/README.md) series: Minecraft's own creatures get pages in
 the creature guide's bestiary, below the series' creatures, found out in play like them: where you met them, what
 breeds and tames them, what they give (milk, wool, eggs, a fish in a bucket), what they drop, and one thing they do (a
 creeper exploding, a zombie drowning). A wild one counts, not one from a spawn egg, bred or tamed. It adds no creature
 and no item. **Requires** [Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
 
-Its design is in [SPECS.md](https://github.com/EAnathos/sunrise-creatures/blob/vanilla_bestiary-0.1.1/mods/vanilla_bestiary/SPECS.md).
+Its design is in [SPECS.md](https://github.com/EAnathos/sunrise-creatures/blob/vanilla_bestiary-0.1.2/mods/vanilla_bestiary/SPECS.md).
 """
 authors = ["EAnathos"]
 owners = ["EAnathos"]
@@ -22,6 +22,22 @@ categories = ["game-mechanics", "utility"]
 tags = ["bestiary", "guide", "vanilla", "creatures"]
 screenshots = ["screenshots/vanilla_bestiary/1-bestiary.jpg"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.2"
+published = "2026-11-20"
+game = "26.3"
+file = "vanilla_bestiary-0.1.2.smod"
+sha256 = "9281fccab1b489924a9291052bd52c62422b7b2c619714a316cf2bc53af1f6ec"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw65KT0wGZ/3bbVSHXuKG8IdeRO3NtdtLwwGT89hnSxePDk5l6vwuFcybHZ5Weiuy3szYyA8O0T5/w56Bs+cdt7wM=
+trusted comment: timestamp:1795206979	file:vanilla_bestiary-0.1.2.smod	hashed
+lHmjqetToeyCsnX1Qg7iPPzlc2l6voPb+Z+YwCuWnFaZ5FgnxR1zwAhVyP24TNI/BQHAaEDSK3Mv1xBpViCEDg==
+"""
+changelog = """
+- Built for Sunrise's 2026-11-20 Nightly (9425651) and Sunrise Creatures 0.3; the package lists what it uses of the game's API (`uses.json`).
+"""
 
 [[versions]]
 version = "0.1.1"

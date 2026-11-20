@@ -1,0 +1,60 @@
+id = "jellyfish"
+kind = "native-mod"
+name = "Jellyfish"
+summary = "Stinging jellyfish drifting in blooms through the oceans, some glowing in the deep; catch them in a bucket for an aquarium."
+description = """
+> **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
+
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/jellyfish-0.1.0/README.md) series: jellyfish drifting in blooms through the oceans, pulsing
+slowly and trailing long tentacles that sting what brushes them. **Requires**
+[Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
+
+## Finding them
+
+Blooms of 3 to 8 drift in the oceans, a few blocks under the surface by day and nearer to it at night:
+
+- **Moon jellies**, pale lilac, in every ocean: a mild sting.
+- **Sea nettles**, amber with red stripes, in lukewarm and warm oceans: a sting that poisons.
+- **Glow jellies**, deep blue, in deep oceans: they glow, rising toward the surface at night, and their sting makes you
+  glow.
+
+In creative: the spawn egg (creative tab "Sunrise Creatures").
+
+## Stings
+
+Touch one and it stings, at most once a second. A boat keeps you safe, and so does a turtle shell. Sea turtles hunt
+them: a turtle nearby swims to a jellyfish and eats it.
+
+## Buckets and jelly
+
+Use a water bucket on a jellyfish to catch it, then use the bucket on a block to let it out in water there, to fill an
+aquarium: it keeps its kind and never wanders off for good. Out of water a jellyfish flops and dries out within a
+minute. Jellyfish drop jelly, which crafts into slime balls, and glow jellies glow jelly, which crafts into glow ink
+sacs.
+"""
+authors = ["EAnathos"]
+owners = ["EAnathos"]
+license = "MIT"
+source = "https://github.com/EAnathos/sunrise-creatures"
+icon = "icons/jellyfish.png"
+categories = ["mobs", "decoration"]
+tags = ["jellyfish", "ocean", "aquatic", "glowing"]
+screenshots = ["screenshots/jellyfish/1-jellyfish-jellyfish-front.png", "screenshots/jellyfish/2-jellyfish-jellyfish-back.png"]
+key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-20"
+game = "26.3"
+file = "jellyfish-0.1.0.smod"
+sha256 = "a1ad61255539eca73902c9f7da1ad523531f38f86d78256595473ad71cf703d5"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw662PP/Mjz1bDN2tnQ6eLLW2vhi/uJpI+dt4vCujSkvrV7cnSeDp5iGYbmCXCcF/3JM/1XMziTtSM3Cd8JcLiOQc=
+trusted comment: timestamp:1795206978	file:jellyfish-0.1.0.smod	hashed
+3JW/SKEI9SEN2baxcZ1p7/Fp3A0tQ7aBhFQx0nrP++tTSb/Smsn7g21wOWX0vbaBO0s6NMdHP8kgnx29blG0AA==
+"""
+changelog = """
+- First release on Sunrise: moon jellies, sea nettles and glow jellies in blooms of one kind, their stings, the
+  bucket, jelly and glow jelly; sea turtles eat them; its own sounds.
+"""

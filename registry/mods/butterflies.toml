@@ -5,7 +5,7 @@ summary = "Butterflies by day and moths by night, in many colours and patterns; 
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/butterflies-0.1.1/README.md) series: butterflies by day and moths by night, in many colours and
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/butterflies-0.1.2/README.md) series: butterflies by day and moths by night, in many colours and
 patterns. **Requires** [Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
 
 ## Finding them
@@ -35,6 +35,22 @@ categories = ["mobs", "decoration"]
 tags = ["butterflies", "moths", "insects", "ambient"]
 screenshots = ["screenshots/butterflies/1-butterflies.jpg", "screenshots/butterflies/2-butterflies-butterfly-front.png", "screenshots/butterflies/3-butterflies-moth-front.png"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.2"
+published = "2026-11-20"
+game = "26.3"
+file = "butterflies-0.1.2.smod"
+sha256 = "3ad92b911b503f6a5da3e3dfccf02079b7b32bf8a868283347c0554d105446cb"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw667CGek+Wbs8TF6c1EDvTIICEc/TMYTFWO0AiPJ3vAj25aGWvRt00wfTxe7ArPL080GP+szEEmP/yHcPcn4nWAc=
+trusted comment: timestamp:1795206976	file:butterflies-0.1.2.smod	hashed
+wmN9ruPFijkLgZcQ/Vys32n5htwS8hXyDgbgMkJ737YTHXg6V/HOpKQa9NbxP8Q2dOxQzau98SWQ4XBMhcTSAw==
+"""
+changelog = """
+- Built for Sunrise's 2026-11-20 Nightly (9425651) and Sunrise Creatures 0.3; the package lists what it uses of the game's API (`uses.json`).
+"""
 
 [[versions]]
 version = "0.1.1"
