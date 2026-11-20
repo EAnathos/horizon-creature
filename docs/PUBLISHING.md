@@ -74,7 +74,8 @@ registry's review asked for it (the 0.1.x pages still point at `main`).
 The registry shows the series as one card too, the collection `sunrise_creatures` (its `collections/<id>.toml`, owned
 by EAnathos, mirrored in `registry/collections/`): a player installs all its members at once, or picks some. It is no
 package: each member keeps its own entry, versions and updates. A new published module joins it with a pull request
-adding its id to `members` (after the module itself is listed); owning both, the review marks it routine. The
+adding its id to `members` (after the module itself is listed; its commit signed off, `git commit -s`, as every
+registry commit); owning both, the review marks it routine. The
 collection's own page (name, summary, description, icon, defaults, member order) changes by a pull request a reviewer
 reads.
 
