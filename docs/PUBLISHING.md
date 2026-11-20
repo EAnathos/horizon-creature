@@ -12,7 +12,7 @@ namespaces), nothing hidden.
 ## What a published module has
 
 - **`module.toml`'s `[registry]`**: its one-line `summary` (at most 160 characters), 1 to 3 `categories` from a mod's
-  list (`tools/src/release.rs`, `CATEGORIES`), up to 10 lowercase `tags`, and its `icon`: one of its models (its
+  list (`tools/src/release.rs`, `CATEGORIES`), up to 10 `tags` (lowercase letters, digits and `-`, at most 24 characters), and its `icon`: one of its models (its
   picture in `docs/models/`) or a PNG by its path (the library's and the Vanilla Bestiary's: the guide). A module
   without the table is not published (the planned mods).
 - **`sunrise-mod.toml`**: its `name`, `version`, `authors`, `license`, `description`, `homepage` and `issues`, shown by

@@ -393,8 +393,11 @@ pub fn page_problems(r: &Registry, description: &str) -> Vec<String> {
         problems.push("at most 10 tags".into());
     }
     for t in &r.tags {
-        if t.is_empty() || t.chars().count() > 24 || t.chars().any(|c| c.is_uppercase()) {
-            problems.push(format!("tag {t:?}: lowercase, 1 to 24 characters"));
+        let allowed = |c: char| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-';
+        if t.is_empty() || t.chars().count() > 24 || !t.chars().all(allowed) {
+            problems.push(format!(
+                "tag {t:?}: lowercase letters, digits and '-', 1 to 24 characters"
+            ));
         }
     }
     problems
@@ -685,11 +688,11 @@ mod tests {
         let r = Registry {
             summary: "A vulture.".into(),
             categories: vec!["mobs".into(), "bloom".into()],
-            tags: vec!["Vulture".into()],
+            tags: vec!["Vulture".into(), "flying fish".into(), "sea-birds2".into()],
             icon: "vulture".into(),
             screenshots: Vec::new(),
         };
         let problems = page_problems(&r, "short");
-        assert_eq!(problems.len(), 3, "{problems:?}");
+        assert_eq!(problems.len(), 4, "{problems:?}");
     }
 }

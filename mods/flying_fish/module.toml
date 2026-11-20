@@ -18,6 +18,6 @@ ported = true
 [registry]
 summary = "Shoals of flying fish in warm seas that burst out of the water and glide over the waves; catch them in a bucket, fish them or cook them."
 categories = ["mobs", "food"]
-tags = ["flying fish", "fish", "ocean", "aquatic"]
+tags = ["flying-fish", "fish", "ocean", "aquatic"]
 icon = "flying_fish"
 screenshots = ["docs/models/flying_fish-flying_fish-front.png", "docs/models/flying_fish-flying_fish-back.png"]

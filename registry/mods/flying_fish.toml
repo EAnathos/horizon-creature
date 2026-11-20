@@ -40,7 +40,7 @@ license = "MIT"
 source = "https://github.com/EAnathos/sunrise-creatures"
 icon = "icons/flying_fish.png"
 categories = ["mobs", "food"]
-tags = ["flying fish", "fish", "ocean", "aquatic"]
+tags = ["flying-fish", "fish", "ocean", "aquatic"]
 screenshots = ["screenshots/flying_fish/1-flying_fish-flying_fish-front.png", "screenshots/flying_fish/2-flying_fish-flying_fish-back.png"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
 
