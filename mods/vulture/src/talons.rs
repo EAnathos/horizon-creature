@@ -9,7 +9,6 @@
 //! - It lets go on the key, when its rider gets off (`Fly::stop`) or when it dies.
 use std::collections::BTreeMap;
 use std::sync::Mutex;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use creature::body::{Body, World};
@@ -27,8 +26,8 @@ const MAX_SIZE: f64 = 1.0;
 /// talons.
 const HANG: f64 = 0.7;
 
-/// When the key was last pressed, in milliseconds since the epoch.
-static PRESSED: AtomicU64 = AtomicU64::new(0);
+/// When each rider last pressed the key, in milliseconds since the epoch: a press moves only the sender's own vulture.
+static PRESSED: Mutex<BTreeMap<u128, u64>> = Mutex::new(BTreeMap::new());
 /// Each vulture's catch, and where to hold it.
 static CARRIED: Mutex<BTreeMap<u32, (u32, [f64; 3])>> = Mutex::new(BTreeMap::new());
 
@@ -38,15 +37,23 @@ fn now() -> u64 {
         .map_or(0, |d| d.as_millis() as u64)
 }
 
-/// From the server's `vulture:talons` payload: the talons key went down.
-pub fn press() {
-    PRESSED.store(now(), Ordering::Relaxed);
+/// From the server's `vulture:talons` payload: player `player`, riding a vulture, pressed the talons key.
+pub fn press(player: u128) {
+    PRESSED.lock().unwrap().insert(player, now());
 }
 
-/// A press in the last half second, taken once.
-pub fn take_press() -> bool {
-    let at = PRESSED.swap(0, Ordering::Relaxed);
-    at != 0 && now().saturating_sub(at) < 500
+/// A press by `player` in the last half second, taken once.
+pub fn take_press(player: u128) -> bool {
+    PRESSED
+        .lock()
+        .unwrap()
+        .remove(&player)
+        .is_some_and(|at| now().saturating_sub(at) < 500)
+}
+
+/// From `player_logged_out`.
+pub fn left(player: u128) {
+    PRESSED.lock().unwrap().remove(&player);
 }
 
 pub fn carrying(id: u32) -> bool {

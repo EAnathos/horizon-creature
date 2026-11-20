@@ -1,7 +1,8 @@
 //! Its rider (SPECS §6.2): who rides it and which keys they hold.
 //!
 //! The server hears each player's movement keys (`player_input`, vanilla's `ServerboundPlayerInputPacket` flags:
-//! forward, backward, left, right, jump, sneak, sprint) and keeps them (`heard`). Each tick, before its behaviours run,
+//! forward, backward, left, right, jump, sneak, sprint) and keeps those of the players riding a vulture (`heard`),
+//! forgotten when they get off or leave. Each tick, before its behaviours run,
 //! the vulture's rider is read (its first passenger: vanilla names a controlling one only on saddled mounts; the player's look and keys: `read`) for the ridden flight
 //! (`Fly`). Sneaking in the air descends instead of getting off: the dismount is cancelled (`keep_seated`), on the
 //! ground it gets off as on any mount.
@@ -13,6 +14,8 @@ use mod_api::ServerHost;
 /// The rider of a vulture this tick: where they look and what they press.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Rider {
+    /// The player riding it.
+    pub player: u128,
     pub yaw: f32,
     /// 1 forward (W), -1 backward (S).
     pub forward: f32,
@@ -33,14 +36,24 @@ const JUMP: i32 = 16;
 const SNEAK: i32 = 32;
 const SPRINT: i32 = 64;
 
-/// Each player's keys, as last heard.
+/// The keys of each player riding a vulture, as last heard.
 static KEYS: Mutex<BTreeMap<u128, i32>> = Mutex::new(BTreeMap::new());
 /// Each ridden vulture's rider this tick.
 static RIDERS: Mutex<BTreeMap<u32, Rider>> = Mutex::new(BTreeMap::new());
 
-/// From the `player_input` hook.
-pub fn heard(player: u128, flags: i32) {
-    KEYS.lock().unwrap().insert(player, flags);
+/// From the `player_input` hook: `riding` whether the player rides a vulture (only their keys are kept).
+pub fn heard(player: u128, flags: i32, riding: bool) {
+    let mut keys = KEYS.lock().unwrap();
+    if riding {
+        keys.insert(player, flags);
+    } else {
+        keys.remove(&player);
+    }
+}
+
+/// From `entity_mount` (getting off) and `player_logged_out`: player `player`'s keys are forgotten.
+pub fn left(player: u128) {
+    KEYS.lock().unwrap().remove(&player);
 }
 
 /// From the vulture's tick, before its behaviours: its rider now, if a player rides it.
@@ -61,6 +74,7 @@ pub fn read(host: &dyn ServerHost, id: u32) {
                 f32::from(i8::from(flags & plus != 0)) - f32::from(i8::from(flags & minus != 0))
             };
             Some(Rider {
+                player: player.uuid(),
                 yaw,
                 forward: axis(FORWARD, BACKWARD),
                 strafe: axis(LEFT, RIGHT),
@@ -108,9 +122,13 @@ mod tests {
 
     #[test]
     fn keys_make_the_rider_s_axes() {
-        heard(7, FORWARD | LEFT | SNEAK);
+        heard(7, FORWARD | LEFT | SNEAK, true);
         let flags = KEYS.lock().unwrap()[&7];
         assert_eq!(flags & FORWARD, FORWARD);
         assert_eq!(flags & (SNEAK | SPRINT), SNEAK);
+        heard(8, FORWARD, false);
+        assert!(!KEYS.lock().unwrap().contains_key(&8));
+        left(7);
+        assert!(!KEYS.lock().unwrap().contains_key(&7));
     }
 }

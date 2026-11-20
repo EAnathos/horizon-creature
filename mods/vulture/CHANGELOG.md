@@ -2,6 +2,11 @@
 
 Each version's section is its registry changelog (`cargo creature release`).
 
+## Unreleased
+
+- The server keeps the riding keys only of a player riding a vulture, forgotten when they get off or leave; a talons
+  press moves only the vulture its sender rides (both from the registry's review, sunrise-org/sunrise-mods#34).
+
 ## 0.2.1
 
 - Built for Sunrise's 2026-11-20 Nightly (9425651) and Sunrise Creatures 0.3; the package lists what it uses of the game's API (`uses.json`).

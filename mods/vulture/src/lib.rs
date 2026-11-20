@@ -212,7 +212,7 @@ impl Behaviour for Fly {
             ridden: true,
         };
         self.flight.tick(m, &controls);
-        if talons::take_press() {
+        if talons::take_press(r.player) {
             talons::toggle(m, cx);
         }
         talons::follow(m);
@@ -588,8 +588,11 @@ impl Hooks for Vulture {
         );
         let mut payloads = r.payload_handlers();
         let mut view = payloads.registrar("1");
-        let token = view.play_to_server_typed::<TalonsPress>(PayloadId("vulture:talons".into()), |_, _| {
-            talons::press();
+        // A press is the sender's: it moves only the vulture they ride.
+        let token = view.play_to_server_typed::<TalonsPress>(PayloadId("vulture:talons".into()), |_, cx| {
+            if let Ok(player) = cx.player() {
+                talons::press(player.uuid());
+            }
             Ok(())
         });
         let _ = TALONS.set(token);
@@ -645,17 +648,35 @@ impl Hooks for Vulture {
         Some(InteractionResult::Consume)
     }
 
-    /// The rider's keys, for the ridden flight.
-    fn player_input(&self, _: &mut dyn ServerHost, event: &mut PlayerInputEvent<'_>) {
-        ride::heard(event.player, event.flags);
+    /// The rider's keys, for the ridden flight: kept only for a player riding a vulture.
+    fn player_input(&self, host: &mut dyn ServerHost, event: &mut PlayerInputEvent<'_>) {
+        let riding = host
+            .player(event.player)
+            .and_then(|p| p.entity().vehicle(&*host))
+            .and_then(|v| v.kind(&*host))
+            .is_some_and(|k| k.id(&*host) == KIND);
+        ride::heard(event.player, event.flags, riding);
     }
 
-    /// Sneaking in the air descends: a rider getting off a vulture that isn't on the ground stays on.
+    /// Sneaking in the air descends: a rider getting off a vulture that isn't on the ground stays on. One who gets off
+    /// leaves their keys behind.
     fn entity_mount(&self, host: &mut dyn ServerHost, event: &mut EntityMountEvent<'_>) -> Flow {
-        if event.vehicle_kind == KIND && !event.mounting && ride::keep_seated(&*host, event.vehicle) {
+        if event.vehicle_kind != KIND || event.mounting {
+            return Flow::Continue;
+        }
+        if ride::keep_seated(&*host, event.vehicle) {
             return Flow::Cancel;
         }
+        if let Some(player) = creature::mob::player_of(&*host, event.entity) {
+            ride::left(player);
+            talons::left(player);
+        }
         Flow::Continue
+    }
+
+    fn player_logged_out(&self, _: &mut dyn ServerHost, event: &mut mod_api::PlayerLoggedOutEvent<'_>) {
+        ride::left(event.player);
+        talons::left(event.player);
     }
 
     /// Hits on and by its owner, for `defend`.
