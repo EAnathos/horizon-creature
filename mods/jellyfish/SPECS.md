@@ -74,7 +74,9 @@ at night), "Bucket" (caught one in a bucket), "Turtle" (saw a turtle eat one).
 - **Jelly** (`jellyfish:jelly`): a translucent blob; crafts into a slime ball (shapeless, one for one).
 - **Glow jelly** (`jellyfish:glow_jelly`): a glowing blue blob; crafts into a glow ink sac (one for one).
 - **Bucket of jellyfish** (`jellyfish:jellyfish_bucket`): a water bucket used on a jellyfish catches it, as a fish; it
-  is let out again where the bucket is emptied, its kind kept, to fill an aquarium. A caught one never despawns.
+  is let out again where the bucket is emptied, its kind kept, to fill an aquarium. A caught one never despawns. Its
+  icon is the game's own water bucket (its model's first layer) with the jellyfish in it (ours, the second layer). In
+  the creative tab; that one lets out a jellyfish of the kind its spot gives.
 
 ## 6. Out of scope for v1
 

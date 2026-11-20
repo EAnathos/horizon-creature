@@ -423,8 +423,16 @@ impl EntityRenderer for Draw {
         creature::model::living_pose(draw, entity);
         draw.scale([SCALE; 3]);
         let pose = |part: &str| pose(part, entity.age, pulse);
-        creature::model::draw(draw, &model::JELLYFISH, texture, &pose);
-        let _ = mob;
+        // Tinted as the game tints a mob: red while it is hurt.
+        let all = |_: &str| true;
+        creature::model::draw_shown(
+            draw,
+            &model::JELLYFISH,
+            texture,
+            &pose,
+            &all,
+            creature::model::tint(mob),
+        );
         draw.pop();
         Ok(())
     }

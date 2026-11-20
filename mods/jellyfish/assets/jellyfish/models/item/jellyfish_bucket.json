@@ -1,4 +1,7 @@
 {
   "parent": "minecraft:item/generated",
-  "textures": { "layer0": "jellyfish:item/jellyfish_bucket" }
+  "textures": {
+    "layer0": "minecraft:item/water_bucket",
+    "layer1": "jellyfish:item/jellyfish_bucket"
+  }
 }

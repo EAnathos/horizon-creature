@@ -164,7 +164,8 @@ The life in water of jellyfish and flying fish, which copy the land-living wande
 - **In water** they float (no gravity), their mod's behaviours moving them. **Beached**, they fall, flop now and then
   and dry out after the mod's delay (a point of `minecraft:dry_out` damage a second), dropping as usual.
 - **The bucket**: a water bucket used on one catches it into the mod's bucket item (`Bucket`, its look and name kept as
-  in the glass jar's item data), which lets it out in water on the block face clicked and gives the empty bucket back;
+  in the glass jar's item data), which lets it out in water on the block face clicked and gives the empty bucket back (a bucket with no creature in it,
+  from the creative tab, lets out one of its mod's kind);
   one let out is tagged `creature.kept` and never despawns (`mob::despawn_far`).
 - **Spawning** (`spawns`): groups under the surface of their biomes' water, out of sight of the players, under a cap.
 

@@ -219,7 +219,7 @@ fn filled(host: &dyn Host, aquatic: &Aquatic, look: Option<&Compound>, name: Opt
 /// From the mod's bucket (`Bucket`): it lets its creature out in water on the face clicked, and the empty bucket comes
 /// back (not in creative). Whether the click was the bucket's.
 pub fn release(host: &mut dyn ServerHost, event: &UseOnEvent<'_>) -> bool {
-    let Some(held) = jar::held(event.stack) else {
+    let Some(held) = held(&*host, event.stack) else {
         return false;
     };
     let Some(player) = host.player(event.player) else {
@@ -270,6 +270,21 @@ pub fn release(host: &mut dyn ServerHost, event: &UseOnEvent<'_>) -> bool {
     true
 }
 
+/// What a mod's bucket holds: the creature caught in it, or, for a bucket with no creature data (from the creative
+/// tab), a creature of its mod's kind, its look rolled where it comes out.
+fn held(host: &dyn Host, stack: &ItemStack) -> Option<jar::Held> {
+    jar::held(stack).or_else(|| {
+        let item = hand::id(host, stack);
+        let aquatic = AQUATIC.lock().unwrap().iter().copied().find(|a| a.bucket == item)?;
+        Some(jar::Held {
+            kind: aquatic.kind.to_owned(),
+            look: None,
+            friend: None,
+            name: None,
+        })
+    })
+}
+
 /// Water at `block`: poured there in air or a plant a bucket would wash away, kept where there is water already.
 fn pour(host: &mut dyn ServerHost, level: LevelRef, block: [i32; 3]) -> bool {
     let here = Ground::new(&*host, level).block(block);
@@ -303,7 +318,7 @@ impl ItemPart for Bucket {
     fn use_on(&self, host: HostSide, event: &mut UseOnEvent<'_>) -> Option<InteractionResult> {
         match host {
             HostSide::Server(host) => release(host, event).then_some(InteractionResult::Success),
-            HostSide::Client(_) => jar::held(event.stack).map(|_| InteractionResult::Success),
+            HostSide::Client(host) => held(&*host, event.stack).map(|_| InteractionResult::Success),
         }
     }
 }
