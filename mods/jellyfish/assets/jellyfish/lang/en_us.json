@@ -1,0 +1,18 @@
+{
+  "entity.jellyfish.jellyfish": "Jellyfish",
+  "item.jellyfish.jellyfish_spawn_egg": "Jellyfish Spawn Egg",
+  "item.jellyfish.jelly": "Jelly",
+  "item.jellyfish.glow_jelly": "Glow Jelly",
+  "item.jellyfish.jellyfish_bucket": "Bucket of Jellyfish",
+  "look.jellyfish.colour.plain": "Plain",
+  "look.jellyfish.pattern.moon_jelly": "Moon Jelly",
+  "look.jellyfish.pattern.sea_nettle": "Sea Nettle",
+  "look.jellyfish.pattern.glow_jelly": "Glow Jelly",
+  "bestiary.jellyfish.bloom": "Bloom",
+  "bestiary.jellyfish.sting": "Sting",
+  "bestiary.jellyfish.glow": "Glow",
+  "bestiary.jellyfish.bucket": "Bucket",
+  "bestiary.jellyfish.item.jelly.use": "Crafts into a slime ball",
+  "bestiary.jellyfish.item.glow_jelly.use": "Crafts into a glow ink sac",
+  "bestiary.jellyfish.item.jellyfish_bucket.use": "Use on a block: lets the jellyfish out in water there"
+}

@@ -21,6 +21,7 @@
 //! - `particles`: the vanilla particles the mods send, their keys asked for at registration.
 //! - `items`: the book's Items tab, a page per item of the series, with the recipes of `recipes.rs` (SPECS §7.2).
 pub mod anger;
+pub mod aquatic;
 pub mod bestiary;
 pub mod body;
 pub mod colours;
@@ -39,14 +40,15 @@ pub mod projectile;
 mod recipes;
 pub mod sounds;
 pub mod territory;
+pub mod touch;
 
 use mod_api::{
     BreakBlockEvent, BuildCreativeModeTabContentsEvent, ClientHost, CreativeTabVisibility, EntityInteractEvent,
     EntityJoinLevelEvent, EntityLeaveLevelEvent, EntitySizeEvent, EntityTickListenedEvent, EntityTickPostEvent,
     ExplosionDetonateEvent, Flow, HitHost, Hooks, Host, HostSide, InteractionResult, LevelTickPostEvent,
-    LivingChangeTargetEvent, LivingIncomingDamageEvent, PlayerLoggedInEvent, RegisterCommandsEvent, Registrar,
-    RegistrationContext, RunModCommandEvent, ScreenMouseButtonPressedPreEvent, ScreenMouseScrolledPreEvent,
-    ScreenRenderPostEvent, ServerHost, TabCompleteEvent, VisualsEvent,
+    LivingBreatheEvent, LivingChangeTargetEvent, LivingIncomingDamageEvent, LoopContext, PlayerLoggedInEvent,
+    RegisterCommandsEvent, Registrar, RegistrationContext, RunModCommandEvent, ScreenMouseButtonPressedPreEvent,
+    ScreenMouseScrolledPreEvent, ScreenRenderPostEvent, ServerHost, TabCompleteEvent, VisualsEvent,
 };
 
 /// The library's items in the guide's Items tab (SPECS §7.2).
@@ -144,22 +146,34 @@ impl Hooks for Creature {
         bestiary::forget(event.entity);
         glow::dim(event.entity);
         anger::forget(event.entity);
+        touch::forget(event.entity);
+        aquatic::forget(event.entity);
     }
 
     /// Small fliers come out near players.
     fn level_tick_post(&self, host: HostSide, event: &mut LevelTickPostEvent) {
         if let HostSide::Server(host) = host {
             flutter::spawn(host, event.level);
+            aquatic::spawn(host, event.level);
         }
     }
 
-    /// An empty glass jar catches a registered creature (before the mods' own right-click). Both sides answer, so the
-    /// client neither trades with it nor tries the off hand.
+    /// An empty glass jar catches a registered creature, a water bucket a water creature (before the mods' own
+    /// right-click). Both sides answer, so the client neither trades with it nor tries the off hand.
     fn entity_interact(&self, host: HostSide, event: &mut EntityInteractEvent<'_>) -> Option<InteractionResult> {
         match host {
-            HostSide::Server(host) => jar::catch(host, event).then_some(InteractionResult::Success),
-            HostSide::Client(host) => jar::catches(&*host, event).then_some(InteractionResult::Success),
+            HostSide::Server(host) => {
+                (jar::catch(host, event) || aquatic::catch(host, event)).then_some(InteractionResult::Success)
+            }
+            HostSide::Client(host) => {
+                (jar::catches(&*host, event) || aquatic::catches(&*host, event)).then_some(InteractionResult::Success)
+            }
         }
+    }
+
+    /// Water creatures never drown (`aquatic`).
+    fn living_breathe(&self, _: &dyn LoopContext, event: &mut LivingBreatheEvent<'_>) {
+        aquatic::breathe(event);
     }
 
     /// The operators' `/bestiary`, to check its pages.
@@ -241,7 +255,7 @@ impl Hooks for Creature {
         if mob::is_ours(event.kind)
             && let Some(m) = host.entity(event.entity).and_then(|e| host.mob(e))
         {
-            mob::clear_template_goals(host, m);
+            mob::clear_template_goals(host, m, aquatic::is(event.kind));
         }
         Flow::Continue
     }

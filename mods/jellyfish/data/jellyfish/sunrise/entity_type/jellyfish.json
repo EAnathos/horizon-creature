@@ -1,0 +1,14 @@
+{
+  "template": "minecraft:wandering_trader",
+  "attributes": {
+    "minecraft:max_health": 6.0,
+    "minecraft:movement_speed": 0.1
+  },
+  "sounds": {
+    "hurt": "minecraft:entity.squid.hurt",
+    "death": "minecraft:entity.squid.death",
+    "ambient": "none",
+    "step": "none"
+  },
+  "shadow_radius": 0.0
+}

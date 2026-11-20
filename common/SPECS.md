@@ -24,9 +24,11 @@ Everything below works and was tested in game, single player, unless said otherw
 - **Glowing creatures' lights** (§3.11, `creature::glow`): the fireflies', the fairies' and the storm spirits' lights,
   sharing the game's 8.
 - **Fighting back** (§3.12, `creature::anger`): the scorpions and the storm spirits.
+- **Water creatures** (§3.10, `creature::aquatic`) and **touches** (§3.13, `creature::touch`): the jellyfish (and the
+  storm spirits' touch).
 - **Mob helpers** (`creature::mob`): `ours` (muted, own box, own goals, spared), `resize`, `Muted`, `despawn_far` (small
-  wild creatures far from players, as vanilla's ambient mobs), `nearest_player`, `give_effect` (an effect on a mob or a
-  player).
+  wild creatures far from players, as vanilla's ambient mobs), `nearest_player`, `player_of`, `give_effect` (an effect
+  on a mob or a player).
 - **The item in hand** (`creature::hand`): items whose right-click only the server's hooks handle (the jar, the guide,
   the mods' throwables) skip the off hand's turn, and `use_one` uses one up.
 - **Creature guide book and bestiary** (§7).
@@ -151,14 +153,21 @@ containers, placed jars and unbreakable blocks, or none, or a burst of fire). A 
 these values. Users: **Cyclops** (its boulder, `cyclops:boulder`, whose goal and projectile move here) and **Magma
 Golem** (planned, its magma glob, mods/magma_golem/SPECS.md §2).
 
-### 3.10 Water creatures (`creature::aquatic`), planned ✅
+### 3.10 Water creatures (`creature::aquatic`) ✅
 
-The life in water of jellyfish and flying fish, which copy the land-living wandering trader: breathing in water and not
-in air (Sunrise's `living_breathe` hook), no gravity in water, **beached** out of it (it can't swim, flops now and
-then, dries out after the mod's delay and dies, dropping as usual), and **the bucket**: a water bucket used on one
-catches it as vanilla's fish, into the mod's bucket item, keeping its kind and name, and lets it out where the bucket is
-emptied; a caught one never despawns. A mod gives its kinds, its bucket item and its drying delay. Users: **Jellyfish**
-(mods/jellyfish/SPECS.md §3, §5) and **Flying Fish** (mods/flying_fish/SPECS.md §3, §5).
+The life in water of jellyfish and flying fish, which copy the land-living wandering trader:
+
+- **Breathing**: they never drown (the library's `living_breathe`); they lose the template's Float goal (`mob`), which
+  would carry them to the surface.
+- **In water** they float (no gravity), their mod's behaviours moving them. **Beached**, they fall, flop now and then
+  and dry out after the mod's delay (a point of `minecraft:dry_out` damage a second), dropping as usual.
+- **The bucket**: a water bucket used on one catches it into the mod's bucket item (`Bucket`, its look and name kept as
+  in the glass jar's item data), which lets it out in water on the block face clicked and gives the empty bucket back;
+  one let out is tagged `creature.kept` and never despawns (`mob::despawn_far`).
+- **Spawning** (`spawns`): groups under the surface of their biomes' water, out of sight of the players, under a cap.
+
+A mod gives its kind, its bucket item and its drying delay (`Aquatic`), and how it spawns (`Spawning`). Users:
+**Jellyfish** (mods/jellyfish/SPECS.md §3, §5) and **Flying Fish** (planned, mods/flying_fish/SPECS.md §3, §5).
 
 ### 3.11 Lights of glowing creatures (`creature::glow`) ✅
 
@@ -166,7 +175,7 @@ A soft coloured light around a glowing creature, seen only (it lights nothing in
 such lights from every mod together, within 32 blocks of the player: the library hands them out, to the creatures
 nearest a player. A mod gives each creature's light (colour, reach, strength, height, whether it shines now) from its
 server tick. Users: **Fireflies** (the lit lanterns), **Fairies** (their night light, wider around one following its
-friend) and **Storm Spirits**.
+friend), **Storm Spirits** and **Jellyfish** (the glow jelly).
 
 ### 3.12 Fighting back (`creature::anger`) ✅
 
@@ -174,6 +183,11 @@ A creature of a kind that fights back, hit, takes whoever hit it as its target (
 until it lets them go: dead, gone from its level, a creative player or out of the mod's reach. The mod's own behaviour
 does the fighting, from `pursued`. Users: **Scorpions** (a pinch or a sting) and **Storm Spirits** (a dash and a
 shock).
+
+### 3.13 Touches (`creature::touch`) ✅
+
+What touches a creature is hurt by it, at most once every so many ticks each while it stays in touch (`due`), the mod
+doing its own harm: **Storm Spirits** (a zap) and **Jellyfish** (its kind's sting).
 
 ## 4. Glass jar and territories ✅
 

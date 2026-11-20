@@ -10,14 +10,23 @@ night.
 
 ## 0. Status
 
-Planned: the spec and the model, no code yet.
+Playable, tested in game (single player): everything below works, unless marked ❓.
 
-- **The model** (`assets/models/jellyfish.bbmodel`, pictures in docs/models/): a domed bell in three tiers with a
-  thin rim, four frilled oral arms under it and eight long thin tentacles around the rim, each in two parts to sway.
-  One model for every kind, a texture each (§2): moon jelly (pale lilac, four pink rings on top), sea nettle (amber,
-  red stripes, red tentacles), glow jelly (deep blue, cyan spots and tentacles).
-
-Next: the code, on Sunrise.
+- **The jellyfish** (`jellyfish:jellyfish`, spawn egg): its own model (`sources/models/jellyfish.bbmodel`, pictures in
+  docs/models/), a texture per kind, its tentacles swaying and flaring out on each pulse. Its kinds are its looks,
+  rolled by biome (§2).
+- **Swimming** (§3): pulses up and sinks, drifting, 3 to 8 blocks under the surface by day, 1 to 3 by night (the glow
+  jelly 8 to 16 by day), never out of the water.
+- **Water life** through the library (common/SPECS.md §3.10): it never drowns; beached it falls, flops and dries out
+  within a minute; a water bucket catches it into `jellyfish:jellyfish_bucket`, which lets it out again (its kind kept,
+  never despawning). Blooms of 3 to 8 spawn in its oceans.
+- **Stings** (§3, through the library's touches, common/SPECS.md §3.13), boats and turtle shells protecting; the glow
+  jelly's light and full-bright glow; its drops and items (§5).
+- ❓ **One kind per bloom**: a bloom's jellies roll their kind one by one, so a warm ocean's bloom mixes moon jellies
+  and sea nettles.
+- ❓ **Turtles eating them** (§3) waits for the library's prey (common/SPECS.md §3.7).
+- ❓ **Sounds**: vanilla's for now (a squid's hurt and death, the bucket's fish sounds), until its own.
+- ❓ The glow jelly in a deep ocean at night is not yet seen in game (the code is the other kinds').
 
 ## 1. Technical context
 

@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": ["jellyfish:jelly"],
+  "result": { "id": "minecraft:slime_ball", "count": 1 }
+}

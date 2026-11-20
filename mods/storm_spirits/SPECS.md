@@ -29,7 +29,7 @@ Playable, tested in game (single player): everything below works, unless marked 
   item `storm_spirits:spark` ✅ (§4).
 - Uses from the library: model drawing and sounds (§3.1, §3.2), hitbox size (§3.4), monsters sparing it (§3.4),
   the behaviours moved by hand (`creature::body`), fighting back (`creature::anger`, §3.12, shared with the Scorpions),
-  the lights of glowing creatures (§3.11), the creature guide's pages and Items tab (§7).
+  the lights of glowing creatures (§3.11), touches (§3.13), the creature guide's pages and Items tab (§7).
 - Sunrise: the `lightning_strike` hook (its `cause` tells a weather bolt from a trident's, a command's or a mod's) for
   its birth, `strike_lightning` for the spark's bolts, `entity_struck_by_lightning` and the damage hook for its
   immunities.

@@ -1,6 +1,9 @@
 # Jellyfish's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
 id = "jellyfish"
 name = "Jellyfish"
-status = "planned"
-# Its items in the series' creative tab, in order (none until implementation starts).
-creative = []
+status = "playable"
+# Its items in the series' creative tab, in order.
+creative = ["jellyfish:jellyfish_spawn_egg", "jellyfish:jelly", "jellyfish:glow_jelly"]
+# Its Rust is built on Sunrise's mod_api.
+ported = true
+

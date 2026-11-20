@@ -40,7 +40,7 @@ pub const GARDEN_FACT: &str = "garden";
 /// The bestiary fact a release on a sandy patch teaches, when the creature settles there.
 pub const SAND_FACT: &str = "sand";
 /// The key of the jar's data in `minecraft:custom_data`.
-const DATA: &str = "creature";
+pub(crate) const DATA: &str = "creature";
 
 /// A creature a jar can hold: its entity type, and the item model of a jar holding it (`<mod>:<kind>_jar`).
 pub struct Catchable {
@@ -72,11 +72,11 @@ fn catchable(kind: &str) -> Option<&'static Catchable> {
 }
 
 /// What a jar holds: its creature's kind, look, friend and name.
-struct Held {
-    kind: String,
-    look: Option<Compound>,
-    friend: Option<[i32; 4]>,
-    name: Option<String>,
+pub(crate) struct Held {
+    pub(crate) kind: String,
+    pub(crate) look: Option<Compound>,
+    pub(crate) friend: Option<[i32; 4]>,
+    pub(crate) name: Option<String>,
 }
 
 /// What a filled jar holds, from its item data (`kind`, `look`, `friend`, `name`) or a placed jar's block entity
@@ -106,8 +106,8 @@ fn read(data: &Compound, [kind, look, friend, name]: [&str; 4]) -> Option<Held> 
     })
 }
 
-/// What a filled jar holds.
-fn held(stack: &ItemStack) -> Option<Held> {
+/// What a filled jar (or a mod's bucket of a water creature, `aquatic`) holds.
+pub(crate) fn held(stack: &ItemStack) -> Option<Held> {
     let Some(Tag::Compound(custom)) = stack.components()?.as_nbt().get(&"minecraft:custom_data".into()) else {
         return None;
     };
@@ -123,7 +123,7 @@ fn empty(host: &dyn Host) -> Option<ItemStack> {
 }
 
 /// SNBT for a string.
-fn quoted(s: &str) -> String {
+pub(crate) fn quoted(s: &str) -> String {
     format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
 }
 
@@ -178,7 +178,7 @@ fn filled(
 /// mod's words: `look.<mod>.colour.<id>`, `look.<mod>.pattern.<id>`), then the series' name in blue, as the creative
 /// tab names an item it lists (a filled jar is in no tab, so the game shows no tab line for it). A named creature's jar
 /// says its name first, a befriended creature's jar says so.
-fn lore(kind: &str, look: Option<[String; 3]>, befriended: bool, name: Option<&str>) -> String {
+pub(crate) fn lore(kind: &str, look: Option<[String; 3]>, befriended: bool, name: Option<&str>) -> String {
     let namespace = kind.split(':').next().unwrap_or(kind);
     let colour = |id: &str| format!("{{translate:{}}}", quoted(&format!("look.{namespace}.colour.{id}")));
     let pattern = |id: &str| format!("{{translate:{}}}", quoted(&format!("look.{namespace}.pattern.{id}")));
@@ -213,7 +213,7 @@ fn lore(kind: &str, look: Option<[String; 3]>, befriended: bool, name: Option<&s
 }
 
 /// The name a name tag gave creature `id`, if any.
-fn custom_name(host: &mut dyn ServerHost, id: u32) -> Option<String> {
+pub(crate) fn custom_name(host: &mut dyn ServerHost, id: u32) -> Option<String> {
     let entity = host.entity(id)?;
     let named = entity
         .nbt(host)

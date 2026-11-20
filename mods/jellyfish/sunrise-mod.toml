@@ -1,0 +1,21 @@
+id = "jellyfish"
+name = "Jellyfish"
+version = "0.1.0"
+description = "Stinging jellyfish drifting in blooms, some glowing in the deep. Needs Sunrise Creatures."
+authors = ["EAnathos"]
+api = "0.2"
+side = "both"
+capabilities = ["registries"]
+license = "MIT"
+homepage = "https://github.com/EAnathos/sunrise-creatures/blob/main/mods/jellyfish/README.md"
+issues = "https://github.com/EAnathos/sunrise-creatures/issues"
+
+# The whole series is pinned to the same Sunrise build (docs/SUNRISE-ISSUES.md, "Moving the pin").
+[native]
+game = "26.3"
+sunrise = "94256510f74e6843754e0a93fd9e4da7e45b1056"
+mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
+
+# The series' library, reached as the `creature` crate (common/SPECS.md).
+[dependencies]
+creature = "^0.2"

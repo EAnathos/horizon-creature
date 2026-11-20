@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": ["jellyfish:glow_jelly"],
+  "result": { "id": "minecraft:glow_ink_sac", "count": 1 }
+}

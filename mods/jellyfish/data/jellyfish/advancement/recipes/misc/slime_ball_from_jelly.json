@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_jelly": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "jellyfish:jelly"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipes": "jellyfish:slime_ball_from_jelly"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_jelly"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "jellyfish:slime_ball_from_jelly"
+    ]
+  }
+}

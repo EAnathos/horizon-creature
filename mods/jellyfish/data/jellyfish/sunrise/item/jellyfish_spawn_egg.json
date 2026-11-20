@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:wandering_trader_spawn_egg",
+  "components": {
+    "minecraft:item_model": "jellyfish:jellyfish_spawn_egg",
+    "minecraft:item_name": {
+      "translate": "item.jellyfish.jellyfish_spawn_egg"
+    }
+  }
+}

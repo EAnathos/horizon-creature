@@ -108,8 +108,6 @@ static LIGHT: creature::glow::Light = creature::glow::Light {
 static BIRTHS: Mutex<Vec<[f64; 3]>> = Mutex::new(Vec::new());
 /// The ticks each spirit has left once the storm is over.
 static FADING: Mutex<BTreeMap<u32, u64>> = Mutex::new(BTreeMap::new());
-/// Who touched each spirit last and how long until it zaps them again.
-static TOUCHED: Mutex<BTreeMap<(u32, u32), i32>> = Mutex::new(BTreeMap::new());
 /// Shocks its behaviours made (spirit, target), dealt by the tick hook (a behaviour can't hurt).
 static SHOCKS: Mutex<Vec<(u32, u32)>> = Mutex::new(Vec::new());
 
@@ -184,15 +182,6 @@ fn sound(host: &mut dyn ServerHost, dimension: &str, at: [f64; 3], id: &str, vol
     }
 }
 
-/// The player whose entity is `entity`, by UUID.
-fn player_of(host: &dyn ServerHost, entity: u32) -> Option<u128> {
-    host.players()
-        .server_players()
-        .into_iter()
-        .find(|p| p.entity().id() == entity)
-        .map(|p| p.uuid())
-}
-
 /// `spirit` zaps `target`: damage from it, sparks and a zap; a shock also slows a player and teaches them the fact.
 fn zap(host: &mut dyn ServerHost, dimension: &str, spirit: u32, target: u32, damage: f32, shock: bool) {
     let (Some(me), Some(t)) = (host.entity(spirit), host.entity(target)) else {
@@ -206,7 +195,7 @@ fn zap(host: &mut dyn ServerHost, dimension: &str, spirit: u32, target: u32, dam
     sound(host, dimension, at, ZAP, if shock { 0.5 } else { 0.2 }, 1.9);
     if shock {
         creature::mob::give_effect(host, target, "minecraft:slowness", SHOCK_SLOWNESS);
-        if let Some(player) = player_of(host, target) {
+        if let Some(player) = creature::mob::player_of(&*host, target) {
             creature::bestiary::learn(host, player, KIND, SHOCK_FACT);
         }
     }
@@ -236,21 +225,8 @@ fn tick(host: &mut dyn ServerHost, dimension: &str, spirit: u32) {
         e.clear_fire(host);
     }
     let middle = [at[0], at[1] + 0.9, at[2]];
-    for target in creature::projectile::hits(&*host, level, middle, KIND, spirit, 0.6) {
-        let ready = {
-            let mut touched = TOUCHED.lock().unwrap();
-            let wait = touched.entry((spirit, target)).or_insert(0);
-            *wait -= 1;
-            if *wait <= 0 {
-                *wait = TOUCH_EVERY;
-                true
-            } else {
-                false
-            }
-        };
-        if ready {
-            zap(host, dimension, spirit, target, TOUCH_DAMAGE, false);
-        }
+    for target in creature::touch::due(&*host, level, middle, KIND, spirit, 0.6, TOUCH_EVERY) {
+        zap(host, dimension, spirit, target, TOUCH_DAMAGE, false);
     }
     creature::glow::shine(&*host, dimension, spirit, LIGHT);
     if level.is_thundering(&*host).unwrap_or(false) {
@@ -279,7 +255,6 @@ fn forget(spirit: u32) {
     creature::body::forget(spirit);
     creature::glow::dim(spirit);
     FADING.lock().unwrap().remove(&spirit);
-    TOUCHED.lock().unwrap().retain(|k, _| k.0 != spirit && k.1 != spirit);
     SHOCKS.lock().unwrap().retain(|s| s.0 != spirit);
     BOLTS.lock().unwrap().retain(|b| b.0 != spirit);
 }

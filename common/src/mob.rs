@@ -106,12 +106,13 @@ pub fn size(host: &dyn Host, event: &mut EntitySizeEvent<'_>) {
 }
 
 /// From the library's `entity_join_level`: our creature `mob` loses its template's goals, keeping ours (named with
-/// `GOAL_PREFIX`) and `float` (it swims up in water). Goals are not saved, so this runs at every join, a load from disk
-/// included.
-pub fn clear_template_goals(host: &mut dyn ServerHost, mob: MobRef) {
+/// `GOAL_PREFIX`) and, but for a water creature (`aquatic`), `float` (it swims up in water). Goals are not saved, so
+/// this runs at every join, a load from disk included.
+pub fn clear_template_goals(host: &mut dyn ServerHost, mob: MobRef, aquatic: bool) {
     for list in [mob.goals(host), mob.target_goals(host)].into_iter().flatten() {
         for goal in list {
-            if !goal.id.starts_with(GOAL_PREFIX) && goal.id != "float" {
+            // Float keeps a land creature from drowning; a water creature (`aquatic`) would float to the surface.
+            if !goal.id.starts_with(GOAL_PREFIX) && (goal.id != "float" || aquatic) {
                 mob.remove_goal(host, goal.id);
                 mob.remove_target_goal(host, goal.id);
             }
@@ -132,6 +133,15 @@ pub fn give_effect(host: &mut dyn ServerHost, target: u32, id: &str, ticks: i32)
         return;
     };
     living.add_effect(host, &ActiveEffect::new(effect, ticks, 0, false, true, true));
+}
+
+/// The UUID of the player whose entity is `entity`, if it is a player.
+pub fn player_of(host: &dyn ServerHost, entity: u32) -> Option<u128> {
+    host.players()
+        .server_players()
+        .into_iter()
+        .find(|p| p.entity().id() == entity)
+        .map(|p| p.uuid())
 }
 
 /// How far the nearest player in level `dimension` is from `at`, in blocks (`f64::MAX` with none there).
@@ -168,9 +178,11 @@ pub fn despawn_far(host: &mut dyn ServerHost, dimension: &str, entity: u32, keep
     if !gone {
         return false;
     }
-    // A name tag keeps it, as in vanilla.
-    let named = e
-        .nbt(host)
-        .is_some_and(|nbt| matches!(nbt.get(&"CustomName".into()), Some(t) if !matches!(t, Tag::End)));
+    // A name tag keeps it, as in vanilla, and so does being let out of a bucket (`aquatic::KEPT`).
+    let named = e.nbt(host).is_some_and(|nbt| {
+        let kept = matches!(nbt.get(&"Tags".into()), Some(Tag::List(tags))
+            if tags.iter().any(|t| matches!(t, Tag::String(s) if s.to_string_lossy() == crate::aquatic::KEPT)));
+        kept || matches!(nbt.get(&"CustomName".into()), Some(t) if !matches!(t, Tag::End))
+    });
     !named && e.discard(host)
 }

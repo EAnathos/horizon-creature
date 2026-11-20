@@ -18,7 +18,7 @@ on it.
 | Sporelins | `mods/sporelins/` | `sporelins` | planned | [mods/sporelins/SPECS.md](../mods/sporelins/SPECS.md) |
 | Living Flowers | `mods/living_flowers/` | `living_flowers` | planned | [mods/living_flowers/SPECS.md](../mods/living_flowers/SPECS.md) |
 | Storm Spirits | `mods/storm_spirits/` | `storm_spirits` | playable | [mods/storm_spirits/SPECS.md](../mods/storm_spirits/SPECS.md) |
-| Jellyfish | `mods/jellyfish/` | `jellyfish` | planned | [mods/jellyfish/SPECS.md](../mods/jellyfish/SPECS.md) |
+| Jellyfish | `mods/jellyfish/` | `jellyfish` | playable | [mods/jellyfish/SPECS.md](../mods/jellyfish/SPECS.md) |
 | Magma Golem | `mods/magma_golem/` | `magma_golem` | planned | [mods/magma_golem/SPECS.md](../mods/magma_golem/SPECS.md) |
 | Fairies | `mods/fairies/` | `fairies` | playable | [mods/fairies/SPECS.md](../mods/fairies/SPECS.md) |
 | Seagulls | `mods/seagulls/` | `seagulls` | planned | [mods/seagulls/SPECS.md](../mods/seagulls/SPECS.md) |
@@ -75,7 +75,7 @@ day a second mod needs it (the move is part of that second mod's work, not a cop
 
 | In the library (`creature`) | In a mod |
 |---|---|
-| Generic systems, configured by data or by Rust parameters: glass jar and territories, the small fliers' flight and spawning, friends, colours and patterns, model drawing, glowing creatures' lights, fighting back, mob sounds, monsters sparing our creatures, the bestiary | The species: entity types, models, textures, sounds, items, recipes, loot, spawns, AI tuning, balance numbers |
+| Generic systems, configured by data or by Rust parameters: glass jar and territories, the small fliers' flight and spawning, friends, colours and patterns, model drawing, glowing creatures' lights, fighting back, water creatures, touches, mob sounds, monsters sparing our creatures, the bestiary | The species: entity types, models, textures, sounds, items, recipes, loot, spawns, AI tuning, balance numbers |
 | Shared blocks and items (`creature:glass_jar`, `creature:guide`) | The mod's own blocks and items (`cyclops:club`) |
 | The series' creative tab | The list of its items for that tab (`module.toml`) |
 | Shared translations (`creature` lang files) | Its own translations |

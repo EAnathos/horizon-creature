@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:slime_ball",
+  "components": {
+    "minecraft:item_model": "jellyfish:jelly",
+    "minecraft:item_name": {
+      "translate": "item.jellyfish.jelly"
+    }
+  }
+}

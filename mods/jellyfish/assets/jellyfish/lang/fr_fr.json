@@ -1,0 +1,18 @@
+{
+  "entity.jellyfish.jellyfish": "Méduse",
+  "item.jellyfish.jellyfish_spawn_egg": "Œuf d'apparition de méduse",
+  "item.jellyfish.jelly": "Gelée",
+  "item.jellyfish.glow_jelly": "Gelée luisante",
+  "item.jellyfish.jellyfish_bucket": "Seau de méduse",
+  "look.jellyfish.colour.plain": "Simple",
+  "look.jellyfish.pattern.moon_jelly": "Méduse lune",
+  "look.jellyfish.pattern.sea_nettle": "Ortie de mer",
+  "look.jellyfish.pattern.glow_jelly": "Méduse luisante",
+  "bestiary.jellyfish.bloom": "Banc",
+  "bestiary.jellyfish.sting": "Piqûre",
+  "bestiary.jellyfish.glow": "Lueur",
+  "bestiary.jellyfish.bucket": "Seau",
+  "bestiary.jellyfish.item.jelly.use": "Se transforme en boule de slime",
+  "bestiary.jellyfish.item.glow_jelly.use": "Se transforme en poche d'encre luisante",
+  "bestiary.jellyfish.item.jellyfish_bucket.use": "Sur un bloc : libère la méduse dans de l'eau"
+}

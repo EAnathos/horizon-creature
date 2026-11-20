@@ -3,8 +3,8 @@
 A series of native Rust mods for **Sunrise** (formerly Horizon, a Rust reimplementation of Minecraft Java 26.3): one mandatory
 library, **Sunrise Creatures** (`common/`, mod id `creature`), and independent creature mods in `mods/<mod>/` that all
 depend on it: `vulture` (tameable, rideable flying vulture), `butterflies` (and moths), `worms`, `fireflies`,
-`cyclops`, `fairies`, `scorpions`, `storm_spirits` and `vanilla_bestiary` (Minecraft's creatures in the guide). The
-other folders of `mods/` are planned mods (a spec, a model).
+`cyclops`, `fairies`, `scorpions`, `storm_spirits`, `jellyfish` and `vanilla_bestiary` (Minecraft's creatures in the
+guide). The other folders of `mods/` are planned mods (a spec, a model).
 
 - **Players**: `README.md` and each module's `README.md`. **Developers**: `CONTRIBUTING.md`.
 - **Architecture**: `docs/ARCHITECTURE.md` (modules, dependencies, what goes in the library, the single creative tab,

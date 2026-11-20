@@ -1,0 +1,10 @@
+{
+  "template": "minecraft:paper",
+  "max_stack_size": 1,
+  "components": {
+    "minecraft:item_model": "jellyfish:jellyfish_bucket",
+    "minecraft:item_name": {
+      "translate": "item.jellyfish.jellyfish_bucket"
+    }
+  }
+}
