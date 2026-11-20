@@ -10,7 +10,7 @@ several creature mods share, and the series' single creative tab. It adds no cre
 Everything below works and was tested in game, single player, unless said otherwise.
 
 - **The library itself**: one native package (`creature.smod`: its content and the crate `mod-creature`) that every mod
-  reaches as the `creature` crate (`[dependencies] creature = "^0.2"`).
+  reaches as the `creature` crate (`[dependencies] creature = "^0.3"`).
 - **Model drawing** (§3.1), **mob sounds** (§3.2), **the creative tab** (§3.3), **monsters sparing our creatures**
   (§3.4), **the small fliers' flight and spawning** (§3.5, by day, at night or at any hour) and **friends** (§6.2, the
   Fairies' and the vulture's owner).
@@ -57,7 +57,7 @@ stay in the vulture until a second mod needs them, except friends (§6.2), share
   own `register` hook. It publishes functions, types and statics; shared state is behind `Mutex`es.
 - **Its content**: the series' tab, shared blocks and items (`creature:glass_jar`, `creature:guide`, the jar blocks), their recipes
   (conditional when a feature depends on a mod), textures and translations (`en_us`, `fr_fr`).
-- **Pinned** to the series' Sunrise revision (docs/SUNRISE-ISSUES.md). Version `0.2.0`; a breaking API change bumps
+- **Pinned** to the series' Sunrise revision (docs/SUNRISE-ISSUES.md). Version `0.3.0`; a breaking API change bumps
   the minor version while in `0.x`, and the mods' `[dependencies] creature` with it.
 
 ## 3. Systems in place

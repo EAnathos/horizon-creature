@@ -1,6 +1,6 @@
 id = "creature"
 name = "Sunrise Creatures"
-version = "0.2.0"
+version = "0.3.0"
 description = "The library of the Sunrise Creatures mods. Needed by every mod of the series."
 authors = ["EAnathos"]
 api = "0.2"

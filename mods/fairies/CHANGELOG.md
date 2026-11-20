@@ -2,6 +2,10 @@
 
 Each version's section is its registry changelog (`cargo creature release`).
 
+## 0.1.2
+
+- Built for Sunrise's 2026-11-20 Nightly (9425651) and Sunrise Creatures 0.3; the package lists what it uses of the game's API (`uses.json`).
+
 ## 0.1.1
 
 - Their night light comes from the library: with fireflies or storm spirits about, the lights go to the creatures

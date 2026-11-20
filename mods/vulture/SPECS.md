@@ -51,7 +51,7 @@ Left: tuning (flight numbers, taming odds, speeds, the dive attack) as players r
 - **Toolchain**: the Rust the pinned Sunrise SDK names (`target/sunrise-sdk/sdk.json`).
 - **Target**: game 26.3, on the series' pinned Sunrise revision (docs/SUNRISE-ISSUES.md).
 - **Mod id**: `vulture` (ids kept from before the series, so test worlds still load).
-- **Dependency** ✅: the library `creature` (`[dependencies] creature = "^0.2"` in `sunrise-mod.toml`). Entity
+- **Dependency** ✅: the library `creature` (`[dependencies] creature = "^0.3"` in `sunrise-mod.toml`). Entity
   `vulture:vulture`, items `vulture:feather`, `vulture:raw_vulture`, `vulture:cooked_vulture` (the saddle is vanilla's).
 - **Multiplayer** ✅: v1 = single player. LAN and the dedicated server come in v2 (for a LAN guest, their own client
   moves the mount, which needs its own work), but server logic is kept apart from rendering from the start.

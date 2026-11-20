@@ -63,7 +63,7 @@ How the dependency is expressed:
 
 | Where | File | Dependency mechanism |
 |---|---|---|
-| The package (`.smod`: content and Rust) | `sunrise-mod.toml` | `[dependencies] creature = "^0.2"` (plus any mod it requires). The game refuses to load without it and runs the library's hooks first; the launcher gives the mod's crate a `creature` crate to call (Sunrise's modding book, "Dependencies between mods"). |
+| The package (`.smod`: content and Rust) | `sunrise-mod.toml` | `[dependencies] creature = "^0.3"` (plus any mod it requires). The game refuses to load without it and runs the library's hooks first; the launcher gives the mod's crate a `creature` crate to call (Sunrise's modding book, "Dependencies between mods"). |
 | Repository tools | `module.toml` | `requires = ["<mod>"]` (none today): `cargo creature install <mod>` then also installs the mods it requires, first. |
 
 
@@ -164,7 +164,7 @@ tools/                  the Rust build tools (`cargo creature ...`), shared by e
 2. Write the spec. For each system it needs, check [common/SPECS.md](../common/SPECS.md): reuse what exists, mark what
    should move to the library (rule of two, §3), and add the library's side of the work to the library's spec.
 3. When implementation starts: `sunrise-mod.toml` (id = the folder name, `side = "both"`, `api = "0.2"`,
-   `capabilities = ["registries"]`, the series' `[native]` pins, `[dependencies] creature = "^0.2"` and any mod it
+   `capabilities = ["registries"]`, the series' `[native]` pins, `[dependencies] creature = "^0.3"` and any mod it
    requires), `Cargo.toml` (a crate `mod-<mod>` on `sunrise-mod-api` from `.sunrise/sdk/`), `src/lib.rs` (its
    `#[mod_api::sunrise_mod] impl Hooks`), `assets/<mod>/lang/` `en_us` and `fr_fr`, `data/<mod>/sunrise/`, items listed in
    `module.toml`, `ported = true`.

@@ -7,3 +7,12 @@ creative = ["jellyfish:jellyfish_spawn_egg", "jellyfish:jellyfish_bucket", "jell
 # Its Rust is built on Sunrise's mod_api.
 ported = true
 
+
+# Its page in Sunrise's registry (`cargo creature release`, docs/PUBLISHING.md): with its manifest's name, authors and
+# licence, and its README as the description.
+[registry]
+summary = "Stinging jellyfish drifting in blooms through the oceans, some glowing in the deep; catch them in a bucket for an aquarium."
+categories = ["mobs", "decoration"]
+tags = ["jellyfish", "ocean", "aquatic", "glowing"]
+icon = "jellyfish"
+screenshots = ["docs/models/jellyfish-jellyfish-front.png", "docs/models/jellyfish-jellyfish-back.png"]
