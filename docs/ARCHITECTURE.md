@@ -144,7 +144,7 @@ tools/                  the Rust build tools (`cargo creature ...`), shared by e
 | `cargo creature build [mod...]` | Writes the tab, packages and checks (`cargo sunrise-mod check`) the library and the mods (default: all) into `target/dist/`, without installing |
 | `cargo creature check` | The repository's consistency (docs/CONVENTIONS.md, "Formatting, lint and checks") |
 | `cargo creature native-check [sdk]` | Clippy and the tests of the ported crates against the pinned SDK |
-| `cargo creature install [--instance <name>] [mod...]` | Writes the tab, packages and installs the library and the mods (default: every mod with a package) in the instance (default `creature-dev`): the ported ones built by `sunrise-launcher native-build`, the others' content turned on |
+| `cargo creature install [--instance <name>] [mod...]` | Writes the tab, packages and installs the library and the mods (default: every mod with a package) in the instance (default `creature-dev`): the ported ones installed in its `sunrise-native-mods/` and built by `sunrise-launcher native-build --instance`, the others' content in `sunrise-mods/`, all turned on |
 
 - **One Sunrise build for the whole series**: every `sunrise-mod.toml` pins the same `[native] sunrise` and `mixins`
   commits, and so does CI (`SUNRISE_REV`). Moving to a new build (`cargo sunrise-mod update`) is done for all modules

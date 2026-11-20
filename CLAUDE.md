@@ -50,10 +50,14 @@ only). How the port went is in the history (`git show 2c09384:docs/SUNRISE-PORT.
 
 - `cargo creature install [--instance <name>] [mod...]` writes the creative tab, packages each module (staged in
   `target/stage/`, zipped to `target/<id>.smod`, checked by `cargo sunrise-mod check`), always with the library: a
-  ported module is built by `sunrise-launcher native-build target/stage/native` (which also selects the build for the
-  instance), a content-only one goes in the instance's `sunrise-mods/`. The launcher's "Installed mods" list shows only what its mod
-  browser installed: our native modules never appear there (they are built into the game the instance plays, its
-  version a `native-<rev>-<hash>` build; `sunrise-launcher instance list`).
+  ported module's `.smod` goes in the instance's `sunrise-native-mods/` and the launcher builds the instance's native
+  mods (`sunrise-launcher native-build --instance`, which also selects the build); a content-only one goes in its
+  `sunrise-mods/`. Each is turned on in the instance's `sunrise-mods.txt` (`mod.<id>:true`): the game loads only those.
+  Since launcher 1.1.1, Play refuses a native build whose mods aren't the packages installed in the profile (same
+  version and digest): build through the profile, never from a loose folder. The game the instance plays is a
+  `native-<rev>-<hash>` build (`sunrise-launcher instance list`).
+- A new Nightly is used once prepared: `sunrise-launcher prepare --version <nightly>` takes the game files from the
+  local Minecraft install (no sign-in needed), then `sunrise-launcher instance version creature-dev <nightly>`.
 - Tools are Rust (`tools/`, commands `list`, `tab`, `model`, `preview`, `sounds`, `vanilla`, `pack`, `build`, `check`,
   `native-check`, `install`, `release`; alias in `.cargo/config.toml`; the table in `CONTRIBUTING.md`).
 - Publishing: each finished module is a project on Sunrise's registry (`[registry]` in its `module.toml`, its README as

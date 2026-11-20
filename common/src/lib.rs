@@ -41,12 +41,12 @@ pub mod sounds;
 pub mod territory;
 
 use mod_api::{
-    BreakBlockEvent, BuildCreativeModeTabContentsEvent, ClientHost, EntityInteractEvent, EntityJoinLevelEvent,
-    EntityLeaveLevelEvent, EntitySizeEvent, EntityTickListenedEvent, EntityTickPostEvent, ExplosionDetonateEvent, Flow,
-    HitHost, Hooks, Host, HostSide, InteractionResult, LevelTickPostEvent, LivingChangeTargetEvent,
-    LivingIncomingDamageEvent, PlayerLoggedInEvent, RegisterCommandsEvent, Registrar, RegistrationContext,
-    RunModCommandEvent, ScreenMouseButtonPressedPreEvent, ScreenMouseScrolledPreEvent, ScreenRenderPostEvent,
-    ServerHost, TabCompleteEvent, VisualsEvent,
+    BreakBlockEvent, BuildCreativeModeTabContentsEvent, ClientHost, CreativeTabVisibility, EntityInteractEvent,
+    EntityJoinLevelEvent, EntityLeaveLevelEvent, EntitySizeEvent, EntityTickListenedEvent, EntityTickPostEvent,
+    ExplosionDetonateEvent, Flow, HitHost, Hooks, Host, HostSide, InteractionResult, LevelTickPostEvent,
+    LivingChangeTargetEvent, LivingIncomingDamageEvent, PlayerLoggedInEvent, RegisterCommandsEvent, Registrar,
+    RegistrationContext, RunModCommandEvent, ScreenMouseButtonPressedPreEvent, ScreenMouseScrolledPreEvent,
+    ScreenRenderPostEvent, ServerHost, TabCompleteEvent, VisualsEvent,
 };
 
 /// The library's items in the guide's Items tab (SPECS §7.2).
@@ -218,14 +218,17 @@ impl Hooks for Creature {
     }
 
     /// The series' tab shows the glass jar only when a mod uses it (common/SPECS.md §3.3).
-    fn build_creative_mode_tab_contents(
-        &self,
-        host: &mut dyn ClientHost,
-        event: &mut BuildCreativeModeTabContentsEvent<'_>,
-    ) {
-        if event.tab == "creature:creature" && !jar::used() {
-            event.items.retain(|s| !hand::is(&*host, s, jar::ITEM));
+    fn build_creative_mode_tab_contents(&self, host: HostSide, event: &mut BuildCreativeModeTabContentsEvent<'_>) {
+        if event.tab != "creature:creature" || jar::used() {
+            return;
         }
+        let host: &dyn Host = match &host {
+            HostSide::Server(h) => &**h,
+            HostSide::Client(h) => &**h,
+        };
+        let _ = event
+            .edit
+            .remove_if(host, CreativeTabVisibility::Both, |s| hand::is(host, s, jar::ITEM));
     }
 
     /// Our creatures' own boxes.

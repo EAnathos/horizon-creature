@@ -6,8 +6,8 @@ our code (marked there with its issue). Update this page when an issue moves, an
 and closed, and file only with a clean repro and the pinned revision. A fixed issue whose workaround is gone leaves
 this page (its history is in git).
 
-Our pin: Nightly `nightly-2026-11-19-520fc48`, source `520fc4882d` (every `sunrise-mod.toml`'s `[native]` pins and
-CI's `SUNRISE_REV`). Last checked: 2026-11-19.
+Our pin: Nightly `nightly-2026-11-20-9425651`, source `94256510f7` (every `sunrise-mod.toml`'s `[native]` pins and
+CI's `SUNRISE_REV`). Last checked: 2026-11-20.
 
 Status: **to open** (found, not filed), **open**, **fixed upstream** (merged, not yet in our pin).
 

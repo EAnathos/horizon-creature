@@ -2,7 +2,7 @@
 //!
 //! A module's root holds its package (`sunrise-mod.toml`, `Cargo.toml`, `src/`, `assets/`, `data/`, `README.md`) beside
 //! files that are the repository's (`module.toml`, `SPECS.md`, `sources/`), which a package refuses. So the package's
-//! files are first copied to `target/stage/<kind>/<id>/` (`stage`), the folder `sunrise-launcher native-build` builds, then
+//! files are first copied to `target/stage/<kind>/<id>/` (`stage`), then
 //! zipped into `target/<id>.smod`. A module whose Rust isn't ported yet (`module.toml`'s `ported`) is staged as content
 //! only: no `Cargo.toml`, `src/` or `[native]`.
 use std::io::Write as _;
@@ -27,8 +27,8 @@ pub fn run(module: &Module) -> crate::Result<Packed> {
     Ok(Packed { smod })
 }
 
-/// The folder of the module's staged package: `target/stage/native/<id>/` for a module with Rust (the folder
-/// `sunrise-launcher native-build` builds), `target/stage/content/<id>/` for content only.
+/// The folder of the module's staged package: `target/stage/native/<id>/` for a module with Rust,
+/// `target/stage/content/<id>/` for content only.
 pub fn stage_dir(module: &Module) -> PathBuf {
     let kind = if module.native().is_some() { "native" } else { "content" };
     crate::root().join("target/stage").join(kind).join(&module.id)

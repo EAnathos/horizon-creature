@@ -45,9 +45,11 @@ The tools find the launcher by `$SUNRISE_LAUNCHER`, else `sunrise-launcher` on t
 data by `$SUNRISE_LAUNCHER_DATA`, else `$XDG_DATA_HOME/sunrise` or `~/.local/share/sunrise`.
 
 `install` writes the creative tab and packages each module (staged in `target/stage/`, zipped to `target/<id>.smod`).
-A module whose Rust is on Sunrise's API (`ported = true` in its `module.toml`) is built by the launcher
-(`sunrise-launcher native-build`, a few seconds once its tools are downloaded), which also makes that build the one the
-instance plays; a content-only module goes in the instance's `sunrise-mods/`. Then press **Play** on the instance.
+A module whose Rust is on Sunrise's API (`ported = true` in its `module.toml`) is installed in the instance's
+`sunrise-native-mods/` and built by the launcher with the instance's other native mods (`sunrise-launcher native-build
+--instance`, a few seconds once its tools are downloaded), which also makes that build the one the instance plays; a
+content-only module goes in the instance's `sunrise-mods/`. Each is turned on in the instance's `sunrise-mods.txt`. Then
+press **Play** on the instance.
 
 The modules are **pinned** to one Sunrise build, the same for every module (`[native] sunrise` and `mixins` in
 `sunrise-mod.toml`, CI's `SUNRISE_REV`); the launcher fetches that build's SDK and compiles against it.
