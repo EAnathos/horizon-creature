@@ -108,7 +108,8 @@ const ROAR: &str = "cyclops:entity.cyclops.roar";
 const EGG: &str = "cyclops:cyclops_spawn_egg";
 /// Vanilla's red (`§c`), packed as tooltip lines take it (`rgba(255, 85, 85, 255)`).
 const PEACEFUL_RED: u32 = 0xFF55_55FF;
-/// Whether the world is on Peaceful, for the egg's tooltip (from the server's tick).
+/// Whether the world is on Peaceful, for the egg's tooltip (from the server's tick): a mod's type can't say it isn't
+/// allowed in Peaceful (sunrise-org/sunrise#3816).
 static PEACEFUL: AtomicBool = AtomicBool::new(false);
 
 /// Whether the world is on Peaceful: no cyclops appears, and those there go, as vanilla's monsters.

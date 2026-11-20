@@ -147,7 +147,7 @@ static PREY: creature::prey::Prey = creature::prey::Prey {
 
 /// A dolphin that caught one is fed, as by a player (SPECS §3): it leads the players near to treasure.
 fn fed(host: &mut dyn ServerHost, dolphin: u32) {
-    // Through a command: `merge_nbt` answers true but the dolphin keeps `GotFish:0b` (docs/SUNRISE-ISSUES.md).
+    // Through a command: `merge_nbt` answers true but the dolphin keeps `GotFish:0b` (sunrise-org/sunrise#3814).
     if let Some(d) = host.entity(dolphin) {
         d.run_command(
             host,

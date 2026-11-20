@@ -219,7 +219,8 @@ pub fn clicked(host: &mut dyn ServerHost, event: &MenuClickedEvent) {
     }
     if event.slot == OUTSIDE {
         if event.mode == PICKUP && drop_cursor(host, player, menu, right) {
-            // The client isn't told of a cursor it didn't change itself: the screen opens again in place.
+            // The client isn't told of a cursor it didn't change itself: the screen opens again in place
+            // (sunrise-org/sunrise#3815).
             open_screen(host, event.uuid, open.vulture, MenuReplace::InPlace);
         }
         return;

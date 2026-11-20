@@ -16,6 +16,9 @@ Status: **to open** (found, not filed), **open**, **fixed upstream** (merged, no
 | Issue | What | Status | Our workaround (where) | Drop it when fixed |
 |---|---|---|---|---|
 | [#1134](https://github.com/sunrise-org/sunrise/issues/1134) (not ours, we follow it) | `entity_size` isn't asked for a client's copies of entities: there, our creatures keep their template's box (a wandering trader's, 1.95 high) | open | The book centres our creatures by their own box, offset from the template's height (`common/src/bestiary/book.rs`, `TEMPLATE_HEIGHT`); the cyclops gets a client box through `minecraft:scale` (`creature::mob::scale_client_box`) | Drop the offset and the scale |
+| [#3814](https://github.com/sunrise-org/sunrise/issues/3814) | `EntityRef::merge_nbt` answers true on a dolphin, but `GotFish` stays `0b` (`/data merge entity` keeps it) | open | The flying fish's dolphin is fed through `EntityRef::run_command` (`mods/flying_fish/src/lib.rs`, `fed`) | Back to `merge_nbt` |
+| [#3815](https://github.com/sunrise-org/sunrise/issues/3815) | A cursor a mod changes from `menu_clicked` (`MenuRef::cursor`) isn't sent to the client, which shows a ghost stack until its next click | open | The vulture's screen opens again in place after a throw (`mods/vulture/src/screen.rs`, `clicked`) | Drop the reopening |
+| [#3816](https://github.com/sunrise-org/sunrise/issues/3816) | A mod's living type can't be disallowed in Peaceful: the egg's "Disabled in Peaceful", `/summon` and spawns follow the template | open (a request) | The cyclops goes in Peaceful by itself, and its egg's line comes from a static its server tick keeps (`mods/cyclops/src/lib.rs`, `PEACEFUL`), single player only | Use the new key, drop the static |
 
 ## Limits of our workarounds
 
@@ -26,20 +29,7 @@ Status: **to open** (found, not filed), **open**, **fixed upstream** (merged, no
 
 ## To open (candidates)
 
-Found, not filed: check the tracker and the newest Nightly first.
-
-- **A cursor a mod changes is not sent to the client**: from `menu_clicked`, writing a menu's cursor through
-  `MenuRef::cursor` changes the server's, but the client keeps showing its own until its next click, as a ghost stack
-  (seen when a click outside the window throws the cursor's stack: the client doesn't predict it). `menu_set_items`
-  sends the slots only. Ours: the vulture's screen opens again in place after a throw (`mods/vulture/src/screen.rs`,
-  `clicked`).
-- **A mod mob's spawn egg never says "Disabled in Peaceful"**: the game decides it from the copied vanilla type (a
-  mod mob copies a zombie, a villager or a wandering trader), with no way to call it a monster. Ours: the cyclops's
-  tooltip adds the line from a static its server tick keeps (`mods/cyclops/src/lib.rs`, `PEACEFUL`), single player
-  only.
-- **`merge_nbt` doesn't keep a dolphin's `GotFish`**: `EntityRef::merge_nbt` with `{GotFish:1b}` on a dolphin answers
-  true, but `/data get` reads `0b` right after, while `/data merge entity` with the same compound keeps it. Ours: the
-  flying fish's dolphin is fed through `EntityRef::run_command` (`mods/flying_fish/src/lib.rs`, `fed`).
+Found, not filed: check the tracker and the newest Nightly first. None at the moment.
 
 ## Moving the pin
 
