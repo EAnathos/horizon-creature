@@ -54,7 +54,7 @@ shepherd, shy fairies, scorpions and spirits of living lightning; and Minecraft'
 | ![](docs/models/cyclops-cyclops-front.png) | [Cyclops](mods/cyclops/README.md) | A one-eyed giant shepherd at cave mouths, with its flock, its club and its boulders |
 | ![](docs/models/fairies-fairy-front.png) | [Fairies](mods/fairies/README.md) | Shy glowing fairies you befriend with glow berries: they circle your head, lighten your step and leave you fairy dust |
 | ![](docs/models/scorpions-scorpion-front.png) | [Scorpions](mods/scorpions/README.md) | Real-size scorpions in the shade of deserts, badlands and caves: they rear up when you come close and sting when hit; their stinger makes a dagger you throw |
-| ![](docs/models/storm_spirits-storm_spirit-front.png) | [Storm Spirits](mods/storm_spirits/README.md) | Spirits of living lightning born in thunderstorms: they zap whoever hits them, and their sparks call lightning where you aim |
+| ![](docs/models/storm_spirits-storm_spirit-front.png) | [Storm Spirits](mods/storm_spirits/README.md) | Spirits of living lightning born in thunderstorms: hit one and it zaps you and calls lightning down on you; their sparks call lightning where you aim |
 | ![](common/assets/creature/textures/item/guide.png) | [Vanilla Bestiary](mods/vanilla_bestiary/README.md) | Minecraft's own creatures in the creature guide's bestiary, found out as you meet them |
 
 Every mod needs **[Sunrise Creatures](common/README.md)**, the library: it adds the glass jar, the creature guide and

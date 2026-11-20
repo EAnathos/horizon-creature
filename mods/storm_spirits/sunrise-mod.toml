@@ -1,6 +1,6 @@
 id = "storm_spirits"
 name = "Storm Spirits"
-version = "0.1.0"
+version = "0.2.0"
 description = "Spirits of living lightning, born in storms. Needs Sunrise Creatures."
 authors = ["EAnathos"]
 api = "0.2"

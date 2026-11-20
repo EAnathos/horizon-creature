@@ -1,10 +1,11 @@
 //! How a storm spirit flies (SPECS §2), by hand (the library's `body`): always in the air, 1 to 4 blocks above the
 //! ground or the water, hovering and flickering, then zipping a few blocks in a quick dash (`Dash`). Hit, it dashes at
-//! whoever hit it and shocks them, then keeps away and comes back to shock them again every few seconds, until it loses
-//! them (`Shock`, its target the library's `anger`).
+//! whoever hit it and shocks them, then keeps away and comes back to shock them again every few seconds, and calls
+//! lightning down on them every few seconds too (sparks over their head first), until it loses them (`Shock`, its
+//! target the library's `anger`).
 use creature::body::{Behaviour, Body, Vec3, World};
 
-use crate::shock;
+use crate::{call_bolt, shock};
 
 /// A dash's speed (blocks a tick), its length (blocks) and the wait between two (ticks).
 const DASH_SPEED: f64 = 0.6;
@@ -24,6 +25,11 @@ const KEEP: f64 = 5.0;
 const GIVE_UP: f64 = 20.0;
 const CHARGE_SPEED: f64 = 0.5;
 const AWAY_SPEED: f64 = 0.25;
+/// While it fights, it calls a lightning bolt down on its target every `BOLT_EVERY` ticks (and up to `BOLT_MORE`
+/// more), the first `FIRST_BOLT` ticks after it was hit.
+const BOLT_EVERY: i32 = 100;
+const BOLT_MORE: i32 = 40;
+const FIRST_BOLT: i32 = 40;
 
 /// The buzz of a dash.
 const BUZZ: &str = "minecraft:entity.bee.loop";
@@ -135,11 +141,16 @@ impl Behaviour for Dash {
 #[derive(Debug, Default)]
 pub(crate) struct Shock {
     cooldown: i32,
+    /// Ticks until its next bolt; 0 before its first.
+    bolt: i32,
 }
 
 impl Behaviour for Shock {
     fn can_use(&mut self, m: &mut Body, cx: &World<'_>) -> bool {
         creature::anger::pursued(m, cx, GIVE_UP).is_some()
+    }
+    fn stop(&mut self, _: &mut Body, _: &World<'_>) {
+        self.bolt = 0;
     }
     fn tick(&mut self, m: &mut Body, cx: &World<'_>) {
         let Some((who, t)) = creature::anger::pursued(m, cx, GIVE_UP) else {
@@ -151,6 +162,14 @@ impl Behaviour for Shock {
         let reach = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt().max(1e-3);
         let toward = d.map(|k| k / reach);
         face(m, toward);
+        if self.bolt == 0 {
+            self.bolt = FIRST_BOLT;
+        }
+        self.bolt -= 1;
+        if self.bolt <= 0 {
+            call_bolt(m.id, who);
+            self.bolt = BOLT_EVERY + m.random.next_int_bound(BOLT_MORE).unwrap_or(0);
+        }
         self.cooldown -= 1;
         if self.cooldown <= 0 {
             if reach < REACH {

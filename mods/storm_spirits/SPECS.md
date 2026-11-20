@@ -17,7 +17,8 @@ Playable, tested in game (single player): everything below works, unless marked 
   flickering, its four sparks circling it and blinking, a soft blue light around it.
 - **Born of lightning** (§2): one weather strike in 10; tested with the spark's bolts and `/summon`, which never give
   birth. **Lives with the storm**: it stays through a thunderstorm and fades 1 to 3 minutes after it.
-- **Flight**, the **shock** (its dash, the zap, keeping away) and the zap of a touch (§2); immune to lightning and fire.
+- **Flight**, the **shock** (its dash, the zap, keeping away), the **bolts** it calls on its attacker and the zap of a
+  touch (§2); immune to lightning and fire.
 - **The spark** (§4): the bolt where you aim, used up, its cooldown.
 - **Sounds** ❓: vanilla's for now (a breeze's hurt and death, a bee's buzz, a firework's twinkle, a lightning bolt's
   impact for the zap), until its own from freesound.
@@ -42,7 +43,7 @@ Playable, tested in game (single player): everything below works, unless marked 
   lightning, and no legs (its body thins into a flickering tail of arcs). Crackling arcs leap around it. It glows: drawn
   at full brightness, with a soft blue light around it, seen only (the library's lights, common/SPECS.md §3.11): Sunrise
   gives a mob no world light.
-- 20 health. Immune to lightning and fire. Water does not hurt it: it flies over it.
+- 60 health. Immune to lightning and fire. Water does not hurt it: it flies over it.
 - **Born of lightning**: when a **weather** lightning bolt strikes, in any biome, one chance in 10 a spirit appears at
   the strike, with a crackle. Not from a trident's Channeling or `/summon` (no farming with a trident). It never
   spawns otherwise (no natural spawning list).
@@ -50,9 +51,11 @@ Playable, tested in game (single player): everything below works, unless marked 
   spark, no drops).
 - **Flight**: it always flies, 1 to 4 blocks above the ground or water, in short, jerky dashes (a flicker, then a quick
   zip of a few blocks), buzzing.
-- **Neutral**: it ignores players. Hit, it **shocks** back: it dashes at the attacker and zaps (3 damage and a moment
-  of Slowness), then keeps away and zaps again every few seconds until it loses them. Anything touching it is zapped
-  (1 damage).
+- **Neutral**: it ignores players. Hit, it **shocks** back: it dashes at the attacker and zaps (6 damage and a moment
+  of Slowness), then keeps away and zaps again every few seconds until it loses them. It also **calls lightning** on
+  them: 2 seconds after it was hit, then every 5 to 7 seconds, sparks crackle over their head for a second and a bolt
+  strikes where they stand (a real bolt: it hurts and sets fire, it doesn't give birth to a spirit). Anything touching
+  it is zapped (2 damage).
 - **Drops**: 1 to 3 sparks (§4), plus one per Looting level.
 
 ## 3. Bestiary page ✅
@@ -75,7 +78,7 @@ The facts: "Born" (saw one appear at a strike), "Shock" (zapped by one), "Bolt" 
 - ~~Q1: The name?~~ Storm Spirits, `storm_spirits` (§1).
 - ~~Q2: How often it is born?~~ One weather strike in 10, never from a trident or `/summon` (§2).
 - ~~Q3: After the storm?~~ It fades within minutes, no drops (§2).
-- ~~Q4: Its temper?~~ Neutral, shocks back when hit (§2).
+- ~~Q4: Its temper?~~ Neutral, shocks back and calls lightning when hit (§2).
 - ~~Q5: Lightning rods, copper, creepers?~~ Left out (§5).
 - ~~Q6: The items?~~ The spark only, used up (§4).
 - ~~Q7: The glass jar?~~ No, too big (§5).

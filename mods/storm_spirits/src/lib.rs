@@ -39,10 +39,10 @@ const BIRTH_CHANCE: u64 = 10;
 /// Out of the storm, it fades after 1 to 3 minutes (ticks).
 const FADE: (u64, u64) = (1200, 3600);
 /// What touches it is zapped (damage), at most once every `TOUCH_EVERY` ticks.
-const TOUCH_DAMAGE: f32 = 1.0;
+const TOUCH_DAMAGE: f32 = 2.0;
 const TOUCH_EVERY: i32 = 10;
 /// A shock (SPECS §2): damage and a moment of Slowness (ticks).
-const SHOCK_DAMAGE: f32 = 3.0;
+const SHOCK_DAMAGE: f32 = 6.0;
 const SHOCK_SLOWNESS: i32 = 30;
 
 /// Its sounds, vanilla's: the crackle of its birth and its fading, its zap.
@@ -118,6 +118,47 @@ pub(crate) fn shock(spirit: u32, target: u32) {
     SHOCKS.lock().unwrap().push((spirit, target));
 }
 
+/// Bolts called down on a target: sparks crackle over its head for `BOLT_WARNING` ticks, then the lightning strikes
+/// where it stands (spirit, target, ticks left).
+static BOLTS: Mutex<Vec<(u32, u32, i32)>> = Mutex::new(Vec::new());
+const BOLT_WARNING: i32 = 20;
+
+/// From a behaviour: `spirit` calls a lightning bolt down on `target`.
+pub(crate) fn call_bolt(spirit: u32, target: u32) {
+    let mut bolts = BOLTS.lock().unwrap();
+    if !bolts.iter().any(|b| b.0 == spirit) {
+        bolts.push((spirit, target, BOLT_WARNING));
+    }
+}
+
+/// From `entity_tick_post`: `spirit`'s bolt on its way, its warning sparks, then the strike (a mod's bolt: it never
+/// gives birth to a spirit, and the spirit is immune to it).
+fn bolts(host: &mut dyn ServerHost, dimension: &str, spirit: u32) {
+    let due: Vec<(u32, i32)> = {
+        let mut all = BOLTS.lock().unwrap();
+        for b in all.iter_mut().filter(|b| b.0 == spirit) {
+            b.2 -= 1;
+        }
+        let due = all.iter().filter(|b| b.0 == spirit).map(|b| (b.1, b.2)).collect();
+        all.retain(|b| b.0 != spirit || b.2 > 0);
+        due
+    };
+    for (target, left) in due {
+        let Some(at) = host.entity(target).and_then(|e| e.position(host)) else {
+            continue;
+        };
+        if left > 0 {
+            if left % 4 == 0 {
+                sparks(host, dimension, [at[0], at[1] + 2.6, at[2]], 3);
+            }
+            continue;
+        }
+        if let Some(level) = host.level(dimension) {
+            level.strike_lightning(host, at, false);
+        }
+    }
+}
+
 /// A few random numbers, for its birth and its fading.
 fn roll(seed: u64) -> u64 {
     let nanos = std::time::SystemTime::now()
@@ -183,6 +224,7 @@ fn tick(host: &mut dyn ServerHost, dimension: &str, spirit: u32) {
     for target in mine {
         zap(host, dimension, spirit, target, SHOCK_DAMAGE, true);
     }
+    bolts(host, dimension, spirit);
     let Some(e) = host.entity(spirit) else {
         return;
     };
@@ -239,6 +281,7 @@ fn forget(spirit: u32) {
     FADING.lock().unwrap().remove(&spirit);
     TOUCHED.lock().unwrap().retain(|k, _| k.0 != spirit && k.1 != spirit);
     SHOCKS.lock().unwrap().retain(|s| s.0 != spirit);
+    BOLTS.lock().unwrap().retain(|b| b.0 != spirit);
 }
 
 /// From the overworld's `level_tick_post`: the spirits born of last tick's weather strikes.

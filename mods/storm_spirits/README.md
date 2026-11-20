@@ -14,9 +14,10 @@ spawn egg (creative tab "Sunrise Creatures").
 
 ## Shocks
 
-A spirit leaves you alone, but hit it and it dashes at you and zaps you (3 damage and a moment of Slowness), then
-keeps away and comes back to zap you again every few seconds, until it loses you. Anything that touches it gets a
-small zap. Lightning and fire don't hurt it.
+A spirit leaves you alone, but hit it and it dashes at you and zaps you (6 damage and a moment of Slowness), then
+keeps away and comes back to zap you again every few seconds, until it loses you. Meanwhile it calls lightning down on
+you every few seconds: when sparks crackle over your head, move. Anything that touches it gets a zap. It has 60
+health, and lightning and fire don't hurt it.
 
 ## Sparks
 
