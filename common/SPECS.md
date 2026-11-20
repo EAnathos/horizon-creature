@@ -137,6 +137,8 @@ bucket.
   **Jellyfish** (mods/jellyfish/SPECS.md §3).
 - **Dolphins** chase flying fish within 12 blocks and eat them ✅; the fish flee by gliding. User: **Flying Fish**
   (mods/flying_fish/SPECS.md §3).
+- After a catch, the prey's mod may do something to the hunter (`prey::when_caught`, given its id) ✅: the flying fish's
+  dolphin is fed, as by a player.
 - **Seagulls** (a mod's hunter) swoop on gliding flying fish within 16 blocks and snatch them in the air, when both
   mods are installed. Users: **Flying Fish** and **Seagulls** (mods/flying_fish/SPECS.md §3).
 

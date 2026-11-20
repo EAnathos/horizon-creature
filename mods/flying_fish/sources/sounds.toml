@@ -1,0 +1,138 @@
+# The flying fish's sounds, made by `cargo creature sounds flying_fish` from freesound downloads (all CC0, nothing to
+# credit). A downloaded file keeps the name freesound gives it: it is found by its number. Each clip: a slice of a
+# source (`start` and `length` in seconds of the output), resampled by `pitch`, faded out over `fade` seconds, `gain` in dB.
+out = "sounds/flying_fish"
+
+[sources]
+jump = 507091       # paulprit, Fish Jumping Splash 2
+release = 507094    # paulprit, Fish Splashing Release 1
+tiny = 321490       # dslrguide, Tiny Splash
+wasp = 398487       # Wakerone, Wasp Wings 2
+dragonfly = 240549  # jaegrover, Dragonfly caught in net (wing movement)
+flutter = 679400    # adviseme333, fast water flutter
+slap = 679390       # adviseme333, Water Slapping (fast)
+catch = 108655      # ag_the_king, wet catch
+
+# Out of and into the water: a fish's splash.
+[[clip]]
+name = "splash1"
+source = "jump"
+start = 0.95
+length = 0.8
+pitch = 1.0
+fade = 0.3
+gain = -4.0
+
+[[clip]]
+name = "splash2"
+source = "release"
+start = 0.45
+length = 0.8
+pitch = 1.05
+fade = 0.3
+gain = -4.0
+
+[[clip]]
+name = "splash3"
+source = "tiny"
+start = 0.2
+length = 0.5
+pitch = 1.0
+fade = 0.2
+gain = -4.0
+
+[[clip]]
+name = "splash4"
+source = "tiny"
+start = 0.95
+length = 0.5
+pitch = 1.1
+fade = 0.2
+gain = -4.0
+
+
+# Gliding: a dry buzz of fins, low and soft.
+[[clip]]
+name = "glide1"
+source = "wasp"
+start = 0.05
+length = 1.0
+pitch = 0.75
+fade = 0.4
+gain = -14.0
+
+[[clip]]
+name = "glide2"
+source = "dragonfly"
+start = 0.25
+length = 1.0
+pitch = 0.9
+fade = 0.4
+gain = -2.0
+
+[[clip]]
+name = "glide3"
+source = "dragonfly"
+start = 15.3
+length = 1.0
+pitch = 0.9
+fade = 0.4
+gain = -2.0
+
+
+# Its tail beating on a wave to glide on.
+[[clip]]
+name = "beat1"
+source = "flutter"
+start = 0.35
+length = 0.6
+pitch = 1.1
+fade = 0.25
+gain = -2.0
+
+[[clip]]
+name = "beat2"
+source = "flutter"
+start = 1.4
+length = 0.6
+pitch = 1.2
+fade = 0.25
+gain = -6.0
+
+
+# Beached: a small wet slap.
+[[clip]]
+name = "flop1"
+source = "slap"
+start = 0.25
+length = 0.3
+pitch = 1.2
+fade = 0.1
+gain = 0.0
+
+[[clip]]
+name = "flop2"
+source = "slap"
+start = 0.5
+length = 0.3
+pitch = 1.25
+fade = 0.1
+gain = 0.0
+
+[[clip]]
+name = "flop3"
+source = "slap"
+start = 0.75
+length = 0.3
+pitch = 1.15
+fade = 0.1
+gain = 0.0
+
+[[clip]]
+name = "flop4"
+source = "catch"
+start = 0.75
+length = 0.5
+pitch = 1.2
+fade = 0.15
+gain = -5.0

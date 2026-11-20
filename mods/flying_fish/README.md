@@ -21,10 +21,12 @@ In creative: the spawn egg (creative tab "Sunrise Creatures").
 Come near a shoal, sail by in a boat or hit one, and the shoal takes off: each fish races up, bursts out of the water
 and glides a block or two above the waves for 10 to 20 blocks, sometimes beating its tail on a wave to glide on, then
 dives back in. Now and then one glides for no reason at all. Dolphins hunt them: a dolphin nearby chases a shoal, which
-flees through the air.
+flees through the air; a dolphin that catches one is happy and leads you to treasure, as if you had fed it. A
+gliding fish that runs into you bounces off and drops.
 
 ## Catching and cooking
 
 Use a water bucket on a flying fish to catch it, then use the bucket on a block to let it out in water there: it keeps
 its kind and never wanders off for good. A flying fish that lands on the shore flops and dries out within 30 seconds:
-pick it up with a right-click. Flying fish drop raw flying fish, which cook in a furnace, a smoker or on a campfire.
+pick it up with a right-click. Flying fish drop raw flying fish, which cook in a furnace, a smoker or on a campfire. Fishing with a rod in
+lukewarm and warm oceans brings some up too, and cats and ocelots take them as they take cod.

@@ -2,6 +2,11 @@
 
 Each version's section is its registry changelog (`cargo creature release`).
 
+## Unreleased
+
+- Hunters (`creature::prey`): after a catch, the prey's mod may do something to the hunter (`prey::when_caught`): the
+  flying fish's dolphin is fed.
+
 ## 0.3.0
 
 - Built for Sunrise's 2026-11-20 Nightly (9425651); the mods built on it need this version (`^0.3`). Each package

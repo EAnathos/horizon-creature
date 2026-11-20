@@ -15,5 +15,11 @@
   "bestiary.flying_fish.item.raw_flying_fish.use": "Food, as raw cod; cooks into a cooked flying fish",
   "bestiary.flying_fish.item.cooked_flying_fish.use": "Food, as cooked cod",
   "bestiary.flying_fish.item.flying_fish_bucket.use": "Use on a block: lets the flying fish out in water there",
-  "bestiary.flying_fish.item.raw_flying_fish.beached": "Right-click a beached flying fish"
+  "bestiary.flying_fish.item.raw_flying_fish.beached": "Right-click a beached flying fish",
+  "bestiary.flying_fish.rod": "Rod",
+  "bestiary.flying_fish.item.raw_flying_fish.fished": "Caught with a fishing rod in lukewarm and warm oceans",
+  "subtitles.entity.flying_fish.splash": "Flying fish splashes",
+  "subtitles.entity.flying_fish.glide": "Flying fish glides",
+  "subtitles.entity.flying_fish.beat": "Flying fish beats the water",
+  "subtitles.entity.flying_fish.flop": "Flying fish flops"
 }

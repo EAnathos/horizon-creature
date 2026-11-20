@@ -107,11 +107,16 @@ static AQUATIC: Aquatic = Aquatic {
     kind: KIND,
     bucket: BUCKET,
     dries: 600,
-    flop: Some("minecraft:entity.cod.flop"),
+    flop: Some(FLOP),
 };
 
-/// Its splash out of and into the water (`swim.rs`); hurt and death are its entity type's.
-pub(crate) const SPLASH: &str = "minecraft:entity.fish.swim";
+/// Its sounds (`sources/sounds.toml`, cut from CC0 freesound recordings): its splash out of and into the water, the buzz
+/// of its fins gliding and its tail beating on a wave (`swim.rs`), its flop on land; hurt and death are its entity
+/// type's.
+pub(crate) const SPLASH: &str = "flying_fish:entity.flying_fish.splash";
+pub(crate) const GLIDE: &str = "flying_fish:entity.flying_fish.glide";
+pub(crate) const BEAT: &str = "flying_fish:entity.flying_fish.beat";
+const FLOP: &str = "flying_fish:entity.flying_fish.flop";
 
 /// Shoals of 4 to 10 in its oceans, just under the surface (SPECS §3).
 static SPAWNING: Spawning = Spawning {
@@ -127,6 +132,7 @@ static SPAWNING: Spawning = Spawning {
 const GLIDE_FACT: &str = "glide";
 const SHOAL_FACT: &str = "shoal";
 const DOLPHIN_FACT: &str = "dolphin";
+const ROD_FACT: &str = "rod";
 
 /// Dolphins eat them (SPECS §3): one within 12 blocks swims after it.
 static PREY: creature::prey::Prey = creature::prey::Prey {
@@ -138,6 +144,18 @@ static PREY: creature::prey::Prey = creature::prey::Prey {
     }],
     fact: Some(DOLPHIN_FACT),
 };
+
+/// A dolphin that caught one is fed, as by a player (SPECS §3): it leads the players near to treasure.
+fn fed(host: &mut dyn ServerHost, dolphin: u32) {
+    // Through a command: `merge_nbt` answers true but the dolphin keeps `GotFish:0b` (docs/SUNRISE-ISSUES.md).
+    if let Some(d) = host.entity(dolphin) {
+        d.run_command(
+            host,
+            "data merge entity @s {GotFish:1b}",
+            mod_api::PermissionLevel::Gamemasters,
+        );
+    }
+}
 
 /// Its page (SPECS §4): met as its kinds (morphs), its facts shown as they are learnt.
 static BESTIARY: Species = Species {
@@ -159,6 +177,11 @@ static BESTIARY: Species = Species {
             id: DOLPHIN_FACT,
             item: "minecraft:heart_of_the_sea",
             key: "bestiary.flying_fish.dolphin",
+        },
+        Fact {
+            id: ROD_FACT,
+            item: "minecraft:fishing_rod",
+            key: "bestiary.flying_fish.rod",
         },
         Fact {
             id: creature::aquatic::BUCKET_FACT,
@@ -188,6 +211,10 @@ static RAW_PAGE: creature::items::ItemPage = creature::items::ItemPage {
         creature::items::Use {
             icon: EGG,
             key: "bestiary.flying_fish.item.raw_flying_fish.beached",
+        },
+        creature::items::Use {
+            icon: "minecraft:fishing_rod",
+            key: "bestiary.flying_fish.item.raw_flying_fish.fished",
         },
     ],
 };
@@ -252,11 +279,69 @@ fn tick(host: &mut dyn ServerHost, dimension: &str, id: u32) {
             swim::scare(at, from);
         }
     }
+    if swim::gliding(id) {
+        bumps(host, id, at);
+    }
     if age % FACTS_EVERY == 0 {
         facts(host, dimension, id, at);
     }
     if creature::mob::despawn_far(host, dimension, id, false) {
         forget(id);
+    }
+}
+
+/// How near a glider runs into a player or a mob (blocks from its middle).
+const BUMP: f64 = 0.5;
+
+/// Gliding flying fish `id` at `at` running into a player or a mob (not one of its own, nor a spectator): it bounces off.
+fn bumps(host: &mut dyn ServerHost, id: u32, at: [f64; 3]) {
+    let Some(level) = host.entity(id).and_then(|e| e.level(&*host)) else {
+        return;
+    };
+    let middle = [at[0], at[1] + 0.15, at[2]];
+    let from = [middle[0] - BUMP, middle[1] - BUMP, middle[2] - BUMP];
+    let to = [middle[0] + BUMP, middle[1] + BUMP, middle[2] + BUMP];
+    let hit = level
+        .entities_in(&*host, from, to)
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|t| t.id() != id && host.living(*t).is_some())
+        .filter(|t| t.kind(&*host).is_none_or(|k| k.id(&*host) != KIND))
+        .filter(|t| {
+            creature::mob::player_of(&*host, t.id())
+                .and_then(|p| host.player(p))
+                .is_none_or(|p| !p.is_spectator(&*host).unwrap_or(false))
+        })
+        .find_map(|t| t.position(&*host));
+    if let Some(there) = hit {
+        swim::bump(id, at, there);
+    }
+}
+
+/// Fishing with a rod in its oceans (SPECS §5): a cod caught there is a raw flying fish two times in five, about as often
+/// as a salmon. The player learns the rod fact.
+fn fished(host: &mut dyn ServerHost, event: &mut mod_api::ItemFishedEvent<'_>) {
+    let Some(level) = host.player(event.player).and_then(|p| p.entity().level(&*host)) else {
+        return;
+    };
+    let p = event.fished.position;
+    let biome = level.biome_at(&*host, [p[0].floor() as i32, p[1].floor() as i32, p[2].floor() as i32]);
+    if !biome.is_some_and(|b| BIOMES.contains(&b.as_str())) {
+        return;
+    }
+    let mut roll = creature::colours::Random::new(event.fished.hook ^ 0xF15F);
+    let mut caught = false;
+    for stack in event.drops.iter_mut() {
+        if creature::hand::is(&*host, stack, "minecraft:cod") && roll.next() % 5 < 2 {
+            let count = stack.count();
+            if let Some(fish) = host.item_from_snbt(&format!("{{id:\"{RAW}\",count:{count}}}")) {
+                *stack = fish;
+                caught = true;
+            }
+        }
+    }
+    if caught {
+        creature::bestiary::learn(host, event.player, KIND, ROD_FACT);
     }
 }
 
@@ -373,6 +458,7 @@ impl Hooks for FlyingFish {
         creature::aquatic::register(&AQUATIC);
         creature::aquatic::spawns(&SPAWNING);
         creature::prey::register(&PREY);
+        creature::prey::when_caught(KIND, fed);
         let bucket = r.item_key(BUCKET);
         r.item_part(bucket, creature::aquatic::Bucket);
         creature::bestiary::register(&BESTIARY);
@@ -405,6 +491,11 @@ impl Hooks for FlyingFish {
                 tick(host, event.dimension, event.entity);
             }
         });
+    }
+
+    fn item_fished(&self, host: &mut dyn ServerHost, event: &mut mod_api::ItemFishedEvent<'_>) -> Flow {
+        fished(host, event);
+        Flow::Continue
     }
 
     fn living_death(&self, _: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {

@@ -35,8 +35,8 @@ const GAP: f64 = 0.7;
 pub(crate) const LONG_GLIDE: f64 = 30.0;
 const SHOAL_TAKEOFF: usize = 4;
 
-/// Its sounds: the splash out of and into the water (`crate`).
-use crate::SPLASH;
+/// Its sounds (`crate`): the splash out of and into the water, the buzz of its fins gliding, its tail on a wave.
+use crate::{BEAT, GLIDE, SPLASH};
 
 /// A fish's place and heading.
 type Place = ([f64; 3], [f64; 2]);
@@ -49,6 +49,14 @@ static GLIDING: Mutex<BTreeSet<u32>> = Mutex::new(BTreeSet::new());
 /// What the mod's tick turns into facts: glides longer than `LONG_GLIDE` (by the fish) and shoals taking off (where).
 static GLIDED: Mutex<Vec<u32>> = Mutex::new(Vec::new());
 static TOOK_OFF: Mutex<Vec<[f64; 3]>> = Mutex::new(Vec::new());
+/// Gliders that ran into a player or a mob (the mod's tick sees it): the heading they bounce off along.
+static BUMPED: Mutex<BTreeMap<u32, [f64; 2]>> = Mutex::new(BTreeMap::new());
+
+/// Flying fish `id`, gliding, ran into something at `from`: it bounces off and drops (SPECS §3).
+pub(crate) fn bump(id: u32, at: [f64; 3], from: [f64; 3]) {
+    let away = flat([at[0] - from[0], at[2] - from[2]]).unwrap_or([0.0, 1.0]);
+    BUMPED.lock().unwrap().insert(id, away);
+}
 
 /// Whether flying fish `id` is gliding (its fins spread).
 pub(crate) fn gliding(id: u32) -> bool {
@@ -73,6 +81,7 @@ pub(crate) fn forget(id: u32) {
     PANIC.lock().unwrap().remove(&id);
     GLIDING.lock().unwrap().remove(&id);
     GLIDED.lock().unwrap().retain(|g| *g != id);
+    BUMPED.lock().unwrap().remove(&id);
 }
 
 /// A threat at `from` frightens the fish at `at` and its shoal: each takes off within half a second, away from it.
@@ -163,6 +172,8 @@ pub(crate) struct Fish {
     /// shore.
     health: f32,
     start: [f64; 3],
+    /// Whether it is falling back into the water from a glide (a splash as it goes in).
+    diving: bool,
     height: f64,
     turn: f64,
 }
@@ -176,6 +187,7 @@ impl Default for Fish {
             rest: 0,
             health: -1.0,
             start: [0.0; 3],
+            diving: false,
             height: 1.5,
             turn: 0.35,
         }
@@ -254,6 +266,9 @@ impl Fish {
 
     fn swim(&mut self, m: &mut Body, cx: &World<'_>) {
         m.no_gravity = true;
+        if std::mem::take(&mut self.diving) {
+            creature::sounds::queue(m.id, SPLASH, 0.5, 1.1 + m.random.next_float() * 0.2);
+        }
         if let Some(away) = self.fright(m, cx) {
             self.dir = away;
             self.phase = Phase::Rise(RISE_TICKS);
@@ -314,6 +329,7 @@ impl Fish {
             self.phase = Phase::Glide(self.stretch(m, cx), beats);
             GLIDING.lock().unwrap().insert(m.id);
             creature::sounds::queue(m.id, SPLASH, 0.6, 1.2 + m.random.next_float() * 0.2);
+            creature::sounds::queue(m.id, GLIDE, 0.4, 0.9 + m.random.next_float() * 0.2);
             self.glide(m, cx);
             return;
         }
@@ -345,14 +361,19 @@ impl Fish {
         };
         m.no_gravity = true;
         m.fall_distance = 0.0;
+        // It ran into a player or a mob: it bounces off and drops, unhurt.
+        if let Some(away) = BUMPED.lock().unwrap().remove(&m.id) {
+            self.dir = away;
+            return self.land(m, 0.15, 0.1);
+        }
         let Some(surface) = surface_under(cx, m.position) else {
             // Over land or too high: it drops.
-            return self.land(m);
+            return self.land(m, 0.3, -0.3);
         };
-        // Bumped into something: it drops.
+        // Stopped by a block: it drops.
         let moved = m.velocity.x.hypot(m.velocity.z);
         if !dipping && left < GLIDE_TICKS.0 - 1 && moved < GLIDE_SPEED * 0.3 {
-            return self.land(m);
+            return self.land(m, 0.3, -0.3);
         }
         // No water ahead: it turns back toward open water.
         let ahead = Vec3 {
@@ -380,17 +401,21 @@ impl Fish {
                     Phase::Glide(l - 1, b)
                 }
             }
-            (false, _, 0) => return self.land(m),
+            (false, _, 0) => return self.land(m, 0.3, -0.3),
             (false, _, b) => {
-                creature::sounds::queue(m.id, SPLASH, 0.4, 1.4);
+                creature::sounds::queue(m.id, BEAT, 0.5, 1.0 + m.random.next_float() * 0.2);
                 Phase::Dip(DIP_TICKS, b - 1)
             }
-            (true, _, b) => Phase::Glide(self.stretch(m, cx), b),
+            (true, _, b) => {
+                creature::sounds::queue(m.id, GLIDE, 0.4, 0.9 + m.random.next_float() * 0.2);
+                Phase::Glide(self.stretch(m, cx), b)
+            }
         };
     }
 
-    /// The glide ends: it falls back into the water (or onto the ground, beached).
-    fn land(&mut self, m: &mut Body) {
+    /// The glide ends: it falls back into the water (or onto the ground, beached), going on at `ahead` and `up` blocks a
+    /// tick.
+    fn land(&mut self, m: &mut Body, ahead: f64, up: f64) {
         let at = m.position.array();
         let far = (at[0] - self.start[0]).hypot(at[2] - self.start[2]);
         if far > LONG_GLIDE {
@@ -399,11 +424,12 @@ impl Fish {
         GLIDING.lock().unwrap().remove(&m.id);
         self.phase = Phase::Swim;
         self.rest = REST;
+        self.diving = true;
         m.no_gravity = false;
         m.velocity = Vec3 {
-            x: self.dir[0] * 0.3,
-            y: -0.3,
-            z: self.dir[1] * 0.3,
+            x: self.dir[0] * ahead,
+            y: up,
+            z: self.dir[1] * ahead,
         };
         self.face(m, 20.0);
     }

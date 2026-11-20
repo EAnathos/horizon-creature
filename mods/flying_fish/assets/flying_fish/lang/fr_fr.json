@@ -15,5 +15,11 @@
   "bestiary.flying_fish.item.raw_flying_fish.use": "Nourriture, comme la morue crue ; se cuit en poisson volant cuit",
   "bestiary.flying_fish.item.cooked_flying_fish.use": "Nourriture, comme la morue cuite",
   "bestiary.flying_fish.item.flying_fish_bucket.use": "Sur un bloc : libère le poisson volant dans de l'eau",
-  "bestiary.flying_fish.item.raw_flying_fish.beached": "Clic droit sur un poisson volant échoué"
+  "bestiary.flying_fish.item.raw_flying_fish.beached": "Clic droit sur un poisson volant échoué",
+  "bestiary.flying_fish.rod": "Canne à pêche",
+  "bestiary.flying_fish.item.raw_flying_fish.fished": "Pêché à la canne dans les océans tièdes et chauds",
+  "subtitles.entity.flying_fish.splash": "Un poisson volant éclabousse",
+  "subtitles.entity.flying_fish.glide": "Un poisson volant plane",
+  "subtitles.entity.flying_fish.beat": "Un poisson volant frappe l'eau",
+  "subtitles.entity.flying_fish.flop": "Un poisson volant frétille"
 }

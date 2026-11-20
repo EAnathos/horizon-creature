@@ -11,8 +11,9 @@ swooping seagull.
 ## 0. Status
 
 Playable (0.1.0): the three kinds in shoals of one kind, swimming as a shoal, gliding when frightened (a player, a hit, a
-dolphin or a boat) or now and then, beached and picked up by hand, the bucket, raw and cooked flying fish, dolphins
-hunting them, the guide's page with the glide, shoal, dolphin and bucket facts. Played in game.
+dolphin or a boat) or now and then, bumping off what they glide into, beached and picked up by hand, the bucket, raw and
+cooked flying fish (fished with a rod in their oceans, in the `minecraft:fishes` tag, food for cats), dolphins hunting
+them and fed by a catch, its own sounds, the guide's page with its facts. Played in game.
 
 - **The model** (`sources/models/flying_fish.bbmodel`, pictures in docs/models/): a slim fish about three quarters of
   a block long, its big pectoral fins spread as wings (about 0.8 block across, each in two parts swept back), a small
@@ -21,8 +22,7 @@ hunting them, the guide's page with the glide, shoal, dolphin and bucket facts. 
   swimming, spread to glide), `pelvic_left`, `pelvic_right`, `tail`, `tail_fin`. One model for every kind, a texture
   each (§2): blue wing (navy back, silver belly, pale blue wings), spotted wing (olive back, pale wings with dark
   spots), sunset wing (blue back, orange wings, gold tips, a dark red edge).
-- Not yet: its own sounds (vanilla's fish splash and cod flop for now), seagulls (with the Seagulls mod), the dolphin
-  happy after a catch, a glider bumping off what it hits, fishing loot and the `minecraft:fishes` tag (❓ below).
+- Not yet: seagulls, with the Seagulls mod (❓ below).
 
 ## 1. Technical context
 
@@ -35,7 +35,7 @@ hunting them, the guide's page with the glide, shoal, dolphin and bucket facts. 
 - It copies the wandering trader (goals only), with a box of 0.5 × 0.3 blocks ✅, without gravity in water. Sunrise:
   the `living_breathe` hook lets it breathe in water and not in air (through the library, §3.10).
 - Its own sounds (a splash on leaving and entering the water, a buzz of fins while gliding, flopping on land) from
-  freesound, CC0, cut by `cargo creature sounds` ❓ (vanilla's `entity.fish.swim` and `entity.cod.flop` meanwhile).
+  freesound, CC0, cut by `cargo creature sounds` ✅ (`sources/sounds.toml`).
 
 ## 2. Kinds ✅
 
@@ -65,32 +65,33 @@ A shoal is of one kind.
   fish) or catches it alive in a water bucket.
 - **Hunted**: dolphins chase and eat flying fish (the library's prey, §3.7): a dolphin that sees one within 12 blocks
   swims after it, and the shoal takes off. A dolphin that caught one is happy for a while (it leads players to treasure
-  as if fed) ❓ (not yet: Sunrise gives no hold on a dolphin's state).
+  as if fed: `GotFish`, through a command, docs/SUNRISE-ISSUES.md) ✅.
 - **Seagulls** ❓ (with the Seagulls mod, not written yet), when the Seagulls mod is installed (no requirement either way): a seagull flying over the sea that sees a
   gliding flying fish within 16 blocks swoops and **snatches it in the air**, then flies off with it (no drop). A
   befriended seagull fishing for its friend (mods/seagulls/SPECS.md §3) may bring back a raw flying fish in their
   biomes. Through the library's prey (common/SPECS.md §3.7), with a mod's mob as the hunter.
-- **Hitting it** ❓: a gliding fish that hits a player or a mob bumps off (no damage) and falls into the water, or on
-  the ground, where it is beached. For now a glider that runs into a block drops.
+- **Hitting it** ✅: a gliding fish that hits a player or a mob (within half a block of its middle) bumps off (no damage)
+  and falls into the water, or on the ground, where it is beached. A glider that runs into a block drops.
 - **Drops**: 1 raw flying fish (cooked when it burns).
 
 ## 4. Bestiary page ✅
 
 The kinds met as its morphs, and the facts: "Glide" (saw one glide more than 30 blocks), "Shoal" (saw a shoal take off
-together), "Dolphin" (saw a dolphin catch one), "Bucket" (caught one in a bucket); with what is still ❓ (§3, §5),
-"Seagull" (saw a seagull snatch one, with the Seagulls) and "Rod" (caught one with a fishing rod).
+together), "Dolphin" (saw a dolphin catch one), "Rod" (caught one with a fishing rod), "Bucket" (caught one in a
+bucket); "Seagull" (saw a seagull snatch one) comes with the Seagulls ❓.
 
 ## 5. Items ✅
 
 - **Raw flying fish** and **cooked flying fish** (`flying_fish:raw_flying_fish`, `flying_fish:cooked_flying_fish`):
   ordinary fish like cod (raw 2 hunger, cooked 5), cooked in a furnace, a smoker or on a campfire. In the `minecraft:fishes`
-  item tag, so it counts as a fish wherever vanilla takes any fish from that tag ❓ (a tag file in Minecraft's
-  namespace: to check how Sunrise merges a mod's addition to a vanilla tag).
+  item tag, so it counts as a fish wherever vanilla takes any fish from that tag (both), and the raw one in
+  `minecraft:cat_food` and `minecraft:ocelot_food`: cats and ocelots take it as cod (additions to vanilla's tags,
+  which Sunrise merges as a data pack's).
 - **Bucket of flying fish** (`flying_fish:flying_fish_bucket`): a water bucket used on a flying fish catches it, as a
   fish (the library's bucket, §3.10); it is let out where the bucket is emptied, its kind kept. A caught one never
   despawns.
-- Fishing with a rod in its biomes sometimes brings up a raw flying fish (in the fish loot, as often as a salmon) ❓
-  (not yet: it means changing vanilla's fishing loot table, which no mod of the series does so far).
+- Fishing with a rod in its biomes sometimes brings up a raw flying fish ✅: a cod caught there is one two times in five,
+  about as often as a salmon (the `item_fished` hook: a mod can't replace vanilla's fishing loot table).
 
 ## 6. Out of scope for v1
 

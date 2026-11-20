@@ -25,7 +25,11 @@ pub struct Prey {
     pub fact: Option<&'static str>,
 }
 
+/// What a mod does to the hunter of its prey after a catch (`when_caught`), given the hunter's id.
+pub type Caught = fn(&mut dyn ServerHost, u32);
+
 static PREY: Mutex<Vec<&'static Prey>> = Mutex::new(Vec::new());
+static CAUGHT: Mutex<Vec<(&'static str, Caught)>> = Mutex::new(Vec::new());
 /// The hunter going for each prey.
 static CHASED: Mutex<BTreeMap<u32, u32>> = Mutex::new(BTreeMap::new());
 /// How often a prey looks out for a new hunter (ticks), and how near a hunter eats it (blocks).
@@ -37,6 +41,14 @@ pub fn register(prey: &'static Prey) {
     let mut all = PREY.lock().unwrap();
     if !all.iter().any(|p| p.kind == prey.kind) {
         all.push(prey);
+    }
+}
+
+/// From a mod's `register`: after a catch of `kind`, `caught` runs on its hunter (the flying fish's dolphin is fed).
+pub fn when_caught(kind: &'static str, caught: Caught) {
+    let mut all = CAUGHT.lock().unwrap();
+    if !all.iter().any(|(k, _)| *k == kind) {
+        all.push((kind, caught));
     }
 }
 
@@ -91,6 +103,15 @@ pub fn tick(host: &mut dyn ServerHost, dimension: &str, entity: u32, kind: &str)
     CHASED.lock().unwrap().insert(entity, hunter);
     if crate::body::distance(there, at) <= REACH {
         eaten(host, dimension, prey, entity, at);
+        let caught = CAUGHT
+            .lock()
+            .unwrap()
+            .iter()
+            .find(|(k, _)| *k == prey.kind)
+            .map(|(_, f)| *f);
+        if let Some(caught) = caught {
+            caught(host, hunter);
+        }
         return true;
     }
     let speed = host

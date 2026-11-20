@@ -1,0 +1,35 @@
+{
+  "entity.flying_fish.splash": {
+    "subtitle": "subtitles.entity.flying_fish.splash",
+    "sounds": [
+      "flying_fish:flying_fish/splash1",
+      "flying_fish:flying_fish/splash2",
+      "flying_fish:flying_fish/splash3",
+      "flying_fish:flying_fish/splash4"
+    ]
+  },
+  "entity.flying_fish.glide": {
+    "subtitle": "subtitles.entity.flying_fish.glide",
+    "sounds": [
+      "flying_fish:flying_fish/glide1",
+      "flying_fish:flying_fish/glide2",
+      "flying_fish:flying_fish/glide3"
+    ]
+  },
+  "entity.flying_fish.beat": {
+    "subtitle": "subtitles.entity.flying_fish.beat",
+    "sounds": [
+      "flying_fish:flying_fish/beat1",
+      "flying_fish:flying_fish/beat2"
+    ]
+  },
+  "entity.flying_fish.flop": {
+    "subtitle": "subtitles.entity.flying_fish.flop",
+    "sounds": [
+      "flying_fish:flying_fish/flop1",
+      "flying_fish:flying_fish/flop2",
+      "flying_fish:flying_fish/flop3",
+      "flying_fish:flying_fish/flop4"
+    ]
+  }
+}

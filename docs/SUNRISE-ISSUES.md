@@ -37,6 +37,9 @@ Found, not filed: check the tracker and the newest Nightly first.
   mod mob copies a zombie, a villager or a wandering trader), with no way to call it a monster. Ours: the cyclops's
   tooltip adds the line from a static its server tick keeps (`mods/cyclops/src/lib.rs`, `PEACEFUL`), single player
   only.
+- **`merge_nbt` doesn't keep a dolphin's `GotFish`**: `EntityRef::merge_nbt` with `{GotFish:1b}` on a dolphin answers
+  true, but `/data get` reads `0b` right after, while `/data merge entity` with the same compound keeps it. Ours: the
+  flying fish's dolphin is fed through `EntityRef::run_command` (`mods/flying_fish/src/lib.rs`, `fed`).
 
 ## Moving the pin
 
