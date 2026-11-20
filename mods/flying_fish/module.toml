@@ -1,6 +1,13 @@
 # Flying Fish's description for the repository's tools (docs/ARCHITECTURE.md); not shipped in the mod.
 id = "flying_fish"
 name = "Flying Fish"
-status = "planned"
-# Its items in the series' creative tab, in order (none until implementation starts).
-creative = []
+status = "playable"
+# Its items in the series' creative tab, in order.
+creative = [
+  "flying_fish:flying_fish_spawn_egg",
+  "flying_fish:flying_fish_bucket",
+  "flying_fish:raw_flying_fish",
+  "flying_fish:cooked_flying_fish",
+]
+# Its Rust is built on Sunrise's mod_api.
+ported = true

@@ -1,0 +1,19 @@
+{
+  "entity.flying_fish.flying_fish": "Flying Fish",
+  "item.flying_fish.flying_fish_spawn_egg": "Flying Fish Spawn Egg",
+  "item.flying_fish.raw_flying_fish": "Raw Flying Fish",
+  "item.flying_fish.cooked_flying_fish": "Cooked Flying Fish",
+  "item.flying_fish.flying_fish_bucket": "Bucket of Flying Fish",
+  "look.flying_fish.colour.plain": "Plain",
+  "look.flying_fish.pattern.blue_wing": "Blue Wing",
+  "look.flying_fish.pattern.spotted_wing": "Spotted Wing",
+  "look.flying_fish.pattern.sunset_wing": "Sunset Wing",
+  "bestiary.flying_fish.glide": "Glide",
+  "bestiary.flying_fish.shoal": "Shoal",
+  "bestiary.flying_fish.dolphin": "Dolphin",
+  "bestiary.flying_fish.bucket": "Bucket",
+  "bestiary.flying_fish.item.raw_flying_fish.use": "Food, as raw cod; cooks into a cooked flying fish",
+  "bestiary.flying_fish.item.cooked_flying_fish.use": "Food, as cooked cod",
+  "bestiary.flying_fish.item.flying_fish_bucket.use": "Use on a block: lets the flying fish out in water there",
+  "bestiary.flying_fish.item.raw_flying_fish.beached": "Right-click a beached flying fish"
+}

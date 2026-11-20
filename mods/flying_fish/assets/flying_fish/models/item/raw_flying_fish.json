@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "flying_fish:item/raw_flying_fish"
+  }
+}

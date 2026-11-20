@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "food",
+  "ingredient": "flying_fish:raw_flying_fish",
+  "result": {
+    "id": "flying_fish:cooked_flying_fish"
+  },
+  "experience": 0.35,
+  "cookingtime": 200
+}

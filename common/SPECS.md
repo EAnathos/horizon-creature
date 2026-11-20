@@ -25,8 +25,8 @@ Everything below works and was tested in game, single player, unless said otherw
   sharing the game's 8.
 - **Fighting back** (§3.12, `creature::anger`): the scorpions and the storm spirits.
 - **Water creatures** (§3.10, `creature::aquatic`), **touches** (§3.13, `creature::touch`) and **hunters** (§3.7,
-  `creature::prey`, the sea turtles; chickens, dolphins and seagulls come with their mods): the jellyfish (and the
-  storm spirits' touch).
+  `creature::prey`, the sea turtles and the dolphins; chickens and seagulls come with their mods): the jellyfish and the
+  flying fish (and the storm spirits' touch).
 - **Mob helpers** (`creature::mob`): `ours` (muted, own box, own goals, spared), `resize`, `Muted`, `despawn_far` (small
   wild creatures far from players, as vanilla's ambient mobs), `nearest_player`, `player_of`, `give_effect` (an effect
   on a mob or a player).
@@ -135,7 +135,7 @@ bucket.
   **Worms**, **Dung Beetles** (mods/dung_beetles/SPECS.md §2).
 - **Sea turtles** swim to jellyfish within 8 blocks and eat them ✅ (the hunter sent with `MobRef::move_to`). User:
   **Jellyfish** (mods/jellyfish/SPECS.md §3).
-- **Dolphins** chase flying fish within 12 blocks and eat them; the fish flee by gliding. User: **Flying Fish**
+- **Dolphins** chase flying fish within 12 blocks and eat them ✅; the fish flee by gliding. User: **Flying Fish**
   (mods/flying_fish/SPECS.md §3).
 - **Seagulls** (a mod's hunter) swoop on gliding flying fish within 16 blocks and snatch them in the air, when both
   mods are installed. Users: **Flying Fish** and **Seagulls** (mods/flying_fish/SPECS.md §3).
@@ -171,7 +171,7 @@ The life in water of jellyfish and flying fish, which copy the land-living wande
 
 A mod gives its kind, its bucket item and its drying delay (`Aquatic`), and how it spawns (`Spawning`: a kind with looks
 spawns in groups of one look, rolled once for the group's biome). Users:
-**Jellyfish** (mods/jellyfish/SPECS.md §3, §5) and **Flying Fish** (planned, mods/flying_fish/SPECS.md §3, §5).
+**Jellyfish** (mods/jellyfish/SPECS.md §3, §5) and **Flying Fish** (mods/flying_fish/SPECS.md §3, §5).
 
 ### 3.11 Lights of glowing creatures (`creature::glow`) ✅
 

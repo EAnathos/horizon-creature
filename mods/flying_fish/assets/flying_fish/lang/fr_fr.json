@@ -1,0 +1,19 @@
+{
+  "entity.flying_fish.flying_fish": "Poisson volant",
+  "item.flying_fish.flying_fish_spawn_egg": "Œuf d'apparition de poisson volant",
+  "item.flying_fish.raw_flying_fish": "Poisson volant cru",
+  "item.flying_fish.cooked_flying_fish": "Poisson volant cuit",
+  "item.flying_fish.flying_fish_bucket": "Seau de poisson volant",
+  "look.flying_fish.colour.plain": "Simple",
+  "look.flying_fish.pattern.blue_wing": "Aile bleue",
+  "look.flying_fish.pattern.spotted_wing": "Aile tachetée",
+  "look.flying_fish.pattern.sunset_wing": "Aile couchant",
+  "bestiary.flying_fish.glide": "Vol plané",
+  "bestiary.flying_fish.shoal": "Banc",
+  "bestiary.flying_fish.dolphin": "Dauphin",
+  "bestiary.flying_fish.bucket": "Seau",
+  "bestiary.flying_fish.item.raw_flying_fish.use": "Nourriture, comme la morue crue ; se cuit en poisson volant cuit",
+  "bestiary.flying_fish.item.cooked_flying_fish.use": "Nourriture, comme la morue cuite",
+  "bestiary.flying_fish.item.flying_fish_bucket.use": "Sur un bloc : libère le poisson volant dans de l'eau",
+  "bestiary.flying_fish.item.raw_flying_fish.beached": "Clic droit sur un poisson volant échoué"
+}

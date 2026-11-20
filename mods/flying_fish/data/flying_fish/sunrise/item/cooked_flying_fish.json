@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:cooked_cod",
+  "components": {
+    "minecraft:item_model": "flying_fish:cooked_flying_fish",
+    "minecraft:item_name": {
+      "translate": "item.flying_fish.cooked_flying_fish"
+    }
+  }
+}

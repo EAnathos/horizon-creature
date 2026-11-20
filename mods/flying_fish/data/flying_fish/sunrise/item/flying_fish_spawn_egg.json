@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:wandering_trader_spawn_egg",
+  "components": {
+    "minecraft:item_model": "flying_fish:flying_fish_spawn_egg",
+    "minecraft:item_name": {
+      "translate": "item.flying_fish.flying_fish_spawn_egg"
+    }
+  }
+}

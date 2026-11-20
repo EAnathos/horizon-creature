@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "flying_fish:item/cooked_flying_fish"
+  }
+}

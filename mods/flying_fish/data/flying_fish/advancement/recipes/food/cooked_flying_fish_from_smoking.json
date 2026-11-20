@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_raw_flying_fish": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "flying_fish:raw_flying_fish"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipes": "flying_fish:cooked_flying_fish_from_smoking"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_raw_flying_fish"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "flying_fish:cooked_flying_fish_from_smoking"
+    ]
+  }
+}

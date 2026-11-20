@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:cod",
+  "components": {
+    "minecraft:item_model": "flying_fish:raw_flying_fish",
+    "minecraft:item_name": {
+      "translate": "item.flying_fish.raw_flying_fish"
+    }
+  }
+}
