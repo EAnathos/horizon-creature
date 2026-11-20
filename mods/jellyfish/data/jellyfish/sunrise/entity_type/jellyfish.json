@@ -5,8 +5,8 @@
     "minecraft:movement_speed": 0.1
   },
   "sounds": {
-    "hurt": "minecraft:entity.squid.hurt",
-    "death": "minecraft:entity.squid.death",
+    "hurt": "jellyfish:entity.jellyfish.hurt",
+    "death": "jellyfish:entity.jellyfish.death",
     "ambient": "none",
     "step": "none"
   },

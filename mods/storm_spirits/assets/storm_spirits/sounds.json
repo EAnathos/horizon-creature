@@ -1,0 +1,44 @@
+{
+  "entity.storm_spirit.zap": {
+    "subtitle": "subtitles.entity.storm_spirit.zap",
+    "sounds": [
+      "storm_spirits:storm_spirits/zap1",
+      "storm_spirits:storm_spirits/zap2",
+      "storm_spirits:storm_spirits/zap3"
+    ]
+  },
+  "entity.storm_spirit.hurt": {
+    "subtitle": "subtitles.entity.storm_spirit.hurt",
+    "sounds": [
+      "storm_spirits:storm_spirits/hurt1",
+      "storm_spirits:storm_spirits/hurt2"
+    ]
+  },
+  "entity.storm_spirit.death": {
+    "subtitle": "subtitles.entity.storm_spirit.death",
+    "sounds": [
+      "storm_spirits:storm_spirits/death"
+    ]
+  },
+  "entity.storm_spirit.crackle": {
+    "subtitle": "subtitles.entity.storm_spirit.crackle",
+    "sounds": [
+      "storm_spirits:storm_spirits/crackle"
+    ]
+  },
+  "entity.storm_spirit.sparks": {
+    "subtitle": "subtitles.entity.storm_spirit.sparks",
+    "sounds": [
+      "storm_spirits:storm_spirits/sparks1",
+      "storm_spirits:storm_spirits/sparks2"
+    ]
+  },
+  "entity.storm_spirit.buzz": {
+    "subtitle": "subtitles.entity.storm_spirit.buzz",
+    "sounds": [
+      "storm_spirits:storm_spirits/buzz1",
+      "storm_spirits:storm_spirits/buzz2",
+      "storm_spirits:storm_spirits/buzz3"
+    ]
+  }
+}

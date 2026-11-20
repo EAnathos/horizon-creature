@@ -5,5 +5,11 @@
   "bestiary.storm_spirits.born": "Né de la foudre",
   "bestiary.storm_spirits.shock": "Décharge",
   "bestiary.storm_spirits.bolt": "Éclair",
-  "bestiary.storm_spirits.item.spark.use": "Utiliser : un éclair sur le bloc visé, jusqu'à 32 blocs"
+  "bestiary.storm_spirits.item.spark.use": "Utiliser : un éclair sur le bloc visé, jusqu'à 32 blocs",
+  "subtitles.entity.storm_spirit.zap": "Un esprit de l'orage foudroie",
+  "subtitles.entity.storm_spirit.hurt": "Un esprit de l'orage est blessé",
+  "subtitles.entity.storm_spirit.death": "Un esprit de l'orage s'éteint",
+  "subtitles.entity.storm_spirit.crackle": "Un esprit de l'orage crépite",
+  "subtitles.entity.storm_spirit.sparks": "Des étincelles crépitent",
+  "subtitles.entity.storm_spirit.buzz": "Un esprit de l'orage bourdonne"
 }

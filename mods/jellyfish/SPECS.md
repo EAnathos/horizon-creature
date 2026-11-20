@@ -26,7 +26,8 @@ Playable, tested in game (single player): everything below works, unless marked 
 - **Turtles eat them** (§3, the library's hunters, common/SPECS.md §3.7): a sea turtle within 8 blocks swims to one
   and eats it ("Turtle" fact).
 - **The glow jelly**, seen in a deep ocean at night: drawn full-bright, its light around it.
-- ❓ **Sounds**: vanilla's for now (a squid's hurt and death, the bucket's fish sounds), until its own from freesound.
+- **Sounds** (`sources/sounds.toml`, CC0 from freesound): a soft pulse as it swims up, a wet flop on land, a squish when
+  hurt or dying, the slap of its sting; the bucket's are vanilla's fish sounds.
 
 ## 1. Technical context
 

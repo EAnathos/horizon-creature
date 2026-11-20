@@ -5,8 +5,8 @@
     "minecraft:movement_speed": 0.3
   },
   "sounds": {
-    "hurt": "minecraft:entity.breeze.hurt",
-    "death": "minecraft:entity.breeze.death",
+    "hurt": "storm_spirits:entity.storm_spirit.hurt",
+    "death": "storm_spirits:entity.storm_spirit.death",
     "ambient": "none",
     "step": "none"
   },

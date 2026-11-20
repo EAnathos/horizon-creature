@@ -15,5 +15,10 @@
   "bestiary.jellyfish.bucket": "Seau",
   "bestiary.jellyfish.item.jelly.use": "Se transforme en boule de slime",
   "bestiary.jellyfish.item.glow_jelly.use": "Se transforme en poche d'encre luisante",
-  "bestiary.jellyfish.item.jellyfish_bucket.use": "Sur un bloc : libère la méduse dans de l'eau"
+  "bestiary.jellyfish.item.jellyfish_bucket.use": "Sur un bloc : libère la méduse dans de l'eau",
+  "subtitles.entity.jellyfish.pulse": "Une méduse ondule",
+  "subtitles.entity.jellyfish.flop": "Une méduse s'agite",
+  "subtitles.entity.jellyfish.hurt": "Une méduse est blessée",
+  "subtitles.entity.jellyfish.death": "Une méduse meurt",
+  "subtitles.entity.jellyfish.sting": "Une méduse pique"
 }

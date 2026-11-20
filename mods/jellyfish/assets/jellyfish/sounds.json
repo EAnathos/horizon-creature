@@ -1,0 +1,39 @@
+{
+  "entity.jellyfish.pulse": {
+    "subtitle": "subtitles.entity.jellyfish.pulse",
+    "sounds": [
+      "jellyfish:jellyfish/pulse1",
+      "jellyfish:jellyfish/pulse2",
+      "jellyfish:jellyfish/pulse3",
+      "jellyfish:jellyfish/pulse4"
+    ]
+  },
+  "entity.jellyfish.flop": {
+    "subtitle": "subtitles.entity.jellyfish.flop",
+    "sounds": [
+      "jellyfish:jellyfish/flop1",
+      "jellyfish:jellyfish/flop2",
+      "jellyfish:jellyfish/flop3",
+      "jellyfish:jellyfish/flop4"
+    ]
+  },
+  "entity.jellyfish.hurt": {
+    "subtitle": "subtitles.entity.jellyfish.hurt",
+    "sounds": [
+      "jellyfish:jellyfish/hurt1",
+      "jellyfish:jellyfish/hurt2"
+    ]
+  },
+  "entity.jellyfish.death": {
+    "subtitle": "subtitles.entity.jellyfish.death",
+    "sounds": [
+      "jellyfish:jellyfish/death"
+    ]
+  },
+  "entity.jellyfish.sting": {
+    "subtitle": "subtitles.entity.jellyfish.sting",
+    "sounds": [
+      "jellyfish:jellyfish/sting"
+    ]
+  }
+}

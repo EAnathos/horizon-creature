@@ -18,7 +18,7 @@ use creature::colours::{Colour, Look, Pattern, Scheme, Variety};
 use mod_api::{
     BlockEntityDrawContext, ClientHost, EmissiveEvent, EntityInteractEvent, EntityRenderState, EntityRenderer,
     EntityTickPostEvent, EquipmentSlot, Flow, Hooks, HostSide, InteractionResult, LivingDeathEvent,
-    RegisterEntityRenderersEvent, Registrar, RegistrationContext, ServerHost,
+    RegisterEntityRenderersEvent, Registrar, RegistrationContext, ServerHost, SoundSource,
 };
 
 pub const KIND: &str = "jellyfish:jellyfish";
@@ -128,7 +128,14 @@ static AQUATIC: Aquatic = Aquatic {
     kind: KIND,
     bucket: BUCKET,
     dries: 1200,
+    flop: Some(FLOP),
 };
+
+/// Its sounds (`sources/sounds.toml`, cut from CC0 freesound recordings): the pulse of its swim (`swim.rs`), its flop on
+/// land, its sting; hurt and death are its entity type's.
+pub(crate) const PULSE: &str = "jellyfish:entity.jellyfish.pulse";
+const FLOP: &str = "jellyfish:entity.jellyfish.flop";
+const STING: &str = "jellyfish:entity.jellyfish.sting";
 
 /// Blooms of 3 to 8 in its oceans, 2 to 6 blocks under the surface (SPECS §3).
 static SPAWNING: Spawning = Spawning {
@@ -265,6 +272,9 @@ fn sting(host: &mut dyn ServerHost, id: u32, target: u32) {
         return;
     }
     let me = host.entity(id);
+    if let (Some(at), Some(level)) = (t.position(&*host), t.level(&*host)) {
+        level.play_sound(host, STING, at, SoundSource::Neutral, 0.8, 1.0, None);
+    }
     match kind(id) {
         NETTLE => {
             t.hurt(host, "minecraft:mob_attack", 2.0, me, me);
@@ -294,6 +304,7 @@ fn tick(host: &mut dyn ServerHost, dimension: &str, id: u32) {
     creature::colours::tick(host, id, &SCHEME);
     let glows = kind(id) == GLOW;
     creature::body::tick(host, id, || vec![Box::new(swim::Swim::new(glows))]);
+    creature::sounds::play_queued(host, id, SoundSource::Neutral);
     let Some(e) = host.entity(id) else {
         return;
     };

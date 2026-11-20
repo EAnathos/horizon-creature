@@ -1,0 +1,126 @@
+# The storm spirits' sounds, made by `cargo creature sounds storm_spirits` from freesound downloads (all CC0, nothing to
+# credit). A downloaded file keeps the name freesound gives it: it is found by its number. Each clip: a slice of a source
+# (`start` and `length` in seconds of the output), resampled by `pitch`, faded out over `fade` seconds, `gain` in dB.
+out = "sounds/storm_spirits"
+
+[sources]
+tesla = 853286    # el_boss, Tesla Tower Zap (electric zap, short, game SFX)
+zap = 512471      # michael_grinnell, Electric zap
+short = 136542    # JoelAudio, ELECTRIC_ZAP_001
+crackle = 582631  # ironcross32, Long Crackle 04
+static = 875011   # cb9382, Electrical Static (crackles and pops)
+arc = 776446      # pryanic, Electric arc hum and buzz
+
+# Its zap (a shock or a touch): short electric zaps.
+[[clip]]
+name = "zap1"
+source = "tesla"
+start = 0.15
+length = 0.6
+pitch = 1.0
+fade = 0.2
+gain = -4.0
+
+[[clip]]
+name = "zap2"
+source = "zap"
+start = 0.0
+length = 0.23
+pitch = 1.0
+fade = 0.05
+gain = -4.0
+
+[[clip]]
+name = "zap3"
+source = "tesla"
+start = 0.15
+length = 0.6
+pitch = 1.2
+fade = 0.2
+gain = -4.0
+
+# Hurt: a short zap, two pitches.
+[[clip]]
+name = "hurt1"
+source = "short"
+start = 0.0
+length = 0.5
+pitch = 1.1
+fade = 0.15
+gain = -4.0
+
+[[clip]]
+name = "hurt2"
+source = "short"
+start = 0.0
+length = 0.5
+pitch = 0.9
+fade = 0.15
+gain = -4.0
+
+# Its death: the crackle dying away, lower.
+[[clip]]
+name = "death"
+source = "crackle"
+start = 0.0
+length = 1.2
+pitch = 0.7
+fade = 0.4
+gain = -2.0
+
+# Its birth at a strike and its fading after the storm: a crackle that dies away.
+[[clip]]
+name = "crackle"
+source = "crackle"
+start = 0.0
+length = 1.0
+pitch = 1.0
+fade = 0.3
+gain = -4.0
+
+# The sparks over its target's head before a bolt: crackles and pops.
+[[clip]]
+name = "sparks1"
+source = "static"
+start = 4.75
+length = 0.5
+pitch = 1.0
+fade = 0.15
+gain = -6.0
+
+[[clip]]
+name = "sparks2"
+source = "static"
+start = 8.1
+length = 0.5
+pitch = 1.0
+fade = 0.15
+gain = -6.0
+
+# The buzz of a dash: an electric arc.
+[[clip]]
+name = "buzz1"
+source = "arc"
+start = 1.0
+length = 0.9
+pitch = 1.2
+fade = 0.3
+gain = -10.0
+
+[[clip]]
+name = "buzz2"
+source = "arc"
+start = 4.45
+length = 0.9
+pitch = 1.2
+fade = 0.3
+gain = -10.0
+
+[[clip]]
+name = "buzz3"
+source = "arc"
+start = 14.25
+length = 0.9
+pitch = 1.2
+fade = 0.3
+gain = -10.0

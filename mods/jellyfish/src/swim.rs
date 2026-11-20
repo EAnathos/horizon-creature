@@ -110,6 +110,8 @@ impl Behaviour for Swim {
         let pulses = depth > deep || (depth > shallow && m.random.next_int_bound(3) == Some(0));
         if pulses && depth > 1.5 {
             self.pulse = PULSE_TICKS;
+            let pitch = 0.9 + m.random.next_float() * 0.2;
+            creature::sounds::queue(m.id, crate::PULSE, 0.5, pitch);
         }
     }
     fn stop(&mut self, m: &mut Body, _: &World<'_>) {

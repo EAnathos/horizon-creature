@@ -45,9 +45,12 @@ const TOUCH_EVERY: i32 = 10;
 const SHOCK_DAMAGE: f32 = 6.0;
 const SHOCK_SLOWNESS: i32 = 30;
 
-/// Its sounds, vanilla's: the crackle of its birth and its fading, its zap.
-const CRACKLE: &str = "minecraft:entity.firework_rocket.twinkle";
-const ZAP: &str = "minecraft:entity.lightning_bolt.impact";
+/// Its sounds (`sources/sounds.toml`, cut from CC0 freesound recordings): the crackle of its birth and its fading, its
+/// zap; its buzz is its dashes' (`flight.rs`), hurt and death its entity type's.
+const CRACKLE: &str = "storm_spirits:entity.storm_spirit.crackle";
+const ZAP: &str = "storm_spirits:entity.storm_spirit.zap";
+/// The sparks over a target's head before a bolt.
+const SPARKS: &str = "storm_spirits:entity.storm_spirit.sparks";
 
 pub const BORN_FACT: &str = "born";
 pub const SHOCK_FACT: &str = "shock";
@@ -149,6 +152,9 @@ fn bolts(host: &mut dyn ServerHost, dimension: &str, spirit: u32) {
             if left % 4 == 0 {
                 sparks(host, dimension, [at[0], at[1] + 2.6, at[2]], 3);
             }
+            if left % 8 == 0 {
+                sound(host, dimension, [at[0], at[1] + 2.0, at[2]], SPARKS, 0.7, 1.0);
+            }
             continue;
         }
         if let Some(level) = host.level(dimension) {
@@ -192,7 +198,7 @@ fn zap(host: &mut dyn ServerHost, dimension: &str, spirit: u32, target: u32, dam
     };
     t.hurt(host, "minecraft:mob_attack", damage, Some(me), Some(me));
     sparks(host, dimension, [at[0], at[1] + 1.0, at[2]], if shock { 12 } else { 4 });
-    sound(host, dimension, at, ZAP, if shock { 0.5 } else { 0.2 }, 1.9);
+    sound(host, dimension, at, ZAP, if shock { 0.8 } else { 0.4 }, 1.0);
     if shock {
         creature::mob::give_effect(host, target, "minecraft:slowness", SHOCK_SLOWNESS);
         if let Some(player) = creature::mob::player_of(&*host, target) {

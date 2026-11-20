@@ -5,5 +5,11 @@
   "bestiary.storm_spirits.born": "Born of lightning",
   "bestiary.storm_spirits.shock": "Shock",
   "bestiary.storm_spirits.bolt": "Bolt",
-  "bestiary.storm_spirits.item.spark.use": "Use: a lightning bolt on the block you aim at, up to 32 blocks away"
+  "bestiary.storm_spirits.item.spark.use": "Use: a lightning bolt on the block you aim at, up to 32 blocks away",
+  "subtitles.entity.storm_spirit.zap": "Storm Spirit zaps",
+  "subtitles.entity.storm_spirit.hurt": "Storm Spirit hurts",
+  "subtitles.entity.storm_spirit.death": "Storm Spirit fizzles out",
+  "subtitles.entity.storm_spirit.crackle": "Storm Spirit crackles",
+  "subtitles.entity.storm_spirit.sparks": "Sparks crackle",
+  "subtitles.entity.storm_spirit.buzz": "Storm Spirit buzzes"
 }

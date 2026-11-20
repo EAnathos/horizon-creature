@@ -32,7 +32,7 @@ const BOLT_MORE: i32 = 40;
 const FIRST_BOLT: i32 = 40;
 
 /// The buzz of a dash.
-const BUZZ: &str = "minecraft:entity.bee.loop";
+const BUZZ: &str = "storm_spirits:entity.storm_spirit.buzz";
 
 /// Whether the block `id` lets it through.
 fn open(id: &str) -> bool {
@@ -133,7 +133,7 @@ impl Behaviour for Dash {
         self.heading = d.map(|k| k / norm);
         self.dash = (norm / DASH_SPEED).ceil() as i32;
         let pitch = 1.4 + m.random.next_float() * 0.4;
-        creature::sounds::queue(m.id, BUZZ, 0.4, pitch);
+        creature::sounds::queue(m.id, BUZZ, 0.5, pitch);
     }
 }
 

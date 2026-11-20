@@ -15,5 +15,10 @@
   "bestiary.jellyfish.bucket": "Bucket",
   "bestiary.jellyfish.item.jelly.use": "Crafts into a slime ball",
   "bestiary.jellyfish.item.glow_jelly.use": "Crafts into a glow ink sac",
-  "bestiary.jellyfish.item.jellyfish_bucket.use": "Use on a block: lets the jellyfish out in water there"
+  "bestiary.jellyfish.item.jellyfish_bucket.use": "Use on a block: lets the jellyfish out in water there",
+  "subtitles.entity.jellyfish.pulse": "Jellyfish pulses",
+  "subtitles.entity.jellyfish.flop": "Jellyfish flops",
+  "subtitles.entity.jellyfish.hurt": "Jellyfish hurts",
+  "subtitles.entity.jellyfish.death": "Jellyfish dies",
+  "subtitles.entity.jellyfish.sting": "Jellyfish stings"
 }

@@ -28,6 +28,8 @@ pub struct Aquatic {
     pub bucket: &'static str,
     /// How long it lasts out of water before it dries out (ticks).
     pub dries: u32,
+    /// The sound of its flop on land, if it has one.
+    pub flop: Option<&'static str>,
 }
 
 /// Where and how a water creature spawns: in groups of `group`, `depth` blocks under the surface, up to `cap` near a
@@ -121,6 +123,9 @@ pub fn tick(host: &mut dyn ServerHost, entity: u32, kind: &str) -> bool {
         let mut side = || (random.next() % 1000) as f64 / 1000.0 * 0.2 - 0.1;
         let kick = [side(), 0.3, side()];
         e.set_velocity(host, kick);
+        if let (Some(sound), Some(at), Some(level)) = (aquatic.flop, e.position(&*host), e.level(&*host)) {
+            level.play_sound(host, sound, at, SoundSource::Neutral, 0.6, 1.0, None);
+        }
     }
     if out >= aquatic.dries && out.is_multiple_of(DRY_HURT_EVERY) {
         e.hurt(host, "minecraft:dry_out", 1.0, None, None);

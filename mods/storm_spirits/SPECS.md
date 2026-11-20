@@ -20,8 +20,8 @@ Playable, tested in game (single player): everything below works, unless marked 
 - **Flight**, the **shock** (its dash, the zap, keeping away), the **bolts** it calls on its attacker and the zap of a
   touch (§2); immune to lightning and fire.
 - **The spark** (§4): the bolt where you aim, used up, its cooldown.
-- **Sounds** ❓: vanilla's for now (a breeze's hurt and death, a bee's buzz, a firework's twinkle, a lightning bolt's
-  impact for the zap), until its own from freesound.
+- **Sounds** (`sources/sounds.toml`, CC0 from freesound): its zaps, the buzz of its dashes, the crackle of its birth
+  and fading, the sparks before a bolt, its hurt and its death.
 
 ## 1. Technical context
 
@@ -34,7 +34,7 @@ Playable, tested in game (single player): everything below works, unless marked 
   its birth, `strike_lightning` for the spark's bolts, `entity_struck_by_lightning` and the damage hook for its
   immunities.
 - It copies the wandering trader (goals only), with a box of 0.8 × 1.8 blocks ✅. Its own sounds (a crackle, a buzz, a
-  zap) from freesound, CC0, cut by `cargo creature sounds` ❓ (vanilla's for now, §0).
+  zap) from freesound, CC0, cut by `cargo creature sounds` (§0).
 
 ## 2. The storm spirit ✅
 
