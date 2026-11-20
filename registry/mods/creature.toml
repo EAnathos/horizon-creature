@@ -5,7 +5,7 @@ summary = "The library of the Sunrise Creatures mods: the creature guide and its
 description = """
 > **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
 
-The library every mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.3.0/README.md) series needs. It adds no creature of its own, but what
+The library every mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.3.1/README.md) series needs. It adds no creature of its own, but what
 the creatures share:
 
 - **The creature guide**, given to every player the first time they join a world. Right-click it to open the
@@ -19,7 +19,7 @@ the creatures share:
 - **The "Sunrise Creatures" creative tab**, with every item of the series.
 - Monsters leave the series' creatures alone.
 
-For developers: [SPECS.md](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.3.0/common/SPECS.md) and [CONTRIBUTING.md](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.3.0/CONTRIBUTING.md).
+For developers: [SPECS.md](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.3.1/common/SPECS.md) and [CONTRIBUTING.md](https://github.com/EAnathos/sunrise-creatures/blob/creature-0.3.1/CONTRIBUTING.md).
 """
 authors = ["EAnathos"]
 owners = ["EAnathos"]
@@ -30,6 +30,24 @@ categories = ["library"]
 tags = ["creatures", "bestiary", "glass-jar", "guide"]
 screenshots = ["screenshots/creature/1-bestiary.jpg"]
 key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.3.1"
+published = "2026-11-20"
+game = "26.3"
+file = "creature-0.3.1.smod"
+sha256 = "fbccb96347b95f96c775db7e0c54b74d21eadef1252e44036111b079829780db"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw60+eh5f68nhTiLBUJfnvoxK3jn+vhiJ71Vsh4LDORUnPHnHh1+4rkZRswbMRHNZfcH8j46P3qQlxVzui5ruECQU=
+trusted comment: timestamp:1795211299	file:creature-0.3.1.smod	hashed
+cHh5/I5DoqDJfkDsQO3mYQTXAf2265GRaRdbLbcO4Ap5izh3MVZD3M2XbVPkaVswWR5uJauOtghDN77jSplPBA==
+"""
+changelog = """
+- Built for Sunrise's 2026-11-20 Nightly (9425651), as 0.3.0.
+- Hunters (`creature::prey`): after a catch, the prey's mod may do something to the hunter (`prey::when_caught`): the
+  flying fish's dolphin is fed.
+"""
 
 [[versions]]
 version = "0.3.0"

@@ -18,4 +18,4 @@ mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
 
 # The series' library, reached as the `creature` crate (common/SPECS.md).
 [dependencies]
-creature = "^0.3"
+creature = "^0.3.1"

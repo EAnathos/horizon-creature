@@ -1,0 +1,64 @@
+id = "flying_fish"
+kind = "native-mod"
+name = "Flying Fish"
+summary = "Shoals of flying fish in warm seas that burst out of the water and glide over the waves; catch them in a bucket, fish them or cook them."
+description = """
+> **Beta.** Played and tested in single player; multiplayer and balance come later. Reports are welcome on the [issues](https://github.com/EAnathos/sunrise-creatures/issues).
+
+A mod of the [Sunrise Creatures](https://github.com/EAnathos/sunrise-creatures/blob/flying_fish-0.1.0/README.md) series: shoals of flying fish in warm seas that burst out of the
+water and glide over the waves on their wing-like fins. **Requires**
+[Sunrise Creatures](https://playsunrise.net/mods/creature), the series' library.
+
+## Finding them
+
+Shoals of 4 to 10 swim just under the surface of lukewarm and warm oceans, all of one kind:
+
+- **Blue wings**, navy with pale blue wings, in lukewarm and warm oceans.
+- **Spotted wings**, olive with spotted wings, in lukewarm oceans.
+- **Sunset wings**, with orange wings, rare in warm oceans.
+
+In creative: the spawn egg (creative tab "Sunrise Creatures").
+
+## Gliding
+
+Come near a shoal, sail by in a boat or hit one, and the shoal takes off: each fish races up, bursts out of the water
+and glides a block or two above the waves for 10 to 20 blocks, sometimes beating its tail on a wave to glide on, then
+dives back in. Now and then one glides for no reason at all. Dolphins hunt them: a dolphin nearby chases a shoal, which
+flees through the air; a dolphin that catches one is happy and leads you to treasure, as if you had fed it. A
+gliding fish that runs into you bounces off and drops.
+
+## Catching and cooking
+
+Use a water bucket on a flying fish to catch it, then use the bucket on a block to let it out in water there: it keeps
+its kind and never wanders off for good. A flying fish that lands on the shore flops and dries out within 30 seconds:
+pick it up with a right-click. Flying fish drop raw flying fish, which cook in a furnace, a smoker or on a campfire. Fishing with a rod in
+lukewarm and warm oceans brings some up too, and cats and ocelots take them as they take cod.
+"""
+authors = ["EAnathos"]
+owners = ["EAnathos"]
+license = "MIT"
+source = "https://github.com/EAnathos/sunrise-creatures"
+icon = "icons/flying_fish.png"
+categories = ["mobs", "food"]
+tags = ["flying fish", "fish", "ocean", "aquatic"]
+screenshots = ["screenshots/flying_fish/1-flying_fish-flying_fish-front.png", "screenshots/flying_fish/2-flying_fish-flying_fish-back.png"]
+key = "RWR7Wf0HwHmw6+OGAJGXZcp5ccpovW1ONwQb7knb3YqMpWGTi+gpP0Jn"
+
+[[versions]]
+version = "0.1.0"
+published = "2026-11-20"
+game = "26.3"
+file = "flying_fish-0.1.0.smod"
+sha256 = "bd6f9ec36c80af2db7f75d6077b2abeed90590d3b87e7c1b6c38cca9124628ad"
+signature = """
+untrusted comment: signature from minisign secret key
+RUR7Wf0HwHmw645vlVpKxZMw3DDVH+wmunAqUdys9wFqqcddscC7IEE270ajxhDGnCkD2UKlCKFfrq7/mv2OQUhzc5BOl5wjwwk=
+trusted comment: timestamp:1795211299	file:flying_fish-0.1.0.smod	hashed
+KkC6ZLmur1XociVMexKYbv25V/aMBmsnOQsCbF5TLJ1zy6293Lh6Ct+d2rGiyJZfsa+RuLMSO/0CIZZSS3WQBw==
+"""
+changelog = """
+- First release on Sunrise: blue wing, spotted wing and sunset wing flying fish in shoals of one kind in lukewarm and
+  warm oceans; they burst out of the water and glide over the waves when frightened; the bucket, raw and cooked flying
+  fish, fished with a rod in their oceans and eaten by cats; dolphins hunt them and are fed by a
+  catch; a glider bounces off what it runs into; its own sounds. Needs Sunrise Creatures 0.3.1.
+"""

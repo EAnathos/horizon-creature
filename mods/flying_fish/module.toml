@@ -11,3 +11,13 @@ creative = [
 ]
 # Its Rust is built on Sunrise's mod_api.
 ported = true
+
+
+# Its page in Sunrise's registry (`cargo creature release`, docs/PUBLISHING.md): with its manifest's name, authors and
+# licence, and its README as the description.
+[registry]
+summary = "Shoals of flying fish in warm seas that burst out of the water and glide over the waves; catch them in a bucket, fish them or cook them."
+categories = ["mobs", "food"]
+tags = ["flying fish", "fish", "ocean", "aquatic"]
+icon = "flying_fish"
+screenshots = ["docs/models/flying_fish-flying_fish-front.png", "docs/models/flying_fish-flying_fish-back.png"]

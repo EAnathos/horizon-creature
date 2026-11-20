@@ -57,7 +57,7 @@ stay in the vulture until a second mod needs them, except friends (§6.2), share
   own `register` hook. It publishes functions, types and statics; shared state is behind `Mutex`es.
 - **Its content**: the series' tab, shared blocks and items (`creature:glass_jar`, `creature:guide`, the jar blocks), their recipes
   (conditional when a feature depends on a mod), textures and translations (`en_us`, `fr_fr`).
-- **Pinned** to the series' Sunrise revision (docs/SUNRISE-ISSUES.md). Version `0.3.0`; a breaking API change bumps
+- **Pinned** to the series' Sunrise revision (docs/SUNRISE-ISSUES.md). Version `0.3.1`; a breaking API change bumps
   the minor version while in `0.x`, and the mods' `[dependencies] creature` with it.
 
 ## 3. Systems in place

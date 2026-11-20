@@ -2,7 +2,7 @@
 
 Each version's section is its registry changelog (`cargo creature release`).
 
-## Unreleased
+## 0.2.2
 
 - The server keeps the riding keys only of a player riding a vulture, forgotten when they get off or leave; a talons
   press moves only the vulture its sender rides (both from the registry's review, sunrise-org/sunrise-mods#34).
