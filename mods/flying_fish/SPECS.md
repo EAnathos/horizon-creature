@@ -65,7 +65,7 @@ A shoal is of one kind.
   fish) or catches it alive in a water bucket.
 - **Hunted**: dolphins chase and eat flying fish (the library's prey, §3.7): a dolphin that sees one within 12 blocks
   swims after it, and the shoal takes off. A dolphin that caught one is happy for a while (it leads players to treasure
-  as if fed: `GotFish`, through a command, docs/SUNRISE-ISSUES.md) ✅.
+  as if fed: its `GotFish`) ✅.
 - **Seagulls** ❓ (with the Seagulls mod, not written yet), when the Seagulls mod is installed (no requirement either way): a seagull flying over the sea that sees a
   gliding flying fish within 16 blocks swoops and **snatches it in the air**, then flies off with it (no drop). A
   befriended seagull fishing for its friend (mods/seagulls/SPECS.md §3) may bring back a raw flying fish in their
