@@ -11,8 +11,9 @@
 //!   another tamed vulture in love and, once close, they have a baby (born tamed, `state::breed`) and wait 5 minutes.
 use creature::body::{Behaviour, Body, World};
 
-use crate::flight::{Controls, Flight};
-use crate::{ride, sounds, state};
+use creature::flight::{Controls, Flight};
+
+use crate::{WINGS, ride, sounds, state};
 
 /// One raw chicken in this many tames it.
 const TAME_CHANCE: i32 = 4;
@@ -191,7 +192,7 @@ impl Behaviour for FollowOwner {
                 ridden: false,
             }
         };
-        self.flight.tick(m, &controls);
+        self.flight.tick(m, &controls, &WINGS);
     }
 }
 

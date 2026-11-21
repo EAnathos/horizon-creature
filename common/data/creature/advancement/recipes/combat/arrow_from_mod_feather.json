@@ -1,4 +1,19 @@
 {
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:or",
+      "values": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "vulture"
+        },
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "seagulls"
+        }
+      ]
+    }
+  ],
   "parent": "minecraft:recipes/root",
   "criteria": {
     "has_feather": {
@@ -6,7 +21,7 @@
       "conditions": {
         "items": [
           {
-            "items": "vulture:feather"
+            "items": "#creature:mod_feathers"
           }
         ]
       }
@@ -14,7 +29,7 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipes": "vulture:brush_from_vulture_feather"
+        "recipes": "creature:arrow_from_mod_feather"
       }
     }
   },
@@ -26,7 +41,7 @@
   ],
   "rewards": {
     "recipes": [
-      "vulture:brush_from_vulture_feather"
+      "creature:arrow_from_mod_feather"
     ]
   }
 }

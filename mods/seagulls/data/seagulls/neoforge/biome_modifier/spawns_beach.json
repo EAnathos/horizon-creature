@@ -1,0 +1,10 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": "minecraft:beach",
+  "spawners": {
+    "type": "seagulls:seagull",
+    "weight": 6,
+    "minCount": 2,
+    "maxCount": 6
+  }
+}

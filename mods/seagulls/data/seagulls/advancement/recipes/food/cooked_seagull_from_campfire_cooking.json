@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_feather": {
+    "has_raw_seagull": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {
         "items": [
           {
-            "items": "vulture:feather"
+            "items": "seagulls:raw_seagull"
           }
         ]
       }
@@ -14,19 +14,19 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipes": "vulture:arrow_from_vulture_feather"
+        "recipes": "seagulls:cooked_seagull_from_campfire_cooking"
       }
     }
   },
   "requirements": [
     [
       "has_the_recipe",
-      "has_feather"
+      "has_raw_seagull"
     ]
   ],
   "rewards": {
     "recipes": [
-      "vulture:arrow_from_vulture_feather"
+      "seagulls:cooked_seagull_from_campfire_cooking"
     ]
   }
 }

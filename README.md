@@ -20,7 +20,7 @@
 
 **Creature mods for [Sunrise](https://playsunrise.net)**, the Rust reimplementation of Minecraft Java 26.3 (formerly
 Horizon). A vulture to tame and fly, butterflies and moths, fireflies, earthworms for your garden, a one-eyed giant
-shepherd, shy fairies, scorpions, spirits of living lightning, jellyfish and flying fish; and Minecraft's own creatures in the guide.
+shepherd, shy fairies, scorpions, spirits of living lightning, jellyfish, flying fish and seagulls; and Minecraft's own creatures in the guide.
 
 - **Install the ones you like**: each mod works alone, with one shared library.
 - **Native mods**, written in Rust on Sunrise's mod API, with their own models, animations, sounds and behaviours.
@@ -57,6 +57,7 @@ shepherd, shy fairies, scorpions, spirits of living lightning, jellyfish and fly
 | ![](docs/models/storm_spirits-storm_spirit-front.png) | [Storm Spirits](mods/storm_spirits/README.md) | Spirits of living lightning born in thunderstorms: hit one and it zaps you and calls lightning down on you; their sparks call lightning where you aim |
 | ![](docs/models/jellyfish-jellyfish-front.png) | [Jellyfish](mods/jellyfish/README.md) | Stinging jellyfish drifting in blooms through the oceans, some glowing in the deep; catch them in a bucket for an aquarium |
 | ![](docs/models/flying_fish-flying_fish-front.png) | [Flying Fish](mods/flying_fish/README.md) | Shoals of flying fish in warm seas that burst out of the water and glide over the waves when frightened; catch them in a bucket or cook them |
+| ![](docs/models/seagulls-seagull-front.png) | [Seagulls](mods/seagulls/README.md) | Noisy gulls of the coasts that float on the waves, follow your boat and snatch food from your hand; befriend one with fish and it dives for fish for you |
 | ![](common/assets/creature/textures/item/guide.png) | [Vanilla Bestiary](mods/vanilla_bestiary/README.md) | Minecraft's own creatures in the creature guide's bestiary, found out as you meet them |
 
 Every mod needs **[Sunrise Creatures](common/README.md)**, the library: it adds the glass jar, the creature guide and
@@ -68,7 +69,6 @@ the "Sunrise Creatures" creative tab, where all the series' items are.
 - [Dung Beetles](mods/dung_beetles/README.md): beetles that roll dung balls under the stars and turn worn pastures
   back into grass.
 - [Sporelins](mods/sporelins/README.md): shy mushroom sprites that tend a mushroom patch.
-- [Seagulls](mods/seagulls/README.md): coastal food thieves that become fishing companions.
 - [Living Flowers](mods/living_flowers/README.md): every small and tall vanilla flower come alive, to ambush you or
   guard you.
 - [Phasmids](mods/phasmids/README.md): stick and leaf insects hiding in the trees, a game of spotting them.

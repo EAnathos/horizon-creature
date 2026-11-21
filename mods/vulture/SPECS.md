@@ -149,7 +149,8 @@ Variant names are simple colour names ✅, so players need not know the species.
 
 ### 6.2 Dynamic flight ✅
 
-> Riding and flight stay in the vulture until a second mod needs them (common/SPECS.md §6.1). The vulture's keys and numbers below. **No
+> The flight itself (gliding, soaring, landing) is the library's since the Seagulls (`creature::flight`,
+> common/SPECS.md §3.14), with the vulture's numbers (its `WINGS`, `wild::SOARING`); riding stays the vulture's. The vulture's keys and numbers below. **No
 > stamina** ✅: the vulture flies as long as the rider wants.
 
 Flown like a plane, not like a flying camera: the vulture always moves forward along its heading, the rider turns it

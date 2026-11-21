@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "vulture:feather",
+      "required": false
+    },
+    {
+      "id": "seagulls:feather",
+      "required": false
+    }
+  ]
+}

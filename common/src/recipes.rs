@@ -3,8 +3,11 @@ use crate::items::{Recipe, Station};
 
 #[rustfmt::skip]
 pub static RECIPES: &[Recipe] = &[
+    Recipe { station: Station::Crafting, grid: [&["minecraft:flint"], &[], &[], &["minecraft:stick"], &[], &[], &["vulture:feather", "seagulls:feather"], &[], &[]], result: "minecraft:arrow", count: 4 },
+    Recipe { station: Station::Crafting, grid: [&["vulture:feather", "seagulls:feather"], &[], &[], &["minecraft:copper_ingot"], &[], &[], &["minecraft:stick"], &[], &[]], result: "minecraft:brush", count: 1 },
     Recipe { station: Station::Crafting, grid: [&[], &["minecraft:oak_slab"], &[], &["minecraft:glass"], &[], &["minecraft:glass"], &["minecraft:glass"], &["minecraft:glass"], &["minecraft:glass"]], result: "creature:glass_jar", count: 2 },
-    Recipe { station: Station::Crafting, grid: [&["minecraft:book"], &["minecraft:feather", "vulture:feather"], &["minecraft:leather"], &[], &[], &[], &[], &[], &[]], result: "creature:guide", count: 1 },
+    Recipe { station: Station::Crafting, grid: [&["minecraft:book"], &["minecraft:feather", "vulture:feather", "seagulls:feather"], &["minecraft:leather"], &[], &[], &[], &[], &[], &[]], result: "creature:guide", count: 1 },
+    Recipe { station: Station::Crafting, grid: [&["minecraft:book"], &["minecraft:ink_sac"], &["vulture:feather", "seagulls:feather"], &[], &[], &[], &[], &[], &[]], result: "minecraft:writable_book", count: 1 },
     Recipe { station: Station::Crafting, grid: [&["minecraft:paper"], &["butterflies:butterfly_dust"], &[], &[], &[], &[], &[], &[], &[]], result: "butterflies:confetti", count: 8 },
     Recipe { station: Station::Crafting, grid: [&[], &["minecraft:oak_log"], &["minecraft:oak_log"], &[], &["minecraft:oak_log"], &["minecraft:oak_log"], &["minecraft:stick"], &[], &[]], result: "cyclops:club", count: 1 },
     Recipe { station: Station::Crafting, grid: [&[], &["minecraft:stick"], &["minecraft:stick"], &[], &["minecraft:stick"], &["cyclops:cyclops_eye"], &["minecraft:white_wool"], &["minecraft:stick"], &[]], result: "cyclops:shepherds_crook", count: 1 },
@@ -19,10 +22,10 @@ pub static RECIPES: &[Recipe] = &[
     Recipe { station: Station::Crafting, grid: [&["minecraft:arrow"], &["minecraft:arrow"], &["minecraft:arrow"], &["minecraft:arrow"], &["scorpions:venom_sac"], &["minecraft:arrow"], &["minecraft:arrow"], &["minecraft:arrow"], &["minecraft:arrow"]], result: "minecraft:tipped_arrow", count: 8 },
     Recipe { station: Station::Brewing, grid: [&[], &["scorpions:venom_sac"], &[], &[], &[], &[], &[], &["minecraft:potion"], &[]], result: "minecraft:potion", count: 1 },
     Recipe { station: Station::Crafting, grid: [&["scorpions:stinger"], &[], &[], &["minecraft:stick"], &[], &[], &[], &[], &[]], result: "scorpions:scorpion_dagger", count: 1 },
-    Recipe { station: Station::Crafting, grid: [&["minecraft:flint"], &[], &[], &["minecraft:stick"], &[], &[], &["vulture:feather"], &[], &[]], result: "minecraft:arrow", count: 4 },
-    Recipe { station: Station::Crafting, grid: [&["vulture:feather"], &[], &[], &["minecraft:copper_ingot"], &[], &[], &["minecraft:stick"], &[], &[]], result: "minecraft:brush", count: 1 },
+    Recipe { station: Station::Campfire, grid: [&[], &[], &[], &[], &["seagulls:raw_seagull"], &[], &[], &[], &[]], result: "seagulls:cooked_seagull", count: 1 },
+    Recipe { station: Station::Furnace, grid: [&[], &[], &[], &[], &["seagulls:raw_seagull"], &[], &[], &[], &[]], result: "seagulls:cooked_seagull", count: 1 },
+    Recipe { station: Station::Smoker, grid: [&[], &[], &[], &[], &["seagulls:raw_seagull"], &[], &[], &[], &[]], result: "seagulls:cooked_seagull", count: 1 },
     Recipe { station: Station::Furnace, grid: [&[], &[], &[], &[], &["vulture:raw_vulture"], &[], &[], &[], &[]], result: "vulture:cooked_vulture", count: 1 },
     Recipe { station: Station::Campfire, grid: [&[], &[], &[], &[], &["vulture:raw_vulture"], &[], &[], &[], &[]], result: "vulture:cooked_vulture", count: 1 },
     Recipe { station: Station::Smoker, grid: [&[], &[], &[], &[], &["vulture:raw_vulture"], &[], &[], &[], &[]], result: "vulture:cooked_vulture", count: 1 },
-    Recipe { station: Station::Crafting, grid: [&["minecraft:book"], &["minecraft:ink_sac"], &["vulture:feather"], &[], &[], &[], &[], &[], &[]], result: "minecraft:writable_book", count: 1 },
 ];

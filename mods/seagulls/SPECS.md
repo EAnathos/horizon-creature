@@ -10,15 +10,21 @@ one becomes a fishing companion that dives for fish and shows you where to cast.
 
 ## 0. Status
 
-Planned: the spec and the model, no code yet.
+Playable (0.1.0), played in game: the seagull on its coasts (soaring with the library's flight, landing on the shore or
+the water, floating, walking, its calls), the food thief, following boats, snatching gliding flying fish (with the
+Flying Fish), befriending with a raw fish, the friend's following, staying, plunge-dives and lucky spot, the feather and
+the meat, the guide's page and facts, its own sounds.
 
-- **The model** (`assets/models/seagull.bbmodel`, pictures in docs/models/): a white gull with a pale grey back and
+- **The model** (`sources/models/seagull.bbmodel`, pictures in docs/models/): a white gull with a pale grey back and
   wings, black wing tips with white spots, a yellow hooked beak with a red spot, pale eyes and pink webbed feet. Its
-  parts are named as the vulture's (`body`, `tail`, `neck`, `head`, `wing_*`, `wing_*_mid`, `wing_*_tip`, `leg_*`), so
-  the shared flight poses it; built with its wings spread, folded on the ground by the pose.
-
-Next: the code, on Sunrise. The library's side comes with it: the vulture's flight (without riding) and taming
-move to the library (common/SPECS.md §6.1, §6.2).
+  parts are named as the vulture's (`body`, `tail`, `neck`, `head`, `wing_*`, `wing_*_mid`, `wing_*_tip`, `leg_*`);
+  built with its wings spread, folded along its back by the pose on the ground and the water, the black tips crossed
+  over the tail.
+- The library's side came with it: the vulture's flight (without riding) moved to the library (`creature::flight`,
+  common/SPECS.md §6.1), and so did the feather recipes (§3.8); a mod can add its creature as a hunter of another
+  mod's prey (§3.7).
+- Sunrise gives no hold on a player's fishing bobber (it is no entity a mod finds): its place is guessed from the
+  cast (`player_fish`), about 6 blocks ahead along the player's look on the water (docs/SUNRISE-ISSUES.md).
 
 ## 1. Technical context
 
@@ -33,8 +39,8 @@ move to the library (common/SPECS.md §6.1, §6.2).
 ## 2. The seagull ✅
 
 - A herring gull, about two thirds of a block long, wings about 2.5 blocks across. 8 health. Neutral: it never attacks.
-- **Spawning** ✅: beaches, stony shores, snowy beaches, and the coasts of oceans and rivers' mouths, in flocks of 2 to
-  6, by day. Wild ones despawn far from players.
+- **Spawning** ✅: beaches, stony shores and snowy beaches, in flocks of 2 to 6. Wild ones despawn far from players.
+  The coasts of oceans and rivers' mouths beyond the beaches ❓ (a biome modifier can't tell a coast from open water).
 - **Life on the coast** ✅: it glides along the shore and soars in circles above it (the library's flight), lands on
   the sand, on rocks, posts and roofs, walks about, and **floats on water**, bobbing on the waves. It calls often (a
   cry, a laughing call), louder when it takes off. At night the flock rests on the shore.
@@ -52,7 +58,7 @@ move to the library (common/SPECS.md §6.1, §6.2).
 
 - **With fish** ✅: thrown raw cod or salmon (dropped near it, as the vulture's chicken), it eats; one chance in 4 it
   befriends the player who threw it (hearts).
-- **Befriended** (the library's taming and ownership, §6.2): it follows its friend, flying above and landing near
+- **Befriended** (the library's friends, common/SPECS.md §6.2): it follows its friend, flying above and landing near
   them, never steals from them, and stays or follows on right-click. Named with a name tag. It never despawns.
 - **It fishes for its friend** ✅: only while its friend is **fishing** (their bobber in the water) and it is following
   them (not told to stay), about **once a minute** it flies out over the water and **plunge-dives** like a real gull: a
@@ -61,7 +67,8 @@ move to the library (common/SPECS.md §6.1, §6.2).
   fish's oceans, sometimes a raw flying fish when the Flying Fish are installed). It never misses.
 - **Circles over a lucky spot** ✅: when its friend is in a boat or fishing, it flies ahead and **circles over a spot
   of water** within 16 blocks, calling: fishing there (the bobber within 4 blocks under it) is luckier, as one level
-  of Luck of the Sea. It moves to a new spot every few minutes.
+  of Luck of the Sea: what fishing brings up there is never junk (a junk catch is a cod instead, through the
+  `item_fished` hook, which can't change the luck itself). It moves to a new spot every 3 to 5 minutes.
 
 ## 4. Bestiary page ✅
 

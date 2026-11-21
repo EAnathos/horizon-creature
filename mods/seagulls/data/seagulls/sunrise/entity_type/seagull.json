@@ -1,0 +1,14 @@
+{
+  "template": "minecraft:wandering_trader",
+  "attributes": {
+    "minecraft:max_health": 8.0,
+    "minecraft:movement_speed": 0.25
+  },
+  "sounds": {
+    "hurt": "seagulls:entity.seagull.hurt",
+    "death": "seagulls:entity.seagull.death",
+    "ambient": "none",
+    "step": "none"
+  },
+  "shadow_radius": 0.35
+}

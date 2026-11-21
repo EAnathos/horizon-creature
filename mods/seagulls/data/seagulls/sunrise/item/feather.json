@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:feather",
+  "components": {
+    "minecraft:item_model": "seagulls:feather",
+    "minecraft:item_name": {
+      "translate": "item.seagulls.feather"
+    }
+  }
+}

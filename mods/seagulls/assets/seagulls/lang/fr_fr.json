@@ -1,0 +1,22 @@
+{
+  "entity.seagulls.seagull": "Mouette",
+  "item.seagulls.seagull_spawn_egg": "Œuf d'apparition de mouette",
+  "item.seagulls.feather": "Plume de mouette",
+  "item.seagulls.raw_seagull": "Mouette crue",
+  "item.seagulls.cooked_seagull": "Mouette cuite",
+  "bestiary.seagulls.thief": "Voleuse",
+  "bestiary.seagulls.fish": "Poisson",
+  "bestiary.seagulls.catch": "Prise",
+  "bestiary.seagulls.spot": "Bon coin",
+  "bestiary.seagulls.boat": "Bateau",
+  "bestiary.seagulls.item.feather.use": "Une plume : flèches, pinceau, livre et plume",
+  "bestiary.seagulls.item.raw_seagull.use": "Nourriture, comme le poulet cru ; se cuit en mouette cuite",
+  "bestiary.seagulls.item.cooked_seagull.use": "Nourriture, comme le poulet cuit",
+  "subtitles.entity.seagull.cry": "Une mouette crie",
+  "subtitles.entity.seagull.laugh": "Une mouette ricane",
+  "subtitles.entity.seagull.flap": "Une mouette bat des ailes",
+  "subtitles.entity.seagull.takeoff": "Une mouette s'envole",
+  "subtitles.entity.seagull.splash": "Une mouette plonge",
+  "subtitles.entity.seagull.hurt": "Une mouette est blessée",
+  "subtitles.entity.seagull.death": "Une mouette meurt"
+}

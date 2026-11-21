@@ -1,0 +1,177 @@
+# The seagull's sounds, made by `cargo creature sounds seagulls` from freesound downloads (all CC0, nothing to credit).
+# A downloaded file keeps the name freesound gives it: it is found by its number. Each clip: a slice of a source
+# (`start` and `length` in seconds of the output), resampled by `pitch`, faded out over `fade` seconds, `gain` in dB.
+out = "sounds/seagull"
+
+[sources]
+single = 263786    # steaq, Seagull single call
+beach = 353416     # squashy555, Seagull on beach
+laughing = 586831  # speakingmusic, seagull.wav
+trill = 75195      # nigelcoop, Seagull trill and whine
+wings = 670509     # 2create, Huge wing flaps (the vulture's)
+jump = 507091      # paulprit, Fish Jumping Splash 2 (the flying fish's)
+release = 507094   # paulprit, Fish Splashing Release 1 (the flying fish's)
+
+# Its cry: the single call, and the calls of a gull on a beach.
+[[clip]]
+name = "cry1"
+source = "single"
+start = 0.0
+length = 0.45
+pitch = 1.0
+fade = 0.15
+gain = -4.0
+
+[[clip]]
+name = "cry2"
+source = "beach"
+start = 0.6
+length = 0.9
+pitch = 1.0
+fade = 0.3
+gain = -4.0
+
+[[clip]]
+name = "cry3"
+source = "beach"
+start = 2.0
+length = 0.8
+pitch = 1.05
+fade = 0.3
+gain = -4.0
+
+[[clip]]
+name = "cry4"
+source = "beach"
+start = 2.85
+length = 0.5
+pitch = 1.0
+fade = 0.2
+gain = -4.0
+
+
+# Its laughing call: a quick run of calls.
+[[clip]]
+name = "laugh1"
+source = "laughing"
+start = 3.5
+length = 2.0
+pitch = 1.0
+fade = 0.4
+gain = -4.0
+
+[[clip]]
+name = "laugh2"
+source = "laughing"
+start = 12.4
+length = 1.5
+pitch = 1.0
+fade = 0.4
+gain = -4.0
+
+[[clip]]
+name = "laugh3"
+source = "beach"
+start = 3.4
+length = 2.3
+pitch = 1.0
+fade = 0.5
+gain = -4.0
+
+
+# Taking off: a loud cry.
+[[clip]]
+name = "takeoff1"
+source = "beach"
+start = 0.6
+length = 1.2
+pitch = 1.0
+fade = 0.3
+gain = 0.0
+
+[[clip]]
+name = "takeoff2"
+source = "single"
+start = 0.0
+length = 0.45
+pitch = 0.95
+fade = 0.15
+gain = 0.0
+
+
+# Hurt and dying: the trill, sharper when hurt, a falling whine for its death.
+[[clip]]
+name = "hurt1"
+source = "trill"
+start = 0.15
+length = 0.55
+pitch = 1.1
+fade = 0.2
+gain = -3.0
+
+[[clip]]
+name = "hurt2"
+source = "single"
+start = 0.0
+length = 0.4
+pitch = 1.25
+fade = 0.15
+gain = -3.0
+
+[[clip]]
+name = "death"
+source = "trill"
+start = 1.5
+length = 0.45
+pitch = 0.85
+fade = 0.25
+gain = -3.0
+
+
+# Its wing beats: the vulture's recording, higher for a smaller bird.
+[[clip]]
+name = "flap1"
+source = "wings"
+start = 1.0
+length = 0.4
+pitch = 0.75
+fade = 0.12
+gain = -6.0
+
+[[clip]]
+name = "flap2"
+source = "wings"
+start = 2.42
+length = 0.5
+pitch = 0.75
+fade = 0.12
+gain = -6.0
+
+[[clip]]
+name = "flap3"
+source = "wings"
+start = 3.7
+length = 0.4
+pitch = 0.75
+fade = 0.12
+gain = -6.0
+
+
+# Its plunge-dive into the water.
+[[clip]]
+name = "splash1"
+source = "jump"
+start = 0.95
+length = 0.8
+pitch = 1.1
+fade = 0.3
+gain = -3.0
+
+[[clip]]
+name = "splash2"
+source = "release"
+start = 0.45
+length = 0.8
+pitch = 1.15
+fade = 0.3
+gain = -3.0

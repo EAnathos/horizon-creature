@@ -28,7 +28,14 @@ Status: **to open** (found, not filed), **open**, **fixed upstream** (merged, no
 
 ## To open (candidates)
 
-Found, not filed: check the tracker and the newest Nightly first. None at the moment.
+Found, not filed: check the tracker and the newest Nightly first.
+
+- **A fishing bobber is no entity a mod can find**: `/execute if entity @e[type=minecraft:fishing_bobber]` fails while
+  a bobber floats, and `LevelRef::entities_in` gives none to `ProjectilesServerHost::fishing_hook` either, so a mod
+  can't tell where a player's bobber is (vanilla's `Player.fishing`). Ours: the seagull guesses it from the cast
+  (`player_fish`, state 0), about 6 blocks ahead along the player's look on the water, forgotten at the reel-in, when
+  the rod leaves their hands or after a minute (`mods/seagulls/src/lib.rs`, `CASTS`, `bobber`). To check on the
+  newest Nightly before filing.
 
 ## Moving the pin
 

@@ -2,6 +2,15 @@
 
 Each version's section is its registry changelog (`cargo creature release`).
 
+## Unreleased
+
+- Big fliers (`creature::flight`): the vulture's flight and soaring, moved from the Vulture for the Seagulls; a climb
+  held down (under leaves) gives up after 10 s and glides down to a perch.
+- Hunters (`creature::prey`): a mod can add its creature as a hunter of another mod's prey (`add_hunter`); a hunter of
+  the series' mods goes for its prey itself (`quarry`).
+- The feather recipes (arrows, the brush, the book and quill) with a mod's feather, moved from the Vulture: they take
+  the vulture's and the seagull's feathers (`creature:mod_feathers`).
+
 ## 0.3.1
 
 - Built for Sunrise's 2026-11-20 Nightly (9425651), as 0.3.0.

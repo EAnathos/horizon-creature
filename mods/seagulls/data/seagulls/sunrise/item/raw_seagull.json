@@ -1,0 +1,9 @@
+{
+  "template": "minecraft:chicken",
+  "components": {
+    "minecraft:item_model": "seagulls:raw_seagull",
+    "minecraft:item_name": {
+      "translate": "item.seagulls.raw_seagull"
+    }
+  }
+}

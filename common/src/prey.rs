@@ -2,7 +2,9 @@
 //! mod's (by entity id: a hunter whose mod isn't installed simply never shows up, so neither mod requires the other).
 //! From the prey's tick (`tick`), the nearest hunter within its range is sent to it (`MobRef::move_to`, as a goal
 //! would), and eats it once it reaches it: the creature is gone, with no drop, and the players near learn the mod's
-//! fact. A creature in a jar or a bucket isn't in the world, so it is safe.
+//! fact. A creature in a jar or a bucket isn't in the world, so it is safe. A hunter of the series' mods (a seagull)
+//! isn't walked there: it goes for its prey itself (its flight), asking which one is its own (`quarry`). A mod can add
+//! its creature as a hunter of another mod's prey (`add_hunter`: the seagull, of the flying fish).
 //!
 //! Single player: the hooks share the mob's id (as the rest of the series).
 use std::collections::BTreeMap;
@@ -30,6 +32,8 @@ pub type Caught = fn(&mut dyn ServerHost, u32);
 
 static PREY: Mutex<Vec<&'static Prey>> = Mutex::new(Vec::new());
 static CAUGHT: Mutex<Vec<(&'static str, Caught)>> = Mutex::new(Vec::new());
+/// Hunters added by other mods, by their prey's kind.
+static ADDED: Mutex<Vec<(&'static str, &'static Hunter)>> = Mutex::new(Vec::new());
 /// The hunter going for each prey.
 static CHASED: Mutex<BTreeMap<u32, u32>> = Mutex::new(BTreeMap::new());
 /// How often a prey looks out for a new hunter (ticks), and how near a hunter eats it (blocks).
@@ -52,6 +56,34 @@ pub fn when_caught(kind: &'static str, caught: Caught) {
     }
 }
 
+/// From a mod's `register`: its creature `hunter` hunts `prey` too, another mod's (by its entity id). Nothing happens
+/// when that mod isn't installed.
+pub fn add_hunter(prey: &'static str, hunter: &'static Hunter) {
+    let mut all = ADDED.lock().unwrap();
+    if !all.iter().any(|(p, h)| *p == prey && h.kind == hunter.kind) {
+        all.push((prey, hunter));
+    }
+}
+
+/// The hunters of `prey`: its own, then those added by other mods.
+fn hunters(prey: &Prey) -> Vec<&'static Hunter> {
+    let added = ADDED.lock().unwrap();
+    prey.hunters
+        .iter()
+        .chain(added.iter().filter(|(p, _)| *p == prey.kind).map(|(_, h)| *h))
+        .collect()
+}
+
+/// The prey hunter `hunter` goes for, if any: for a hunter of the series' mods, which goes for it itself.
+pub fn quarry(hunter: u32) -> Option<u32> {
+    CHASED
+        .lock()
+        .unwrap()
+        .iter()
+        .find(|(_, h)| **h == hunter)
+        .map(|(p, _)| *p)
+}
+
 fn of(kind: &str) -> Option<&'static Prey> {
     PREY.lock().unwrap().iter().copied().find(|p| p.kind == kind)
 }
@@ -68,10 +100,11 @@ pub fn tick(host: &mut dyn ServerHost, dimension: &str, entity: u32, kind: &str)
     let (Some(at), Some(level)) = (e.position(&*host), e.level(&*host)) else {
         return false;
     };
+    let hunters = hunters(prey);
     let kept = CHASED.lock().unwrap().get(&entity).copied().and_then(|h| {
         let hunter = host.entity(h)?;
         let kind = hunter.kind(&*host)?.id(&*host);
-        let range = prey.hunters.iter().find(|x| x.kind == kind)?.range;
+        let range = hunters.iter().find(|x| x.kind == kind)?.range;
         let there = hunter.position(&*host)?;
         (crate::body::distance(there, at) <= range * 1.5).then_some((h, there))
     });
@@ -79,7 +112,7 @@ pub fn tick(host: &mut dyn ServerHost, dimension: &str, entity: u32, kind: &str)
         if e.tick_count(&*host).unwrap_or(0) % LOOK_EVERY != 0 {
             return None;
         }
-        let r = prey.hunters.iter().map(|h| h.range).fold(0.0, f64::max);
+        let r = hunters.iter().map(|h| h.range).fold(0.0, f64::max);
         let from = [at[0] - r, at[1] - r, at[2] - r];
         let to = [at[0] + r, at[1] + r, at[2] + r];
         level
@@ -88,7 +121,7 @@ pub fn tick(host: &mut dyn ServerHost, dimension: &str, entity: u32, kind: &str)
             .into_iter()
             .filter_map(|h| {
                 let kind = h.kind(&*host)?.id(&*host);
-                let range = prey.hunters.iter().find(|x| x.kind == kind)?.range;
+                let range = hunters.iter().find(|x| x.kind == kind)?.range;
                 let there = h.position(&*host)?;
                 let d = crate::body::distance(there, at);
                 (d <= range).then_some((h.id(), there, d))
@@ -102,23 +135,30 @@ pub fn tick(host: &mut dyn ServerHost, dimension: &str, entity: u32, kind: &str)
     };
     CHASED.lock().unwrap().insert(entity, hunter);
     if crate::body::distance(there, at) <= REACH {
-        eaten(host, dimension, prey, entity, at);
+        // The prey's fact and its mod's `when_caught` are about its own hunters, not those other mods added.
+        let own = host
+            .entity(hunter)
+            .and_then(|h| h.kind(&*host))
+            .is_some_and(|k| prey.hunters.iter().any(|x| x.kind == k.id(&*host)));
+        eaten(host, dimension, prey, entity, at, own);
         let caught = CAUGHT
             .lock()
             .unwrap()
             .iter()
             .find(|(k, _)| *k == prey.kind)
             .map(|(_, f)| *f);
-        if let Some(caught) = caught {
+        if let Some(caught) = caught.filter(|_| own) {
             caught(host, hunter);
         }
         return true;
     }
-    let speed = host
-        .entity(hunter)
-        .and_then(|h| h.kind(&*host))
-        .map(|k| k.id(&*host))
-        .and_then(|k| prey.hunters.iter().find(|x| x.kind == k))
+    let kind = host.entity(hunter).and_then(|h| h.kind(&*host)).map(|k| k.id(&*host));
+    // One of ours goes for it itself (`quarry`).
+    if kind.as_deref().is_some_and(crate::mob::is_ours) {
+        return false;
+    }
+    let speed = kind
+        .and_then(|k| hunters.iter().find(|x| x.kind == k))
         .map_or(1.0, |h| h.speed);
     if let Some(m) = host.entity(hunter).and_then(|h| host.mob(h)) {
         m.move_to(host, at, speed);
@@ -126,8 +166,9 @@ pub fn tick(host: &mut dyn ServerHost, dimension: &str, entity: u32, kind: &str)
     false
 }
 
-/// Prey `entity` at `at` eaten: a crunch and crumbs, the players near learn the fact, it is gone with no drop.
-fn eaten(host: &mut dyn ServerHost, dimension: &str, prey: &Prey, entity: u32, at: [f64; 3]) {
+/// Prey `entity` at `at` eaten: a crunch and crumbs, the players near learn the fact (an own hunter's, `own`), it is gone
+/// with no drop.
+fn eaten(host: &mut dyn ServerHost, dimension: &str, prey: &Prey, entity: u32, at: [f64; 3], own: bool) {
     if let Some(level) = host.level(dimension) {
         level.play_sound(
             host,
@@ -142,7 +183,7 @@ fn eaten(host: &mut dyn ServerHost, dimension: &str, prey: &Prey, entity: u32, a
             level.send_particles(host, &ParticleOptions::simple(k), None, at, [0.2, 0.2, 0.2], 0.02, 6);
         }
     }
-    if let Some(fact) = prey.fact {
+    if let Some(fact) = prey.fact.filter(|_| own) {
         for player in crate::bestiary::players_near(&*host, dimension, at) {
             crate::bestiary::learn(host, player, prey.kind, fact);
         }

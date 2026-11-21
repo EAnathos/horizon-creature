@@ -1,112 +1,24 @@
-//! The wild vulture (SPECS §4): soaring in slow circles high up, then gliding back down.
-//!
-//! `Soar` flies with the same physics as the ridden flight (`flight::Flight`), steered by its own controls: it takes
-//! off now and then, climbs to 18 to 26 blocks above where it left the ground, circles there for 30 to 60 s, then
-//! picks the highest point within 16 blocks (a peak, a tree top, a pillar, `landing_spot`) and glides down onto it. A vulture left in the air (its rider got off) glides down the same way. Fighting
-//! (`DiveAttack`, below, its target from vanilla's `HurtByTarget`, added at join) and riding come first. Both run from
-//! the server tick (the library's `body`).
+//! The wild vulture (SPECS §4): soaring in slow circles high up, then gliding back down (the library's
+//! `creature::flight::Soar`, as `SOARING` says), and fighting in the air (`DiveAttack`, below, its target from
+//! vanilla's `HurtByTarget`, added at join). Fighting and riding come first. Both run from the server tick (the
+//! library's `body`).
 use creature::body::{Behaviour, Body, World};
+use creature::flight::{Controls, Flight, Soaring, heading_of};
 
-use crate::flight::{CRUISE, Controls, Flight, MAX_CLIMB};
+use crate::WINGS;
 
-/// One take-off every 30 s on average, from the ground.
-const TAKE_OFF_CHANCE: i32 = 600;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Phase {
-    Climb,
-    Circle,
-    Descend,
-}
-
-#[derive(Debug)]
-pub struct Soar {
-    flight: Flight,
-    phase: Phase,
-    /// The circle's centre (x, z), radius and height.
-    center: [f64; 2],
-    radius: f64,
-    cruise_y: f64,
-    clockwise: bool,
-    /// Ticks spent in the phase.
-    ticks: i32,
-    /// Ticks to circle before going down.
-    circle_for: i32,
-    /// Where it lands: the highest point near it when it starts down.
-    landing: Option<[f64; 3]>,
-    on: bool,
-}
-
-/// Ticks of descent before it gives up its landing spot, and before it stops flying at all.
-const ABANDON_SPOT: i32 = 400;
-const GIVE_UP: i32 = 1200;
-
-/// How far around it looks for a high point to land on, and in steps of how many blocks.
-const LANDING_SEARCH: i32 = 16;
-const LANDING_STEP: i32 = 2;
-
-/// The highest ground within `LANDING_SEARCH` blocks (the first block from `SCAN_UP` above it down that isn't air),
-/// where it lands; none where nothing is loaded.
-fn landing_spot(m: &Body, cx: &World<'_>) -> Option<[f64; 3]> {
-    let (cx0, cz0) = (m.position.x.floor() as i32, m.position.z.floor() as i32);
-    let top0 = m.position.y.floor() as i32 + SCAN_UP;
-    let mut best: Option<(i32, i32, i32)> = None;
-    for dx in (-LANDING_SEARCH..=LANDING_SEARCH).step_by(LANDING_STEP as usize) {
-        for dz in (-LANDING_SEARCH..=LANDING_SEARCH).step_by(LANDING_STEP as usize) {
-            let (x, z) = (cx0 + dx, cz0 + dz);
-            let Some((y, name)) = (top0 - SCAN_DEPTH..=top0)
-                .rev()
-                .map(|y| (y, cx.block([x, y, z])))
-                .find(|(_, name)| !matches!(name.as_str(), "minecraft:air" | "minecraft:cave_air" | ""))
-            else {
-                continue;
-            };
-            // Not in a tree top (it gets stuck in the leaves), nor on water or lava.
-            let perch = !name.ends_with("leaves") && !matches!(name.as_str(), "minecraft:water" | "minecraft:lava");
-            let top = y + 1;
-            if perch && best.is_none_or(|b| top > b.1) {
-                best = Some((x, top, z));
-            }
-        }
-    }
-    best.map(|(x, y, z)| [f64::from(x) + 0.5, f64::from(y), f64::from(z) + 0.5])
-}
-/// How far above and below it the landing spot is looked for (blocks).
-const SCAN_UP: i32 = 8;
-const SCAN_DEPTH: i32 = 48;
-
-impl Soar {
-    pub fn new() -> Self {
-        Self {
-            flight: Flight::default(),
-            phase: Phase::Descend,
-            center: [0.0; 2],
-            radius: 16.0,
-            cruise_y: 0.0,
-            clockwise: true,
-            ticks: 0,
-            circle_for: 0,
-            landing: None,
-            on: false,
-        }
-    }
-
-    /// The heading that follows the circle, steering back towards its radius.
-    fn circle_yaw(&self, m: &Body) -> f32 {
-        let (dx, dz) = (m.position.x - self.center[0], m.position.z - self.center[1]);
-        let dist = (dx * dx + dz * dz).sqrt().max(0.01);
-        let (rx, rz) = (dx / dist, dz / dist);
-        let (tx, tz) = if self.clockwise { (-rz, rx) } else { (rz, -rx) };
-        // Inwards when too far, outwards when too close.
-        let pull = ((dist - self.radius) / self.radius).clamp(-1.0, 1.0) * 0.8;
-        heading_of(tx - rx * pull, tz - rz * pull)
-    }
-}
-
-/// The yaw of a horizontal direction (`velocity.x = -sin(yaw)`, `velocity.z = cos(yaw)`).
-fn heading_of(x: f64, z: f64) -> f32 {
-    (-x).atan2(z).to_degrees() as f32
-}
+/// How a wild vulture soars: one take-off every 30 s on average from the ground, a climb to 18 to 26 blocks above
+/// where it left the ground, a circle of 12 to 20 blocks for 30 to 60 s, then down onto a high perch: not a tree top
+/// (it gets stuck in the leaves), nor water or lava.
+pub static SOARING: Soaring = Soaring {
+    take_off: 600,
+    height: (18.0, 8),
+    radius: (12.0, 8),
+    circle_for: (600, 600),
+    idle,
+    perch: |name| !name.ends_with("leaves") && !matches!(name, "minecraft:water" | "minecraft:lava"),
+    lands_on_water: false,
+};
 
 /// Only a wild vulture soars on its own; a tamed one follows its owner (`tame.rs`).
 fn idle(m: &Body, cx: &World<'_>) -> bool {
@@ -114,124 +26,6 @@ fn idle(m: &Body, cx: &World<'_>) -> bool {
         && crate::ride::of(m.id).is_none()
         && crate::target(cx, m.id).is_none()
         && !crate::state::leashed(m.id)
-}
-
-impl Behaviour for Soar {
-    fn can_use(&mut self, m: &mut Body, cx: &World<'_>) -> bool {
-        let on = if self.on {
-            // Down, or a minute spent trying: it lets itself drop (no fall damage).
-            idle(m, cx) && !(self.phase == Phase::Descend && (m.on_ground && self.ticks > 0 || self.ticks > GIVE_UP))
-        } else {
-            idle(m, cx) && (!m.on_ground || m.random.next_int_bound(TAKE_OFF_CHANCE).unwrap_or(1) == 0)
-        };
-        if on && !self.on {
-            self.start(m, cx);
-        }
-        self.on = on;
-        on
-    }
-    fn stop(&mut self, m: &mut Body, _: &World<'_>) {
-        self.on = false;
-        self.flight.land(m);
-    }
-    fn tick(&mut self, m: &mut Body, cx: &World<'_>) {
-        self.soar(m, cx);
-    }
-}
-
-impl Soar {
-    fn start(&mut self, m: &mut Body, cx: &World<'_>) {
-        self.flight = Flight::default();
-        self.ticks = 0;
-        self.landing = None;
-        self.center = [m.position.x, m.position.z];
-        self.radius = 12.0 + f64::from(m.random.next_int_bound(9).unwrap_or(4));
-        self.clockwise = m.random.next_int_bound(2).unwrap_or(0) == 0;
-        if m.on_ground {
-            self.phase = Phase::Climb;
-            self.cruise_y = m.position.y + 18.0 + f64::from(m.random.next_int_bound(9).unwrap_or(4));
-            self.circle_for = 600 + m.random.next_int_bound(601).unwrap_or(300);
-        } else {
-            // Left in the air: glide down from where it is.
-            self.phase = Phase::Descend;
-            self.cruise_y = m.position.y;
-            self.flight.speed = CRUISE * 0.6;
-            self.landing = landing_spot(m, cx);
-        }
-    }
-    fn soar(&mut self, m: &mut Body, cx: &World<'_>) {
-        self.ticks += 1;
-        // A spot it can't reach in 20 s (behind a tree, a cliff): it spirals down where it is instead.
-        if self.phase == Phase::Descend && self.ticks > ABANDON_SPOT {
-            self.landing = None;
-        }
-        let yaw = self.circle_yaw(m);
-        let below = self.cruise_y - m.position.y;
-        let controls = match self.phase {
-            Phase::Climb => {
-                if below < 2.0 {
-                    self.phase = Phase::Circle;
-                    self.ticks = 0;
-                }
-                Controls {
-                    yaw,
-                    pitch: -MAX_CLIMB * 0.6,
-                    flap: true,
-                    brake: false,
-                    boost: self.ticks < 10,
-                    ridden: false,
-                }
-            }
-            Phase::Circle => {
-                if self.ticks > self.circle_for {
-                    self.phase = Phase::Descend;
-                    self.ticks = 0;
-                    self.landing = landing_spot(m, cx);
-                }
-                // Holds its height: noses up below it, down above it; flaps only to keep its speed or climb.
-                let pitch = (-below * 3.0).clamp(-20.0, 20.0) as f32;
-                Controls {
-                    yaw,
-                    pitch,
-                    flap: below > 1.0 || self.flight.speed < CRUISE * 0.6,
-                    brake: false,
-                    boost: false,
-                    ridden: false,
-                }
-            }
-            // Down onto its landing spot along a glide path (0.4 block down per block across), steeply over it; with no
-            // spot found, spiralling down where it is.
-            Phase::Descend => match self.landing {
-                Some(at) => {
-                    let (dx, dz) = (at[0] - m.position.x, at[2] - m.position.z);
-                    let flat = (dx * dx + dz * dz).sqrt();
-                    let path = at[1] + flat * 0.4 - m.position.y;
-                    let (pitch, brake) = if flat < 3.0 {
-                        (45.0, true)
-                    } else {
-                        ((-path * 3.0).clamp(-20.0, 35.0) as f32, self.flight.speed > CRUISE)
-                    };
-                    Controls {
-                        yaw: heading_of(dx, dz),
-                        pitch,
-                        flap: path > 2.0,
-                        brake,
-                        boost: false,
-                        ridden: false,
-                    }
-                }
-                None => Controls {
-                    yaw,
-                    pitch: 12.0,
-                    flap: false,
-                    brake: self.flight.speed > CRUISE,
-                    boost: false,
-                    ridden: false,
-                },
-            },
-        };
-        self.flight.tick(m, &controls);
-    }
 }
 
 /// Above its target before diving, and how far from it it starts the dive, in blocks.
@@ -299,7 +93,7 @@ impl Behaviour for DiveAttack {
         // Where it hovers: a block over the target's head.
         let hover_y = t.eye_y + HOVER_ABOVE;
         if self.away == 0 && flat < HOVER_FROM {
-            self.flight.hover(m, [t.at[0], hover_y, t.at[2]], to_target);
+            self.flight.hover(m, [t.at[0], hover_y, t.at[2]], to_target, &WINGS);
             return;
         }
         let dy = hover_y - m.position.y;
@@ -337,6 +131,6 @@ impl Behaviour for DiveAttack {
                 ridden: false,
             }
         };
-        self.flight.tick(m, &controls);
+        self.flight.tick(m, &controls, &WINGS);
     }
 }

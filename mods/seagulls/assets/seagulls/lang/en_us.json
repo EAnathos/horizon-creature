@@ -1,0 +1,22 @@
+{
+  "entity.seagulls.seagull": "Seagull",
+  "item.seagulls.seagull_spawn_egg": "Seagull Spawn Egg",
+  "item.seagulls.feather": "Seagull Feather",
+  "item.seagulls.raw_seagull": "Raw Seagull",
+  "item.seagulls.cooked_seagull": "Cooked Seagull",
+  "bestiary.seagulls.thief": "Thief",
+  "bestiary.seagulls.fish": "Fish",
+  "bestiary.seagulls.catch": "Catch",
+  "bestiary.seagulls.spot": "Spot",
+  "bestiary.seagulls.boat": "Boat",
+  "bestiary.seagulls.item.feather.use": "A feather: arrows, a brush, a book and quill",
+  "bestiary.seagulls.item.raw_seagull.use": "Food, as raw chicken; cooks into a cooked seagull",
+  "bestiary.seagulls.item.cooked_seagull.use": "Food, as cooked chicken",
+  "subtitles.entity.seagull.cry": "Seagull cries",
+  "subtitles.entity.seagull.laugh": "Seagull laughs",
+  "subtitles.entity.seagull.flap": "Seagull flaps",
+  "subtitles.entity.seagull.takeoff": "Seagull takes off",
+  "subtitles.entity.seagull.splash": "Seagull dives",
+  "subtitles.entity.seagull.hurt": "Seagull hurts",
+  "subtitles.entity.seagull.death": "Seagull dies"
+}

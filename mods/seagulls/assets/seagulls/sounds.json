@@ -1,0 +1,54 @@
+{
+  "entity.seagull.cry": {
+    "subtitle": "subtitles.entity.seagull.cry",
+    "sounds": [
+      "seagulls:seagull/cry1",
+      "seagulls:seagull/cry2",
+      "seagulls:seagull/cry3",
+      "seagulls:seagull/cry4"
+    ]
+  },
+  "entity.seagull.laugh": {
+    "subtitle": "subtitles.entity.seagull.laugh",
+    "sounds": [
+      "seagulls:seagull/laugh1",
+      "seagulls:seagull/laugh2",
+      "seagulls:seagull/laugh3"
+    ]
+  },
+  "entity.seagull.takeoff": {
+    "subtitle": "subtitles.entity.seagull.takeoff",
+    "sounds": [
+      "seagulls:seagull/takeoff1",
+      "seagulls:seagull/takeoff2"
+    ]
+  },
+  "entity.seagull.hurt": {
+    "subtitle": "subtitles.entity.seagull.hurt",
+    "sounds": [
+      "seagulls:seagull/hurt1",
+      "seagulls:seagull/hurt2"
+    ]
+  },
+  "entity.seagull.death": {
+    "subtitle": "subtitles.entity.seagull.death",
+    "sounds": [
+      "seagulls:seagull/death"
+    ]
+  },
+  "entity.seagull.flap": {
+    "subtitle": "subtitles.entity.seagull.flap",
+    "sounds": [
+      "seagulls:seagull/flap1",
+      "seagulls:seagull/flap2",
+      "seagulls:seagull/flap3"
+    ]
+  },
+  "entity.seagull.splash": {
+    "subtitle": "subtitles.entity.seagull.splash",
+    "sounds": [
+      "seagulls:seagull/splash1",
+      "seagulls:seagull/splash2"
+    ]
+  }
+}

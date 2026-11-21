@@ -13,7 +13,9 @@ Everything below works and was tested in game, single player, unless said otherw
   reaches as the `creature` crate (`[dependencies] creature = "^0.3"`).
 - **Model drawing** (§3.1), **mob sounds** (§3.2), **the creative tab** (§3.3), **monsters sparing our creatures**
   (§3.4), **the small fliers' flight and spawning** (§3.5, by day, at night or at any hour) and **friends** (§6.2, the
-  Fairies' and the vulture's owner).
+  Fairies', the seagulls' and the vulture's owner).
+- **The big fliers' flight** (§3.14, `creature::flight`): the vulture's flight and soaring, moved here with the Seagulls;
+  the Vulture runs on it (tested in game: soaring, gliding down, ridden flight), and the seagull.
 - **The small crawlers' crawl** (§3.6, `creature::crawl`): the worm's ground crawl, now a library goal the next ground
   creatures share; Worms runs on it (tested in game, its behaviour unchanged).
 - **Glass jar and territories** (§4): catching, releasing, settling on a flower patch or in a garden, the jar on
@@ -21,12 +23,13 @@ Everything below works and was tested in game, single player, unless said otherw
   installed, and the catch/release/display/name/TNT/piston behavior, are confirmed. The **sand** rule (§4.2, for
   Scorpions) is coded but not yet exercised in game.
 - **Colours and patterns** (§5), used by the butterflies.
+- **Feathers** (§3.8): the feather recipes with a mod's feather (the vulture's, the seagull's).
 - **Glowing creatures' lights** (§3.11, `creature::glow`): the fireflies', the fairies' and the storm spirits' lights,
   sharing the game's 8.
 - **Fighting back** (§3.12, `creature::anger`): the scorpions and the storm spirits.
 - **Water creatures** (§3.10, `creature::aquatic`), **touches** (§3.13, `creature::touch`) and **hunters** (§3.7,
-  `creature::prey`, the sea turtles and the dolphins; chickens and seagulls come with their mods): the jellyfish and the
-  flying fish (and the storm spirits' touch).
+  `creature::prey`, the sea turtles, the dolphins and the seagulls; chickens come with their mods): the jellyfish and
+  the flying fish (and the storm spirits' touch).
 - **Mob helpers** (`creature::mob`): `ours` (muted, own box, own goals, spared), `resize`, `Muted`, `despawn_far` (small
   wild creatures far from players, as vanilla's ambient mobs), `nearest_player`, `player_of`, `give_effect` (an effect
   on a mob or a player).
@@ -35,7 +38,7 @@ Everything below works and was tested in game, single player, unless said otherw
 - **Creature guide book and bestiary** (§7).
 
 Limits: single player only (the drawing reads render state from statics, kept on the server's side); the systems of §6
-stay in the vulture until a second mod needs them, except friends (§6.2), shared with the Fairies.
+stay in the vulture until a second mod needs them, except friends (§6.2) and the flight (§6.1).
 
 ## 1. Role and rules ✅
 
@@ -129,7 +132,9 @@ their top, never coming down on its own).
 A hunter that sees one of its prey within its range goes over and eats it: the creature is gone (no drop), wild or
 settled. A mod registers its kinds as prey of a hunter, a vanilla mob or **another mod's** (by its entity id): a hunter
 whose mod is not installed is skipped, so neither mod requires the other. Not on creatures in a jar, on display or in a
-bucket.
+bucket. A mod can also add its creature as a hunter of another mod's prey (`add_hunter`: the seagull, of the flying
+fish) ✅; the prey's fact and its mod's `when_caught` stay for its own hunters. A hunter of the series' mods is not
+walked to its prey: it goes for it itself (its flight), asking which one is its own (`quarry`) ✅.
 
 - **Chickens** peck small creatures within 6 blocks, so a player keeps chickens out of a garden or a pasture. Users:
   **Worms**, **Dung Beetles** (mods/dung_beetles/SPECS.md §2).
@@ -139,15 +144,16 @@ bucket.
   (mods/flying_fish/SPECS.md §3).
 - After a catch, the prey's mod may do something to the hunter (`prey::when_caught`, given its id) ✅: the flying fish's
   dolphin is fed, as by a player.
-- **Seagulls** (a mod's hunter) swoop on gliding flying fish within 16 blocks and snatch them in the air, when both
-  mods are installed. Users: **Flying Fish** and **Seagulls** (mods/flying_fish/SPECS.md §3).
+- **Seagulls** (a mod's hunter, `add_hunter`) swoop on gliding flying fish within 16 blocks and snatch them in the air,
+  when both mods are installed ✅. Users: **Flying Fish** and **Seagulls** (mods/seagulls/SPECS.md §2).
 
 ### 3.8 Feathers (`creature:feathers`) ✅
 
 A mod's own feather works as a feather: the item tag `creature:feathers` lists vanilla's feather and each mod's (as
-`required: false` entries, so a missing mod's is left out), and the guide's recipe (§7) takes any of it ✅. Planned:
-the recipes for arrows, the brush and the book and quill move here from the Vulture (its `vulture:feather`) when the
-**Seagulls** come (mods/seagulls/SPECS.md §5).
+`required: false` entries, so a missing mod's is left out), and the guide's recipe (§7) takes any of it ✅. The
+recipes for arrows, the brush and the book and quill with a mod's feather are the library's ✅ (moved from the Vulture
+with the Seagulls): they take the tag `creature:mod_feathers` (the vulture's and the seagull's feathers, not vanilla's,
+whose recipes are vanilla's), with conditions on either mod being installed. Users: **Vulture**, **Seagulls**.
 
 ### 3.9 Lobbed projectiles (`creature::lob`), planned ✅
 
@@ -194,6 +200,17 @@ shock).
 
 What touches a creature is hurt by it, at most once every so many ticks each while it stays in touch (`due`), the mod
 doing its own harm: **Storm Spirits** (a zap) and **Jellyfish** (its kind's sting).
+
+### 3.14 Big fliers (`creature::flight`) ✅
+
+The flight of the vulture and the seagull, moved from the vulture with the Seagulls (§6.1). `Flight` is flown like a
+plane: always along its heading, turning toward the wanted one (banking), nosing up or down toward the wanted pitch,
+trading speed for height like a glider, hovering on beating wings for a strike or a snatch (`hover`); it is steered each
+tick by `Controls` (a rider's keys, or the creature's own behaviour). What differs between fliers is their `Wings`
+(cruising and diving speeds, wing-beat and take-off sounds, their own pace). `Soar` is soaring on its own, as a
+`Soaring` says: a take-off now and then, a climb (given up after 10 s held down, under leaves say), circling, then a
+glide down onto the highest perch near it (`landing_spot`, its `perch` rule), or onto the water for one that floats.
+Riding stays the vulture's. Users: **Vulture**, **Seagulls**.
 
 ## 4. Glass jar and territories ✅
 
@@ -259,8 +276,8 @@ Each moves here when a second mod needs it. Until then it stays in the vulture.
 
 | # | System | Today |
 |---|---|---|
-| 6.1 | **Riding and flight**: mount by right-click, **dynamic ridden flight** (steered by the look, banking into arc turns like a plane, vulture/SPECS.md §6.2), dismount, mount hearts (vanilla's on Sunrise; the `mount-hud` injection on Horizon), a saddle | in the vulture; the flight itself (glide, soaring, landing, the wing poses) moves here with the Seagulls (planned, mods/seagulls/SPECS.md §1), riding stays |
-| 6.2 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | **friends** ✅ in the library (`creature::friend`: the friend's UUID and staying, saved on the creature as `creature:friend`, kept in the glass jar), used by the **Fairies** and the **Vulture** (its owner and sitting; a save from before, which held them in `vulture:state`, is moved over once, tested in game); defending, healing food and riding come with the Sporelins, the Seagulls and the Living Flowers (planned) |
+| 6.1 | **Riding and flight**: mount by right-click, **dynamic ridden flight** (steered by the look, banking into arc turns like a plane, vulture/SPECS.md §6.2), dismount, mount hearts (vanilla's on Sunrise; the `mount-hud` injection on Horizon), a saddle | the flight itself (glide, soaring, landing) moved here with the Seagulls ✅ (`creature::flight`, §3.14); riding and the wing poses stay in the mods |
+| 6.2 | **Taming and ownership**: owner on the entity, sit / follow, defend the owner, healing food, only the owner rides | **friends** ✅ in the library (`creature::friend`: the friend's UUID and staying, saved on the creature as `creature:friend`, kept in the glass jar), used by the **Fairies**, the **Seagulls** (befriended with a fish) and the **Vulture** (its owner and sitting; a save from before, which held them in `vulture:state`, is moved over once, tested in game); defending, healing food and riding come with the Sporelins and the Living Flowers (planned) |
 | 6.3 | **Babies and growth**: smaller model, growth time, faster when fed | in the vulture |
 | 6.4 | **Ridden special attack**: a key that makes the mount attack (the vulture's talons) | in the vulture |
 

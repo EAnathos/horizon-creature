@@ -17,7 +17,6 @@
 //!   its renderer (`Draw`).
 //!
 //! It depends on the series' library, Sunrise Creatures (`creature`, common/SPECS.md).
-mod flight;
 mod interaction;
 mod model;
 mod model_baby;
@@ -33,7 +32,7 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
 use creature::body::{Behaviour, Body, World};
-use flight::{Controls, Flight};
+use creature::flight::{Controls, Flight, Wings};
 use mod_api::{
     BlockEntityDrawContext, ClientHost, ClientTickPostEvent, EntityInteractEvent, EntityJoinLevelEvent,
     EntityMountEvent, EntityRenderState, EntityRenderer, EntityTickPostEvent, Flow, GoalSpec, HitHost, Hooks, HostSide,
@@ -43,6 +42,16 @@ use mod_api::{
 };
 
 pub const KIND: &str = "vulture:vulture";
+
+/// Its flight (the library's `creature::flight`, SPECS §6.2): its cruising and diving speeds (blocks per tick, before
+/// air drag), its wing beats, and its own pace (its kind and age, `state::pace`).
+pub static WINGS: Wings = Wings {
+    cruise: 0.55,
+    dive: 1.0,
+    flap: sounds::FLAP,
+    takeoff: sounds::TAKEOFF,
+    pace: state::pace,
+};
 /// Its hitbox and eye height, in blocks (SPECS §4); its rider sits on its harness (its entity type's
 /// `passenger_attachments`).
 /// How tall its model stands, for the book's 3D view (its box is lower: the rider sits on its back).
@@ -153,7 +162,7 @@ const DESCEND_PITCH: f32 = 35.0;
 /// How far A or D, held in the air, sets its wanted heading to that side of the look, in degrees.
 const STEER: f32 = 45.0;
 
-/// Ridden flight (SPECS §6.2): the rider's look turns it and the keys steer `flight::Flight`. W flaps up to the
+/// Ridden flight (SPECS §6.2): the rider's look turns it and the keys steer the library's `creature::flight::Flight`. W flaps up to the
 /// cruising speed, S brakes, A / D steer to a side, Space climbs with strong flaps (and takes off from the ground), sneak
 /// descends (getting off only on the ground, `ride.rs`); on the ground it walks, and S backs it up slowly.
 #[derive(Debug, Default)]
@@ -211,7 +220,7 @@ impl Behaviour for Fly {
             boost: r.jumping,
             ridden: true,
         };
-        self.flight.tick(m, &controls);
+        self.flight.tick(m, &controls, &WINGS);
         if talons::take_press(r.player) {
             talons::toggle(m, cx);
         }
@@ -523,7 +532,7 @@ impl EntityRenderer for Draw {
             walk_speed: mob.map_or(0.0, |m| m.walk_animation_speed),
             flying: FLYING.lock().unwrap().get(&entity.id).copied().unwrap_or(false),
         };
-        let flapping = flight::flapping(entity.id);
+        let flapping = creature::flight::flapping(entity.id);
         let look = state::look(entity.id);
         let carrying = talons::carrying(entity.id);
         let shown = |part: &str| match part {
@@ -743,7 +752,7 @@ impl Hooks for Vulture {
                     Box::new(tame::Mate::default()),
                     Box::new(tame::Eat::default()),
                     Box::new(tame::FollowOwner::default()),
-                    Box::new(wild::Soar::new()),
+                    Box::new(creature::flight::Soar::new(&wild::SOARING, &WINGS)),
                 ]
             });
             apply(host, id);

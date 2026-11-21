@@ -2,6 +2,10 @@
 
 Each version's section is its registry changelog (`cargo creature release`).
 
+## Unreleased
+
+- A seagull (with the Seagulls) frightens a shoal, as a dolphin does.
+
 ## 0.1.0
 
 - First release on Sunrise: blue wing, spotted wing and sunset wing flying fish in shoals of one kind in lukewarm and

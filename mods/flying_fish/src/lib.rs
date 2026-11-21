@@ -240,9 +240,9 @@ const THREAT: f64 = 6.0;
 /// How often the facts seen are looked for (ticks).
 const FACTS_EVERY: i32 = 20;
 
-/// Whether `kind` frightens a flying fish: a dolphin or a boat.
+/// Whether `kind` frightens a flying fish: a dolphin, a seagull (with the Seagulls) or a boat.
 fn threat(kind: &str) -> bool {
-    kind == "minecraft:dolphin" || kind.ends_with("boat") || kind.ends_with("raft")
+    matches!(kind, "minecraft:dolphin" | "seagulls:seagull") || kind.ends_with("boat") || kind.ends_with("raft")
 }
 
 /// From `entity_tick_post`, for each flying fish: its life in water, its look, its swim and glides, the dolphins and
@@ -519,6 +519,7 @@ mod tests {
     fn its_fins_fold_to_swim_and_spread_to_glide() {
         assert_ne!(pose("fin_left", 0.0, false), pose("fin_left", 0.0, true));
         assert_eq!(pose("body", 3.0, true), [0.0; 3]);
-        assert!(threat("minecraft:dolphin") && threat("minecraft:oak_boat") && !threat("minecraft:cod"));
+        assert!(threat("minecraft:dolphin") && threat("seagulls:seagull") && threat("minecraft:oak_boat"));
+        assert!(!threat("minecraft:cod"));
     }
 }

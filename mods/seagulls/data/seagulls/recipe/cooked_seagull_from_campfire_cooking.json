@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "category": "food",
+  "ingredient": "seagulls:raw_seagull",
+  "result": {
+    "id": "seagulls:cooked_seagull"
+  },
+  "experience": 0.35,
+  "cookingtime": 600
+}

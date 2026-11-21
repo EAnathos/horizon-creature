@@ -22,7 +22,8 @@ them and fed by a catch, its own sounds, the guide's page with its facts. Played
   swimming, spread to glide), `pelvic_left`, `pelvic_right`, `tail`, `tail_fin`. One model for every kind, a texture
   each (§2): blue wing (navy back, silver belly, pale blue wings), spotted wing (olive back, pale wings with dark
   spots), sunset wing (blue back, orange wings, gold tips, a dark red edge).
-- Not yet: seagulls, with the Seagulls mod (❓ below).
+- Seagulls (with the Seagulls): they snatch gliding flying fish, and frighten a shoal. The guide's "Seagull" fact is ❓
+  (§4).
 
 ## 1. Technical context
 
@@ -30,7 +31,7 @@ them and fed by a catch, its own sounds, the guide's page with its facts. Played
   spawn egg `flying_fish:flying_fish_spawn_egg`, items `flying_fish:raw_flying_fish`, `flying_fish:cooked_flying_fish`,
   `flying_fish:flying_fish_bucket` ✅ (§5).
 - Uses from the library: model drawing and sounds (§3.1, §3.2), hitbox size (§3.4), monsters sparing it (§3.4), the
-  creature guide's pages and morphs (§7), hunters (§3.7: dolphins, and seagulls when the Seagulls are installed), and **water creatures** (§3.10, with
+  creature guide's pages and morphs (§7), hunters (§3.7: dolphins, and seagulls when the Seagulls are installed, which add themselves as its hunters), and **water creatures** (§3.10, with
   the Jellyfish: breathing in water, drying out when beached, the bucket).
 - It copies the wandering trader (goals only), with a box of 0.5 × 0.3 blocks ✅, without gravity in water. Sunrise:
   the `living_breathe` hook lets it breathe in water and not in air (through the library, §3.10).
@@ -66,8 +67,8 @@ A shoal is of one kind.
 - **Hunted**: dolphins chase and eat flying fish (the library's prey, §3.7): a dolphin that sees one within 12 blocks
   swims after it, and the shoal takes off. A dolphin that caught one is happy for a while (it leads players to treasure
   as if fed: its `GotFish`) ✅.
-- **Seagulls** ❓ (with the Seagulls mod, not written yet), when the Seagulls mod is installed (no requirement either way): a seagull flying over the sea that sees a
-  gliding flying fish within 16 blocks swoops and **snatches it in the air**, then flies off with it (no drop). A
+- **Seagulls** ✅, when the Seagulls mod is installed (no requirement either way): a seagull flying over the sea that sees a
+  gliding flying fish within 16 blocks swoops and **snatches it in the air** (it is gone, no drop). A
   befriended seagull fishing for its friend (mods/seagulls/SPECS.md §3) may bring back a raw flying fish in their
   biomes. Through the library's prey (common/SPECS.md §3.7), with a mod's mob as the hunter.
 - **Hitting it** ✅: a gliding fish that hits a player or a mob (within half a block of its middle) bumps off (no damage)
